@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cnpsXML CreatedByAppVersion="3.21.0">
+	<Sources />
+	
+	<Destinations />
+
+	<ProjectSettings Stitching.DWD="1" TargetOverWrite.DWD="1">
+		<KernelFlags KP_LetterBoxParam.DWD="0" KP_MethodVideoScaleUp.DWD="0" KP_MethodVideoScaleDown.DWD="0" KP_MethodVideoScaleThreads.DWD="0" KP_MethodVideoScaleOptions.DWD="0" KP_Activelinelength704.DWD="0" KP_TCFrameRateMode.DWD="0" KP_FrameRateMode.DWD="2" KP_SpecialMPEGScaling.DWD="1" KP_SpecialDeinterlacing.DWD="1" KP_SpecialD1toDVScaling.DWD="1" KP_RGB2YUV601.DWD="1" KP_YUV2RGB601.DWD="1" KP_AdjustDurationLimit.DWD="5" KP_AdjustDurationEnabled.DWD="1" KP_RestrictQuality.DWD="0" KP_AnamorphicScalingLimit.DWD="50" KP_AnamorphicScalingLimitEnabled.DWD="1" KP_SpecialVBIScaling.DWD="1" KP_DefaultSTLanguage.DWD="0" KP_DefaultAudioLanguage.DWD="0" KP_ForceInternalMPEGDecoder.DWD="1" KP_SetChapterAtStitch.DWD="0" KP_UseDropFrame.DWD="1" KP_UseMPEGTimeStamp.DWD="0" KP_MaxMediaCut.DWD="5" KP_UseLegacyMPEG.DWD="0" KP_UseLegacyQT.DWD="0" KP_UseNTSCSafeLetterBox.DWD="0"/>
+	</ProjectSettings>
+</cnpsXML>

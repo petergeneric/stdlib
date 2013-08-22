@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.mediasmiths.std.guice</groupId>
+	<artifactId>stdlib-guice-hibernate</artifactId>
+	<version>4.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+	
+	<name>stdlib guice hibernate</name>
+	<description>stdlib guice hibernate</description>
+
+	<properties>
+		<!-- Pinned to 4.1.7.Final currently because we aren't able to use a JDBC4 driver for SQL Server (have to use jTDS) -->
+		<!-- It would be nice to fix this but for now the easier option is to keep Hibernate at this version -->
+		<!-- If there's a compelling reason to upgrade Hibernate we should likely go ahead though... -->
+		<hibernate.version>4.1.7.Final</hibernate.version>
+	</properties>
+	
+	<parent>
+		<groupId>com.mediasmiths.std.guice</groupId>
+		<artifactId>stdlib-guice-parent</artifactId>
+		<version>4.0.1-SNAPSHOT</version>
+	</parent>
+	
+	<dependencies>
+		<dependency>
+			<groupId>com.mediasmiths.std.guice</groupId>
+			<artifactId>stdlib-guice-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>log4j</groupId>
+			<artifactId>log4j</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.1</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>commons-logging</groupId>
+			<artifactId>commons-logging</artifactId>
+			<version>1.0.4</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>${hibernate.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>org.hibernate.javax.persistence</groupId>
+			<artifactId>hibernate-jpa-2.0-api</artifactId>
+			<version>1.0.1.Final</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>1.8.0.10</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

@@ -1,0 +1,61 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<groupId>com.mediasmiths.std.guice</groupId>
+	<artifactId>stdlib-guice-parent</artifactId>
+	<version>4.0.1-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	
+	<name>mediasmiths stdlib guice parent</name>
+	<description>Mediasmiths Standard Library Guice (Parent Package)</description>
+	
+	<properties>
+		<guice.version>3.1.2</guice.version>
+	</properties>
+
+	<parent>
+		<groupId>com.mediasmiths.std</groupId>
+		<artifactId>stdlib-parent</artifactId>
+		<version>4.0.1-SNAPSHOT</version>
+	</parent>
+	
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>com.mediasmiths.std</groupId>
+				<artifactId>stdlib</artifactId>
+				<version>${project.version}</version>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+	
+	<dependencies>
+		<dependency>
+			<groupId>com.mediasmiths.std</groupId>
+			<artifactId>stdlib</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<!-- guice -->
+		<dependency>
+			<groupId>org.sonatype.sisu</groupId>
+			<artifactId>sisu-guice</artifactId>
+			<version>${guice.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.sonatype.sisu.inject</groupId>
+			<artifactId>guice-multibindings</artifactId>
+			<version>${guice.version}</version>
+		</dependency>
+	</dependencies>
+	
+	<modules>
+		<module>metrics</module>
+		<module>common</module>
+		<module>webapp</module>
+		<module>thymeleaf</module>
+		<module>hibernate</module>
+		<module>restclient</module>
+		<module>sample-rest-service</module>
+	</modules>
+</project>
