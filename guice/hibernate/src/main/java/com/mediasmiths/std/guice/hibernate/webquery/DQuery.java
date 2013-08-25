@@ -4,6 +4,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
+import org.hibernate.sql.JoinType;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -195,7 +196,7 @@ public class DQuery
 		final String alias = field.replace('.', '_');
 
 		log.trace("Create alias '" + alias + "' for " + field);
-		criteria.createAlias(field, alias); // We know we've joined to the parent so we must be able to join to one level deeper
+		criteria.createAlias(field, alias, JoinType.LEFT_OUTER_JOIN); // We know we've joined to the parent so we must be able to join to one level deeper
 
 		final DQJoin join = new DQJoin(field, alias, childField);
 
