@@ -18,6 +18,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import static org.junit.Assert.assertEquals;
+
 public class DynamicQueryTest
 {
 	@Inject
@@ -74,5 +76,21 @@ public class DynamicQueryTest
 
 		// Nonsense field shouldn't work
 		dao.findByUriQuery(new ResultSetConstraint(constraints, 200));
+	}
+
+
+	@Test
+	public void testGetByRelationIdIsNull() throws Exception
+	{
+		MyObject obj = new MyObject();
+		obj.setName("Name");
+		dao.save(obj);
+
+		Map<String, List<String>> constraints = new HashMap<String, List<String>>();
+
+		constraints.put("otherObject.id", Arrays.asList("_null"));
+
+		// Nonsense field shouldn't work
+		assertEquals(1, dao.findByUriQuery(new ResultSetConstraint(constraints, 200)).getList().size());
 	}
 }
