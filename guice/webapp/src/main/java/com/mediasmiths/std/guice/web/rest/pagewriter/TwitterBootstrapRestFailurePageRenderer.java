@@ -232,10 +232,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 				{
 					final String name = (String) nameObj;
 
-					for (Object val : ListUtility.iterate(r.getAttribute(name)))
-					{
-						appendKeyValueListElement(sb, name, val);
-					}
+					appendKeyValueListElement(sb, name, r.getAttribute(name));
 				}
 			}
 			sb.append("</dl>\n");

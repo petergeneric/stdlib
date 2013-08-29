@@ -1,11 +1,12 @@
 package com.mediasmiths.std.crypto.digest;
 
-import java.util.*;
-import java.io.*;
-import com.mediasmiths.std.crypto.digest.impl.JCEDigester;
 import com.mediasmiths.std.crypto.digest.impl.CRC32Digester;
+import com.mediasmiths.std.crypto.digest.impl.JCEDigester;
 import com.mediasmiths.std.crypto.digest.impl.LengthDigester;
-import com.mediasmiths.std.util.ListUtility;
+
+import java.io.Serializable;
+import java.util.Arrays;
+import java.util.Comparator;
 
 /**
  * A number of different types of digest algorithm
@@ -174,7 +175,7 @@ public enum DigestAlgorithm {
 	 * @return The best algorithm (or null if no algorithm was specified)
 	 */
 	public static DigestAlgorithm getBest(boolean prioritiseSecure, DigestAlgorithm... algorithms) {
-		return getBest(prioritiseSecure, ListUtility.iterate(algorithms));
+		return getBest(prioritiseSecure, Arrays.asList(algorithms));
 	}
 
 

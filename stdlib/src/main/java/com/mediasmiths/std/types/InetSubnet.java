@@ -5,7 +5,6 @@ import java.io.*;
 import java.net.*;
 
 import com.mediasmiths.std.net.IpHelper;
-import com.mediasmiths.std.types.collections.ip.InetRangeIterator;
 
 /**
  * Represents an IPv4 network subnet (a combination of an IP address and a prefix. For example, 193.61.123.0/24 represents 193.61.123.1 to 193.61.123.254)<br />
@@ -13,7 +12,7 @@ import com.mediasmiths.std.types.collections.ip.InetRangeIterator;
  * 
  * 
  */
-public class InetSubnet implements Iterable<InetAddress>, Serializable {
+public class InetSubnet {
 	/**
 	 * 
 	 */
@@ -386,12 +385,4 @@ public class InetSubnet implements Iterable<InetAddress>, Serializable {
 		return IpHelper.ntoa(~this.mask);
 	}
 
-
-	/**
-	 * @see java.lang.Iterable#iterator()
-	 */
-	@Override
-	public Iterator<InetAddress> iterator() {
-		return new InetRangeIterator(getHostMin(), getHostMax());
-	}
 }

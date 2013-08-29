@@ -1,12 +1,6 @@
 package com.mediasmiths.std.util;
 
 import com.mediasmiths.std.types.HybridIterator;
-import com.mediasmiths.std.types.collections.IRestriction;
-import com.mediasmiths.std.types.collections.IterableIterable;
-import com.mediasmiths.std.types.collections.ListIt;
-import com.mediasmiths.std.types.collections.RangeIterableInteger;
-import com.mediasmiths.std.types.collections.RestrictIt;
-import com.mediasmiths.std.types.collections.restrictions.NotNullRestriction;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -50,12 +44,6 @@ public class ListUtility
 			list.add(item);
 		}
 		return list;
-	}
-
-
-	public static RangeIterableInteger range(int min, int max)
-	{
-		return new RangeIterableInteger(min, max);
 	}
 
 
@@ -274,39 +262,6 @@ public class ListUtility
 	}
 
 
-	public static <T> Enumeration<T> enumeration(final T[] items)
-	{
-		return new ListIt<T>(items);
-	}
-
-
-	public static <T> Enumeration<T> enumeration(final Collection<T> items)
-	{
-		return new ListIt<T>(new ArrayList<T>(items));
-	}
-
-
-	public static <T> Enumeration<T> enumeration(final List<T> items)
-	{
-		return new ListIt<T>(items);
-	}
-
-
-	public static <T> ListIt<T> iterate(final T... items)
-	{
-		return new ListIt<T>(items);
-	}
-
-
-	public static <T> Iterable<T> iterate(final Iterable<T>... items)
-	{
-		if (items.length == 1)
-			return items[0];
-		else
-			return new IterableIterable<T>(items);
-	}
-
-
 	public static <T> HybridIterator<T> iterate(final Iterator<T> items)
 	{
 		return new HybridIterator<T>(items);
@@ -316,27 +271,6 @@ public class ListUtility
 	public static <T> HybridIterator<T> iterate(final Enumeration<T> items)
 	{
 		return new HybridIterator<T>(items);
-	}
-
-
-	public static <T> Iterable<T> notnull(final Iterable<T> items)
-	{
-		return restrict(items, new NotNullRestriction<T>());
-	}
-
-
-	public static <T> Iterable<T> restrict(final Iterable<T> items, final IRestriction<T> r)
-	{
-		if (items instanceof RestrictIt)
-		{
-			((RestrictIt<T>) items).addRestriction(r);
-
-			return items;
-		}
-		else
-		{
-			return new RestrictIt<T>(items, r);
-		}
 	}
 
 

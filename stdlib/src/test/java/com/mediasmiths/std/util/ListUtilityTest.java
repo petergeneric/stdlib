@@ -1,12 +1,15 @@
 package com.mediasmiths.std.util;
 
+import org.junit.Test;
+
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
-import org.junit.Test;
-
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class ListUtilityTest {
 	@Test
@@ -132,29 +135,5 @@ public class ListUtilityTest {
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertEquals(list, ListUtility.last(list, 10));
-	}
-
-
-	@Test
-	public void testRangeZeroZeroIsSizeOne() {
-		List<Integer> list = ListUtility.list(ListUtility.range(0, 0));
-
-		assertEquals(Arrays.asList(0), list);
-	}
-
-
-	@Test
-	public void testDecreasingRangeIsCorrect() {
-		List<Integer> list = ListUtility.list(ListUtility.range(0, -1));
-
-		assertEquals(Arrays.asList(0, -1), list);
-	}
-
-
-	@Test
-	public void testIncreasingRangeIsCorrect() {
-		List<Integer> list = ListUtility.list(ListUtility.range(1, 3));
-
-		assertEquals(Arrays.asList(1, 2, 3), list);
 	}
 }
