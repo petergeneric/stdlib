@@ -2,7 +2,6 @@ package com.mediasmiths.std.io;
 
 import com.mediasmiths.std.system.exec.Exec;
 import com.mediasmiths.std.system.exec.Execed;
-import com.mediasmiths.std.types.SpeedyString;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
@@ -86,7 +85,7 @@ public class FileHelper {
 				chars[i] = safeChar;
 		}
 
-		return SpeedyString.fastAllocate(chars);
+		return String.valueOf(chars);
 	}
 
 

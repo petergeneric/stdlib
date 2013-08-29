@@ -1,7 +1,5 @@
 package com.mediasmiths.std.threading;
 
-import com.mediasmiths.std.config.annotation.Creatable;
-
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
 
@@ -10,7 +8,6 @@ import java.util.concurrent.TimeUnit;
  * time.<br />
  * This class can be used to represent a duration without needing a dependency on Joda time
  */
-@Creatable(Long.class)
 public final class Timeout implements Comparable<Timeout>, Serializable
 {
 	/**

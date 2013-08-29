@@ -4,7 +4,6 @@ import java.util.*;
 import java.io.*;
 import java.net.*;
 
-import com.mediasmiths.std.config.annotation.Creatable;
 import com.mediasmiths.std.net.IpHelper;
 import com.mediasmiths.std.types.collections.ip.InetRangeIterator;
 
@@ -14,7 +13,6 @@ import com.mediasmiths.std.types.collections.ip.InetRangeIterator;
  * 
  * 
  */
-@Creatable(String.class)
 public class InetSubnet implements Iterable<InetAddress>, Serializable {
 	/**
 	 * 

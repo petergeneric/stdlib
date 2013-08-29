@@ -1,8 +1,7 @@
 package com.mediasmiths.std.crypto.keystore;
 
-import java.io.*;
-
-import com.mediasmiths.std.config.annotation.Optional;
+import java.io.File;
+import java.io.Serializable;
 
 /**
  * <p>
@@ -19,18 +18,10 @@ import com.mediasmiths.std.config.annotation.Optional;
  * 
  */
 public class Keystore implements Serializable {
-
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 
 	public File file;
-
-	@Optional
 	public String password = "";
-
-	@Optional
 	public String type = "JKS";
 
 

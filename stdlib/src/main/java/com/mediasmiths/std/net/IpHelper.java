@@ -1,10 +1,16 @@
 package com.mediasmiths.std.net;
 
-import java.net.*;
-import java.util.*;
-
-import com.mediasmiths.std.io.FileHelper;
 import org.apache.log4j.Logger;
+
+import java.net.Inet4Address;
+import java.net.Inet6Address;
+import java.net.InetAddress;
+import java.net.NetworkInterface;
+import java.net.SocketException;
+import java.net.UnknownHostException;
+import java.util.Enumeration;
+import java.util.List;
+import java.util.Vector;
 
 /*
  * <p> Title: Ip Helper </p>
@@ -21,15 +27,6 @@ import org.apache.log4j.Logger;
 public class IpHelper {
 	private static final Logger log = Logger.getLogger(IpHelper.class);
 
-	private static final String[] addressResolvers = new String[] {
-			// TODO provide URLs that, when fetched, return plain text with the client IP address
-		};
-
-	/**
-	 * Hostnames which are used in the hasDNS heuristic test. If none of these resolve then it is assumed the machine has no access to an internet-aware DNS server
-	 */
-	private static final String[] dnsHeuristicHosts = new String[] { "news.bbc.co.uk", "www.google.com", "www.microsoft.com",
-	"www.archive.org" };
 
 	/**
 	 * The "Quad Zero" IPv4 address: <code>0.0.0.0</code>
@@ -49,96 +46,6 @@ public class IpHelper {
 
 	// Prevent instantiation
 	private IpHelper() {
-	}
-
-	private static InetAddress _cachedPublicIp = null;
-
-
-	public static InetAddress guessPublicAddress() {
-		return guessPublicAddress(true);
-	}
-
-
-	/**
-	 * Determines whether this machine is currently able to resolve DNS queries for internet sites<br />
-	 * This uses a heuristic which attempts to lookup a number of domain names; if none of them can be resolved then it is assumed DNS is not available
-	 * 
-	 * @return
-	 */
-	public static boolean hasInternetDNS() {
-		int attempts = 0;
-		int failures = 0;
-
-		for (String hostname : dnsHeuristicHosts) {
-			try {
-				attempts++;
-				InetAddress.getByName(hostname);
-			}
-			catch (Throwable e) {
-				failures++;
-			}
-		}
-
-		return failures < attempts;
-	}
-
-
-	public static InetAddress guessPublicAddress(boolean allowCache) {
-		// Allow the Public IP address to be statically assigned (in case the public ip address guessing is incorrect)
-		if (System.getenv("PUBLIC_IP_ADDRESS") != null) {
-			try {
-				return InetAddress.getByName(System.getenv("PUBLIC_IP_ADDRESS"));
-			}
-			catch (Throwable t) {
-				log.debug("[IpHelper] {guessPublicAddress} Error using static public ip guess. Error: " + t.getMessage(), t);
-				return null;
-			}
-		}
-
-		if (allowCache && _cachedPublicIp != null)
-			return _cachedPublicIp;
-
-		if (hasInternetDNS()) {
-			InetAddress addr = null;
-
-			for (String resolver : addressResolvers) {
-				try {
-					if (addr == null)
-						addr = guessAddress(resolver);
-				}
-				catch (Throwable t) {
-					log.debug("[IpHelper] {guessPublicAddress} Error contacting IP resolver(s): " + t.getMessage(), t);
-					addr = null;
-				}
-			}
-
-			if (allowCache)
-				_cachedPublicIp = addr;
-			return addr;
-		}
-		else {
-			log.warn("[IpHelper] {guessPublicAddress} No Internet DNS. Private network? Returning local IP");
-			return IpHelper.getLocalIpAddress();
-		}
-	}
-
-
-	private static InetAddress guessAddress(String resolver) throws RuntimeException {
-		try {
-			URL url = new URL(resolver);
-
-			URLConnection conn = url.openConnection();
-			conn.setConnectTimeout(1000);
-			conn.setReadTimeout(1000);
-
-			String s = FileHelper.cat(conn.getInputStream());
-
-			return InetAddress.getByName(s);
-		}
-		catch (Throwable t) {
-			log.error("[IpHelper] {guessAddress} Error contacting IP resolver: " + t.getMessage(), t);
-			return null;
-		}
 	}
 
 
