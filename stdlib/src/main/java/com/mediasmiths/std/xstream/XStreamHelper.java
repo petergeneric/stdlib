@@ -1,7 +1,6 @@
 package com.mediasmiths.std.xstream;
 
 import com.mediasmiths.std.types.BooleanMessage;
-import com.mediasmiths.std.xstream.serialisers.ISO8601CalendarConverter;
 import com.mediasmiths.std.xstream.serialisers.InetAddressConverter;
 import com.mediasmiths.std.xstream.serialisers.URIConverter;
 import com.thoughtworks.xstream.XStream;
@@ -157,7 +156,6 @@ public class XStreamHelper {
 			if (registerStandardTypeConverters) {
 				xs.registerConverter(new URIConverter());
 				xs.registerConverter(new InetAddressConverter());
-				xs.registerConverter(new ISO8601CalendarConverter());
 			}
 
 			xs.setNoObjectGraph(noObjectGraph);
