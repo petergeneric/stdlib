@@ -2,7 +2,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.mediasmiths.std.guice</groupId>
+	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-thymeleaf</artifactId>
 	<version>4.0.1-SNAPSHOT</version>
 	<packaging>jar</packaging>
@@ -11,14 +11,14 @@
 	<description>stdlib guice thymeleaf webapp</description>
 	
 	<parent>
-		<groupId>com.mediasmiths.std.guice</groupId>
+		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
 		<version>4.0.1-SNAPSHOT</version>
 	</parent>
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.mediasmiths.std.guice</groupId>
+			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-webapp</artifactId>
 			<version>${project.version}</version>
 		</dependency>

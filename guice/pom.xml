@@ -1,20 +1,20 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>com.mediasmiths.std.guice</groupId>
+	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-parent</artifactId>
 	<version>4.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 	
-	<name>mediasmiths stdlib guice parent</name>
-	<description>Mediasmiths Standard Library Guice (Parent Package)</description>
+	<name>application framework guice modules parent</name>
+	<description>Application Framework Guice Modules (Parent Package)</description>
 	
 	<properties>
 		<guice.version>3.1.2</guice.version>
 	</properties>
 
 	<parent>
-		<groupId>com.mediasmiths.std</groupId>
+		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
 		<version>4.0.1-SNAPSHOT</version>
 	</parent>
@@ -22,7 +22,7 @@
 	<dependencyManagement>
 		<dependencies>
 			<dependency>
-				<groupId>com.mediasmiths.std</groupId>
+				<groupId>com.peterphi.std</groupId>
 				<artifactId>stdlib</artifactId>
 				<version>${project.version}</version>
 			</dependency>
@@ -31,7 +31,7 @@
 	
 	<dependencies>
 		<dependency>
-			<groupId>com.mediasmiths.std</groupId>
+			<groupId>com.peterphi.std</groupId>
 			<artifactId>stdlib</artifactId>
 			<version>${project.version}</version>
 		</dependency>

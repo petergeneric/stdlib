@@ -1,13 +1,36 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<groupId>com.mediasmiths.std</groupId>
+	<parent>
+		<groupId>org.sonatype.oss</groupId>
+		<artifactId>oss-parent</artifactId>
+		<version>7</version>
+	</parent>
+	
+	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
 	<version>4.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
-	<name>mediasmiths stdlib parent</name>
-	<description>Mediasmiths Standard Library (Parent Package)</description>
+	<name>application framework parent</name>
+	<description>Application Framework Parent Package</description>
+	<url>https://github.com/petergeneric/stdlib/wiki</url>
+	
+	
+	<licenses>
+		<license>
+			<name>MIT</name>
+			<url>https://github.com/petergeneric/stdlib/blob/master/LICENSE</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<developers>
+		<developer>
+			<id>peter</id>
+			<name>Peter</name>
+		</developer>
+	</developers>
 	
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -15,9 +38,9 @@
 	</properties>
 		
 	<scm>
-		<connection>scm:git:git@github.com:MediasmithsInternational/mediasmiths-stdlib.git</connection>
-		<developerConnection>scm:git:git@github.com:MediasmithsInternational/mediasmiths-stdlib.git</developerConnection>
-		<url>scm:git:git@github.com:MediasmithsInternational/mediasmiths-stdlib.git</url>
+		<connection>scm:git:git@github.com:petergeneric/stdlib.git</connection>
+		<developerConnection>scm:git:git@github.com:petergeneric/stdlib.git</developerConnection>
+		<url>scm:git:git@github.com:petergeneric/stdlib.git</url>
 		<tag>HEAD</tag>
   </scm>
 		
@@ -30,16 +53,6 @@
 			</releases>
 			<snapshots>
 				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>eclipselink</id>
-			<url>http://download.eclipse.org/rt/eclipselink/maven.repo</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>false</enabled>
 			</snapshots>
 		</repository>
 	</repositories>
