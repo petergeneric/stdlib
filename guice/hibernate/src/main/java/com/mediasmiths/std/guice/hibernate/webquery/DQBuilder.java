@@ -19,16 +19,20 @@ public class DQBuilder
 	@Inject
 	DQRestrictionFunctionRegistry dqRestrictionFunctionRegistry;
 
+
 	/**
 	 * For the given constraints and base type generate the dynamic query which is backed by a Criteria object.
+	 *
 	 * @param constraints
 	 * @param clazz
+	 * @param baseCriteria
+	 *
 	 * @return
 	 */
-	public DQuery buildQueryForUriQuery(final ResultSetConstraint constraints, final Class<?> clazz)
+	public DQuery buildQueryForUriQuery(final ResultSetConstraint constraints, final Class<?> clazz, final Criteria baseCriteria)
 	{
 		List<RestrictionFunction> functions = dqRestrictionFunctionRegistry.getFunctions();
-		DQuery query = new DQuery(dqEntityBuilder.createEntity(clazz));
+		DQuery query = createQuery(clazz, baseCriteria);
 		DQCriteriaConstraintDTOMap dqCriteriaConstraintDTOMap = new DQCriteriaConstraintDTOMap();
 
 		//Build up the Query param to Criteria DTO Map
@@ -41,7 +45,6 @@ public class DQBuilder
 					function.addRestriction(key, queryParamValue, dqCriteriaConstraintDTOMap);
 				}
 			}
-
 		}
 
 		//modify query from the built up Map
@@ -49,7 +52,9 @@ public class DQBuilder
 		{
 			function.executeChanges(query, dqCriteriaConstraintDTOMap);
 		}
+
 		Criteria criteria = query.getCriteria();
+
 		if (!constraints.getOrderings().isEmpty())
 		{
 			for (Order order : constraints.getOrderings())
@@ -67,15 +72,23 @@ public class DQBuilder
 		return query;
 	}
 
+
 	/**
 	 * create a dynamic query object for the specified Entity class
+	 *
 	 * @param clazz
+	 * @param baseCriteria
+	 * 		the base criteria to add restrictions and joins to (optional)
+	 *
 	 * @return
 	 */
-	public DQuery createQuery(final Class<?> clazz)
+	public DQuery createQuery(final Class<?> clazz, Criteria baseCriteria)
 	{
-		DQuery query = new DQuery(dqEntityBuilder.createEntity(clazz));
-		return query;
-	}
+		final DQEntity entity = dqEntityBuilder.createEntity(clazz);
 
+		if (baseCriteria != null)
+			return new DQuery(entity, baseCriteria);
+		else
+			return new DQuery(entity, entity.createCriteria());
+	}
 }

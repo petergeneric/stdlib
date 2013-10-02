@@ -2,8 +2,10 @@ package com.mediasmiths.std.guice.database.dao;
 
 import com.mediasmiths.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.mediasmiths.std.guice.hibernate.webquery.ResultSetConstraint;
+import org.hibernate.Criteria;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -29,7 +31,9 @@ public interface Dao<T, ID extends Serializable>
 	 * @param constraints
 	 *
 	 * @return
+	 * @deprecated  use findbyUriQuery instead
 	 */
+	@Deprecated
 	public List<T> getConstraintResults(ResultSetConstraint constraints);
 
 	/**
@@ -40,6 +44,16 @@ public interface Dao<T, ID extends Serializable>
 	 * @return
 	 */
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints);
+
+	/**
+	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
+	 *
+	 * @param constraints
+	 * @param base the base criteria to use (the constraints will be ANDed with this Criteria
+	 *
+	 * @return
+	 */
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints,Criteria base);
 
 	/**
 	 * Retrieve every object accessible through this DAO
@@ -68,6 +82,17 @@ public interface Dao<T, ID extends Serializable>
 	 * @return the item (or null if it is not present)
 	 */
 	public T getById(ID id);
+
+	/**
+	 * Query the database for all items with the given primary keys (convenience method for an ORred id query)
+	 *
+	 * @param ids
+	 * 		a collection (may be empty) of primary keys
+	 *
+	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller than
+	 *         <code>ids</code>
+	 */
+	public List<T> getByIds(final Collection<ID> ids);
 
 	/**
 	 * Delete an item by its primary key

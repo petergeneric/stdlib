@@ -15,8 +15,11 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -82,13 +85,15 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * Create a Dynamic query with the specified constraints
 	 *
 	 * @param constraints
+	 * @param baseCriteria
+	 * 		the base Criteria to add constraints to
 	 *
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	public DQuery createQueryFromConstraints(ResultSetConstraint constraints)
+	public DQuery createQueryFromConstraints(ResultSetConstraint constraints, Criteria baseCriteria)
 	{
-		return dqBuilder.buildQueryForUriQuery(constraints, this.clazz);
+		return dqBuilder.buildQueryForUriQuery(constraints, this.clazz, baseCriteria);
 	}
 
 
@@ -100,7 +105,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public DQuery createQuery()
 	{
-		return dqBuilder.createQuery(this.clazz);
+		return dqBuilder.createQuery(this.clazz, null);
 	}
 
 
@@ -113,11 +118,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 */
 	@Override
 	@Transactional(readOnly = true)
+	@Deprecated
 	public List<T> getConstraintResults(ResultSetConstraint constraints)
 	{
-		final Criteria criteria = createQueryFromConstraints(constraints).getCriteria();
+		ConstrainedResultSet<T> resultset = findByUriQuery(constraints);
 
-		return getList(criteria);
+		return resultset.getList();
 	}
 
 
@@ -125,9 +131,34 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints)
 	{
-		final List<T> results = getConstraintResults(constraints);
+		return findByUriQuery(constraints, null);
+	}
 
-		return new ConstrainedResultSet<T>(constraints, results);
+
+	@Transactional(readOnly = true)
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base)
+	{
+		final Criteria criteria = createQueryFromConstraints(constraints, base).getCriteria();
+
+		final List<T> results = getList(criteria);
+
+		return new ConstrainedResultSet<>(constraints, results);
+	}
+
+
+	protected String idProperty()
+	{
+		return getSessionFactory().getClassMetadata(clazz).getIdentifierPropertyName();
+	}
+
+
+	@Override
+	public List<T> getByIds(final Collection<ID> ids)
+	{
+		if (ids.isEmpty())
+			return new ArrayList<>();
+
+		return getList(createCriteria().add(Restrictions.in(idProperty(), ids)));
 	}
 
 

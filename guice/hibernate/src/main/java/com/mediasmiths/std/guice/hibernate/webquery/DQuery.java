@@ -29,16 +29,10 @@ public class DQuery
 	private final Map<String, DQJoin> joins = new HashMap<String, DQJoin>();
 
 
-	/**
-	 * Map of
-	 *
-	 * @param entity
-	 */
-
-	public DQuery(DQEntity entity)
+	public DQuery(DQEntity entity, Criteria criteria)
 	{
 		this.entity = entity;
-		this.criteria = entity.createCriteria();
+		this.criteria = criteria;
 	}
 
 
@@ -196,7 +190,9 @@ public class DQuery
 		final String alias = field.replace('.', '_');
 
 		log.trace("Create alias '" + alias + "' for " + field);
-		criteria.createAlias(field, alias, JoinType.LEFT_OUTER_JOIN); // We know we've joined to the parent so we must be able to join to one level deeper
+		criteria.createAlias(field,
+		                     alias,
+		                     JoinType.LEFT_OUTER_JOIN); // We know we've joined to the parent so we must be able to join to one level deeper
 
 		final DQJoin join = new DQJoin(field, alias, childField);
 
