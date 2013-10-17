@@ -7,6 +7,7 @@ import com.mediasmiths.std.guice.apploader.GuiceSetup;
 import com.mediasmiths.std.guice.common.JAXBModule;
 import com.mediasmiths.std.guice.common.Log4JModule;
 import com.mediasmiths.std.guice.common.ServicePropertiesModule;
+import com.mediasmiths.std.guice.common.auth.AuthConstraintInterceptorModule;
 import com.mediasmiths.std.guice.common.converter.PropertiesTypeConversionModule;
 import com.mediasmiths.std.guice.common.retry.module.RetryModule;
 import com.mediasmiths.std.guice.common.shutdown.ShutdownModule;
@@ -27,12 +28,14 @@ public class GuiceInjectorBootstrap
 {
 	private static final Logger log = Logger.getLogger(GuiceInjectorBootstrap.class);
 
+
 	public static Injector createInjector()
 	{
 		final PropertyFile properties = discoverProperties();
 
 		return createInjector(properties);
 	}
+
 
 	private static PropertyFile discoverProperties()
 	{
@@ -54,6 +57,7 @@ public class GuiceInjectorBootstrap
 		return loadAllProperties(fileNames);
 	}
 
+
 	private static PropertyFile loadAllProperties(final List<String> files)
 	{
 		final PropertyFile file = new PropertyFile();
@@ -74,6 +78,7 @@ public class GuiceInjectorBootstrap
 		return file;
 	}
 
+
 	/**
 	 * Create an Injector by loading service.properties and then reading the guice.bootstrap.class from it<br />
 	 * This is the entrypoint for the GuiceRegistry
@@ -86,6 +91,7 @@ public class GuiceInjectorBootstrap
 
 		return createInjector(properties, setup);
 	}
+
 
 	/**
 	 * Creates an Injector by taking a preloaded service.properties and a pre-constructed GuiceSetup
@@ -101,6 +107,7 @@ public class GuiceInjectorBootstrap
 
 		return createInjector(properties, setup);
 	}
+
 
 	/**
 	 * Creates an Injector by taking a preloaded service.properties and a pre-constructed GuiceSetup
@@ -146,6 +153,7 @@ public class GuiceInjectorBootstrap
 		}
 	}
 
+
 	private static GuiceSetup getSetup(PropertyFile properties)
 	{
 		final Class<?> clazz = properties.getClass("guice.bootstrap.class", null);
@@ -162,6 +170,7 @@ public class GuiceInjectorBootstrap
 			throw new RuntimeException("Error loading guice.bootstrap.class " + clazz + ": " + e.getMessage(), e);
 		}
 	}
+
 
 	private static void cleanup(ShutdownModule shutdown)
 	{
