@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-hibernate</artifactId>
-	<version>4.0.1-SNAPSHOT</version>
+	<version>5.0.0</version>
 	<packaging>jar</packaging>
 	
 	<name>stdlib guice hibernate</name>
@@ -20,7 +20,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>4.0.1-SNAPSHOT</version>
+		<version>5.0.0</version>
 	</parent>
 	
 	<dependencies>
