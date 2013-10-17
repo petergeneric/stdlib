@@ -12,7 +12,7 @@
 
 	<servlet>
 		<servlet-name>Resteasy</servlet-name>
-		<servlet-class>com.mediasmiths.std.guice.web.rest.resteasy.ResteasyDispatcher</servlet-class>
+		<servlet-class>com.peterphi.std.guice.web.rest.resteasy.ResteasyDispatcher</servlet-class>
 	</servlet>
 
 	<context-param>
