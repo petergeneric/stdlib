@@ -8,19 +8,22 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
-import java.util.Collection;
 
 @Entity
 class MyObject
 {
-	private Long id;
-	private String name;
-	private MyOtherObject otherObject;
-	private Collection<MyObject> children;
-
-
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
+	private Long id;
+
+	@Column(name = "obj_name")
+	private String name;
+
+	@ManyToOne(optional = true, fetch = FetchType.EAGER)
+	@JoinColumn(name = "other_object_id", nullable = true)
+	private MyOtherObject otherObject;
+
+
 	public Long getId()
 	{
 		return id;
@@ -33,7 +36,6 @@ class MyObject
 	}
 
 
-	@Column(name = "obj_name")
 	public String getName()
 	{
 		return name;
@@ -46,8 +48,6 @@ class MyObject
 	}
 
 
-	@ManyToOne(optional = true, fetch = FetchType.EAGER)
-	@JoinColumn(name = "other_object_id", nullable = true)
 	public MyOtherObject getOtherObject()
 	{
 		return otherObject;
@@ -58,5 +58,4 @@ class MyObject
 	{
 		this.otherObject = otherObject;
 	}
-
 }

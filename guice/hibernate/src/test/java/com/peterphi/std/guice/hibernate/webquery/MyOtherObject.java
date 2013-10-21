@@ -12,13 +12,18 @@ import javax.persistence.ManyToOne;
 @Entity
 class MyOtherObject
 {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	@Column(name = "obj_name")
 	private String name;
+
+	@ManyToOne(optional = true, fetch = FetchType.EAGER)
+	@JoinColumn(name = "parent_id", nullable = true)
 	private MyObject parent;
 
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId()
 	{
 		return id;
@@ -31,7 +36,6 @@ class MyOtherObject
 	}
 
 
-	@Column(name = "obj_name")
 	public String getName()
 	{
 		return name;
@@ -44,8 +48,6 @@ class MyOtherObject
 	}
 
 
-	@ManyToOne(optional = true, fetch = FetchType.EAGER)
-	@JoinColumn(name = "parent_id", nullable = true)
 	public MyObject getParent()
 	{
 		return parent;

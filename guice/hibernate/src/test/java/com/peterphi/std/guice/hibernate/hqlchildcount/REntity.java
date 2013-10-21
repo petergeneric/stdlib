@@ -12,13 +12,18 @@ import javax.persistence.ManyToOne;
 @Entity(name = "R")
 class REntity
 {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
+	@JoinColumn(nullable = false)
 	private QEntity parent;
+
+	@Column(nullable = false)
 	private boolean flag;
 
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId()
 	{
 		return id;
@@ -31,8 +36,6 @@ class REntity
 	}
 
 
-	@ManyToOne(optional = false, fetch = FetchType.LAZY)
-	@JoinColumn(nullable = false)
 	public QEntity getParent()
 	{
 		return parent;
@@ -45,7 +48,6 @@ class REntity
 	}
 
 
-	@Column(nullable = false)
 	public boolean isFlag()
 	{
 		return flag;

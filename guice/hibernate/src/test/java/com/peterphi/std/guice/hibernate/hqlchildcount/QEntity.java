@@ -13,13 +13,17 @@ import java.util.List;
 @Entity(name = "Q")
 class QEntity
 {
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
+
+	@Column(nullable = false)
 	private Integer capacity;
+
+	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 	private List<REntity> children;
 
 
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId()
 	{
 		return id;
@@ -32,7 +36,6 @@ class QEntity
 	}
 
 
-	@Column(nullable = false)
 	public Integer getCapacity()
 	{
 		return capacity;
@@ -45,7 +48,6 @@ class QEntity
 	}
 
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 	public List<REntity> getChildren()
 	{
 		return children;
