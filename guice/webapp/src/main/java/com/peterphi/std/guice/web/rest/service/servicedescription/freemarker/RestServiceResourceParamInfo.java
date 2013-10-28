@@ -42,7 +42,7 @@ public class RestServiceResourceParamInfo
 	{
 		final String pkg = clazz.getPackage() == null ? null : clazz.getPackage().getName();
 
-		if (pkg == null || pkg.startsWith("java.lang") || pkg.startsWith("java.util"))
+		if (clazz == type && (pkg == null || pkg.startsWith("java.lang") || pkg.startsWith("java.util")))
 			return clazz.getSimpleName();
 		else
 			return type.toString();
@@ -137,7 +137,9 @@ public class RestServiceResourceParamInfo
 
 		if (doc != null)
 		{
-			if (!StringUtils.isEmpty(doc.value()))
+			if (doc.lines().length != 0)
+				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
+			else if (!StringUtils.isEmpty(doc.value()))
 				return doc.value();
 			else if (!StringUtils.isEmpty(doc.href()))
 				return "See " + doc.href();

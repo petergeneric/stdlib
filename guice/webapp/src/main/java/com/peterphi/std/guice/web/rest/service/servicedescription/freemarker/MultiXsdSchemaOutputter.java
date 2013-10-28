@@ -10,7 +10,7 @@ import java.util.Map;
 
 class MultiXsdSchemaOutputter extends SchemaOutputResolver
 {
-	private final Map<String, StringWriter> schemas = new HashMap<String, StringWriter>();
+	private final Map<String, StringWriter> schemas = new HashMap<>();
 
 	public Result createOutput(String namespaceURI, String suggestedFileName) throws IOException
 	{

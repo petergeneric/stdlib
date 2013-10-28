@@ -24,11 +24,13 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	private final RestServiceInfo service;
 	private final Method method;
 
+
 	public RestServiceResourceInfo(final RestServiceInfo service, final Method method)
 	{
 		this.service = service;
 		this.method = method;
 	}
+
 
 	public static boolean isResource(Method method)
 	{
@@ -48,6 +50,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		return method.isAnnotationPresent(Deprecated.class);
 	}
 
+
 	public String getHttpMethod()
 	{
 		for (Annotation annotation : method.getAnnotations())
@@ -61,14 +64,16 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		return "UNKNOWN";
 	}
 
+
 	public String getMethodString()
 	{
 		return method.toGenericString();
 	}
 
+
 	public List<RestServiceResourceParamInfo> getParameters()
 	{
-		List<RestServiceResourceParamInfo> list = new ArrayList<RestServiceResourceParamInfo>();
+		List<RestServiceResourceParamInfo> list = new ArrayList<>();
 
 		Annotation[][] allAnnotations = method.getParameterAnnotations();
 		Type[] types = method.getGenericParameterTypes();
@@ -84,6 +89,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		return list;
 	}
 
+
 	public RestServiceResourceParamInfo getRequestEntity()
 	{
 		for (RestServiceResourceParamInfo param : getParameters())
@@ -92,6 +98,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 		return null;
 	}
+
 
 	@Override
 	public int compareTo(final RestServiceResourceInfo that)
@@ -104,10 +111,12 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		                      .result();
 	}
 
+
 	public String getPath()
 	{
 		return concat(service.getPath(), getLocalPath());
 	}
+
 
 	private static String concat(String a, String b)
 	{
@@ -127,6 +136,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			return a + "/" + b;
 	}
 
+
 	public String getLocalPath()
 	{
 		Path path = method.getAnnotation(Path.class);
@@ -137,10 +147,12 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			return "/";
 	}
 
+
 	public Class<?> getReturnType()
 	{
 		return method.getReturnType();
 	}
+
 
 	public String getConsumes()
 	{
@@ -151,6 +163,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		else
 			return StringUtils.join(consumes.value(), ", ");
 	}
+
 
 	public String getProduces()
 	{
@@ -169,7 +182,9 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 		if (doc != null)
 		{
-			if (!StringUtils.isEmpty(doc.value()))
+			if (doc.lines().length != 0)
+				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
+			else if (!StringUtils.isEmpty(doc.value()))
 				return doc.value();
 			else if (!StringUtils.isEmpty(doc.href()))
 				return doc.href();
@@ -178,13 +193,14 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		return "";
 	}
 
+
 	public List<String> getSeeAlsoURLs()
 	{
 		Doc doc = method.getAnnotation(Doc.class);
 
 		if (doc != null)
 		{
-			List<String> hrefs = new ArrayList<String>();
+			List<String> hrefs = new ArrayList<>();
 
 			if (!StringUtils.isEmpty(doc.href()))
 				hrefs.add(doc.href());

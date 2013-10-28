@@ -16,20 +16,24 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 {
 	private final Class<?> clazz;
 
+
 	public RestServiceInfo(RestResource resource)
 	{
 		this.clazz = resource.getResourceClass();
 	}
+
 
 	public boolean isDeprecated()
 	{
 		return clazz.isAnnotationPresent(Deprecated.class);
 	}
 
+
 	public String getInterfaceName()
 	{
 		return clazz.getSimpleName();
 	}
+
 
 	public String getPath()
 	{
@@ -38,9 +42,10 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 		return path.value();
 	}
 
+
 	public List<RestServiceResourceInfo> getResources()
 	{
-		final List<RestServiceResourceInfo> list = new ArrayList<RestServiceResourceInfo>();
+		final List<RestServiceResourceInfo> list = new ArrayList<>();
 
 		for (Method method : clazz.getMethods())
 		{
@@ -53,13 +58,16 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 		return list;
 	}
 
+
 	public String getDescription()
 	{
 		Doc doc = clazz.getAnnotation(Doc.class);
 
 		if (doc != null)
 		{
-			if (!StringUtils.isEmpty(doc.value()))
+			if (doc.lines().length != 0)
+				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
+			else if (!StringUtils.isEmpty(doc.value()))
 				return doc.value();
 			else if (!StringUtils.isEmpty(doc.href()))
 				return doc.href();
@@ -68,13 +76,14 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 		return "";
 	}
 
+
 	public List<String> getSeeAlsoURLs()
 	{
 		Doc doc = clazz.getAnnotation(Doc.class);
 
 		if (doc != null)
 		{
-			List<String> hrefs = new ArrayList<String>();
+			List<String> hrefs = new ArrayList<>();
 
 			if (!StringUtils.isEmpty(doc.href()))
 				hrefs.add(doc.href());
@@ -89,9 +98,10 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 		}
 	}
 
+
 	public static List<RestServiceInfo> getAll(Iterable<RestResource> resources)
 	{
-		List<RestServiceInfo> list = new ArrayList<RestServiceInfo>();
+		List<RestServiceInfo> list = new ArrayList<>();
 
 		for (RestResource resource : resources)
 			list.add(new RestServiceInfo(resource));
@@ -100,6 +110,7 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 
 		return list;
 	}
+
 
 	@Override
 	public int compareTo(final RestServiceInfo that)

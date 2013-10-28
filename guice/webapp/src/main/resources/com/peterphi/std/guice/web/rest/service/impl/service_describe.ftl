@@ -42,7 +42,7 @@ ${bootstrap.CSS}
     </div>
 </#if>
 
-    <p>${service.description}</p>
+    <p>${service.description?html?replace('\n', '<br/>')}</p>
 
 <#if service.seeAlsoURLs?has_content>
     See also:
@@ -75,7 +75,7 @@ ${bootstrap.CSS}
         </div>
 	</#if>
 
-    <p>${resource.description?html}</p>
+    <p>${resource.description?html?replace('\n', '<br/>')}</p>
 
     <h5>Details</h5>
     <table class="table">
@@ -141,7 +141,7 @@ ${bootstrap.CSS}
                 <tr>
                     <td>${param.name?html}</td>
                     <td>${param.type?html}</td>
-                    <td>${param.description?html}
+                    <td>${param.description?html?replace('\n', '<br/>')}
 						<#if param.defaultValue?has_content>
                             <p>Default Value: ${param.defaultValue?html}</p>
 						</#if>
