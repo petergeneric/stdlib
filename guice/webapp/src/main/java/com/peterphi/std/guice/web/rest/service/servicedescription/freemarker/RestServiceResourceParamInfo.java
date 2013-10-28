@@ -11,6 +11,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
+import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
 
 public class RestServiceResourceParamInfo
@@ -20,6 +21,7 @@ public class RestServiceResourceParamInfo
 	private final Class<?> clazz;
 	private final Annotation[] annotations;
 
+
 	public RestServiceResourceParamInfo(RestServiceResourceInfo resource, Type type, final Annotation[] annotations)
 	{
 		if (type == null)
@@ -28,8 +30,13 @@ public class RestServiceResourceParamInfo
 		this.resource = resource;
 		this.type = type;
 		this.annotations = annotations;
-		this.clazz = (Class) type;
+
+		if (type instanceof ParameterizedType)
+			this.clazz = (Class) ((ParameterizedType) type).getRawType();
+		else
+			this.clazz = (Class) type;
 	}
+
 
 	public String getType()
 	{
@@ -41,10 +48,12 @@ public class RestServiceResourceParamInfo
 			return type.toString();
 	}
 
+
 	public Class<?> getDataType()
 	{
 		return clazz;
 	}
+
 
 	public String getName()
 	{
@@ -84,6 +93,7 @@ public class RestServiceResourceParamInfo
 		}
 	}
 
+
 	public String getDefaultValue()
 	{
 		DefaultValue annotation = getAnnotation(DefaultValue.class);
@@ -94,10 +104,12 @@ public class RestServiceResourceParamInfo
 			return null;
 	}
 
+
 	private boolean hasAnnotation(Class<? extends Annotation> test)
 	{
 		return getAnnotation(test) != null;
 	}
+
 
 	private boolean hasAnnotations(Class<? extends Annotation>... tests)
 	{
@@ -108,6 +120,7 @@ public class RestServiceResourceParamInfo
 		return false;
 	}
 
+
 	private <T extends Annotation> T getAnnotation(Class<T> search)
 	{
 		for (Annotation annotation : annotations)
@@ -116,6 +129,7 @@ public class RestServiceResourceParamInfo
 
 		return null;
 	}
+
 
 	public String getDescription()
 	{
@@ -131,6 +145,7 @@ public class RestServiceResourceParamInfo
 
 		return "";
 	}
+
 
 	@SuppressWarnings("unchecked")
 	public boolean isEntity()
