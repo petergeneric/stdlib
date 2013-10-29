@@ -6,9 +6,10 @@ import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.database.dao.Dao;
 import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.DQBuilder;
-import com.peterphi.std.guice.hibernate.webquery.DQuery;
 import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraint;
+import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -42,7 +43,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	private SessionFactory sessionFactory;
 
 	@Inject
-	DQBuilder dqBuilder;
+	QEntityFactory entityFactory;
 
 	protected Class<T> clazz;
 
@@ -91,21 +92,28 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	public DQuery createQueryFromConstraints(ResultSetConstraint constraints, Criteria baseCriteria)
+	public Criteria createCriteria(ResultSetConstraint constraints, Criteria baseCriteria)
 	{
-		return dqBuilder.buildQueryForUriQuery(constraints, this.clazz, baseCriteria);
+		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
+
+		builder.addAll(constraints.getParameters());
+
+		final Criteria criteria;
+
+		if (baseCriteria != null)
+			criteria = baseCriteria;
+		else
+			criteria = createCriteria();
+
+		builder.append(criteria);
+
+		return criteria;
 	}
 
 
-	/**
-	 * Create a dynamic query based on the Dao Entity type
-	 *
-	 * @return
-	 */
-	@Transactional(readOnly = true)
-	public DQuery createQuery()
+	public QEntity getQEntity()
 	{
-		return dqBuilder.createQuery(this.clazz, null);
+		return entityFactory.get(clazz);
 	}
 
 
@@ -138,7 +146,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base)
 	{
-		final Criteria criteria = createQueryFromConstraints(constraints, base).getCriteria();
+		final Criteria criteria = createCriteria(constraints, base);
 
 		final List<T> results = getList(criteria);
 

@@ -146,11 +146,12 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>2.5.1</version>
+				<version>3.1</version>
 				<configuration>
-					<source>${javalang.version}</source>
-					<target>${javalang.version}</target>
-					<encoding>${project.build.sourceEncoding}</encoding>
+			       <source>${javalang.version}</source>
+			       <target>${javalang.version}</target>
+			       <testSource>${javalang.version}</testSource>
+			       <testTarget>${javalang.version}</testTarget>
 				</configuration>
 			</plugin>
 		</plugins>

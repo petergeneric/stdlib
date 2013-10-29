@@ -19,6 +19,9 @@ class MyObject
 	@Column(name = "obj_name")
 	private String name;
 
+	@Column(name = "deprecated")
+	private boolean deprecated = false;
+
 	@ManyToOne(optional = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "other_object_id", nullable = true)
 	private MyOtherObject otherObject;
@@ -45,6 +48,18 @@ class MyObject
 	public void setName(final String name)
 	{
 		this.name = name;
+	}
+
+
+	boolean isDeprecated()
+	{
+		return deprecated;
+	}
+
+
+	void setDeprecated(final boolean deprecated)
+	{
+		this.deprecated = deprecated;
 	}
 
 
