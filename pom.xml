@@ -9,7 +9,7 @@
 	
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
-	<version>5.0.1-SNAPSHOT</version>
+	<version>5.0.1</version>
 	<packaging>pom</packaging>
 
 	<name>application framework parent</name>
@@ -42,7 +42,7 @@
 		<connection>scm:git:git@github.com:petergeneric/stdlib.git</connection>
 		<developerConnection>scm:git:git@github.com:petergeneric/stdlib.git</developerConnection>
 		<url>scm:git:git@github.com:petergeneric/stdlib.git</url>
-		<tag>HEAD</tag>
+		<tag>stdlib-parent-5.0.1</tag>
   </scm>
 		
 	<repositories>
