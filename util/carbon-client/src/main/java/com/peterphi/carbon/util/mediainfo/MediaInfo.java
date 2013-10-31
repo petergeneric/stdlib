@@ -1,6 +1,7 @@
 package com.peterphi.carbon.util.mediainfo;
 
 import com.peterphi.carbon.type.XMLWrapper;
+import org.apache.commons.lang.StringUtils;
 import org.jdom2.Element;
 
 import java.util.ArrayList;
@@ -28,23 +29,55 @@ public class MediaInfo extends XMLWrapper
 
 	public List<MediaInfoTrack> getTracks()
 	{
-		List<MediaInfoTrack> tracks = new ArrayList<MediaInfoTrack>();
+		List<MediaInfoTrack> tracks = new ArrayList<>();
 
 		for (Element track : getFileElement().getChildren("track"))
-			tracks.add(new MediaInfoTrack(track));
+		{
+			MediaInfoTrack generic = new MediaInfoTrack(track);
+
+			if (StringUtils.equalsIgnoreCase(generic.getTrackType(), "video"))
+				tracks.add(new VideoTrack(track));
+			else if (StringUtils.equalsIgnoreCase(generic.getTrackType(), "audio"))
+				tracks.add(new AudioTrack(track));
+			else
+				tracks.add(generic);
+		}
 
 		return tracks;
 	}
 
 
-	public MediaInfoTrack getFirstVideoTrack()
+	public List<VideoTrack> getVideoTracks()
 	{
-		for (MediaInfoTrack track : getTracks())
-		{
-			if ("video".equalsIgnoreCase(track.getTrackType()))
-				return track;
-		}
+		List<VideoTrack> tracks = new ArrayList<>();
 
-		throw new RuntimeException("No track type=Video found in mediainfo output!");
+		for (MediaInfoTrack track : getTracks())
+			if (track instanceof VideoTrack)
+				tracks.add((VideoTrack) track);
+
+		return tracks;
+	}
+
+
+	public List<AudioTrack> getAudioTracks()
+	{
+		List<AudioTrack> tracks = new ArrayList<>();
+
+		for (MediaInfoTrack track : getTracks())
+			if (track instanceof AudioTrack)
+				tracks.add((AudioTrack) track);
+
+		return tracks;
+	}
+
+
+	public VideoTrack getFirstVideoTrack()
+	{
+		List<VideoTrack> tracks = getVideoTracks();
+
+		if (tracks.isEmpty())
+			throw new RuntimeException("Media has no video tracks!");
+		else
+			return tracks.get(0);
 	}
 }
