@@ -12,6 +12,13 @@ public class AudioTrack extends AVTrack
 
 
 	@Override
+	protected long getSamples()
+	{
+		return Long.parseLong(getElement("Sample_count", 0).getText());
+	}
+
+
+	@Override
 	public Framerate getRate()
 	{
 		final Element e = getElement("Sampling_rate", 0);

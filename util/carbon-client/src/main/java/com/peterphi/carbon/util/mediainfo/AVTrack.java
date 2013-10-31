@@ -1,6 +1,7 @@
 package com.peterphi.carbon.util.mediainfo;
 
 import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.SampleCount;
 import com.peterphi.std.types.Timecode;
 import org.jdom2.Element;
 
@@ -25,10 +26,51 @@ public abstract class AVTrack extends MediaInfoTrack
 		return Timecode.getInstance(frames, false, framerate);
 	}
 
+
+	/**
+	 * Get the file where this track can be found (or null if this information is not available)
+	 *
+	 * @return
+	 */
+	public String getSource()
+	{
+		final Element element = getElement("Source", 0);
+
+		if (element != null)
+			return element.getText();
+		else
+			return null;
+	}
+
+
+	/**
+	 * Get the track's Codec_ID field (or null if this information is not available)
+	 *
+	 * @return
+	 */
+	public String getCodecID()
+	{
+		final Element element = getElement("Codec_ID", 0);
+
+		if (element != null)
+			return element.getText();
+		else
+			return null;
+	}
+
+
+	protected abstract long getSamples();
+
 	public abstract Framerate getRate();
 
 
-	private long getDelayInMicroseconds()
+	public SampleCount getSampleCount()
+	{
+		return new SampleCount(getSamples(), getRate());
+	}
+
+
+	protected long getDelayInMicroseconds()
 	{
 		List<Element> delays = element.getChildren("Delay");
 

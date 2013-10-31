@@ -13,7 +13,7 @@ public class VideoTrack extends AVTrack
 	}
 
 
-	public String getFrameHeight()
+	public int getFrameHeight()
 	{
 		List<Element> heights = element.getChildren("Height");
 
@@ -22,7 +22,7 @@ public class VideoTrack extends AVTrack
 			String height = heights.get(0).getValue();
 
 			if (!height.isEmpty())
-				return height;
+				return Integer.parseInt(height);
 			else
 				throw new RuntimeException("Height not found");
 		}
@@ -31,7 +31,7 @@ public class VideoTrack extends AVTrack
 	}
 
 
-	public String getFrameWidth()
+	public int getFrameWidth()
 	{
 		List<Element> widths = element.getChildren("Width");
 
@@ -40,7 +40,7 @@ public class VideoTrack extends AVTrack
 			String width = widths.get(0).getValue();
 
 			if (!width.isEmpty())
-				return width;
+				return Integer.parseInt(width);
 			else
 				throw new RuntimeException("Width not found");
 		}
@@ -81,5 +81,12 @@ public class VideoTrack extends AVTrack
 		{
 			throw new IllegalArgumentException("Cannot parse Frame rate " + e.getText() + ": floating point not permitted");
 		}
+	}
+
+
+	@Override
+	protected long getSamples()
+	{
+		return Long.parseLong(getElement("Frame_count", 0).getText());
 	}
 }

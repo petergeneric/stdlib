@@ -24,7 +24,7 @@ public class MediaInfoTrack extends XMLWrapper
 	 *
 	 * @return
 	 */
-	public long getDuration()
+	public long getDurationMillis()
 	{
 		List<Element> durations = element.getChildren("Duration");
 
