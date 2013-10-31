@@ -1,14 +1,14 @@
 package com.peterphi.carbon.type.mutable;
 
 import com.peterphi.carbon.exception.CarbonBuildException;
-import com.peterphi.carbon.type.CarbonXMLWrapper;
+import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Document;
 import org.jdom2.Element;
 
 import java.util.ArrayList;
 import java.util.List;
 
-public class CarbonProject extends CarbonXMLWrapper
+public class CarbonProject extends XMLWrapper
 {
 	public CarbonProject(Document doc)
 	{

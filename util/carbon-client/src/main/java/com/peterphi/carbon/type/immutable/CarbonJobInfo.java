@@ -1,13 +1,13 @@
 package com.peterphi.carbon.type.immutable;
 
-import com.peterphi.carbon.type.CarbonXMLWrapper;
+import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
 
 import com.peterphi.carbon.exception.CarbonBuildException;
 
-public class CarbonJobInfo extends CarbonXMLWrapper
+public class CarbonJobInfo extends XMLWrapper
 {
 	public CarbonJobInfo(Element element)
 	{

@@ -1,10 +1,9 @@
 package com.peterphi.carbon.type.mutable;
 
+import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Element;
 
-import com.peterphi.carbon.type.CarbonXMLWrapper;
-
-public class CarbonFTPSettings extends CarbonXMLWrapper
+public class CarbonFTPSettings extends XMLWrapper
 {
 
 	public final static String CARBON_FTP_SETTINGS_ELEMENT_NAME = "FTPSettings";

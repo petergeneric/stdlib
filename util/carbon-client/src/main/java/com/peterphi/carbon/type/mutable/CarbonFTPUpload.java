@@ -1,10 +1,9 @@
 package com.peterphi.carbon.type.mutable;
 
+import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Element;
 
-import com.peterphi.carbon.type.CarbonXMLWrapper;
-
-public class CarbonFTPUpload extends CarbonXMLWrapper
+public class CarbonFTPUpload extends XMLWrapper
 {
 
 	public static final String REMOTE_FTP_FILE_ATTRIBUTE = "RemoteFTPFile";

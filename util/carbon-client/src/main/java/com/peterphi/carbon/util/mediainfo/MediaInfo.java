@@ -1,28 +1,30 @@
 package com.peterphi.carbon.util.mediainfo;
 
+import com.peterphi.carbon.type.XMLWrapper;
+import org.jdom2.Element;
+
 import java.util.ArrayList;
 import java.util.List;
 
-import org.jdom2.Element;
-
-public class MediaInfo
+public class MediaInfo extends XMLWrapper
 {
-	private final Element root;
-
-	public MediaInfo(Element root)
+	public MediaInfo(Element element)
 	{
-		this.root = root;
+		super(element);
 	}
+
 
 	public String getMediaInfoVersion()
 	{
-		return root.getAttributeValue("version");
+		return element.getAttributeValue("version");
 	}
+
 
 	private Element getFileElement()
 	{
-		return root.getChild("File");
+		return element.getChild("File");
 	}
+
 
 	public List<MediaInfoTrack> getTracks()
 	{
@@ -33,6 +35,7 @@ public class MediaInfo
 
 		return tracks;
 	}
+
 
 	public MediaInfoTrack getFirstVideoTrack()
 	{

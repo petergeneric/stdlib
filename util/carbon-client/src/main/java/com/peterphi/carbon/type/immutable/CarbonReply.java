@@ -1,7 +1,7 @@
 package com.peterphi.carbon.type.immutable;
 
 import com.peterphi.carbon.exception.CarbonBuildException;
-import com.peterphi.carbon.type.CarbonXMLWrapper;
+import com.peterphi.carbon.type.XMLWrapper;
 import com.peterphi.carbon.type.mutable.CarbonProject;
 import org.apache.log4j.Logger;
 import org.jdom2.Attribute;
@@ -12,7 +12,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
-public class CarbonReply extends CarbonXMLWrapper
+public class CarbonReply extends XMLWrapper
 {
 	private static final Logger log = Logger.getLogger(CarbonReply.class);
 

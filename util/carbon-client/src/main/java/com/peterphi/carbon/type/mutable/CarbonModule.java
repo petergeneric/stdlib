@@ -1,9 +1,9 @@
 package com.peterphi.carbon.type.mutable;
 
-import com.peterphi.carbon.type.CarbonXMLWrapper;
+import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Element;
 
-public class CarbonModule extends CarbonXMLWrapper
+public class CarbonModule extends XMLWrapper
 {
 	private static final String MODULE_DATA_ELEMENT = "ModuleData";
 	private static final String PRESET_GUID = "PresetGUID";
