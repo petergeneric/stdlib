@@ -1,6 +1,6 @@
 package com.peterphi.carbon.util.mediainfo;
 
-import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.SampleCount;
 import com.peterphi.std.types.Timecode;
 import org.jdom2.Element;
@@ -17,13 +17,13 @@ public abstract class AVTrack extends MediaInfoTrack
 
 	public Timecode getDelay()
 	{
-		final Framerate framerate = getRate(); // get asset timebase
+		final Timebase timebase = getRate(); // get asset timebase
 		final long delayMicros = getDelayInMicroseconds(); // get delay in ms on asset
 
-		final long frames = framerate.resample(delayMicros, Framerate.HZ_1000000); // translate to frames
+		final long frames = timebase.resample(delayMicros, Timebase.HZ_1000000); // translate to frames
 
 		// Return the result as a timecode
-		return Timecode.getInstance(frames, false, framerate);
+		return Timecode.getInstance(frames, false, timebase);
 	}
 
 
@@ -61,7 +61,7 @@ public abstract class AVTrack extends MediaInfoTrack
 
 	protected abstract long getSamples();
 
-	public abstract Framerate getRate();
+	public abstract Timebase getRate();
 
 
 	public SampleCount getSampleCount()

@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
-import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.SampleCount;
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 public class SampleCountUserTypeTest
 {
-	private final SampleCount SC = new SampleCount(124, Framerate.HZ_25);
+	private final SampleCount SC = new SampleCount(124, Timebase.HZ_25);
 
 	private final SampleCountUserType svc = SampleCountUserType.INSTANCE;
 

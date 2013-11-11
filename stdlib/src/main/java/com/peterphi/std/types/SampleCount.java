@@ -5,11 +5,11 @@ package com.peterphi.std.types;
  */
 public class SampleCount
 {
-	private final Framerate rate;
+	private final Timebase rate;
 	private final long samples;
 
 
-	public SampleCount(final long samples, final Framerate rate)
+	public SampleCount(final long samples, final Timebase rate)
 	{
 		if (rate == null)
 			throw new IllegalArgumentException("Must specify a rate!");
@@ -26,7 +26,7 @@ public class SampleCount
 	 *
 	 * @return
 	 */
-	public SampleCount resample(Framerate newRate)
+	public SampleCount resample(Timebase newRate)
 	{
 		if (!this.rate.equals(newRate))
 		{
@@ -98,7 +98,7 @@ public class SampleCount
 	}
 
 
-	public Framerate getRate()
+	public Timebase getRate()
 	{
 		return rate;
 	}
@@ -119,7 +119,7 @@ public class SampleCount
 	 *
 	 * @return
 	 */
-	public long getSamples(Framerate newRate)
+	public long getSamples(Timebase newRate)
 	{
 		return newRate.resample(this.samples, this.rate);
 	}
@@ -128,7 +128,7 @@ public class SampleCount
 	/**
 	 * Returns the number of samples represented by this SampleCount, converted to <code>newRate</code>. If precision would be lost
 	 * this method throws an exception<br />
-	 * This method uses <code>Framerate.resamplePrecise<code> for lossless-or-exception resampling
+	 * This method uses <code>Timebase.resamplePrecise<code> for lossless-or-exception resampling
 	 *
 	 * @param newRate
 	 *
@@ -137,7 +137,7 @@ public class SampleCount
 	 * @throws ResamplingException
 	 * 		if precision would be lost by the resample
 	 */
-	public long getSamplesPrecise(Framerate newRate) throws ResamplingException
+	public long getSamplesPrecise(Timebase newRate) throws ResamplingException
 	{
 		return newRate.resamplePrecise(this.samples, this.rate);
 	}
@@ -168,9 +168,9 @@ public class SampleCount
 		if (parts.length == 2)
 		{
 			final long samples = Long.parseLong(parts[0]);
-			final Framerate framerate = Framerate.parseVidispine(parts[1]);
+			final Timebase timebase = Timebase.getInstance(parts[1]);
 
-			return new SampleCount(samples, framerate);
+			return new SampleCount(samples, timebase);
 		}
 		else
 		{
@@ -181,7 +181,7 @@ public class SampleCount
 	}
 
 
-	public static SampleCount seconds(final Framerate rate, final int seconds)
+	public static SampleCount seconds(final Timebase rate, final int seconds)
 	{
 		final double samples = rate.getSamplesPerSecond() * seconds;
 
@@ -191,7 +191,7 @@ public class SampleCount
 
 	public String toVidispineString()
 	{
-		return samples + "@" + rate.toVidispineString();
+		return samples + "@" + rate.toEncodedString();
 	}
 
 
@@ -204,7 +204,7 @@ public class SampleCount
 	 */
 	public double getSeconds()
 	{
-		return Framerate.HZ_1.resample((double) this.samples, this.rate);
+		return Timebase.HZ_1.resample((double) this.samples, this.rate);
 	}
 
 

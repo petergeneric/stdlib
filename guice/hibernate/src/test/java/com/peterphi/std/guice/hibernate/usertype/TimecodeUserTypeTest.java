@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
-import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.Timecode;
 import org.junit.Test;
 
@@ -10,7 +10,7 @@ import static org.junit.Assert.assertEquals;
 
 public class TimecodeUserTypeTest
 {
-	private final Timecode TC = Timecode.getInstance("01:02:03:04", Framerate.HZ_25);
+	private final Timecode TC = Timecode.getInstance("01:02:03:04", Timebase.HZ_25);
 
 	private final TimecodeUserType svc = TimecodeUserType.INSTANCE;
 

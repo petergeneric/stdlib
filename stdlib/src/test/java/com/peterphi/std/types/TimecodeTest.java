@@ -15,8 +15,8 @@ public class TimecodeTest
 	@Test
 	public void testResample_IdentityFunction_Zero()
 	{
-		final Timecode src = Timecode.getInstance("00:00:00:00", Framerate.HZ_25);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("00:00:00:00", Timebase.HZ_25);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals(src.toString(), dst.toString());
 	}
@@ -25,8 +25,8 @@ public class TimecodeTest
 	@Test
 	public void testResample_IdentityFunction()
 	{
-		final Timecode src = Timecode.getInstance("01:02:03:04", Framerate.HZ_25);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("01:02:03:04", Timebase.HZ_25);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals(src.toString(), dst.toString());
 	}
@@ -35,8 +35,8 @@ public class TimecodeTest
 	@Test
 	public void testResample()
 	{
-		final Timecode src = Timecode.getInstance("09:08:07:04", Framerate.HZ_50);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("09:08:07:04", Timebase.HZ_50);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals("09:08:07:02", dst.toString());
 	}
@@ -45,8 +45,8 @@ public class TimecodeTest
 	@Test
 	public void testBounds()
 	{
-		final Timecode small = Timecode.getInstance("00:00:00:00", Framerate.HZ_50);
-		final Timecode big = Timecode.getInstance("00:00:00:01", Framerate.HZ_50);
+		final Timecode small = Timecode.getInstance("00:00:00:00", Timebase.HZ_50);
+		final Timecode big = Timecode.getInstance("00:00:00:01", Timebase.HZ_50);
 
 		assertTrue(small.lt(big));
 		assertTrue(big.gt(small));
@@ -56,8 +56,8 @@ public class TimecodeTest
 	@Test
 	public void testResamplePrecise_HappyPath()
 	{
-		final Timecode src = Timecode.getInstance("09:08:07:02", Framerate.HZ_50);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("09:08:07:02", Timebase.HZ_50);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals("09:08:07:01", dst.toString());
 	}
@@ -66,8 +66,8 @@ public class TimecodeTest
 	@Test
 	public void testResamplePrecise_HappyPath_Zero()
 	{
-		final Timecode src = Timecode.getInstance("00:00:00:00", Framerate.HZ_50);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("00:00:00:00", Timebase.HZ_50);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals("00:00:00:00", dst.toString());
 	}
@@ -76,17 +76,17 @@ public class TimecodeTest
 	@Test(expected = ResamplingException.class)
 	public void testResamplePrecise_Imprecise() throws Exception
 	{
-		final Timecode src = Timecode.getInstance("09:08:07:03", Framerate.HZ_50);
+		final Timecode src = Timecode.getInstance("09:08:07:03", Timebase.HZ_50);
 
-		src.resamplePrecise(Framerate.HZ_25);
+		src.resamplePrecise(Timebase.HZ_25);
 	}
 
 
 	@Test
 	public void testResample_Imprecise()
 	{
-		final Timecode src = Timecode.getInstance("09:08:07:03", Framerate.HZ_50);
-		final Timecode dst = src.resample(Framerate.HZ_25);
+		final Timecode src = Timecode.getInstance("09:08:07:03", Timebase.HZ_50);
+		final Timecode dst = src.resample(Timebase.HZ_25);
 
 		assertEquals("09:08:07:02", dst.toString());
 	}
@@ -95,8 +95,8 @@ public class TimecodeTest
 	@Test
 	public void testGetSampleCountDelta_Zero()
 	{
-		final Timecode base = Timecode.getInstance("00:00:00:00", Framerate.HZ_50);
-		final Timecode tc = Timecode.getInstance("00:00:00:00", Framerate.HZ_25);
+		final Timecode base = Timecode.getInstance("00:00:00:00", Timebase.HZ_50);
+		final Timecode tc = Timecode.getInstance("00:00:00:00", Timebase.HZ_25);
 
 		final SampleCount delta = tc.getSampleCount(base);
 
@@ -109,8 +109,8 @@ public class TimecodeTest
 	public void testGetSampleCountDelta()
 	{
 		// 2 timecodes which are 1h2m3s and 4 frames apart
-		final Timecode base = Timecode.getInstance("01:02:03:04", Framerate.HZ_50);
-		final Timecode tc = Timecode.getInstance("02:04:06:08", Framerate.HZ_50);
+		final Timecode base = Timecode.getInstance("01:02:03:04", Timebase.HZ_50);
+		final Timecode tc = Timecode.getInstance("02:04:06:08", Timebase.HZ_50);
 
 		final SampleCount delta = tc.getSampleCount(base);
 		final Timecode deltaTC = Timecode.getInstance(delta);
@@ -122,7 +122,7 @@ public class TimecodeTest
 	@Test
 	public void testDurationInSeconds()
 	{
-		final Timecode base = Timecode.getInstance("01:02:03:49", Framerate.HZ_50);
+		final Timecode base = Timecode.getInstance("01:02:03:49", Timebase.HZ_50);
 
 		assertEquals(3723, base.getDurationInSeconds());
 	}
@@ -135,7 +135,7 @@ public class TimecodeTest
 	public void testSampleCountForNegativeTimecode()
 	{
 		final Timecode timecode = Timecode.getInstance("-00:00:00:02@25");
-		SampleCount samples = new SampleCount(-2, Framerate.HZ_25);
+		SampleCount samples = new SampleCount(-2, Timebase.HZ_25);
 
 		assertEquals(samples, timecode.getSampleCount());
 	}
@@ -144,7 +144,7 @@ public class TimecodeTest
 	@Test
 	public void testGetInstanceWithNegativeSampleCount()
 	{
-		final Timecode tc = Timecode.getInstance(new SampleCount(-2, Framerate.HZ_25), false);
+		final Timecode tc = Timecode.getInstance(new SampleCount(-2, Timebase.HZ_25), false);
 
 		assertEquals("-00:00:00:02@25", tc.toEncodedString());
 	}
@@ -153,7 +153,7 @@ public class TimecodeTest
 	@Test
 	public void testAddNegativeSamples()
 	{
-		final SampleCount samples = new SampleCount(-2, Framerate.HZ_25);
+		final SampleCount samples = new SampleCount(-2, Timebase.HZ_25);
 
 		final Timecode base = Timecode.getInstance("-00:00:00:02@25");
 
@@ -169,8 +169,8 @@ public class TimecodeTest
 	@Test
 	public void testAddSmpte()
 	{
-		final Timecode base = Timecode.getInstance("23:29:59:05", Framerate.HZ_25);
-		final Timecode add = Timecode.getInstance("00:59:59:22", Framerate.HZ_25);
+		final Timecode base = Timecode.getInstance("23:29:59:05", Timebase.HZ_25);
+		final Timecode add = Timecode.getInstance("00:59:59:22", Timebase.HZ_25);
 		final Timecode tc = base.add(add.getSampleCount());
 
 		Assert.assertEquals("00:29:59:02", tc.toSMPTEString());
@@ -183,8 +183,8 @@ public class TimecodeTest
 	@Test
 	public void testAddSmpteIncludingDays()
 	{
-		final Timecode base = Timecode.getInstance("23:29:59:05", Framerate.HZ_25);
-		final Timecode add = Timecode.getInstance("00:59:59:22", Framerate.HZ_25);
+		final Timecode base = Timecode.getInstance("23:29:59:05", Timebase.HZ_25);
+		final Timecode add = Timecode.getInstance("00:59:59:22", Timebase.HZ_25);
 		final Timecode tc = base.add(add.getSampleCount());
 
 		Assert.assertEquals("01:00:29:59:02", tc.toSMPTEString(true));
@@ -194,7 +194,7 @@ public class TimecodeTest
 	@Test
 	public void testSubtractNegativeSamples()
 	{
-		final SampleCount samples = new SampleCount(-2, Framerate.HZ_25);
+		final SampleCount samples = new SampleCount(-2, Timebase.HZ_25);
 
 		final Timecode base = Timecode.getInstance("-00:00:00:02@25");
 
@@ -259,7 +259,7 @@ public class TimecodeTest
 
 		for (String smpte : yes)
 		{
-			final Timecode tc = Timecode.getInstance(smpte, Framerate.HZ_25);
+			final Timecode tc = Timecode.getInstance(smpte, Timebase.HZ_25);
 
 			final boolean between = tc.between(start, end);
 
@@ -268,7 +268,7 @@ public class TimecodeTest
 
 		for (String smpte : no)
 		{
-			final Timecode tc = Timecode.getInstance(smpte, Framerate.HZ_25);
+			final Timecode tc = Timecode.getInstance(smpte, Timebase.HZ_25);
 
 			final boolean between = tc.between(start, end);
 

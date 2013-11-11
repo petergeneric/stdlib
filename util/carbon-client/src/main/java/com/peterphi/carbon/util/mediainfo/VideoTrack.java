@@ -1,6 +1,6 @@
 package com.peterphi.carbon.util.mediainfo;
 
-import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.Timebase;
 import org.jdom2.Element;
 
 import java.util.List;
@@ -68,14 +68,14 @@ public class VideoTrack extends AVTrack
 
 
 	@Override
-	public Framerate getRate()
+	public Timebase getRate()
 	{
 		final Element e = getElement("Frame_rate", 0);
 		final double rate = Double.parseDouble(e.getText());
 
 		if (rate == Math.floor(rate))
 		{
-			return Framerate.parseVidispine(Long.toString((long) rate));
+			return Timebase.getInstance(Long.toString((long) rate));
 		}
 		else
 		{

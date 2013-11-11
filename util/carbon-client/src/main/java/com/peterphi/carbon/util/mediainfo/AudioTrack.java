@@ -1,6 +1,6 @@
 package com.peterphi.carbon.util.mediainfo;
 
-import com.peterphi.std.types.Framerate;
+import com.peterphi.std.types.Timebase;
 import org.jdom2.Element;
 
 public class AudioTrack extends AVTrack
@@ -19,9 +19,9 @@ public class AudioTrack extends AVTrack
 
 
 	@Override
-	public Framerate getRate()
+	public Timebase getRate()
 	{
 		final Element e = getElement("Sampling_rate", 0);
-		return Framerate.parseVidispine(e.getText());
+		return Timebase.getInstance(e.getText());
 	}
 }

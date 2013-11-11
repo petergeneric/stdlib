@@ -20,7 +20,7 @@ public class Timecode
 	/**
 	 * The number of samples per second
 	 */
-	private final Framerate frameRate;
+	private final Timebase timebase;
 
 	private final boolean dropFrame;
 
@@ -37,7 +37,7 @@ public class Timecode
 	 * @param seconds
 	 * 		the seconds part
 	 * @param frames
-	 * 		a number between 0 and frameRate-1 (no validation is performed on this figure)
+	 * 		a number between 0 and timebase-1 (no validation is performed on this figure)
 	 * @param timebase
 	 * 		the number of samples per second (a positive integer)
 	 * @param dropFrame
@@ -48,7 +48,7 @@ public class Timecode
 	         final long minutes,
 	         final long seconds,
 	         final long frames,
-	         final Framerate timebase,
+	         final Timebase timebase,
 	         final boolean dropFrame)
 	{
 		if (days < 0 || days > 99)
@@ -65,9 +65,9 @@ public class Timecode
 			throw new IllegalArgumentException("Frame component must represent < 1 second! Got " +
 			                                   frames +
 			                                   " with timebase " +
-			                                   timebase.toVidispineString());
+			                                   timebase.toEncodedString());
 
-		this.frameRate = timebase;
+		this.timebase = timebase;
 		this.dropFrame = dropFrame;
 
 		this.days = days;
@@ -110,14 +110,14 @@ public class Timecode
 	 */
 	public long getDurationInFrames(boolean allowDropFrameRemoval)
 	{
-		final double frameRate = this.frameRate.getSamplesPerSecond();
+		final double fps = this.timebase.getSamplesPerSecond();
 
 		double totalFrames = frames;
 
-		totalFrames += seconds * frameRate;
-		totalFrames += (minutes * 60) * frameRate;
-		totalFrames += (hours * 60 * 60) * frameRate;
-		totalFrames += (days * 24 * 60 * 60) * frameRate;
+		totalFrames += seconds * fps;
+		totalFrames += (minutes * 60) * fps;
+		totalFrames += (hours * 60 * 60) * fps;
+		totalFrames += (days * 24 * 60 * 60) * fps;
 
 		if (dropFrame && allowDropFrameRemoval)
 		{
@@ -151,7 +151,7 @@ public class Timecode
 	 */
 	public long getFramesPartAsMicroseconds()
 	{
-		final int microsecondsPerFrame = (int) (1000000D / frameRate.getSamplesPerSecond());
+		final int microsecondsPerFrame = (int) (1000000D / timebase.getSamplesPerSecond());
 
 		return microsecondsPerFrame * frames;
 	}
@@ -203,9 +203,9 @@ public class Timecode
 	}
 
 
-	public Framerate getFramerate()
+	public Timebase getTimebase()
 	{
-		return frameRate;
+		return timebase;
 	}
 
 	// ///////////////
@@ -270,13 +270,13 @@ public class Timecode
 	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte timecode@rate</code>
 	 * where
 	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
-	 * is 1). See {@link Framerate} for further information on the encoding of the framerate
+	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
 	 *
 	 * @return
 	 */
 	public String toEncodedString()
 	{
-		return toSMPTEString() + "@" + getFramerate().toVidispineString();
+		return toSMPTEString() + "@" + getTimebase().toEncodedString();
 	}
 
 
@@ -287,7 +287,7 @@ public class Timecode
 	 *
 	 * @return
 	 *
-	 * @deprecated use getSampleCount().toVidispineString();
+	 * @deprecated use getSampleCount().toEncodedString();
 	 */
 	@Deprecated
 	public String toVidispineString()
@@ -398,7 +398,7 @@ public class Timecode
 	 */
 	public SampleCount getSampleCount()
 	{
-		return new SampleCount(this.getDurationInFrames(), this.frameRate);
+		return new SampleCount(this.getDurationInFrames(), this.timebase);
 	}
 
 
@@ -445,16 +445,16 @@ public class Timecode
 
 
 	/**
-	 * Resample this timecode to another framerate
+	 * Resample this timecode to another timebase
 	 *
 	 * @param toRate
 	 * 		the destination rate
 	 *
 	 * @return
 	 */
-	public Timecode resample(final Framerate toRate)
+	public Timecode resample(final Timebase toRate)
 	{
-		final Framerate fromRate = getFramerate();
+		final Timebase fromRate = getTimebase();
 
 		if (!fromRate.equals(toRate))
 		{
@@ -479,10 +479,10 @@ public class Timecode
 	 *
 	 * @throws ResamplingException
 	 */
-	public Timecode resamplePrecise(final Framerate toRate) throws ResamplingException
+	public Timecode resamplePrecise(final Timebase toRate) throws ResamplingException
 	{
 		final Timecode newTimecode = resample(toRate); // Resample to the new timebase
-		final Timecode back = newTimecode.resample(this.frameRate); // Resample back to the source timebase
+		final Timecode back = newTimecode.resample(this.timebase); // Resample back to the source timebase
 
 		// If we don't have the same number of frames then we lost precision.
 		if (back.getFramesPart() != this.getFramesPart())
@@ -490,7 +490,7 @@ public class Timecode
 			throw new ResamplingException("Timecode resample would have lost precision: " +
 			                              this.toString() +
 			                              "@" +
-			                              this.frameRate +
+			                              this.timebase +
 			                              " to " +
 			                              toRate);
 		}
@@ -529,7 +529,7 @@ public class Timecode
 			return false;
 		if (seconds != timecode.seconds)
 			return false;
-		if (!frameRate.equals(timecode.frameRate))
+		if (!timebase.equals(timecode.timebase))
 			return false;
 
 		return true;
@@ -545,7 +545,7 @@ public class Timecode
 		result = 31 * result + (int) (minutes ^ (minutes >>> 32));
 		result = 31 * result + (int) (seconds ^ (seconds >>> 32));
 		result = 31 * result + (int) (frames ^ (frames >>> 32));
-		result = 31 * result + frameRate.hashCode();
+		result = 31 * result + timebase.hashCode();
 		result = 31 * result + (dropFrame ? 1 : 0);
 		return result;
 	}
@@ -577,7 +577,7 @@ public class Timecode
 	 *
 	 * @return a timecode representation of the given data, null when a timecode can not be generated (i.e. duration exceeds a day)
 	 */
-	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Framerate timebase)
+	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Timebase timebase)
 	{
 		return TimecodeBuilder.fromFrames(frameNumber, dropFrame, timebase).build();
 	}
@@ -629,7 +629,7 @@ public class Timecode
 
 	/**
 	 * Parse a Timecode encoded in the encoded style for this library (<code>[-][dd:]hh:mm:ss:ff@timebase</code>). See {@link
-	 * Framerate#parseVidispine} for information on valid timebase representations
+	 * Timebase#getInstance} for information on valid timebase representations
 	 *
 	 * @param encoded
 	 * 		a timecode encoded as <code>hh:mm:ss:ff@timebase</code>
@@ -656,7 +656,7 @@ public class Timecode
 	 * @return
 	 */
 	@Deprecated
-	public static final Timecode getSmpteTimecode(final String smpte, final Framerate timebase)
+	public static final Timecode getSmpteTimecode(final String smpte, final Timebase timebase)
 	{
 		return getInstance(smpte, timebase);
 	}
@@ -676,7 +676,7 @@ public class Timecode
 	 * @throws RuntimeException
 	 * 		if parsing fails
 	 */
-	public static final Timecode getInstance(final String smpte, final Framerate timebase)
+	public static final Timecode getInstance(final String smpte, final Timebase timebase)
 	{
 		return TimecodeBuilder.fromSMPTE(smpte).withRate(timebase).build();
 	}
@@ -697,7 +697,7 @@ public class Timecode
 	 * @deprecated use method without supportDays
 	 */
 	@Deprecated
-	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Framerate timebase, boolean supportDays)
+	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Timebase timebase, boolean supportDays)
 	{
 		final Timecode timecode = getInstance(frameNumber, dropFrame, timebase);
 

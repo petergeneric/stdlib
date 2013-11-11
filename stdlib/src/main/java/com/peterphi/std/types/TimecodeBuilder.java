@@ -13,7 +13,7 @@ public class TimecodeBuilder
 	private long minutes = 0;
 	private long seconds = 0;
 	private long frames = 0;
-	private Framerate rate = null;
+	private Timebase rate = null;
 	private boolean dropFrame = false;
 
 
@@ -33,7 +33,7 @@ public class TimecodeBuilder
 		           .withSeconds(timecode.getSecondsPart())
 		           .withFrames(timecode.getFramesPart())
 		           .withDropFrame(timecode.isDropFrame())
-		           .withRate(timecode.getFramerate());
+		           .withRate(timecode.getTimebase());
 	}
 
 
@@ -86,7 +86,7 @@ public class TimecodeBuilder
 	}
 
 
-	public TimecodeBuilder withRate(Framerate rate)
+	public TimecodeBuilder withRate(Timebase rate)
 	{
 		this.rate = rate;
 		return this;
@@ -148,7 +148,7 @@ public class TimecodeBuilder
 	}
 
 
-	public Framerate getRate()
+	public Timebase getRate()
 	{
 		return rate;
 	}
@@ -193,7 +193,7 @@ public class TimecodeBuilder
 
 
 	/**
-	 * Parse a Timecode encoded in the "vidispine style" (<code>hh:mm:ss:ff@timebase</code>). See {@link Framerate#parseVidispine}
+	 * Parse a Timecode encoded in the "vidispine style" (<code>hh:mm:ss:ff@timebase</code>). See {@link Timebase#getInstance}
 	 * for information on valid timebase representations
 	 *
 	 * @param encoded
@@ -216,9 +216,7 @@ public class TimecodeBuilder
 			final String smpte = parts[0];
 			final String timebase = parts[1];
 
-			final Framerate framerate = Framerate.parseVidispine(timebase);
-
-			return fromSMPTE(smpte).withRate(framerate);
+			return fromSMPTE(smpte).withRate(Timebase.getInstance(timebase));
 		}
 		catch (RuntimeException e)
 		{
@@ -282,9 +280,9 @@ public class TimecodeBuilder
 	}
 
 
-	public static TimecodeBuilder fromFrames(final long signedFrameNumber, boolean dropFrame, final Framerate rate)
+	public static TimecodeBuilder fromFrames(final long signedFrameNumber, boolean dropFrame, final Timebase rate)
 	{
-		final double frameRate = rate.getSamplesPerSecond();
+		final double fps = rate.getSamplesPerSecond();
 		final boolean negative = signedFrameNumber < 0;
 
 		// Now make it positive
@@ -293,14 +291,14 @@ public class TimecodeBuilder
 		if (dropFrame)
 		{
 			// add in the number of drop frames, we can then treat the new value as a "non drop frame calc".
-			frameNumber = compensateForDropFrame(frameNumber, frameRate);
+			frameNumber = compensateForDropFrame(frameNumber, fps);
 		}
 
-		final long frames = Math.round(Math.floor((frameNumber % frameRate)));
-		final long seconds = Math.round(Math.floor((frameNumber / frameRate))) % 60;
-		final long minutes = (Math.round(Math.floor((frameNumber / frameRate))) / 60) % 60;
-		final long hours = ((Math.round(Math.floor((frameNumber / frameRate))) / 60) / 60) % 24;
-		final long days = (Math.round(Math.floor(((((frameNumber / frameRate) / 60) / 60) / 24))));
+		final long frames = Math.round(Math.floor((frameNumber % fps)));
+		final long seconds = Math.round(Math.floor((frameNumber / fps))) % 60;
+		final long minutes = (Math.round(Math.floor((frameNumber / fps))) / 60) % 60;
+		final long hours = ((Math.round(Math.floor((frameNumber / fps))) / 60) / 60) % 24;
+		final long days = (Math.round(Math.floor(((((frameNumber / fps) / 60) / 60) / 24))));
 
 		return new TimecodeBuilder().withNegative(negative)
 		                            .withDropFrame(dropFrame)

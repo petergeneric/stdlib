@@ -6,45 +6,45 @@ import org.apache.log4j.Logger;
  * Describes a timebase, expressed as a rational number. This is primarily designed for timebases where the numerator is 1 (i.e.
  * where the denominator is the number of samples per second)
  */
-public class Framerate
+public class Timebase
 {
 
-	private static final Logger log = Logger.getLogger(Framerate.class);
+	private static final Logger log = Logger.getLogger(Timebase.class);
 
-	public static final Framerate HZ_25 = new Framerate(1, 25);
-	public static final Framerate HZ_30 = new Framerate(1, 30);
-	public static final Framerate HZ_50 = new Framerate(1, 50);
-	public static final Framerate HZ_44100 = new Framerate(1, 44100);
-	public static final Framerate HZ_48000 = new Framerate(1, 48000);
-	public static final Framerate HZ_96000 = new Framerate(1, 96000);
-	public static final Framerate HZ_192000 = new Framerate(1, 192000);
+	public static final Timebase HZ_25 = new Timebase(1, 25);
+	public static final Timebase HZ_30 = new Timebase(1, 30);
+	public static final Timebase HZ_50 = new Timebase(1, 50);
+	public static final Timebase HZ_44100 = new Timebase(1, 44100);
+	public static final Timebase HZ_48000 = new Timebase(1, 48000);
+	public static final Timebase HZ_96000 = new Timebase(1, 96000);
+	public static final Timebase HZ_192000 = new Timebase(1, 192000);
 
 	private static final double FAST_RESAMPLE_PATH_PRODUCT_LIMIT = Math.sqrt(Double.MAX_VALUE);
 
 	/**
 	 * 1 MHz (Vidispine transcoder default sampling rate)
 	 */
-	public static final Framerate HZ_1000000 = new Framerate(1, 1000000);
+	public static final Timebase HZ_1000000 = new Timebase(1, 1000000);
 
 	/**
 	 * 27 MHz (sampling rate used by Carbon)
 	 */
-	public static final Framerate HZ_27000000 = new Framerate(1, 27000000);
+	public static final Timebase HZ_27000000 = new Timebase(1, 27000000);
 
 	/**
 	 * 1 kHz (1 frame = 1 millisecond. One of the ways MediaInfo uses to express durations/offsets)
 	 */
-	public static final Framerate HZ_1000 = new Framerate(1, 1000);
+	public static final Timebase HZ_1000 = new Timebase(1, 1000);
 
 	/**
 	 * 1 Hz (1 frame = 1 second)
 	 */
-	public static final Framerate HZ_1 = new Framerate(1, 1);
+	public static final Timebase HZ_1 = new Timebase(1, 1);
 
 	/**
 	 * 29.97 Hz (NTSC)
 	 */
-	public static final Framerate NTSC = new Framerate(1001, 30000);
+	public static final Timebase NTSC = new Timebase(1001, 30000);
 
 	/**
 	 * The numerator (the top part of the fraction)
@@ -63,7 +63,7 @@ public class Framerate
 	 * @param denominator
 	 * 		the denominator (the bottom part of the fraction) - e.g. 25 for PAL (with a numerator of 1)
 	 */
-	public Framerate(int numerator, int denominator)
+	public Timebase(int numerator, int denominator)
 	{
 		if (numerator == 0)
 			throw new IllegalArgumentException("Numerator cannot be 0!");
@@ -121,7 +121,7 @@ public class Framerate
 
 
 	/**
-	 * Convert a sample count from one framerate to another<br />
+	 * Convert a sample count from one timebase to another<br />
 	 * Note that this may result in data loss due to rounding.
 	 *
 	 * @param samples
@@ -129,7 +129,7 @@ public class Framerate
 	 *
 	 * @return
 	 */
-	public long resample(final long samples, final Framerate oldRate)
+	public long resample(final long samples, final Timebase oldRate)
 	{
 		try
 		{
@@ -144,7 +144,7 @@ public class Framerate
 
 
 	/**
-	 * Convert a sample count from one framerate to another, throwing an exception if precision is lost
+	 * Convert a sample count from one timebase to another, throwing an exception if precision is lost
 	 *
 	 * @param samples
 	 * @param oldRate
@@ -154,14 +154,14 @@ public class Framerate
 	 * @throws ResamplingException
 	 * 		if precision is lost during the conversion
 	 */
-	public long resamplePrecise(final long samples, final Framerate oldRate) throws ResamplingException
+	public long resamplePrecise(final long samples, final Timebase oldRate) throws ResamplingException
 	{
 		return resample(samples, oldRate, true);
 	}
 
 
 	/**
-	 * Convert a sample count from one framerate to another<br />
+	 * Convert a sample count from one timebase to another<br />
 	 * Note that this may result in data loss due to rounding.
 	 *
 	 * @param samples
@@ -171,7 +171,7 @@ public class Framerate
 	 *
 	 * @return
 	 */
-	public long resample(final long samples, final Framerate oldRate, boolean failOnPrecisionLoss) throws ResamplingException
+	public long resample(final long samples, final Timebase oldRate, boolean failOnPrecisionLoss) throws ResamplingException
 	{
 		final double resampled = resample((double) samples, oldRate);
 
@@ -207,14 +207,14 @@ public class Framerate
 
 
 	/**
-	 * Convert a sample count from one framerate to another
+	 * Convert a sample count from one timebase to another
 	 *
 	 * @param samples
 	 * @param oldRate
 	 *
 	 * @return
 	 */
-	public double resample(final double samples, final Framerate oldRate)
+	public double resample(final double samples, final Timebase oldRate)
 	{
 		if (samples == 0)
 		{
@@ -253,7 +253,7 @@ public class Framerate
 			return false;
 		if (getClass() != obj.getClass())
 			return false;
-		Framerate other = (Framerate) obj;
+		Timebase other = (Timebase) obj;
 		if (denominator != other.denominator)
 			return false;
 		if (numerator != other.numerator)
@@ -265,17 +265,17 @@ public class Framerate
 	@Override
 	public String toString()
 	{
-		return "Framerate [" + numerator + "/" + denominator + "]";
+		return "Timebase [" + numerator + "/" + denominator + "]";
 	}
 
 
 	/**
-	 * Return the Vidispine string representation of this Framerate<br />
+	 * Return the encoded string representation of this Timebase<br />
 	 * N.B. does not return string constants such as NTSC or NTSC30
 	 *
 	 * @return
 	 */
-	public String toVidispineString()
+	public String toEncodedString()
 	{
 		if (this.numerator != 1)
 			return this.denominator + ":" + this.numerator;
@@ -284,7 +284,7 @@ public class Framerate
 	}
 
 
-	static double resample(final double samples, final Framerate source, final Framerate target)
+	static double resample(final double samples, final Timebase source, final Timebase target)
 	{
 		// If both have the same numerator then we should be able to take a path that retains more precision
 		// We only do this for sample counts less than <code>sqrt(Double.MAX_VALUE)</code>
@@ -306,7 +306,7 @@ public class Framerate
 
 
 	/**
-	 * Parses a Vidispine style timebase (as originally described in <a href="http://wiki.vidispine.com/vidiwiki/Time#Time_bases">http://wiki.vidispine.com/vidiwiki/Time#Time_bases</a>).<br
+	 * Parses an encoded timebase.<br
 	 * />
 	 * <p>The following textual representations are valid for time bases:</p>
 	 * <ul>
@@ -341,7 +341,7 @@ public class Framerate
 	 *
 	 * @return
 	 */
-	public static Framerate parseVidispine(String rate)
+	public static Timebase getInstance(String rate)
 	{
 		if (rate.equalsIgnoreCase("PAL"))
 		{
@@ -372,12 +372,12 @@ public class Framerate
 			}
 			else
 			{
-				throw new IllegalArgumentException("Cannot parse Vidispine framerate: " + rate);
+				throw new IllegalArgumentException("Cannot parse encoded timebase: " + rate);
 			}
 
 			denominator = Integer.parseInt(parts[0]);
 
-			return new Framerate(numerator, denominator);
+			return new Timebase(numerator, denominator);
 		}
 	}
 }
