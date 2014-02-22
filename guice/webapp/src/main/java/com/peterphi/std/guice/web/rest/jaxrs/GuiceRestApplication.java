@@ -1,16 +1,16 @@
 package com.peterphi.std.guice.web.rest.jaxrs;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import javax.ws.rs.core.Application;
-
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 
+import javax.ws.rs.core.Application;
+import java.util.HashSet;
+import java.util.Set;
+
 /**
- * A jax-rs REST {@link Application} implementation that returns singletons whih are dynamic proxies bound to objects built by Guice<br />
+ * A jax-rs REST {@link Application} implementation that returns singletons whih are dynamic proxies bound to objects built by
+ * Guice<br />
  * This allows for a vanilla jax rs implementation, albeit at a small runtime performance penalty.
  */
 public class GuiceRestApplication extends Application implements GuiceApplication

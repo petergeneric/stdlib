@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
-import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.SampleCount;
+import com.peterphi.std.types.Timebase;
 import org.junit.Test;
 
 import java.sql.Types;

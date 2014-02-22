@@ -1,28 +1,39 @@
 package com.peterphi.std.xstream.serialisers;
 
-import java.util.*;
-import com.thoughtworks.xstream.converters.*;
-import com.thoughtworks.xstream.io.*;
+import com.thoughtworks.xstream.converters.Converter;
+import com.thoughtworks.xstream.converters.MarshallingContext;
+import com.thoughtworks.xstream.converters.UnmarshallingContext;
+import com.thoughtworks.xstream.io.HierarchicalStreamReader;
+import com.thoughtworks.xstream.io.HierarchicalStreamWriter;
 
-@SuppressWarnings({ "rawtypes","unchecked" })
-public class MapStringStringConverter implements Converter {
+import java.util.HashMap;
+import java.util.Map;
+
+@SuppressWarnings({"rawtypes", "unchecked"})
+public class MapStringStringConverter implements Converter
+{
 
 	@Override
-	public boolean canConvert(Class clazz) {
-		if (Map.class.isAssignableFrom(clazz)) {
+	public boolean canConvert(Class clazz)
+	{
+		if (Map.class.isAssignableFrom(clazz))
+		{
 			return true; // can we test if the class is a Map<String, String> ?
 		}
-		else {
+		else
+		{
 			return false;
 		}
 	}
 
 
 	@Override
-	public void marshal(Object valueO, HierarchicalStreamWriter writer, MarshallingContext context) {
+	public void marshal(Object valueO, HierarchicalStreamWriter writer, MarshallingContext context)
+	{
 		Map<String, String> val = (Map<String, String>) valueO;
 
-		for (Map.Entry<String, String> entry : val.entrySet()) {
+		for (Map.Entry<String, String> entry : val.entrySet())
+		{
 			writer.startNode(entry.getKey());
 			writer.setValue(entry.getValue());
 			writer.endNode();
@@ -31,10 +42,12 @@ public class MapStringStringConverter implements Converter {
 
 
 	@Override
-	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context) {
+	public Object unmarshal(HierarchicalStreamReader reader, UnmarshallingContext context)
+	{
 		Map<String, String> map = new HashMap<String, String>();
 
-		while (reader.hasMoreChildren()) {
+		while (reader.hasMoreChildren())
+		{
 			reader.moveDown(); // move down to the Value
 
 			String key = reader.getNodeName();

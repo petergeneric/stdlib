@@ -1,12 +1,11 @@
 package com.peterphi.std.guice.restclient.jaxb;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
 @XmlType(namespace = "http://ns.mediasmithsforge.com/stdlib/rest/exception", name = "exception")
 public class ExceptionInfo

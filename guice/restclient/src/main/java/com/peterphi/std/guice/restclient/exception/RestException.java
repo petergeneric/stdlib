@@ -16,7 +16,8 @@ public class RestException extends RuntimeException
 	private Response response;
 
 	/**
-	 * Whether this exception was caused by a remote service throwing an exception. If false then this must have been thrown locally
+	 * Whether this exception was caused by a remote service throwing an exception. If false then this must have been thrown
+	 * locally
 	 */
 	private boolean causedByRemote = false;
 

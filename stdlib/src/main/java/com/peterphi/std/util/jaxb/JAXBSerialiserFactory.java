@@ -3,7 +3,8 @@ package com.peterphi.std.util.jaxb;
 import java.util.concurrent.ConcurrentHashMap;
 
 /**
- * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext implementation acquisition rules)
+ * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext
+ * implementation acquisition rules)
  */
 public class JAXBSerialiserFactory
 {

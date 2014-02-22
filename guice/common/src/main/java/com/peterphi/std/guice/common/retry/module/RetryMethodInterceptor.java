@@ -29,7 +29,7 @@ final class RetryMethodInterceptor implements MethodInterceptor
 				          " on " + invocation.getThis() + " with " +
 				          Arrays.asList(invocation.getArguments()));
 
-			return mgr.run(new InvocationRetryable(invocation, options.on(),  options.exceptOn(), options.exceptOnCore()));
+			return mgr.run(new InvocationRetryable(invocation, options.on(), options.exceptOn(), options.exceptOnCore()));
 		}
 		catch (Throwable t)
 		{

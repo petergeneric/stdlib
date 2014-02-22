@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.restclient;
 
-import java.net.URI;
-
 import com.google.inject.Binding;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
@@ -9,6 +7,8 @@ import com.google.inject.Key;
 import com.google.inject.Singleton;
 import com.google.inject.name.Names;
 import com.peterphi.std.NotImplementedException;
+
+import java.net.URI;
 
 @Singleton
 public class EnvironmentPropertyRestClientFactory implements RestClientFactory

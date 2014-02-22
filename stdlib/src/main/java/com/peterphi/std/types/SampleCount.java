@@ -76,7 +76,8 @@ public class SampleCount
 
 
 	/**
-	 * @param that the sample count to subtract
+	 * @param that
+	 * 		the sample count to subtract
 	 *
 	 * @return
 	 *
@@ -126,7 +127,8 @@ public class SampleCount
 
 
 	/**
-	 * Returns the number of samples represented by this SampleCount, converted to <code>newRate</code>. If precision would be lost
+	 * Returns the number of samples represented by this SampleCount, converted to <code>newRate</code>. If precision would be
+	 * lost
 	 * this method throws an exception<br />
 	 * This method uses <code>Timebase.resamplePrecise<code> for lossless-or-exception resampling
 	 *

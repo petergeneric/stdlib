@@ -16,7 +16,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * Basic Guice-aware servlet that is configured at invocation time and restarted using {@link GuiceRegistry}<br />
  * Feeds Servlet lifecycle events back to {@link GuiceRegistry} to perform orderly shutdown of services<br />
- * Overrides {@link HttpServlet#service} to perform lazy configuration. See the <code>doService</code> method if you need to override <code>service</code>
+ * Overrides {@link HttpServlet#service} to perform lazy configuration. See the <code>doService</code> method if you need to
+ * override <code>service</code>
  */
 public abstract class GuiceServlet extends HttpServlet implements GuiceApplication
 {
@@ -55,9 +56,10 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 
 	/**
 	 * Calls {@link HttpServlet#service} should a subclass need to implement that method
-	 * 
+	 *
 	 * @param req
 	 * @param resp
+	 *
 	 * @throws ServletException
 	 * @throws IOException
 	 */

@@ -1,19 +1,19 @@
 package com.peterphi.std.guice.thymeleaf;
 
+import com.google.inject.Inject;
+import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.Templater;
+import com.peterphi.std.io.PropertyFile;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.WebContext;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.peterphi.std.guice.web.HttpCallContext;
-import com.peterphi.std.io.PropertyFile;
-
 /**
- * Light abstraction over a ThymeLeaf TemplateEngine allowing cleaner construction of the current web context (when the template engine is being used inside an http call)
+ * Light abstraction over a ThymeLeaf TemplateEngine allowing cleaner construction of the current web context (when the template
+ * engine is being used inside an http call)
  */
 @Singleton
 public class ThymeleafTemplater implements Templater
@@ -45,7 +45,7 @@ public class ThymeleafTemplater implements Templater
 
 	/**
 	 * Build a new IContext (exposing the HttpCallContext, where possible)
-	 * 
+	 *
 	 * @return
 	 */
 	private IContext makeContext()

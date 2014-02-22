@@ -13,7 +13,6 @@ public class MediaInfoTrack extends XMLWrapper
 	}
 
 
-
 	public String getTrackType()
 	{
 		return element.getAttributeValue("type");

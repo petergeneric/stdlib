@@ -5,7 +5,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
-@XmlRootElement(name="serviceSearchResults")
+@XmlRootElement(name = "serviceSearchResults")
 public class ServiceSearchResults
 {
 	@XmlElement(name = "service")

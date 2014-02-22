@@ -14,6 +14,7 @@ public interface LocalEndpointDiscovery
 
 	/**
 	 * Get the endpoint of the local webapp
+	 *
 	 * @return
 	 */
 	public URI getLocalEndpoint();

@@ -11,9 +11,11 @@ import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
-public class ListUtilityTest {
+public class ListUtilityTest
+{
 	@Test
-	public void testHeadWithEmptyList() {
+	public void testHeadWithEmptyList()
+	{
 		List<String> list = Arrays.asList();
 
 		assertNull(ListUtility.head(list));
@@ -21,13 +23,15 @@ public class ListUtilityTest {
 
 
 	@Test(expected = NullPointerException.class)
-	public void testNPEWhenHeadWithNullList() {
+	public void testNPEWhenHeadWithNullList()
+	{
 		ListUtility.head(null);
 	}
 
 
 	@Test
-	public void testHeadWithList() {
+	public void testHeadWithList()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertNotNull(ListUtility.head(list));
@@ -36,7 +40,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testTailWithList() {
+	public void testTailWithList()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertNotNull(ListUtility.tail(list));
@@ -45,7 +50,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testTailWithOneItemList() {
+	public void testTailWithOneItemList()
+	{
 		List<String> list = Arrays.asList("a");
 
 		assertNotNull(ListUtility.tail(list));
@@ -54,7 +60,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testTailWithEmptyList() {
+	public void testTailWithEmptyList()
+	{
 		List<String> list = Arrays.asList();
 
 		assertNotNull(ListUtility.tail(list));
@@ -63,7 +70,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testFlipWithEmptyList() {
+	public void testFlipWithEmptyList()
+	{
 		List<String> list = Arrays.asList();
 
 		List<String> flipped = ListUtility.flip(list);
@@ -72,7 +80,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testFlipWithOneItemListIsSame() {
+	public void testFlipWithOneItemListIsSame()
+	{
 		List<String> list = Arrays.asList("a");
 
 		List<String> flipped = ListUtility.flip(list);
@@ -81,7 +90,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testFlipWithListReverses() {
+	public void testFlipWithListReverses()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		List<String> flipped = ListUtility.flip(list);
@@ -90,7 +100,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testDoubleFlipIsIdentity() {
+	public void testDoubleFlipIsIdentity()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertEquals(list, ListUtility.flip(ListUtility.flip(list)));
@@ -98,7 +109,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testListAppliedToListIsCopyWithSameContent() {
+	public void testListAppliedToListIsCopyWithSameContent()
+	{
 		List<String> list = Arrays.asList("a", "b");
 
 		assertTrue(list != ListUtility.list(list));
@@ -107,7 +119,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testListAppliedToIterableIsCorrect() {
+	public void testListAppliedToIterableIsCorrect()
+	{
 		List<String> list = Arrays.asList("a", "b");
 
 		assertEquals(list, ListUtility.list((Iterable<String>) list));
@@ -115,7 +128,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testLast() {
+	public void testLast()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertEquals(Arrays.asList("b", "c"), ListUtility.last(list, 2));
@@ -123,7 +137,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testLastWithZeroIsEmpty() {
+	public void testLastWithZeroIsEmpty()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertEquals(Arrays.asList(), ListUtility.last(list, 0));
@@ -131,7 +146,8 @@ public class ListUtilityTest {
 
 
 	@Test
-	public void testLastWithGreaterThanCount() {
+	public void testLastWithGreaterThanCount()
+	{
 		List<String> list = Arrays.asList("a", "b", "c");
 
 		assertEquals(list, ListUtility.last(list, 10));

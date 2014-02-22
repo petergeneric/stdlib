@@ -1,19 +1,30 @@
 package com.peterphi.std.crypto.keystore;
 
-import java.io.*;
-import java.security.*;
-import java.security.cert.X509Certificate;
-
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
-import org.bouncycastle.jce.provider.*;
-import org.bouncycastle.openssl.*;
+import org.bouncycastle.jce.provider.BouncyCastleProvider;
+import org.bouncycastle.jce.provider.X509CertificateObject;
+import org.bouncycastle.openssl.PEMReader;
+import org.bouncycastle.openssl.PEMWriter;
 
-public class DirectoryKeystore {
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.security.KeyPair;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.cert.X509Certificate;
+
+public class DirectoryKeystore
+{
 	private static final Logger log = Logger.getLogger(DirectoryKeystore.class);
 
-	static {
-		if (Security.getProvider("BC") == null) {
+	static
+	{
+		if (Security.getProvider("BC") == null)
+		{
 			log.debug("[DirectoryKeystore] {static} Initialising BC Provider");
 			Security.addProvider(new BouncyCastleProvider());
 		}
@@ -24,7 +35,8 @@ public class DirectoryKeystore {
 	private final File _privateFolder;
 
 
-	public DirectoryKeystore(File directory) {
+	public DirectoryKeystore(File directory)
+	{
 		log.info("[DirectoryKeystore] {ctor} Initialising from " + directory.toString());
 		_keyFolder = directory;
 		_publicFolder = new File(_keyFolder, "public");
@@ -32,13 +44,15 @@ public class DirectoryKeystore {
 	}
 
 
-	public PublicKey[] loadPublicKeys() {
+	public PublicKey[] loadPublicKeys()
+	{
 		PublicKey[] buffer;
 
 		File[] files = _publicFolder.listFiles();
 
 		buffer = new PublicKey[files.length];
-		for (int i = 0; i < files.length; i++) {
+		for (int i = 0; i < files.length; i++)
+		{
 			buffer[i] = getPublicKey(files[i]);
 		}
 
@@ -46,65 +60,79 @@ public class DirectoryKeystore {
 	}
 
 
-	public PrivateKey getPrivateKey(String name) {
+	public PrivateKey getPrivateKey(String name)
+	{
 		File keyFile = new File(_privateFolder, name);
 
 		return getPrivateKey(keyFile);
 	}
 
 
-	public PublicKey getPublicKey(String name) {
+	public PublicKey getPublicKey(String name)
+	{
 		File keyFile = new File(_publicFolder, name);
 
 		return getPublicKey(keyFile);
 	}
 
 
-	public boolean hasKeyPair(String name) {
-		try {
+	public boolean hasKeyPair(String name)
+	{
+		try
+		{
 			return (getKeypair(name) != null);
 		}
-		catch (Throwable t) {
+		catch (Throwable t)
+		{
 			return false;
 		}
 	}
 
 
-	public KeyPair getKeypair(String name) {
+	public KeyPair getKeypair(String name)
+	{
 		PrivateKey kPrivate;
 		PublicKey kPublic;
 
-		try {
+		try
+		{
 			log.debug("[DirectoryKeystore] {getKeypair} Getting private key");
 			kPrivate = getPrivateKey(name);
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			log.error("[DirectoryKeystore] {getKeypair} Error retrieving private key: " + e.getMessage(), e);
 			kPrivate = null;
 		}
 
-		try {
+		try
+		{
 			log.debug("[DirectoryKeystore] {getKeypair} Getting public key");
 			kPublic = getPublicKey(new File(_privateFolder, name));
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			kPublic = null;
 		}
 
-		if (kPrivate != null && kPublic != null) {
+		if (kPrivate != null && kPublic != null)
+		{
 			return new KeyPair(kPublic, kPrivate);
 		}
-		else if (kPrivate == null && kPublic == null) {
+		else if (kPrivate == null && kPublic == null)
+		{
 			log.info("[DirectoryKeystore] {getKeypair} No public or private key '" + name + "' found");
 			// This key doesn't exist
 			return null;
 		}
-		else if (kPrivate == null) {
+		else if (kPrivate == null)
+		{
 			// There's no private key in the private folder. Fail.
 			log.warn("[DocumentKeystore] {getKeypair} private:" + name + " not in private keystore.");
 			return null;
 		}
-		else if (kPublic == null) {
+		else if (kPublic == null)
+		{
 			// no public key
 			log.warn("[DocumentKeystore] {getKeypair} public:" + name + " not in private keystore.");
 			return null;
@@ -115,144 +143,177 @@ public class DirectoryKeystore {
 	}
 
 
-	public boolean setPrivateKey(String name, PrivateKey pk) {
+	public boolean setPrivateKey(String name, PrivateKey pk)
+	{
 		return setKey(new File(_privateFolder, name), pk);
 	}
 
 
-	public boolean setPublicKey(String name, PublicKey kpub) {
+	public boolean setPublicKey(String name, PublicKey kpub)
+	{
 		return setKey(new File(_publicFolder, name), kpub);
 	}
 
 
-	public boolean setPublicKey(String name, X509Certificate cert) {
+	public boolean setPublicKey(String name, X509Certificate cert)
+	{
 		return setKey(new File(_publicFolder, name), cert);
 	}
 
 
-	public boolean setKeypair(String name, KeyPair kp) {
+	public boolean setKeypair(String name, KeyPair kp)
+	{
 		return setKey(new File(_privateFolder, name), kp);
 	}
 
 
-	private static boolean setKey(File keyFile, Object keyObject) {
-		try {
+	private static boolean setKey(File keyFile, Object keyObject)
+	{
+		try
+		{
 			PEMWriter w = new PEMWriter(new FileWriter(keyFile));
 			w.writeObject(keyObject);
 			w.close();
 
 			return true;
 		}
-		catch (Throwable t) {
+		catch (Throwable t)
+		{
 			log.error("[DirectoryKeystore] {setKey} Error writing key: " + t.getMessage(), t);
 			return false;
 		}
 	}
 
 
-	public static PrivateKey getPrivateKey(File keyFile) {
-		try {
-			if (keyFile.exists()) {
+	public static PrivateKey getPrivateKey(File keyFile)
+	{
+		try
+		{
+			if (keyFile.exists())
+			{
 				log.debug("[DirectoryKeystore] {getPrivateKey} Private keyfile exists.");
 				PEMReader r = new PEMReader(new FileReader(keyFile), null, "BC");
-				try {
+				try
+				{
 					log.debug("[DirectoryKeystore] {getPrivateKey} PEM file loaded.");
-	
+
 					Object o;
-					try {
+					try
+					{
 						o = r.readObject();
 					}
-					catch (Throwable e) {
-						log.error(
-								"[DirectoryKeystore] {getPrivateKey} Error reading keyfile (it might be encrypted?). Error: "
-										+ e.getMessage(), e);
+					catch (Throwable e)
+					{
+						log.error("[DirectoryKeystore] {getPrivateKey} Error reading keyfile (it might be encrypted?). Error: " +
+						          e.getMessage(), e);
 						return null;
 					}
-	
+
 					// A public/private keypair
-					if (o instanceof KeyPair) {
+					if (o instanceof KeyPair)
+					{
 						KeyPair kp = (KeyPair) o;
-	
+
 						return kp.getPrivate();
 					}
-					else if (o instanceof PrivateKey) {
+					else if (o instanceof PrivateKey)
+					{
 						return (PrivateKey) o;
 					}
-					else {
+					else
+					{
 						log.error("[DirectoryKeystore] Unknown key format: " + o.getClass());
 						return null;
 					}
 				}
-				finally {
+				finally
+				{
 					IOUtils.closeQuietly(r);
 				}
 			}
-			else {
+			else
+			{
 				return null;
 			}
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			log.error("[DirectoryKeystore] {getPrivateKey} Error getting key: " + e.getMessage(), e);
 			return null;
 		}
 	}
 
 
-	public static PublicKey getPublicKey(File keyFile) {
-		try {
-			if (keyFile.exists()) {
+	public static PublicKey getPublicKey(File keyFile)
+	{
+		try
+		{
+			if (keyFile.exists())
+			{
 				PEMReader r = new PEMReader(new FileReader(keyFile), null, "BC");
-				try {
+				try
+				{
 					Object o;
-					try {
+					try
+					{
 						o = r.readObject();
 					}
-					catch (IOException e) {
-						log.error(
-								"[DirectoryKeystore] {getPrivateKey} Error reading keyfile (it might be encrypted?). Error: "
-										+ e.getMessage(), e);
+					catch (IOException e)
+					{
+						log.error("[DirectoryKeystore] {getPrivateKey} Error reading keyfile (it might be encrypted?). Error: " +
+						          e.getMessage(), e);
 						return null;
 					}
-	
+
 					// An X509 certificate
-					if (o instanceof X509CertificateObject) {
-						try {
+					if (o instanceof X509CertificateObject)
+					{
+						try
+						{
 							X509CertificateObject cert = (X509CertificateObject) o;
 							cert.checkValidity();
 							return cert.getPublicKey();
 						}
-						catch (java.security.cert.CertificateNotYetValidException e) {
+						catch (java.security.cert.CertificateNotYetValidException e)
+						{
 							log.info("[DirectoryKeystore] {getPublicKey} Key not yet valid");
 							return null;
 						}
-						catch (java.security.cert.CertificateExpiredException e) {
+						catch (java.security.cert.CertificateExpiredException e)
+						{
 							log.info("[DirectoryKeystore] {getPublicKey} Key expired");
 							return null;
 						}
 					}
-					else if (o instanceof PublicKey) {
+					else if (o instanceof PublicKey)
+					{
 						return (PublicKey) o;
 					}
 					// A public/private keypair
-					else if (o instanceof KeyPair) {
+					else if (o instanceof KeyPair)
+					{
 						KeyPair kp = (KeyPair) o;
-	
+
 						return kp.getPublic();
 					}
-					else {
+					else
+					{
 						log.error("[DirectoryKeystore] Unknown key format: " + o.getClass());
 						return null;
 					}
 				}
-				finally {
+				finally
+				{
 					IOUtils.closeQuietly(r);
 				}
 			}
-			else {
+			else
+			{
 				return null;
 			}
 		}
-		catch (IOException e) {
+		catch (IOException e)
+		{
 			log.error("[DirectoryKeystore] {getPublicKey} Error getting key: " + e.getMessage(), e);
 			return null;
 		}

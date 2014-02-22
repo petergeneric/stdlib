@@ -1,19 +1,18 @@
 package com.peterphi.std.guice.common.converter;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertFalse;
-
-import java.util.concurrent.TimeUnit;
-
-import org.junit.Test;
-
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.guice.common.ServicePropertiesModule;
+import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.threading.Timeout;
+import org.junit.Test;
+
+import java.util.concurrent.TimeUnit;
+
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
 
 public class TimeoutConverterTest
 {

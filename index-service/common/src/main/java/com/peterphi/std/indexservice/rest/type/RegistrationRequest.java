@@ -6,7 +6,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
 import java.util.List;
 
-@XmlRootElement(name="registrationRequest")
+@XmlRootElement(name = "registrationRequest")
 public class RegistrationRequest
 {
 

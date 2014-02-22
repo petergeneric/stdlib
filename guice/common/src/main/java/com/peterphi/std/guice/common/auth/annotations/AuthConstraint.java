@@ -24,7 +24,8 @@ public @interface AuthConstraint
 	public boolean skip() default false;
 
 	/**
-	 * The role the user must have (defaults to "user"). If the user does not hold this role then an authentication exception will
+	 * The role the user must have (defaults to "user"). If the user does not hold this role then an authentication exception
+	 * will
 	 * be raised
 	 *
 	 * @return

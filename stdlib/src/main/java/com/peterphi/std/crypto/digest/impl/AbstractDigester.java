@@ -1,29 +1,37 @@
 package com.peterphi.std.crypto.digest.impl;
 
-import java.io.*;
-import java.nio.channels.ByteChannel;
-
 import com.peterphi.std.crypto.digest.IDigester;
 import com.peterphi.std.util.Base64;
 import com.peterphi.std.util.HexHelper;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.channels.ByteChannel;
+
 /**
- * 
+ *
  */
-public abstract class AbstractDigester implements IDigester {
-	public static enum DigestEncoding {
-		HEX, BASE64;
+public abstract class AbstractDigester implements IDigester
+{
+	public static enum DigestEncoding
+	{
+		HEX,
+		BASE64;
 	}
 
 	private final DigestEncoding encoding;
 
 
-	public AbstractDigester() {
+	public AbstractDigester()
+	{
 		this(DigestEncoding.HEX);
 	}
 
 
-	public AbstractDigester(DigestEncoding encoding) {
+	public AbstractDigester(DigestEncoding encoding)
+	{
 		this.encoding = encoding;
 	}
 
@@ -32,7 +40,8 @@ public abstract class AbstractDigester implements IDigester {
 	 * @see com.peterphi.std.crypto.digest.IDigester#digest(byte[])
 	 */
 	@Override
-	public final String digest(byte[] content) {
+	public final String digest(byte[] content)
+	{
 		return encode(makeDigest(content));
 	}
 
@@ -41,7 +50,8 @@ public abstract class AbstractDigester implements IDigester {
 	 * @see com.peterphi.std.crypto.digest.IDigester#digest(java.io.File)
 	 */
 	@Override
-	public final String digest(File file) throws IOException {
+	public final String digest(File file) throws IOException
+	{
 		return encode(makeDigest(file));
 	}
 
@@ -50,25 +60,29 @@ public abstract class AbstractDigester implements IDigester {
 	 * @see com.peterphi.std.crypto.digest.IDigester#digest(java.io.InputStream)
 	 */
 	@Override
-	public final String digest(InputStream is) throws IOException {
+	public final String digest(InputStream is) throws IOException
+	{
 		return encode(makeDigest(is));
 	}
 
 
 	@Override
-	public final String digest(ByteChannel channel) throws IOException {
+	public final String digest(ByteChannel channel) throws IOException
+	{
 		return encode(makeDigest(channel));
 	}
 
 
-	protected final String encode(byte[] unencoded) {
-		switch (encoding) {
-		case HEX:
-			return HexHelper.toHex(unencoded);
-		case BASE64:
-			return Base64.encodeBytes(unencoded);
-		default:
-			throw new IllegalArgumentException("Illegal encoding: " + encoding);
+	protected final String encode(byte[] unencoded)
+	{
+		switch (encoding)
+		{
+			case HEX:
+				return HexHelper.toHex(unencoded);
+			case BASE64:
+				return Base64.encodeBytes(unencoded);
+			default:
+				throw new IllegalArgumentException("Illegal encoding: " + encoding);
 		}
 	}
 
@@ -76,7 +90,8 @@ public abstract class AbstractDigester implements IDigester {
 	public abstract byte[] makeDigest(byte[] content);
 
 
-	public byte[] makeDigest(File file) throws IOException {
+	public byte[] makeDigest(File file) throws IOException
+	{
 		return makeDigest(new FileInputStream(file));
 	}
 

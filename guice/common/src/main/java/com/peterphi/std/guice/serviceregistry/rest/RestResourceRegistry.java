@@ -1,11 +1,11 @@
 package com.peterphi.std.guice.serviceregistry.rest;
 
+import com.peterphi.std.guice.serviceregistry.index.IndexableServiceRegistry;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import com.peterphi.std.guice.serviceregistry.index.IndexableServiceRegistry;
 
 /**
  * Holds information about the REST resources this webapp exposes
@@ -18,7 +18,7 @@ public class RestResourceRegistry
 
 	/**
 	 * Register a new resource - N.B. currently this resource cannot be safely unregistered without restarting the webapp
-	 * 
+	 *
 	 * @param clazz
 	 */
 	public static synchronized void register(Class<?> clazz)
@@ -28,10 +28,10 @@ public class RestResourceRegistry
 
 	/**
 	 * Register a new resource - N.B. currently this resource cannot be safely unregistered without restarting the webapp
-	 * 
+	 *
 	 * @param clazz
 	 * @param indexable
-	 *            true if this service should also be exposed to any configured index service
+	 * 		true if this service should also be exposed to any configured index service
 	 */
 	public static synchronized void register(Class<?> clazz, boolean indexable)
 	{

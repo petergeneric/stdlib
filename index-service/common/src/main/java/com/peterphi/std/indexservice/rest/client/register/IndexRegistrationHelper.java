@@ -49,6 +49,7 @@ public class IndexRegistrationHelper
 
 	/**
 	 * Called periodically to allow index registration/reregistration/heartbeat
+	 *
 	 * @return
 	 */
 	public Timeout pulse()

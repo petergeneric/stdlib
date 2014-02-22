@@ -1,26 +1,19 @@
 package com.peterphi.carbon.message;
 
-import java.io.File;
-import java.util.Collections;
-
-import org.jdom2.Document;
-import org.jdom2.input.SAXBuilder;
-import org.junit.After;
-import org.junit.Before;
-import org.junit.Ignore;
-import org.junit.Test;
-
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.peterphi.carbon.CarbonClient;
 import com.peterphi.carbon.guice.CarbonClientModule;
 import com.peterphi.carbon.type.immutable.CarbonJobInfo;
 import com.peterphi.carbon.type.immutable.CarbonProfile;
-import com.peterphi.carbon.type.mutable.CarbonProject;
 import com.peterphi.std.guice.apploader.BasicSetup;
 import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
-import com.peterphi.std.threading.Timeout;
+import org.junit.After;
+import org.junit.Before;
+import org.junit.Test;
+
+import java.util.Collections;
 
 public class BuilderManual
 {
@@ -29,8 +22,7 @@ public class BuilderManual
 	@Before
 	public void setUp()
 	{
-		this.injector = GuiceInjectorBootstrap.createInjector(new BasicSetup(
-				Collections.singletonList((Module) new CarbonClientModule())));
+		this.injector = GuiceInjectorBootstrap.createInjector(new BasicSetup(Collections.singletonList((Module) new CarbonClientModule())));
 	}
 
 	@After

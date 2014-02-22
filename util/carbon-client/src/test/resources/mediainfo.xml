@@ -67,7 +67,8 @@
 			<Tagged_date>UTC 2012-11-01 18:42:45</Tagged_date>
 			<File_last_modification_date>UTC 2012-11-02 14:27:34</File_last_modification_date>
 			<File_last_modification_date__local_>2012-11-02 14:27:34</File_last_modification_date__local_>
-			<Writing_application>Omneon libommedia 5,5,0,0 09-16-2009 13:38:34,ex={0,-1},rng={-1,-1,1},trimAu,exPre</Writing_application>
+			<Writing_application>Omneon libommedia 5,5,0,0 09-16-2009 13:38:34,ex={0,-1},rng={-1,-1,1},trimAu,exPre
+			</Writing_application>
 		</track>
 		<track type="Video">
 			<Count>251</Count>
@@ -88,7 +89,11 @@
 			<Format_settings__BVOP>Yes</Format_settings__BVOP>
 			<Format_settings__Matrix>Custom</Format_settings__Matrix>
 			<Format_settings__Matrix>Custom</Format_settings__Matrix>
-			<Format_Settings_Matrix_Data>0808080A080A0B0B0B0B0B0B0D0C0D0E0E0E0D0D0D0D0E0E0E0F0F0F1111110F0F0F0E0E0F0F10101111131313121211121313141414181817171C1C1D23232A / 10111111111112121212121212121213131313131313131313131313141414141414141414141415141414151515151515161616161616161616171717181819</Format_Settings_Matrix_Data>
+			<Format_Settings_Matrix_Data>
+				0808080A080A0B0B0B0B0B0B0D0C0D0E0E0E0D0D0D0D0E0E0E0F0F0F1111110F0F0F0E0E0F0F10101111131313121211121313141414181817171C1C1D23232A
+				/
+				10111111111112121212121212121213131313131313131313131313141414141414141414141415141414151515151515161616161616161616171717181819
+			</Format_Settings_Matrix_Data>
 			<Format_settings__GOP>M=3, N=12</Format_settings__GOP>
 			<Internet_media_type>video/MPV</Internet_media_type>
 			<Codec_ID>xd5c</Codec_ID>

@@ -1,12 +1,12 @@
 package com.peterphi.std.guice.common.converter;
 
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeConverter;
 import com.peterphi.std.threading.Timeout;
+
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Interprets a number of milliseconds as a Timeout
@@ -50,13 +50,17 @@ class TimeoutConverter implements TypeConverter
 		{
 			return TimeUnit.MILLISECONDS;
 		}
-		else if ("s".equalsIgnoreCase(unit) || "sec".equalsIgnoreCase(unit) || "seconds".equalsIgnoreCase(unit)
-				|| "second".equalsIgnoreCase(unit))
+		else if ("s".equalsIgnoreCase(unit) ||
+		         "sec".equalsIgnoreCase(unit) ||
+		         "seconds".equalsIgnoreCase(unit) ||
+		         "second".equalsIgnoreCase(unit))
 		{
 			return TimeUnit.SECONDS;
 		}
-		else if ("m".equalsIgnoreCase(unit) || "min".equalsIgnoreCase(unit) || "minute".equalsIgnoreCase(unit)
-				|| "minutes".equalsIgnoreCase(unit))
+		else if ("m".equalsIgnoreCase(unit) ||
+		         "min".equalsIgnoreCase(unit) ||
+		         "minute".equalsIgnoreCase(unit) ||
+		         "minutes".equalsIgnoreCase(unit))
 		{
 			return TimeUnit.MINUTES;
 		}

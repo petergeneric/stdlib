@@ -1,12 +1,19 @@
 package com.peterphi.std.io;
 
-import java.io.*;
-import java.util.Map;
-import java.util.zip.*;
-
+import com.ice.tar.TarArchive;
 import org.apache.log4j.Logger;
 
-import com.ice.tar.TarArchive;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Map;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.ZipEntry;
+import java.util.zip.ZipInputStream;
+import java.util.zip.ZipOutputStream;
 
 /*
  * <p> Title: Archive Helper </p>
@@ -20,29 +27,38 @@ import com.ice.tar.TarArchive;
  * 
  * @version $Revision$
  */
-public class ArchiveHelper {
+public class ArchiveHelper
+{
 	private static Logger log = Logger.getLogger(ArchiveHelper.class);
 
 
 	/**
 	 * Gets the input stream for a given file (for tar archives)
-	 * 
-	 * @param f File
+	 *
+	 * @param f
+	 * 		File
+	 *
 	 * @return InputStream
-	 * @throws FileNotFoundException When the file's not found
+	 *
+	 * @throws FileNotFoundException
+	 * 		When the file's not found
 	 */
-	private static InputStream getInputStream(File f) throws FileNotFoundException {
+	private static InputStream getInputStream(File f) throws FileNotFoundException
+	{
 		InputStream is = new FileInputStream(f);
-		try {
+		try
+		{
 			return new GZIPInputStream(is);
 		}
-		catch (IOException e) {
+		catch (IOException e)
+		{
 			return new FileInputStream(f);
 		}
 	}
 
 
-	private static TarArchive getArchive(File tarFile) throws FileNotFoundException {
+	private static TarArchive getArchive(File tarFile) throws FileNotFoundException
+	{
 		InputStream is = getInputStream(tarFile);
 
 		return new TarArchive(is);
@@ -51,31 +67,40 @@ public class ArchiveHelper {
 
 	/**
 	 * Extracts a .tar or .tar.gz archive to a given folder
-	 * 
-	 * @param tarFile File The archive file
-	 * @param extractTo File The folder to extract the contents of this archive to
+	 *
+	 * @param tarFile
+	 * 		File The archive file
+	 * @param extractTo
+	 * 		File The folder to extract the contents of this archive to
+	 *
 	 * @return boolean True if the archive was successfully extracted, otherwise false
 	 */
-	public static boolean extractArchive(File tarFile, File extractTo) {
-		try {
+	public static boolean extractArchive(File tarFile, File extractTo)
+	{
+		try
+		{
 			TarArchive ta = getArchive(tarFile);
-			try {
+			try
+			{
 				if (!extractTo.exists())
 					if (!extractTo.mkdir())
 						throw new RuntimeException("Could not create extract dir: " + extractTo);
 
 				ta.extractContents(extractTo);
 			}
-			finally {
+			finally
+			{
 				ta.closeArchive();
 			}
 			return true;
 		}
-		catch (FileNotFoundException e) {
+		catch (FileNotFoundException e)
+		{
 			log.error("File not found exception: " + e.getMessage(), e);
 			return false;
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			log.error("Exception while extracting archive: " + e.getMessage(), e);
 			return false;
 		}
@@ -84,45 +109,53 @@ public class ArchiveHelper {
 
 	/**
 	 * Adds a file or files to a jar file, replacing the original one
-	 * 
-	 * @param jarFile File the jar file
-	 * @param basePathWithinJar String the base path to put the files within the Jar
-	 * @param files File[] The files. The files will be placed in basePathWithinJar
-	 * @since 2007-06-07 uses createTempFile instead of Java's createTempFile, increased buffer from 1k to 4k
+	 *
+	 * @param jarFile
+	 * 		File the jar file
+	 * @param basePathWithinJar
+	 * 		String the base path to put the files within the Jar
+	 * @param files
+	 * 		File[] The files. The files will be placed in basePathWithinJar
+	 *
 	 * @throws Exception
+	 * @since 2007-06-07 uses createTempFile instead of Java's createTempFile, increased buffer from 1k to 4k
 	 */
-	public static boolean addFilesToExistingJar(
-			File jarFile,
-			String basePathWithinJar,
-			Map<String, File> files,
-			ActionOnConflict action) throws IOException {
+	public static boolean addFilesToExistingJar(File jarFile,
+	                                            String basePathWithinJar,
+	                                            Map<String, File> files,
+	                                            ActionOnConflict action) throws IOException
+	{
 
 		// get a temp file
 		File tempFile = FileHelper.createTempFile(jarFile.getName(), null);
 
 		boolean renamed = jarFile.renameTo(tempFile);
-		if (!renamed) {
+		if (!renamed)
+		{
 			throw new RuntimeException("[ArchiveHelper] {addFilesToExistingJar} " + "Could not rename the file " +
-					jarFile.getAbsolutePath() + " to " + tempFile.getAbsolutePath());
+			                           jarFile.getAbsolutePath() + " to " + tempFile.getAbsolutePath());
 		}
 
 		ZipInputStream jarInput = new ZipInputStream(new FileInputStream(tempFile));
 		ZipOutputStream jarOutput = new ZipOutputStream(new FileOutputStream(jarFile));
 
-		try {
-			switch (action) {
-			case OVERWRITE:
-				overwriteFiles(jarInput, jarOutput, basePathWithinJar, files);
-				break;
-			case CONFLICT:
-				conflictFiles(jarInput, jarOutput, basePathWithinJar, files);
-				break;
-			default:
-				// This should never happen with validation of action taking place in WarDriver class
-				throw new IOException("An invalid ActionOnConflict action was received");
+		try
+		{
+			switch (action)
+			{
+				case OVERWRITE:
+					overwriteFiles(jarInput, jarOutput, basePathWithinJar, files);
+					break;
+				case CONFLICT:
+					conflictFiles(jarInput, jarOutput, basePathWithinJar, files);
+					break;
+				default:
+					// This should never happen with validation of action taking place in WarDriver class
+					throw new IOException("An invalid ActionOnConflict action was received");
 			}
 		}
-		finally {
+		finally
+		{
 			if (!tempFile.delete())
 				log.warn("Could not delete temp file " + tempFile);
 		}
@@ -130,29 +163,34 @@ public class ArchiveHelper {
 	}
 
 
-	private static void overwriteFiles(
-			ZipInputStream jarInput,
-			ZipOutputStream jarOutput,
-			String basePathWithinJar,
-			Map<String, File> files) throws IOException {
+	private static void overwriteFiles(ZipInputStream jarInput,
+	                                   ZipOutputStream jarOutput,
+	                                   String basePathWithinJar,
+	                                   Map<String, File> files) throws IOException
+	{
 		byte[] buf = new byte[4096];
 		ZipEntry entry = jarInput.getNextEntry();
-		while (entry != null) {
+		while (entry != null)
+		{
 			String name = entry.getName();
 			boolean addFile = true;
-			for (String f : files.keySet()) {
+			for (String f : files.keySet())
+			{
 				String filename = basePathWithinJar + f;
-				if (filename.compareTo(name) == 0) {
+				if (filename.compareTo(name) == 0)
+				{
 					addFile = false;
 					break;
 				}
 			}
-			if (addFile) {
+			if (addFile)
+			{
 				// Add jar entry to output stream.
 				jarOutput.putNextEntry(new ZipEntry(name));
 				// Transfer bytes from the jar file to the output file
 				int len;
-				while ((len = jarInput.read(buf)) > 0) {
+				while ((len = jarInput.read(buf)) > 0)
+				{
 					jarOutput.write(buf, 0, len);
 				}
 				jarOutput.closeEntry();
@@ -162,21 +200,25 @@ public class ArchiveHelper {
 		// Close the streams
 		jarInput.close();
 
-		for (String fname : files.keySet()) {
+		for (String fname : files.keySet())
+		{
 			InputStream input = new FileInputStream(files.get(fname));
-			try {
+			try
+			{
 				// Add ZIP entry to output stream.
 				jarOutput.putNextEntry(new ZipEntry(basePathWithinJar + fname));
 
 				// Transfer bytes from the file to the jar file
 				int length;
-				while ((length = input.read(buf)) > 0) {
+				while ((length = input.read(buf)) > 0)
+				{
 					jarOutput.write(buf, 0, length);
 				}
 				// Complete the entry
 				jarOutput.closeEntry();
 			}
-			finally {
+			finally
+			{
 				input.close();
 			}
 		}
@@ -185,30 +227,35 @@ public class ArchiveHelper {
 	}
 
 
-	private static void conflictFiles(
-			ZipInputStream jarInput,
-			ZipOutputStream jarOutput,
-			String basePathWithinJar,
-			Map<String, File> files) throws IOException {
+	private static void conflictFiles(ZipInputStream jarInput,
+	                                  ZipOutputStream jarOutput,
+	                                  String basePathWithinJar,
+	                                  Map<String, File> files) throws IOException
+	{
 		ZipEntry entry = jarInput.getNextEntry();
 		byte[] buf = new byte[4096];
-		while (entry != null) {
+		while (entry != null)
+		{
 			String name = entry.getName();
 
-			for (String f : files.keySet()) {
+			for (String f : files.keySet())
+			{
 				String filename = basePathWithinJar + f;
-				if (filename.compareTo(name) == 0) {
+				if (filename.compareTo(name) == 0)
+				{
 					jarInput.close();
 					jarOutput.close();
 					throw new IOException("File already exists in jar - Action set to conflict");
 				}
-				else {
+				else
+				{
 					// Add jar entry to output stream.
 					jarOutput.putNextEntry(new ZipEntry(name));
 					// Transfer bytes from the jar file to the output file
 
 					int len;
-					while ((len = jarInput.read(buf)) > 0) {
+					while ((len = jarInput.read(buf)) > 0)
+					{
 						jarOutput.write(buf, 0, len);
 					}
 					jarOutput.closeEntry();
@@ -216,20 +263,24 @@ public class ArchiveHelper {
 			}
 			entry = jarInput.getNextEntry();
 		}
-		for (String fname : files.keySet()) {
+		for (String fname : files.keySet())
+		{
 			InputStream input = new FileInputStream(files.get(fname));
-			try {
+			try
+			{
 				// Add ZIP entry to output stream.
 				jarOutput.putNextEntry(new ZipEntry(basePathWithinJar + fname));
 				// Transfer bytes from the file to the jar file
 				int length;
-				while ((length = input.read(buf)) > 0) {
+				while ((length = input.read(buf)) > 0)
+				{
 					jarOutput.write(buf, 0, length);
 				}
 				// Complete the entry
 				jarOutput.closeEntry();
 			}
-			finally {
+			finally
+			{
 				input.close();
 			}
 		}

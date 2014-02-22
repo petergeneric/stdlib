@@ -1,9 +1,9 @@
 package com.peterphi.std.guice.common.converter;
 
-import java.io.File;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeConverter;
+
+import java.io.File;
 
 class FileTypeConverter implements TypeConverter
 {

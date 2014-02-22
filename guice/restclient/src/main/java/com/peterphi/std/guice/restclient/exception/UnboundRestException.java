@@ -1,7 +1,8 @@
 package com.peterphi.std.guice.restclient.exception;
 
 /**
- * Represents a server-side exception that could not be bound to a local client-side RestException implementation (for example, an IllegalArgumentException thrown server-side)
+ * Represents a server-side exception that could not be bound to a local client-side RestException implementation (for example, an
+ * IllegalArgumentException thrown server-side)
  */
 public class UnboundRestException extends RestException
 {

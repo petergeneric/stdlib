@@ -31,7 +31,8 @@ public interface Dao<T, ID extends Serializable>
 	 * @param constraints
 	 *
 	 * @return
-	 * @deprecated  use findbyUriQuery instead
+	 *
+	 * @deprecated use findbyUriQuery instead
 	 */
 	@Deprecated
 	public List<T> getConstraintResults(ResultSetConstraint constraints);
@@ -49,11 +50,12 @@ public interface Dao<T, ID extends Serializable>
 	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
 	 *
 	 * @param constraints
-	 * @param base the base criteria to use (the constraints will be ANDed with this Criteria
+	 * @param base
+	 * 		the base criteria to use (the constraints will be ANDed with this Criteria
 	 *
 	 * @return
 	 */
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints,Criteria base);
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base);
 
 	/**
 	 * Retrieve every object accessible through this DAO
@@ -89,8 +91,9 @@ public interface Dao<T, ID extends Serializable>
 	 * @param ids
 	 * 		a collection (may be empty) of primary keys
 	 *
-	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller than
-	 *         <code>ids</code>
+	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller
+	 * than
+	 * <code>ids</code>
 	 */
 	public List<T> getByIds(final Collection<ID> ids);
 

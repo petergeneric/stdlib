@@ -1,12 +1,12 @@
 package com.peterphi.std.guice.apploader;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.peterphi.std.io.PropertyFile;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class BasicSetup implements GuiceSetup
 {

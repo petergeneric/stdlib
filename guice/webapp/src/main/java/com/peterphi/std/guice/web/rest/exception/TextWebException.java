@@ -39,8 +39,11 @@ public class TextWebException extends WebApplicationException
 
 	private static Response buildResponse(int status, String message)
 	{
-		return Response.status(status).type(MediaType.TEXT_PLAIN_TYPE).header(
-				"X-Java-Exception-Impl",
-				TextWebException.class.getName()).entity(message).build();
+		return Response.status(status)
+		               .type(MediaType.TEXT_PLAIN_TYPE)
+		               .header("X-Java-Exception-Impl",
+		                       TextWebException.class.getName())
+		               .entity(message)
+		               .build();
 	}
 }

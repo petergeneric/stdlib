@@ -72,7 +72,8 @@ public class CaHelper
 
 	//public static String getSignatureAlgorithm() = "SHA1WithRSAEncryption"; // Was SHA1withRSAEncryption
 	/**
-	 * If true, enables a hack which works around GT 4.2.1 "Bug 3299:12 Extended Key Usage certificate extension not supported" (a
+	 * If true, enables a hack which works around GT 4.2.1 "Bug 3299:12 Extended Key Usage certificate extension not supported"
+	 * (a
 	 * problem in CoG)
 	 */
 	public static final boolean GLOBUS_COG_HACK = true;

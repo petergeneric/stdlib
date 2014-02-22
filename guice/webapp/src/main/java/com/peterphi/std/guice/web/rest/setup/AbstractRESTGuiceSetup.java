@@ -40,7 +40,8 @@ public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 		{
 			modules.add(new CoreRestServicesModule());
 		}
-		else {
+		else
+		{
 			log.info("REST Core Services disabled by config parameter");
 		}
 

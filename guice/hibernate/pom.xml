@@ -1,12 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-hibernate</artifactId>
 	<version>5.0.2-SNAPSHOT</version>
 	<packaging>jar</packaging>
-	
+
 	<name>stdlib guice hibernate</name>
 	<description>stdlib guice hibernate</description>
 
@@ -16,20 +17,20 @@
 		<!-- If there's a compelling reason to upgrade Hibernate we should likely go ahead though... -->
 		<hibernate.version>4.1.7.Final</hibernate.version>
 	</properties>
-	
+
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
 		<version>5.0.2-SNAPSHOT</version>
 	</parent>
-	
+
 	<dependencies>
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
@@ -40,7 +41,7 @@
 			<artifactId>joda-time</artifactId>
 			<version>2.1</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
@@ -52,7 +53,7 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
 		</dependency>
-		
+
 		<dependency>
 			<groupId>org.hibernate.javax.persistence</groupId>
 			<artifactId>hibernate-jpa-2.0-api</artifactId>

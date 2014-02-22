@@ -8,9 +8,9 @@ public class CarbonFTPUpload extends XMLWrapper
 
 	public static final String REMOTE_FTP_FILE_ATTRIBUTE = "RemoteFTPFile";
 	public static final String REMOTE_FTP_FOLDER_ATTRIBUTE = "RemoteFTPFolder";
-	
+
 	public static String FTP_UPLOAD_ELEMENT_NAME_PREFIX = "FTPUpload_";
-	
+
 	public CarbonFTPUpload(Element element)
 	{
 		super(element);
@@ -18,7 +18,7 @@ public class CarbonFTPUpload extends XMLWrapper
 
 	public void setRemoteFTPFile(String filename)
 	{
-		setAttribute(REMOTE_FTP_FILE_ATTRIBUTE, filename);		
+		setAttribute(REMOTE_FTP_FILE_ATTRIBUTE, filename);
 	}
 
 	public void setRemoteFTPFolder(String folder)
@@ -43,18 +43,21 @@ public class CarbonFTPUpload extends XMLWrapper
 		CarbonFTPSettings settings = getOrCreateSettingsElement();
 		settings.setServer(server);
 	}
-	
-	private CarbonFTPSettings getOrCreateSettingsElement(){
-		
-		if(getSettingsElement() == null){
+
+	private CarbonFTPSettings getOrCreateSettingsElement()
+	{
+
+		if (getSettingsElement() == null)
+		{
 			element.addContent(new Element(CarbonFTPSettings.CARBON_FTP_SETTINGS_ELEMENT_NAME));
 		}
-		
-		return getSettingsElement();		
+
+		return getSettingsElement();
 	}
-	
-	private CarbonFTPSettings getSettingsElement(){
+
+	private CarbonFTPSettings getSettingsElement()
+	{
 		return new CarbonFTPSettings(element.getChild(CarbonFTPSettings.CARBON_FTP_SETTINGS_ELEMENT_NAME));
 	}
-	
+
 }

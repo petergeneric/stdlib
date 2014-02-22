@@ -1,10 +1,10 @@
 package com.peterphi.std.guice.common.converter;
 
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeConverter;
+
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 
 class InetAddressTypeConverter implements TypeConverter
 {

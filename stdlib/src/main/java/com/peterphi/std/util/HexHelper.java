@@ -12,12 +12,13 @@ public class HexHelper
 	{
 	}
 
-	private static final char[] hex = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+	private static final char[] hex = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
 	/**
 	 * Decodes a hexidecimal string into a series of bytes
-	 * 
+	 *
 	 * @param value
+	 *
 	 * @return
 	 */
 	public static final byte[] fromHex(final String value)
@@ -44,11 +45,13 @@ public class HexHelper
 
 	/**
 	 * Decodes a hexidecimal string (optionally with <code>separator</code> characters separating each two-digit pair)<br />
-	 * Multiple runs of the separator will be ignored (eg. AA::BB will result in <code>[0xAA,0xBB]</code>, not <code>[0xAA,0x00,0xBB]</code>)<br />
-	 * 
+	 * Multiple runs of the separator will be ignored (eg. AA::BB will result in <code>[0xAA,0xBB]</code>, not
+	 * <code>[0xAA,0x00,0xBB]</code>)<br />
+	 *
 	 * @param separator
-	 *            the separator character
+	 * 		the separator character
 	 * @param value
+	 *
 	 * @return
 	 */
 	public static final byte[] fromHex(final char separator, final String value)
@@ -56,7 +59,7 @@ public class HexHelper
 		if (value.length() == 0)
 			return new byte[0];
 
-		final String sepString = new String(new char[] { separator });
+		final String sepString = new String(new char[]{separator});
 
 		final StringTokenizer t = new StringTokenizer(value, sepString, false);
 
@@ -70,8 +73,12 @@ public class HexHelper
 			if (hex.length() == 2)
 				buffer[i++] = (byte) Integer.parseInt(hex, 16);
 			else
-				throw new IllegalArgumentException("Hex section of length " + hex.length() + " encountered inside hex string: "
-						+ value + " with separator " + separator);
+				throw new IllegalArgumentException("Hex section of length " +
+				                                   hex.length() +
+				                                   " encountered inside hex string: " +
+				                                   value +
+				                                   " with separator " +
+				                                   separator);
 		}
 
 		return buffer;
@@ -80,8 +87,9 @@ public class HexHelper
 	/**
 	 * Generates a number of random bytes which can then be manipulated and/or converted to hex<br />
 	 * Uses a new instance of java.util.Random
-	 * 
+	 *
 	 * @param bytes
+	 *
 	 * @return
 	 */
 	public static final byte[] generateBytes(final int bytes)
@@ -91,10 +99,11 @@ public class HexHelper
 
 	/**
 	 * Generates a number of random bytes which can then be manipulated and/or converted to hex<br />
-	 * 
+	 *
 	 * @param RANDOM
-	 *            the random number generator to use
+	 * 		the random number generator to use
 	 * @param bytes
+	 *
 	 * @return
 	 */
 	public static final byte[] generateBytes(final Random rand, final int bytes)
@@ -109,9 +118,10 @@ public class HexHelper
 
 	/**
 	 * Generates a hexidecimal String of length <code>characters</code>
-	 * 
+	 *
 	 * @param characters
-	 *            the number of characters in the resulting String
+	 * 		the number of characters in the resulting String
+	 *
 	 * @return
 	 */
 	public static final String generateHex(final int characters)
@@ -121,11 +131,12 @@ public class HexHelper
 
 	/**
 	 * Generates a hexidecimal String of length <code>characters</code>
-	 * 
+	 *
 	 * @param random
-	 *            the random number generator to use
+	 * 		the random number generator to use
 	 * @param characters
-	 *            the number of characters in the resulting String
+	 * 		the number of characters in the resulting String
+	 *
 	 * @return
 	 */
 	public static final String generateHex(final Random random, final int characters)
@@ -144,9 +155,11 @@ public class HexHelper
 	}
 
 	/**
-	 * Encodes a series of bytes into a hexidecimal string (potentially with leading zeroes) with no separators between each source byte
-	 * 
+	 * Encodes a series of bytes into a hexidecimal string (potentially with leading zeroes) with no separators between each
+	 * source byte
+	 *
 	 * @param bin
+	 *
 	 * @return
 	 */
 	public static final String toHex(final byte... bin)
@@ -169,13 +182,16 @@ public class HexHelper
 	}
 
 	/**
-	 * Encodes a series of bytes into a hexidecimal string with each source byte (represented in the output as a 2 digit hexidecimal pair) separated by <code>separator</code><br />
-	 * 
+	 * Encodes a series of bytes into a hexidecimal string with each source byte (represented in the output as a 2 digit
+	 * hexidecimal pair) separated by <code>separator</code><br />
+	 *
 	 * @param separator
-	 *            The character to insert between each byte (for example, <code>':'</code>)
+	 * 		The character to insert between each byte (for example, <code>':'</code>)
 	 * @param bin
-	 *            the series of bytes to encode
-	 * @return a hexidecimal string with each source byte (represented in the output as a 2 digit hexidecimal pair) separated by <code>separator</code>
+	 * 		the series of bytes to encode
+	 *
+	 * @return a hexidecimal string with each source byte (represented in the output as a 2 digit hexidecimal pair) separated by
+	 * <code>separator</code>
 	 */
 	public static final String toHex(final char separator, final byte... bin)
 	{

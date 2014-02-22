@@ -1,17 +1,18 @@
 package com.peterphi.std.threading;
 
-import java.util.concurrent.TimeUnit;
-
-import static org.junit.Assert.*;
-
 import org.junit.Test;
 
-import com.peterphi.std.threading.SettableFuture;
-import com.peterphi.std.threading.Timeout;
+import java.util.concurrent.TimeUnit;
 
-public class SettableFutureTest {
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertFalse;
+import static org.junit.Assert.assertTrue;
+
+public class SettableFutureTest
+{
 	@Test
-	public void testSetThenGetPrimitiveTimeout() throws Exception {
+	public void testSetThenGetPrimitiveTimeout() throws Exception
+	{
 		final Object val = new Object();
 		SettableFuture<Object> future = new SettableFuture<Object>();
 
@@ -24,11 +25,9 @@ public class SettableFutureTest {
 	}
 
 
-
-
-
 	@Test
-	public void testSetThenGetPrimitiveTimeoutMaxLong() throws Exception {
+	public void testSetThenGetPrimitiveTimeoutMaxLong() throws Exception
+	{
 		final Object val = new Object();
 		SettableFuture<Object> future = new SettableFuture<Object>();
 
@@ -42,7 +41,8 @@ public class SettableFutureTest {
 
 
 	@Test
-	public void testSetThenGetWithTimeout() throws Exception {
+	public void testSetThenGetWithTimeout() throws Exception
+	{
 		final Object val = new Object();
 		SettableFuture<Object> future = new SettableFuture<Object>();
 
@@ -56,7 +56,8 @@ public class SettableFutureTest {
 
 
 	@Test
-	public void testSetThenGetNoTimeout() throws Exception {
+	public void testSetThenGetNoTimeout() throws Exception
+	{
 		final Object val = new Object();
 		SettableFuture<Object> future = new SettableFuture<Object>();
 

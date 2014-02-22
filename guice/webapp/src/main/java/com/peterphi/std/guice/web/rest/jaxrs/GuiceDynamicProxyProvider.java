@@ -1,11 +1,10 @@
 package com.peterphi.std.guice.web.rest.jaxrs;
 
-import java.lang.reflect.Method;
-
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-
 import javassist.util.proxy.MethodHandler;
 import javassist.util.proxy.ProxyFactory;
+
+import java.lang.reflect.Method;
 
 class GuiceDynamicProxyProvider implements MethodHandler
 {
@@ -18,7 +17,7 @@ class GuiceDynamicProxyProvider implements MethodHandler
 	{
 		this.clazz = interfaceType;
 
-		proxyFactory.setInterfaces(new Class[] { clazz });
+		proxyFactory.setInterfaces(new Class[]{clazz});
 	}
 
 	public synchronized Object getProxy()
@@ -33,7 +32,7 @@ class GuiceDynamicProxyProvider implements MethodHandler
 	{
 		try
 		{
-			return proxyFactory.create(new Class[] {}, new Object[] {}, this);
+			return proxyFactory.create(new Class[]{}, new Object[]{}, this);
 		}
 		catch (Exception e)
 		{

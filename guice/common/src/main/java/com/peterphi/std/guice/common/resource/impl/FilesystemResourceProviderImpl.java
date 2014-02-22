@@ -1,20 +1,18 @@
 package com.peterphi.std.guice.common.resource.impl;
 
+import com.peterphi.std.guice.common.resource.iface.ResourceNotFoundException;
+import com.peterphi.std.guice.common.resource.iface.ResourceProvider;
+import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.io.IOUtils;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileReader;
 import java.io.InputStream;
 import java.io.Reader;
 
-import org.apache.commons.io.IOUtils;
-
-import com.peterphi.std.guice.common.resource.iface.ResourceNotFoundException;
-import com.peterphi.std.guice.common.resource.iface.ResourceProvider;
-import com.peterphi.std.io.PropertyFile;
-
 /**
  * An implementation of ResourceProvider that loads resources from a folder on the local filesystem
- * 
  */
 public class FilesystemResourceProviderImpl implements ResourceProvider
 {

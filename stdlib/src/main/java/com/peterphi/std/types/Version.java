@@ -381,7 +381,7 @@ public class Version implements Comparable<Version>, Serializable
 			segments[i] = pad(version[i]);
 		}
 
-		return StringUtils.join(segments,".");
+		return StringUtils.join(segments, ".");
 	}
 
 

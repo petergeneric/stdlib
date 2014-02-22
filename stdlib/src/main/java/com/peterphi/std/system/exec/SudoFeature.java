@@ -1,10 +1,13 @@
 package com.peterphi.std.system.exec;
 
-import java.util.*;
-import java.util.concurrent.TimeUnit;
-import org.apache.log4j.Logger;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Determines the features available from the locally installed sudo<br />
@@ -12,7 +15,8 @@ import com.peterphi.std.threading.Timeout;
  * <em>-n</em> is the most useful (since if there's a privileges issue then control will return immediately)<br />
  * <em>--</em> increases security (since
  */
-class SudoFeature {
+class SudoFeature
+{
 	private static transient final Logger log = Logger.getLogger(SudoFeature.class);
 
 	// Some old versions of sudo don't support "--" to tell sudo that the user's command starts now
@@ -29,31 +33,37 @@ class SudoFeature {
 
 
 	/**
-	 * Determines whether a sane version of sudo is available which supports -n and -- (and, especially, does not claim to support -- and not, in fact, support it properly)
-	 * 
+	 * Determines whether a sane version of sudo is available which supports -n and -- (and, especially, does not claim to support
+	 * -- and not, in fact, support it properly)
+	 *
 	 * @return
 	 */
-	public static boolean hasSaneSudo() {
+	public static boolean hasSaneSudo()
+	{
 		return SudoFeature.hasSudo() && SudoFeature.hasNonInteractive() && SudoFeature.hasArgumentsEnd();
 	}
 
 
 	/**
 	 * Determines whether sudo is supported on the local machine
-	 * 
+	 *
 	 * @return
 	 */
-	public synchronized static boolean hasSudo() {
-		if (!sudoTested) {
-			String[] cmdArr = new String[] { "which", "sudo" };
+	public synchronized static boolean hasSudo()
+	{
+		if (!sudoTested)
+		{
+			String[] cmdArr = new String[]{"which", "sudo"};
 			List<String> cmd = new ArrayList<String>(cmdArr.length);
 			Collections.addAll(cmd, cmdArr);
 
 			ProcessBuilder whichsudo = new ProcessBuilder(cmd);
 
-			try {
+			try
+			{
 				Process p = whichsudo.start();
-				try {
+				try
+				{
 					Execed e = new Execed(cmd, p, false);
 
 					// Let it run
@@ -62,11 +72,13 @@ class SudoFeature {
 					sudoSupported = (returnCode == 0);
 					sudoTested = true;
 				}
-				finally {
+				finally
+				{
 					p.destroy();
 				}
 			}
-			catch (Throwable t) {
+			catch (Throwable t)
+			{
 				sudoSupported = false;
 				sudoTested = true;
 			}
@@ -77,23 +89,25 @@ class SudoFeature {
 
 
 	/**
-	 * 
 	 * @return
 	 */
 	@SuppressWarnings("unused")
-	public synchronized static boolean hasNonInteractive() {
+	public synchronized static boolean hasNonInteractive()
+	{
 		if (!hasSudo())
 			return false;
 
-		if (!dashNTested) {
+		if (!dashNTested)
+		{
 			// Try to run sudo -n whoami
 			// There are 3 possible outputs:
 			// 1. -n simply unsupported (returns 1, outputs "sudo: illegal option `-n'" on stderr)
 			// 2. -n ignored (execution times out since sudo is waiting for a password) - unlikely to ever happen
 			// 3. -n supported, user
 			Process p = null;
-			try {
-				String[] cmdArr = new String[] { "sudo", "-n", "whoami" };
+			try
+			{
+				String[] cmdArr = new String[]{"sudo", "-n", "whoami"};
 				List<String> cmd = new ArrayList<String>(cmdArr.length);
 				Collections.addAll(cmd, cmdArr);
 
@@ -106,49 +120,59 @@ class SudoFeature {
 				final int returnCode = e.waitForExit(Timeout.TEN_SECONDS.start());
 
 				// code 0 (fully supported, operation worked)
-				if (returnCode == 0) {
+				if (returnCode == 0)
+				{
 					dashNTested = true;
 					dashNSupported = true;
 				}
-				else if (returnCode == 1) {
+				else if (returnCode == 1)
+				{
 					// Take the simple approach and say it's unsupported
 					dashNSupported = false;
 					dashNTested = true;
 
-					if (false) {
+					if (false)
+					{
 						String stderr = e.getStandardError();
 
-						if (stderr.contains("-n")) {
+						if (stderr.contains("-n"))
+						{
 							// Unsupported - outputs something like this on stderr: sudo: illegal option `-n'
 
 							dashNSupported = false;
 							dashNTested = true;
 						}
-						else {
+						else
+						{
 							// Supported, password required. Output is something like: sudo: sorry, a password is required to run sudo
 							dashNSupported = true;
 							dashNTested = true;
 						}
 					}
 				}
-				else {
-					if (returnCode == Integer.MIN_VALUE) {
+				else
+				{
+					if (returnCode == Integer.MIN_VALUE)
+					{
 						// Execution took longer than 3 seconds; -n was ignored
 						dashNSupported = false;
 						dashNTested = true;
 					}
-					else {
+					else
+					{
 						throw new Error("sudo -n whoami returned " + returnCode + " (expected 0, 1 or Integer.MIN_VALUE)");
 					}
 				}
 			}
-			catch (Throwable t) {
+			catch (Throwable t)
+			{
 				log.warn("{runasSupportsNoninteractiveMode} Cannot determine support. Exception: " + t.getMessage(), t);
 
 				dashNSupported = false;
 				dashNTested = true;
 			}
-			finally {
+			finally
+			{
 				// Make sure the process is terminated in case it's still running for whatever reason
 				if (p != null)
 					p.destroy();
@@ -160,26 +184,32 @@ class SudoFeature {
 
 
 	/**
-	 * Determines whether sudo on this machine supports the "--" option to indicate the end of the parseable arguments and the start of the user's command<br />
-	 * This feature is currently dependent upon the "-n" feature (as well as the ability of the current user to whois as root with no password); this is not necessarily a bad thing, since old versions of sudo didn't seem to support -- properly
-	 * 
+	 * Determines whether sudo on this machine supports the "--" option to indicate the end of the parseable arguments and the
+	 * start of the user's command<br />
+	 * This feature is currently dependent upon the "-n" feature (as well as the ability of the current user to whois as root with
+	 * no password); this is not necessarily a bad thing, since old versions of sudo didn't seem to support -- properly
+	 *
 	 * @return
 	 */
-	public synchronized static boolean hasArgumentsEnd() {
+	public synchronized static boolean hasArgumentsEnd()
+	{
 		// If we can't execute "sudo -n" then don't even try to test this
 		if (!hasSudo() || !hasNonInteractive())
 			return false;
 
-		if (!dashDashTested) {
+		if (!dashDashTested)
+		{
 			// Try running sudo -n whoami
 			// If it works, try running sudo -n -- whoami
 			// The result should be the same
 
-			try {
+			try
+			{
 				{
 					Process p = null;
-					try {
-						String[] cmdArr = new String[] { "sudo", "-n", "whoami" };
+					try
+					{
+						String[] cmdArr = new String[]{"sudo", "-n", "whoami"};
 						List<String> cmd = new ArrayList<String>(cmdArr.length);
 						Collections.addAll(cmd, cmdArr);
 
@@ -190,7 +220,8 @@ class SudoFeature {
 						// Let it run
 						e.waitForExit(0);
 					}
-					finally {
+					finally
+					{
 						if (p != null)
 							p.destroy();
 					}
@@ -198,8 +229,9 @@ class SudoFeature {
 
 				{
 					Process p = null;
-					try {
-						String[] cmdArr = new String[] { "sudo", "-n", "--", "whoami" };
+					try
+					{
+						String[] cmdArr = new String[]{"sudo", "-n", "--", "whoami"};
 						List<String> cmd = new ArrayList<String>(cmdArr.length);
 						Collections.addAll(cmd, cmdArr);
 
@@ -213,14 +245,16 @@ class SudoFeature {
 						dashDashSupported = (returnCode == 0);
 						dashDashTested = true;
 					}
-					finally {
+					finally
+					{
 						if (p != null)
 							p.destroy();
 					}
 				}
 
 			}
-			catch (Throwable e) {
+			catch (Throwable e)
+			{
 				dashDashSupported = false;
 				dashDashTested = true;
 

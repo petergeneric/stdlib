@@ -5,9 +5,10 @@ import java.io.Serializable;
 /**
  * A class for keeping track of indentation levels; allows indentation using spaces or tabs
  */
-public class TabLevel  implements Serializable{
+public class TabLevel implements Serializable
+{
 	/**
-	 * 
+	 *
 	 */
 	private static final long serialVersionUID = 1L;
 
@@ -28,10 +29,12 @@ public class TabLevel  implements Serializable{
 
 	private static final int CHARS_TO_BUFFER = 10;
 
-	static {
+	static
+	{
 		tabs = new char[CHARS_TO_BUFFER];
 		spaces = new char[CHARS_TO_BUFFER];
-		for (int i = 0; i < tabs.length; i++) {
+		for (int i = 0; i < tabs.length; i++)
+		{
 			tabs[i] = '\t';
 			spaces[i] = ' ';
 		}
@@ -47,46 +50,54 @@ public class TabLevel  implements Serializable{
 	private int level;
 
 
-	public TabLevel() {
+	public TabLevel()
+	{
 		this(false);
 	}
 
 
-	public TabLevel(boolean useSpaces) {
+	public TabLevel(boolean useSpaces)
+	{
 		this(0, useSpaces);
 	}
 
 
-	public TabLevel(int level) {
+	public TabLevel(int level)
+	{
 		this(level, false);
 	}
 
 
-	public TabLevel(int level, boolean useSpaces) {
+	public TabLevel(int level, boolean useSpaces)
+	{
 		this.level = level;
 		this.useSpaces = useSpaces;
 	}
 
 
-	public void add() {
+	public void add()
+	{
 		level++;
 	}
 
 
-	public void sub() {
+	public void sub()
+	{
 		if (level == 0)
 			throw new IllegalStateException("sub called but level is already 0! Mismatched add() and sub() ?");
 		level--;
 	}
 
 
-	public int getLevel() {
+	public int getLevel()
+	{
 		return this.level;
 	}
 
 
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		if (level == 0)
 			return "";
 
@@ -96,12 +107,14 @@ public class TabLevel  implements Serializable{
 	}
 
 
-	private StringBuilder toStringBuilder() {
+	private StringBuilder toStringBuilder()
+	{
 		return appendTo(null);
 	}
 
 
-	private StringBuilder appendTo(StringBuilder sb) {
+	private StringBuilder appendTo(StringBuilder sb)
+	{
 		final int chars = getChars(useSpaces, level);
 		final char[] buffer = !useSpaces ? tabs : spaces;
 
@@ -116,26 +129,31 @@ public class TabLevel  implements Serializable{
 	}
 
 
-	private static int getChars(final boolean useSpaces, final int level) {
+	private static int getChars(final boolean useSpaces, final int level)
+	{
 		final int chars = !useSpaces ? level : (level * TABSIZE_IN_SPACES);
 
 		return chars;
 	}
 
 
-	private static void appendTo(final StringBuilder sb, final int quantity, final char[] buffer) {
+	private static void appendTo(final StringBuilder sb, final int quantity, final char[] buffer)
+	{
 		if (quantity == 0)
 			return;
 
 		final int bufferSize = buffer.length;
 
-		if (quantity <= bufferSize) {
+		if (quantity <= bufferSize)
+		{
 			sb.append(buffer, 0, quantity);
 		}
-		else {
+		else
+		{
 			int remaining = quantity;
 
-			while (remaining > 0) {
+			while (remaining > 0)
+			{
 				// copy at most the bufferSize each time & no more than we need
 				final int toCopy = Math.min(bufferSize, remaining);
 				remaining -= toCopy;
@@ -147,7 +165,8 @@ public class TabLevel  implements Serializable{
 	}
 
 
-	public StringBuilder newLine(StringBuilder sb) {
+	public StringBuilder newLine(StringBuilder sb)
+	{
 		if (sb == null)
 			sb = new StringBuilder(getChars(useSpaces, level) + 1);
 
@@ -158,7 +177,8 @@ public class TabLevel  implements Serializable{
 	}
 
 
-	public String newLine() {
+	public String newLine()
+	{
 		return newLine(null).toString();
 	}
 }

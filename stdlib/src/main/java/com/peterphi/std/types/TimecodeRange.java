@@ -150,7 +150,8 @@ public class TimecodeRange
 
 
 	/**
-	 * Produce a new Timecode range which includes all timecodes from <code>a</code> and <code>b</code>. This may result in coverage
+	 * Produce a new Timecode range which includes all timecodes from <code>a</code> and <code>b</code>. This may result in
+	 * coverage
 	 * of additional timecodes if the two ranges do not overlap.
 	 *
 	 * @param a

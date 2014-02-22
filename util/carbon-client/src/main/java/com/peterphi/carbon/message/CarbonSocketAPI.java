@@ -1,5 +1,9 @@
 package com.peterphi.carbon.message;
 
+import com.peterphi.carbon.exception.MalformedCarbonResponseException;
+import org.apache.commons.io.IOUtils;
+import org.apache.log4j.Logger;
+
 import java.io.BufferedOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -7,11 +11,6 @@ import java.io.OutputStream;
 import java.io.StringWriter;
 import java.net.Socket;
 import java.nio.charset.Charset;
-
-import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
-
-import com.peterphi.carbon.exception.MalformedCarbonResponseException;
 
 /**
  * Implements the Carbon socket API
@@ -102,8 +101,10 @@ public class CarbonSocketAPI
 
 			if (length != cutLength.length())
 			{
-				throw new MalformedCarbonResponseException("Carbon response length mismatch: expected " + length + ", got "
-						+ cutLength.length());
+				throw new MalformedCarbonResponseException("Carbon response length mismatch: expected " +
+				                                           length +
+				                                           ", got " +
+				                                           cutLength.length());
 			}
 
 			return cutLength;

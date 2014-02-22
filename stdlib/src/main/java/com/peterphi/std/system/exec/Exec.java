@@ -1,13 +1,21 @@
 package com.peterphi.std.system.exec;
 
-import java.util.*;
-import java.io.*;
 import org.apache.log4j.Logger;
+
+import java.io.File;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 
 /**
  * An abstraction over ProcessBuilder to simplify the creation of processes
  */
-public class Exec {
+public class Exec
+{
 	private static transient final Logger log = Logger.getLogger(Exec.class);
 	private static String SUPERUSER_IDENTIFIER = UUID.randomUUID().toString();
 
@@ -19,22 +27,27 @@ public class Exec {
 	private final Map<String, String> environment = new HashMap<String, String>();
 
 
-	public Exec(String... command) {
+	public Exec(String... command)
+	{
 		this(Arrays.asList(command));
 	}
 
 
-	public Exec(Iterable<String> command) {
-		for (String segment : command) {
+	public Exec(Iterable<String> command)
+	{
+		for (String segment : command)
+		{
 			this.cmd.add(segment);
 		}
 	}
 
 
-	public File getWorkingDirectory() {
+	public File getWorkingDirectory()
+	{
 		File builderDirectory = builder.directory();
 
-		if (builderDirectory == null) {
+		if (builderDirectory == null)
+		{
 			String userDir = System.getProperty("user.dir");
 			if (userDir != null)
 				builderDirectory = new File(userDir);
@@ -44,21 +57,24 @@ public class Exec {
 	}
 
 
-	public Exec setWorkingDirectory(File dir) {
+	public Exec setWorkingDirectory(File dir)
+	{
 		builder.directory(dir);
 
 		return this;
 	}
 
 
-	public Exec setEnv(String key, String value) {
+	public Exec setEnv(String key, String value)
+	{
 		environment.put(key, value);
 
 		return this;
 	}
 
 
-	public String getEnv(String key) {
+	public String getEnv(String key)
+	{
 		if (environment.containsKey(key))
 			return environment.get(key);
 		else
@@ -66,12 +82,14 @@ public class Exec {
 	}
 
 
-	public Exec runAsSuperuser() {
+	public Exec runAsSuperuser()
+	{
 		return runAs(SUPERUSER_IDENTIFIER);
 	}
 
 
-	public Exec runAs(String username) {
+	public Exec runAs(String username)
+	{
 		if (this.isSudoCommand())
 			throw new IllegalStateException("Will not run a sudo command as another user!");
 
@@ -81,12 +99,14 @@ public class Exec {
 	}
 
 
-	public boolean getRedirectError() {
+	public boolean getRedirectError()
+	{
 		return builder.redirectErrorStream();
 	}
 
 
-	public Exec setRedirectError(boolean value) {
+	public Exec setRedirectError(boolean value)
+	{
 		builder.redirectErrorStream(value);
 
 		return this;
@@ -95,12 +115,15 @@ public class Exec {
 
 	/**
 	 * Launches the process, returning a handle to it for IO ops, etc<br />
-	 * <strong>the caller must read the output streams: otherwise the buffers may fill up and the remote program will be suspended indefinitely</strong>
-	 * 
+	 * <strong>the caller must read the output streams: otherwise the buffers may fill up and the remote program will be suspended
+	 * indefinitely</strong>
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
-	public BaseExeced startBasic() throws IOException {
+	public BaseExeced startBasic() throws IOException
+	{
 		startManually();
 
 		Process p = builder.start();
@@ -111,12 +134,15 @@ public class Exec {
 
 	/**
 	 * Launches the process, returning a handle to it for IO ops, etc.<br />
-	 * The finish condition for the OutputProcess is that all processes outputting to standard out must be complete before proceeding
-	 * 
+	 * The finish condition for the OutputProcess is that all processes outputting to standard out must be complete before
+	 * proceeding
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
-	public Execed start() throws IOException {
+	public Execed start() throws IOException
+	{
 		Process p = getProcessBuilder().start();
 
 		return new Execed(cmd, p, builder.redirectErrorStream());
@@ -125,35 +151,39 @@ public class Exec {
 
 	/**
 	 * Returns a ProcessBuilder for use in a manual launching
-	 * 
+	 *
 	 * @return
 	 */
 	@Deprecated
-	public ProcessBuilder startManually() {
+	public ProcessBuilder startManually()
+	{
 		return getProcessBuilder();
 	}
 
 
 	/**
 	 * Returns a ProcessBuilder for use in a manual launching
-	 * 
+	 *
 	 * @return
 	 */
-	public ProcessBuilder getProcessBuilder() {
+	public ProcessBuilder getProcessBuilder()
+	{
 		if (spawned)
 			return builder; // throw new IllegalStateException("Cannot call spawn twice!");
 
-		if (runAs != null) {
+		if (runAs != null)
+		{
 			String command = cmd.get(0);
 
 			if (command.charAt(0) == '-' && !SudoFeature.hasArgumentsEnd())
-				throw new IllegalArgumentException(
-						"Command to runAs starts with - but this version of sudo does not support the -- argument end token: this command cannot, therefore, be executed securely. Command was: '" +
-								command + "'");
+				throw new IllegalArgumentException("Command to runAs starts with - but this version of sudo does not support the -- argument end token: this command cannot, therefore, be executed securely. Command was: '" +
+				                                   command + "'");
 
 			// Pass the environment in through an "env" command:
-			if (this.environment.size() > 0) {
-				for (final String key : this.environment.keySet()) {
+			if (this.environment.size() > 0)
+			{
+				for (final String key : this.environment.keySet())
+				{
 					final String value = this.environment.get(key);
 
 					final String var = key + "=" + value;
@@ -177,19 +207,22 @@ public class Exec {
 			// If possible tell sudo to run non-interactively
 			String noninteractive = SudoFeature.hasNonInteractive() ? "-n" : null;
 
-			if (this.runAs.equals(SUPERUSER_IDENTIFIER)) {
+			if (this.runAs.equals(SUPERUSER_IDENTIFIER))
+			{
 				addToCmd(0, "sudo", noninteractive);
 			}
 			else
 				addToCmd(0, "sudo", noninteractive, "-u", runAs);
 		}
-		else {
+		else
+		{
 			builder.environment().putAll(this.environment);
 		}
 
 		spawned = true;
 
-		if (log.isInfoEnabled()) {
+		if (log.isInfoEnabled())
+		{
 			log.info("ProcessBuilder created for command: " + join(" ", cmd));
 		}
 
@@ -197,16 +230,19 @@ public class Exec {
 	}
 
 
-	protected static String join(String with, String... strings) {
+	protected static String join(String with, String... strings)
+	{
 		return join(with, Arrays.asList(strings));
 	}
 
 
-	protected static String join(final String with, final List<String> strings) {
+	protected static String join(final String with, final List<String> strings)
+	{
 		final StringBuilder sb = new StringBuilder();
 
 		boolean isFirst = true;
-		for (final String str : strings) {
+		for (final String str : strings)
+		{
 			if (!isFirst)
 				sb.append(with);
 			else
@@ -219,10 +255,13 @@ public class Exec {
 	}
 
 
-	private void addToCmd(final int position, final String... args) {
+	private void addToCmd(final int position, final String... args)
+	{
 		if (args != null)
-			for (int i = args.length - 1; i != -1; i--) {
-				if (args[i] != null) {
+			for (int i = args.length - 1; i != -1; i--)
+			{
+				if (args[i] != null)
+				{
 					cmd.add(position, args[i]);
 				}
 			}
@@ -231,38 +270,45 @@ public class Exec {
 
 	/**
 	 * Determines whether the command is trying to launch sudo
-	 * 
+	 *
 	 * @return
 	 */
-	boolean isSudoCommand() {
+	boolean isSudoCommand()
+	{
 		return cmd.get(0).equals("sudo");
 	}
 
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
 
-	public static Execed rootUtility(String... command) throws IOException {
+	public static Execed rootUtility(String... command) throws IOException
+	{
 		return rootUtility(Arrays.asList(command));
 	}
 
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
 
-	public static Execed rootUtility(Iterable<String> command) throws IOException {
+	public static Execed rootUtility(Iterable<String> command) throws IOException
+	{
 		Exec e = new Exec(command);
 		e.runAsSuperuser();
 		e.setRedirectError(true);
@@ -273,55 +319,67 @@ public class Exec {
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
 
-	public static Execed utility(String... command) throws IOException {
+	public static Execed utility(String... command) throws IOException
+	{
 		return utilityAs(null, command);
 	}
 
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
 
-	public static Execed utility(Iterable<String> command) throws IOException {
+	public static Execed utility(Iterable<String> command) throws IOException
+	{
 		return utilityAs(null, command);
 	}
 
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
 
-	public static Execed utilityAs(String as, String... command) throws IOException {
+	public static Execed utilityAs(String as, String... command) throws IOException
+	{
 		return utilityAs(as, Arrays.asList(command));
 	}
 
 
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
-	public static Execed utilityAs(String as, Iterable<String> command) throws IOException {
+	public static Execed utilityAs(String as, Iterable<String> command) throws IOException
+	{
 		Exec e = new Exec(command);
 		if (as != null)
 			e.runAs(as);
@@ -333,26 +391,32 @@ public class Exec {
 
 	/**
 	 * Runs a command, optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
-	public static Execed appAs(String as, String... command) throws IOException {
+	public static Execed appAs(String as, String... command) throws IOException
+	{
 		return appAs(as, Arrays.asList(command));
 	}
 
 
 	/**
 	 * Runs a command, optionally executing as a different user (eg root)
-	 * 
+	 *
 	 * @param as
 	 * @param command
+	 *
 	 * @return
+	 *
 	 * @throws IOException
 	 */
-	public static Execed appAs(String as, Iterable<String> command) throws IOException {
+	public static Execed appAs(String as, Iterable<String> command) throws IOException
+	{
 		Exec e = new Exec(command);
 		if (as != null)
 			e.runAs(as);

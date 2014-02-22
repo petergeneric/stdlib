@@ -11,12 +11,11 @@ public class CarbonDestination extends CarbonModule
 	 * Filter_0 is for video filters
 	 */
 	private static final String VIDEO_FILTER_CONTAINER = "Filter_0";
-	
+
 	/**
-	 * PostconversionTasks is for post conversion tasks 
-	 * 
+	 * PostconversionTasks is for post conversion tasks
+	 * <p/>
 	 * eg FTPUpload, FileDelete
-	 * 
 	 */
 	private static final String POST_CONVERSION_TASKS_CONTAINER = "PostconversionTasks";
 
@@ -157,7 +156,7 @@ public class CarbonDestination extends CarbonModule
 	{
 		return element.getChild(POST_CONVERSION_TASKS_CONTAINER);
 	}
-	
+
 	// 
 	// Post transcode delete
 	//

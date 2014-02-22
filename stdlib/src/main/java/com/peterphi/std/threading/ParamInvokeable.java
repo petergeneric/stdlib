@@ -4,24 +4,27 @@ import org.apache.log4j.Logger;
 
 /**
  * A special ParamRunnable which runs synchronously once prepare() is called
- * 
- * 
+ *
  * @param <T>
  */
-public abstract class ParamInvokeable<T> extends ParamRunnable<T> {
+public abstract class ParamInvokeable<T> extends ParamRunnable<T>
+{
 	private static transient final Logger log = Logger.getLogger(ParamInvokeable.class);
 
 	private boolean run = false;
 
 
 	/**
-	 * @deprecated if calling a ParamInvokeable directly the call(T) method should be used; this method is for maintaining full backwards compatibility with ParamRunnable
 	 * @see com.peterphi.std.threading.ParamRunnable#prepare(java.lang.Object)
+	 * @deprecated if calling a ParamInvokeable directly the call(T) method should be used; this method is for maintaining full
+	 * backwards compatibility with ParamRunnable
 	 */
 	@Deprecated
 	@Override
-	public final Runnable prepare(T param) {
-		if (!prepared) {
+	public final Runnable prepare(T param)
+	{
+		if (!prepared)
+		{
 			prepared = true;
 
 			call(param);
@@ -29,7 +32,8 @@ public abstract class ParamInvokeable<T> extends ParamRunnable<T> {
 			// Nothing to submit as a runnable
 			return null;
 		}
-		else {
+		else
+		{
 			throw new IllegalStateException("Cannot prepare() an already-prepared ParamRunnable");
 		}
 	}
@@ -37,18 +41,22 @@ public abstract class ParamInvokeable<T> extends ParamRunnable<T> {
 
 	/**
 	 * Synchronously executes this Invokeable
-	 * 
+	 *
 	 * @param param
 	 */
-	public final void call(T param) {
-		if (!run) {
+	public final void call(T param)
+	{
+		if (!run)
+		{
 			run = true;
 			prepared = true;
 
-			try {
+			try
+			{
 				this.run(param);
 			}
-			catch (Throwable t) {
+			catch (Throwable t)
+			{
 				log.error("[ParamInvokeable] {prepare} : " + t.getMessage(), t);
 			}
 		}

@@ -1,16 +1,15 @@
 package com.peterphi.std.guice.common.resource.impl;
 
+import com.peterphi.std.guice.common.resource.iface.ResourceNotFoundException;
+import com.peterphi.std.guice.common.resource.iface.ResourceProvider;
+import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.io.IOUtils;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.Reader;
 import java.nio.charset.Charset;
-
-import org.apache.commons.io.IOUtils;
-
-import com.peterphi.std.guice.common.resource.iface.ResourceNotFoundException;
-import com.peterphi.std.guice.common.resource.iface.ResourceProvider;
-import com.peterphi.std.io.PropertyFile;
 
 public class ClasspathResourceProvider implements ResourceProvider
 {

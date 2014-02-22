@@ -52,7 +52,8 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 	 * Start a background process to initialise Guice
 	 * </p>
 	 * <p>
-	 * This means that our servlet/filter does not block the startup of other Tomcat webapps. If we block startup we can cause a deadlock (we're waiting for them to come up but Tomcat will only let
+	 * This means that our servlet/filter does not block the startup of other Tomcat webapps. If we block startup we can cause a
+	 * deadlock (we're waiting for them to come up but Tomcat will only let
 	 * them start once we've returned from <code>init</code>)
 	 * </p>
 	 * <p>
@@ -69,9 +70,7 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 	}
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain)
-			throws IOException,
-			ServletException
+	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
 	{
 		try
 		{

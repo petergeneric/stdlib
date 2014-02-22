@@ -56,7 +56,8 @@ public class FreemarkerURLHelper
 
 
 	/**
-	 * Similar to the <code>rest</code> method, however this performs concatenation using String operations rather than UriBuilder,
+	 * Similar to the <code>rest</code> method, however this performs concatenation using String operations rather than
+	 * UriBuilder,
 	 * allowing the representation of URLs which are technically invalid (e.g. using templates)
 	 *
 	 * @param path

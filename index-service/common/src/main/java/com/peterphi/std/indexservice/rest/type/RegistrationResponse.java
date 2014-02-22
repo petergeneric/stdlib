@@ -3,7 +3,7 @@ package com.peterphi.std.indexservice.rest.type;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 
-@XmlRootElement(name="registrationResponse")
+@XmlRootElement(name = "registrationResponse")
 public class RegistrationResponse
 {
 	@XmlAttribute(required = true)

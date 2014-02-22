@@ -50,7 +50,8 @@ public class RetryManager
 
 
 	/**
-	 * Returns true if the given attempt number is greater than or equal to the maximum number of attempts this retry manager should
+	 * Returns true if the given attempt number is greater than or equal to the maximum number of attempts this retry manager
+	 * should
 	 * run
 	 *
 	 * @param attempt
@@ -65,12 +66,16 @@ public class RetryManager
 
 	/**
 	 * Called when the final attempt at a retryable operation failed
-	 *
+	 * <p/>
 	 * Allows extending classes to customise behaviour or throw custom exceptions
 	 *
-	 * @param operation - the operation being attempted
-	 * @param attempt   - the attempt number that failed
-	 * @param e         - the exception thrown when the operation failed
+	 * @param operation
+	 * 		- the operation being attempted
+	 * @param attempt
+	 * 		- the attempt number that failed
+	 * @param e
+	 * 		- the exception thrown when the operation failed
+	 *
 	 * @throws Exception
 	 */
 	protected <T> T finalAttemptFailed(final Retryable<T> operation, final int attempt, final Throwable e) throws Exception

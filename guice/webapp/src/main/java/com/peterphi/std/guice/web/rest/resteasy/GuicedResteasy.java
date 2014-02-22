@@ -78,7 +78,7 @@ class GuicedResteasy implements GuiceApplication
 
 	/**
 	 * Return the path of the local webapp (if known)
-	 * 
+	 *
 	 * @return
 	 */
 	public String getWebappPath()
@@ -106,10 +106,8 @@ class GuicedResteasy implements GuiceApplication
 		return dispatcher;
 	}
 
-	public void call(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException,
-			IOException,
-			NotFoundException
+	public void call(HttpServletRequest request,
+	                 HttpServletResponse response) throws ServletException, IOException, NotFoundException
 	{
 		final HttpCallContext ctx = HttpCallContext.set(request, response, context);
 
@@ -158,20 +156,18 @@ class GuicedResteasy implements GuiceApplication
 	}
 
 	/**
-	 * 
 	 * @param ctx
 	 * @param response
 	 * @param t
+	 *
 	 * @throws ServletException
 	 * @throws IOException
 	 * @throws RuntimeException
 	 * @throws Error
 	 */
-	private void tryHandleException(HttpCallContext ctx, HttpServletResponse response, Throwable t)
-			throws ServletException,
-			IOException,
-			RuntimeException,
-			Error
+	private void tryHandleException(HttpCallContext ctx,
+	                                HttpServletResponse response,
+	                                Throwable t) throws ServletException, IOException, RuntimeException, Error
 	{
 		log.warn("Failure during " + ctx.getRequestInfo(), t);
 

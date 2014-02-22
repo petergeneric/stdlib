@@ -1,7 +1,7 @@
 package com.peterphi.carbon.util.mediainfo;
 
-import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.SampleCount;
+import com.peterphi.std.types.Timebase;
 import com.peterphi.std.types.Timecode;
 import org.jdom2.Element;
 

@@ -8,7 +8,8 @@ import java.nio.channels.ByteChannel;
 /**
  * A method which can verify that a piece of content matches an expected digest
  */
-public interface IDigestVerifier {
+public interface IDigestVerifier
+{
 
 	public boolean verify(byte[] content);
 

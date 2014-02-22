@@ -1,9 +1,11 @@
 package com.peterphi.std.system.exec;
 
-import java.util.*;
-import java.io.*;
+import java.io.IOException;
+import java.io.StringWriter;
+import java.util.List;
 
-public class Execed extends BaseExeced {
+public class Execed extends BaseExeced
+{
 	// Outputs
 	final StringWriter stdout_content = new StringWriter();
 	final StringWriter stderr_content;
@@ -12,23 +14,27 @@ public class Execed extends BaseExeced {
 	final Thread stderrRead;
 
 
-	public static Execed spawn(Exec e) throws IOException {
+	public static Execed spawn(Exec e) throws IOException
+	{
 		ProcessBuilder pb = e.getProcessBuilder();
 
 		return new Execed(e.cmd, pb.start(), pb.redirectErrorStream());
 	}
 
 
-	protected Execed(List<String> cmd, Process p, boolean combinedOutput) {
+	protected Execed(List<String> cmd, Process p, boolean combinedOutput)
+	{
 		super(cmd, p, combinedOutput);
 
-		if (combinedOutput) {
+		if (combinedOutput)
+		{
 			stderr_content = null;
 
 			stdoutRead = copy(p.getInputStream(), stdout_content);
 			stderrRead = null;
 		}
-		else {
+		else
+		{
 			stderr_content = new StringWriter();
 
 			stdoutRead = copy(p.getInputStream(), stdout_content);
@@ -38,14 +44,16 @@ public class Execed extends BaseExeced {
 	}
 
 
-	public String getStandardOut() {
+	public String getStandardOut()
+	{
 		this.stdout_content.flush();
 
 		return this.stdout_content.getBuffer().toString();
 	}
 
 
-	public String getStandardError() {
+	public String getStandardError()
+	{
 		if (stderr_content == null)
 			return null;
 		else
@@ -54,17 +62,20 @@ public class Execed extends BaseExeced {
 
 
 	@Override
-	public boolean isFinished() {
+	public boolean isFinished()
+	{
 		return super.isFinished() && !stdoutRead.isAlive();
 	}
 
 	@Override
-	public void discardOutput() {
+	public void discardOutput()
+	{
 		throw new RuntimeException("SimpleOutputGrabber cannot discard output!");
 	}
 
 	@Override
-	public void kill() {
+	public void kill()
+	{
 		process.destroy();
 	}
 

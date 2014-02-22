@@ -18,32 +18,34 @@ package com.peterphi.std.guice.database.annotation;
  * limitations under the License.
  */
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.Target;
 import java.lang.annotation.ElementType;
+import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+import java.lang.annotation.Target;
 
-@Target({ ElementType.METHOD })
+@Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Transactional
 {
 	public boolean readOnly() default false;
 
 	/**
-	 * A list of exceptions to rollback on, if thrown by the transactional method. These exceptions are propagated correctly after a rollback.
-	 * 
+	 * A list of exceptions to rollback on, if thrown by the transactional method. These exceptions are propagated correctly after
+	 * a rollback.
+	 *
 	 * @return Returns the configured rollback exceptions.
 	 */
 	Class<? extends Exception>[] rollbackOn() default RuntimeException.class;
 
 	/**
 	 * A list of exceptions to *not* rollback on. A caveat to the rollbackOn clause.
-	 * 
-	 * The disjunction of rollbackOn and exceptOn represents the list of exceptions that will trigger a rollback. The complement of rollbackOn and the universal set plus any exceptions in the exceptOn
+	 * <p/>
+	 * The disjunction of rollbackOn and exceptOn represents the list of exceptions that will trigger a rollback. The complement
+	 * of rollbackOn and the universal set plus any exceptions in the exceptOn
 	 * set represents the list of exceptions that will trigger a commit.
 	 * <p/>
 	 * Note that exceptOn exceptions take precedence over rollbackOn, but with subtype granularity.
-	 * 
+	 *
 	 * @return Returns the configured rollback exceptions.
 	 */
 	Class<? extends Exception>[] exceptOn() default {};

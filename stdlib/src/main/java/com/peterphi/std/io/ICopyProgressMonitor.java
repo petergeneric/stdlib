@@ -1,9 +1,10 @@
 package com.peterphi.std.io;
 
-public interface ICopyProgressMonitor {
+public interface ICopyProgressMonitor
+{
 	/**
 	 * A method which MAY be called to inform the monitor of the total size
-	 * 
+	 *
 	 * @param bytes
 	 */
 	public void size(long bytes);
@@ -14,7 +15,7 @@ public interface ICopyProgressMonitor {
 
 	/**
 	 * A method which MAY be called to inform the monitor of the block size
-	 * 
+	 *
 	 * @param size
 	 */
 	public void blocksize(int size);

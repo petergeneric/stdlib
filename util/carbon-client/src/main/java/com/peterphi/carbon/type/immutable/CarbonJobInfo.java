@@ -1,11 +1,10 @@
 package com.peterphi.carbon.type.immutable;
 
+import com.peterphi.carbon.exception.CarbonBuildException;
 import com.peterphi.carbon.type.XMLWrapper;
 import org.jdom2.Attribute;
 import org.jdom2.DataConversionException;
 import org.jdom2.Element;
-
-import com.peterphi.carbon.exception.CarbonBuildException;
 
 public class CarbonJobInfo extends XMLWrapper
 {
@@ -28,7 +27,8 @@ public class CarbonJobInfo extends XMLWrapper
 	}
 
 	/**
-	 * Possible values (according to Carbon API 1.40.6 section 3.4.1: <code>possible values can be: NEX_JOB_PREPARING, NEX_JOB_QUEUE,
+	 * Possible values (according to Carbon API 1.40.6 section 3.4.1: <code>possible values can be: NEX_JOB_PREPARING,
+	 * NEX_JOB_QUEUE,
 	 * NEX_JOB_STARTING, NEX_JOB_COMPLETED, NEX_JOB_ERROR, etc.</code><br />
 	 * Deprecated by Rhozet - use status field instead
 	 *
@@ -41,7 +41,8 @@ public class CarbonJobInfo extends XMLWrapper
 
 	/**
 	 * Possible values (according to Carbon API 1.40.6 section 3.4.1:
-	 * <code>possible values can be: Preparing, Queued, Starting, Started, Stopping, Stopped, Pausing, Paused, Resuming, Completed,
+	 * <code>possible values can be: Preparing, Queued, Starting, Started, Stopping, Stopped, Pausing, Paused, Resuming,
+	 * Completed,
 	 * Error and Invalid.</code>
 	 *
 	 * @return

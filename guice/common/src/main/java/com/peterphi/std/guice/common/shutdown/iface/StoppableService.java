@@ -8,7 +8,7 @@ public interface StoppableService
 {
 	/**
 	 * Called to request this service clean up any ongoing work and terminate.
-	 * 
+	 * <p/>
 	 * See {@link ShutdownManager#shutdown} for the shutdown sequence guarantees
 	 */
 	public void shutdown();

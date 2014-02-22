@@ -250,7 +250,7 @@ final class FixedDOMOutputProcessor extends AbstractDOMOutputProcessor
 	 * 		<code>ProcessingInstruction</code> to write.
 	 *
 	 * @return The input JDOM ProcessingInstruction converted to a DOM
-	 *         ProcessingInstruction.
+	 * ProcessingInstruction.
 	 */
 	protected org.w3c.dom.ProcessingInstruction printProcessingInstruction(final FormatStack fstack,
 	                                                                       final org.w3c.dom.Document basedoc,

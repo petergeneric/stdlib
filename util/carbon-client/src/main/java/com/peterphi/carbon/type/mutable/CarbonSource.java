@@ -1,6 +1,7 @@
 package com.peterphi.carbon.type.mutable;
 
 import org.jdom2.Element;
+
 import java.util.List;
 
 public class CarbonSource extends CarbonModule
@@ -16,7 +17,8 @@ public class CarbonSource extends CarbonModule
 	}
 
 	/**
-	 * Determines whether this Source is MultiSource (multiple source files for different data types). According to the Carbon API:
+	 * Determines whether this Source is MultiSource (multiple source files for different data types). According to the Carbon
+	 * API:
 	 * <pre>Note: If the MultiSource.DWD attribute is set to 1, only "Filename" is allowed (see 5.2.2.1).</pre>
 	 *
 	 * @return

@@ -1,21 +1,26 @@
 package com.peterphi.std.crypto.digest.impl;
 
-import java.util.zip.CRC32;
-import java.util.zip.Checksum;
-import java.io.*;
+import com.peterphi.std.crypto.digest.IDigester;
+
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
 import java.nio.ByteBuffer;
 import java.nio.channels.ByteChannel;
-
-import com.peterphi.std.crypto.digest.IDigester;
+import java.util.zip.CRC32;
+import java.util.zip.Checksum;
 
 /**
  * Produces CRC32 checksums (in hexidecimal) using the java.util.zip CRC32 class
  */
-public class CRC32Digester implements IDigester {
+public class CRC32Digester implements IDigester
+{
 	private static CRC32Digester instance = null;
 
 
-	public static CRC32Digester getInstance() {
+	public static CRC32Digester getInstance()
+	{
 		if (instance == null)
 			instance = new CRC32Digester();
 
@@ -24,7 +29,8 @@ public class CRC32Digester implements IDigester {
 
 
 	@Override
-	public String digest(byte[] content) {
+	public String digest(byte[] content)
+	{
 		Checksum crc = newChecksum();
 		crc.update(content, 0, content.length);
 
@@ -36,21 +42,25 @@ public class CRC32Digester implements IDigester {
 	 * @see com.peterphi.std.crypto.digest.IDigester#digest(java.io.File)
 	 */
 	@Override
-	public String digest(File file) throws IOException {
+	public String digest(File file) throws IOException
+	{
 		return digest(new FileInputStream(file));
 	}
 
 
 	@Override
-	public String digest(InputStream is) throws IOException {
+	public String digest(InputStream is) throws IOException
+	{
 		Checksum crc = newChecksum();
 
 		byte[] buffer = new byte[4096];
 		int readSize = 0;
-		while (readSize >= 0) {
+		while (readSize >= 0)
+		{
 			readSize = is.read(buffer);
 
-			if (readSize >= 0) {
+			if (readSize >= 0)
+			{
 				crc.update(buffer, 0, readSize);
 			}
 		}
@@ -60,11 +70,13 @@ public class CRC32Digester implements IDigester {
 
 
 	@Override
-	public String digest(ByteChannel channel) throws IOException {
+	public String digest(ByteChannel channel) throws IOException
+	{
 		Checksum crc = newChecksum();
 
 		ByteBuffer buffer = ByteBuffer.allocate(8192);
-		while (channel.read(buffer) >= 0) {
+		while (channel.read(buffer) >= 0)
+		{
 			buffer.flip();
 			crc.update(buffer.array(), 0, buffer.limit());
 			buffer.clear();
@@ -74,7 +86,8 @@ public class CRC32Digester implements IDigester {
 	}
 
 
-	protected Checksum newChecksum() {
+	protected Checksum newChecksum()
+	{
 		return new CRC32();
 	}
 }

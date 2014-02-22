@@ -1,11 +1,10 @@
 package com.peterphi.std.guice.web.rest.resteasy;
 
+import com.google.inject.Injector;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
 import org.jboss.resteasy.spi.InjectorFactory;
 import org.jboss.resteasy.spi.ResourceFactory;
-
-import com.google.inject.Injector;
 
 /**
  * Represents a resteasy REST resource that will be retrieved through Guice

@@ -4,7 +4,7 @@ import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.Date;
 
-@XmlRootElement(name="registrationHeartbeatResponse")
+@XmlRootElement(name = "registrationHeartbeatResponse")
 public class RegistrationHeartbeatResponse
 {
 	/**

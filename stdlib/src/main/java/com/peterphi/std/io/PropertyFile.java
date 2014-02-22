@@ -161,9 +161,10 @@ public class PropertyFile
 
 	/**
 	 * Find a property file
-	 * 
+	 *
 	 * @param classloader
 	 * @param fileName
+	 *
 	 * @return
 	 */
 	public static PropertyFile find(final ClassLoader classloader, final String... fileNames)
@@ -185,8 +186,10 @@ public class PropertyFile
 					}
 					catch (IOException e)
 					{
-						throw new IllegalArgumentException("Error loading property file: " + fileName + ". Error: "
-								+ e.getMessage(), e);
+						throw new IllegalArgumentException("Error loading property file: " +
+						                                   fileName +
+						                                   ". Error: " +
+						                                   e.getMessage(), e);
 					}
 				}
 			}
@@ -246,16 +249,16 @@ public class PropertyFile
 		}
 		catch (IOException e)
 		{
-			throw new IllegalArgumentException(
-					"Error finding/loading property file: " + fileName + ". Error: " + e.getMessage(),
-					e);
+			throw new IllegalArgumentException("Error finding/loading property file: " + fileName + ". Error: " + e.getMessage(),
+			                                   e);
 		}
 	}
 
 	/**
 	 * Find all property files by the name <code>name</code> by searching the classloader that owns PropertyFile
-	 * 
+	 *
 	 * @param name
+	 *
 	 * @return
 	 */
 	public static PropertyFile[] findAll(final String name)
@@ -265,9 +268,10 @@ public class PropertyFile
 
 	/**
 	 * Find all property files by the name <code>name</code> by searching the specified classloader
-	 * 
+	 *
 	 * @param loader
 	 * @param name
+	 *
 	 * @return
 	 */
 	public static PropertyFile[] findAll(ClassLoader loader, final String name)
@@ -290,8 +294,12 @@ public class PropertyFile
 				}
 				catch (IOException e)
 				{
-					throw new RuntimeException("Error loading properties from " + url + " for name: " + name + ": "
-							+ e.getMessage(), e);
+					throw new RuntimeException("Error loading properties from " +
+					                           url +
+					                           " for name: " +
+					                           name +
+					                           ": " +
+					                           e.getMessage(), e);
 				}
 				finally
 				{
@@ -366,7 +374,7 @@ public class PropertyFile
 
 	/**
 	 * Converts the name/value pairs stored in this PropertyFile to the Java Properties propertyfile type
-	 * 
+	 *
 	 * @return a Properties representing the data (but not the comments, etc) in this file
 	 */
 	public Properties toProperties()
@@ -488,10 +496,11 @@ public class PropertyFile
 	// ////////////////////////////
 
 	/**
-	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from <code>other</code>
-	 * 
+	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
+	 * <code>other</code>
+	 *
 	 * @param other
-	 *            the other property file
+	 * 		the other property file
 	 */
 	public void merge(PropertyFile other)
 	{
@@ -500,10 +509,11 @@ public class PropertyFile
 
 	/**
 	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
-	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will overwrite the local properties
-	 * 
+	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will
+	 * overwrite the local properties
+	 *
 	 * @param other
-	 *            the other property file
+	 * 		the other property file
 	 * @param conflictResolver
 	 */
 	public void merge(PropertyFile other, IMergeConflictResolver conflictResolver)
@@ -534,8 +544,9 @@ public class PropertyFile
 	}
 
 	/**
-	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from <code>other</code>
-	 * 
+	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
+	 * <code>other</code>
+	 *
 	 * @param other
 	 */
 	public void merge(Properties other)
@@ -545,10 +556,11 @@ public class PropertyFile
 
 	/**
 	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
-	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will overwrite the local properties
-	 * 
+	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will
+	 * overwrite the local properties
+	 *
 	 * @param other
-	 *            the other property file
+	 * 		the other property file
 	 * @param conflictResolver
 	 */
 	public void merge(final Properties other, final IMergeConflictResolver conflictResolver)
@@ -582,7 +594,8 @@ public class PropertyFile
 	public String get(final String name, final String defaultValue)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {get} key=" + name + "; default=" + defaultValue + "; storedValue=" + _get_core(name, null));
+			log.trace("[PropertyFile] {get} key=" + name + "; default=" + defaultValue + "; storedValue=" + _get_core(name,
+			                                                                                                          null));
 
 		return _get(name, defaultValue);
 	}
@@ -595,8 +608,9 @@ public class PropertyFile
 		{
 			value = value.trim();
 			if (value.isEmpty())
-				throw new IllegalArgumentException("Missing value for IP address field " + name
-						+ ": contents appears to be an empty string (or just whitespace?)");
+				throw new IllegalArgumentException("Missing value for IP address field " +
+				                                   name +
+				                                   ": contents appears to be an empty string (or just whitespace?)");
 			try
 			{
 				return InetAddress.getByName(value);
@@ -694,8 +708,9 @@ public class PropertyFile
 
 	/**
 	 * Get a value which is Base64 encoded
-	 * 
+	 *
 	 * @param name
+	 *
 	 * @return
 	 */
 	public byte[] getBase64(final String name)
@@ -726,9 +741,11 @@ public class PropertyFile
 	}
 
 	/**
-	 * Get a value which has been encoded in hexidecimal; The encoding may optionally include : delimiters, but no other non-hex characters are permitted
-	 * 
+	 * Get a value which has been encoded in hexidecimal; The encoding may optionally include : delimiters, but no other non-hex
+	 * characters are permitted
+	 *
 	 * @param name
+	 *
 	 * @return
 	 */
 	public byte[] getHex(final String name)
@@ -1070,11 +1087,13 @@ public class PropertyFile
 	/**
 	 * Creates a read-only union of a number of property files<br />
 	 * If any property file is null or the file it points to does not exist then it is ignored
-	 * 
+	 *
 	 * @param filenames
+	 *
 	 * @return
+	 *
 	 * @throws IOException
-	 *             if an unexpected error occurs while loading a file
+	 * 		if an unexpected error occurs while loading a file
 	 */
 	public static PropertyFile readOnlyUnion(final File... filenames) throws IOException
 	{
@@ -1096,8 +1115,9 @@ public class PropertyFile
 	/**
 	 * Construct a new read-only PropertyFile which merges the contents of a number of other PropertyFile objects<br />
 	 * Null PropertyFiles are ignored.
-	 * 
+	 *
 	 * @param files
+	 *
 	 * @return
 	 */
 	public static PropertyFile readOnlyUnion(final PropertyFile... files)
@@ -1118,12 +1138,14 @@ public class PropertyFile
 	/**
 	 * Creates a read-only version of a property file<br />
 	 * Fails if the file does not exist.
-	 * 
+	 *
 	 * @param filename
-	 *            the filename to load
+	 * 		the filename to load
+	 *
 	 * @return
+	 *
 	 * @throws IOException
-	 *             if the file cannot be loaded
+	 * 		if the file cannot be loaded
 	 */
 	public static PropertyFile readOnly(final File filename) throws IOException
 	{

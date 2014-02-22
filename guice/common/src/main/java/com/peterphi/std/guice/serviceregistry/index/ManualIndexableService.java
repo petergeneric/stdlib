@@ -1,7 +1,8 @@
 package com.peterphi.std.guice.serviceregistry.index;
 
 /**
- * Describes a service which is not automatically exposed by this application (for example, it may be a remote service that this application is responsible for registering with the index service)
+ * Describes a service which is not automatically exposed by this application (for example, it may be a remote service that this
+ * application is responsible for registering with the index service)
  */
 public class ManualIndexableService
 {

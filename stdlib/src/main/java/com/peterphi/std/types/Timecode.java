@@ -230,7 +230,8 @@ public class Timecode
 	 * timecode)
 	 *
 	 * @param includeDays
-	 * 		if true (and this timecode has a days component), emit a timecode with a days field. If false then the days component will
+	 * 		if true (and this timecode has a days component), emit a timecode with a days field. If false then the days component
+	 * 		will
 	 * 		be ignored
 	 *
 	 * @return
@@ -267,7 +268,8 @@ public class Timecode
 
 
 	/**
-	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte timecode@rate</code>
+	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
+	 * timecode@rate</code>
 	 * where
 	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
 	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
@@ -281,7 +283,8 @@ public class Timecode
 
 
 	/**
-	 * Returns the timecode in the Vidispine Timecode format. The format of this timecode is <code>frames@rate</code> where rate is
+	 * Returns the timecode in the Vidispine Timecode format. The format of this timecode is <code>frames@rate</code> where rate
+	 * is
 	 * <code>denominator:[numerator]</code> (where numerator, if omitted,
 	 * is 1)<br />
 	 *
@@ -575,7 +578,8 @@ public class Timecode
 	 * 		set to true to indicate that the frame-rate excludes dropframes
 	 * @param timebase
 	 *
-	 * @return a timecode representation of the given data, null when a timecode can not be generated (i.e. duration exceeds a day)
+	 * @return a timecode representation of the given data, null when a timecode can not be generated (i.e. duration exceeds a
+	 * day)
 	 */
 	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Timebase timebase)
 	{
@@ -612,7 +616,7 @@ public class Timecode
 	 * @return
 	 *
 	 * @deprecated use method without supportDays (supportDays is now implicitly true) or dropFrame (drop frame timecode is not
-	 *             correctly supported currently)
+	 * correctly supported currently)
 	 */
 	@Deprecated
 	public static final Timecode getInstance(SampleCount samples, boolean dropFrame, boolean supportDays)
@@ -663,7 +667,8 @@ public class Timecode
 
 
 	/**
-	 * Part a Timecode encoded in the SMPTE style (<code>[dd:]hh:mm:ss:ff</code> - or <code>[dd:]hh:mm:ss;ff</code> for drop-frame
+	 * Part a Timecode encoded in the SMPTE style (<code>[dd:]hh:mm:ss:ff</code> - or <code>[dd:]hh:mm:ss;ff</code> for
+	 * drop-frame
 	 * timecode) alongside a timebase.
 	 *
 	 * @param smpte
@@ -692,7 +697,8 @@ public class Timecode
 	 * @param supportDays
 	 * 		true if the resulting Timecode may use the days field (default false)
 	 *
-	 * @return a timecode representation of the given data, null when a timecode can not be generated (i.e. duration exceeds a day)
+	 * @return a timecode representation of the given data, null when a timecode can not be generated (i.e. duration exceeds a
+	 * day)
 	 *
 	 * @deprecated use method without supportDays
 	 */

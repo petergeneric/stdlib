@@ -11,7 +11,8 @@ import java.util.Comparator;
 /**
  * A number of different types of digest algorithm
  */
-public enum DigestAlgorithm {
+public enum DigestAlgorithm
+{
 	/**
 	 * Length (an algorithm which takes the length of the data, in decimal, as its digest)
 	 */
@@ -47,12 +48,14 @@ public enum DigestAlgorithm {
 	public static final Comparator<DigestAlgorithm> COMPARE = new BasicAlgComparator(false);
 
 	/**
-	 * The comparator to use when comparing algorithms & preferring secure algorithms (will usually be the same as the default comparator, but preferring algorithms marked cryptographically secure)
+	 * The comparator to use when comparing algorithms & preferring secure algorithms (will usually be the same as the default
+	 * comparator, but preferring algorithms marked cryptographically secure)
 	 */
 	public static final Comparator<DigestAlgorithm> COMPARE_PREFER_SECURE = new BasicAlgComparator(true);
 
 	/**
-	 * Whether this algorithm can be considered cryptographically secure (ie. generating collisions is difficult, it is not possible to obtain data about the source data from the digest)
+	 * Whether this algorithm can be considered cryptographically secure (ie. generating collisions is difficult, it is not
+	 * possible to obtain data about the source data from the digest)
 	 */
 	private final boolean cryptographicallySecure;
 
@@ -72,13 +75,15 @@ public enum DigestAlgorithm {
 	private int implPriority = Integer.MIN_VALUE;
 
 
-	private DigestAlgorithm(boolean cryptographicallySecure, int priority) {
+	private DigestAlgorithm(boolean cryptographicallySecure, int priority)
+	{
 		this.cryptographicallySecure = cryptographicallySecure;
 		this.priority = priority;
 	}
 
 
-	private DigestAlgorithm(boolean cryptographicallySecure, int priority, IDigester defaultImplementation) {
+	private DigestAlgorithm(boolean cryptographicallySecure, int priority, IDigester defaultImplementation)
+	{
 		this.cryptographicallySecure = cryptographicallySecure;
 		this.priority = priority;
 
@@ -86,12 +91,14 @@ public enum DigestAlgorithm {
 	}
 
 
-	public boolean isCryptographicallySecure() {
+	public boolean isCryptographicallySecure()
+	{
 		return this.cryptographicallySecure;
 	}
 
 
-	public int getPriority() {
+	public int getPriority()
+	{
 		return this.priority;
 	}
 
@@ -99,30 +106,33 @@ public enum DigestAlgorithm {
 	/**
 	 * Determines whether this algorithm has been blacklisted.<br />
 	 * Blacklisted algorithms must not be used
-	 * 
+	 *
 	 * @return
 	 */
-	public boolean isBlacklisted() {
+	public boolean isBlacklisted()
+	{
 		return false;
 	}
 
 
 	/**
 	 * Determines whether this algorithm is available for use
-	 * 
+	 *
 	 * @return
 	 */
-	public boolean isAvailable() {
+	public boolean isAvailable()
+	{
 		return !isBlacklisted() && impl != null;
 	}
 
 
 	/**
 	 * Set the default implementation for an algorithm; this will be used if no other implementations are registered
-	 * 
+	 *
 	 * @param digester
 	 */
-	public synchronized void setDefaultImplementation(IDigester digester) {
+	public synchronized void setDefaultImplementation(IDigester digester)
+	{
 		if (this.impl == null)
 			this.impl = digester;
 	}
@@ -130,11 +140,13 @@ public enum DigestAlgorithm {
 
 	/**
 	 * Set the implementation, permitted that no other implementations have attempted to register with a higher priority
-	 * 
+	 *
 	 * @param digester
 	 */
-	public synchronized void setImplementation(IDigester digester, int implPriority) {
-		if (this.implPriority <= implPriority) {
+	public synchronized void setImplementation(IDigester digester, int implPriority)
+	{
+		if (this.implPriority <= implPriority)
+		{
 			this.impl = digester;
 			this.implPriority = implPriority;
 		}
@@ -143,10 +155,11 @@ public enum DigestAlgorithm {
 
 	/**
 	 * Set a new implementation
-	 * 
+	 *
 	 * @param digester
 	 */
-	public synchronized void setImplementation(IDigester digester) {
+	public synchronized void setImplementation(IDigester digester)
+	{
 		if (this.implPriority == Integer.MAX_VALUE)
 			return; // Someone's already registered a maximum-priority digest implementation
 
@@ -156,10 +169,11 @@ public enum DigestAlgorithm {
 
 	/**
 	 * Retrieves the implementation of this algorithm
-	 * 
+	 *
 	 * @return
 	 */
-	public IDigester getImplementation() {
+	public IDigester getImplementation()
+	{
 		if (isAvailable())
 			return this.impl;
 		else
@@ -169,33 +183,44 @@ public enum DigestAlgorithm {
 
 	/**
 	 * Determines the best algorithm from a list of choices
-	 * 
-	 * @param prioritiseSecure if true, cryptographically secure algorithms will be prioritised
-	 * @param algorithms The algorithms
+	 *
+	 * @param prioritiseSecure
+	 * 		if true, cryptographically secure algorithms will be prioritised
+	 * @param algorithms
+	 * 		The algorithms
+	 *
 	 * @return The best algorithm (or null if no algorithm was specified)
 	 */
-	public static DigestAlgorithm getBest(boolean prioritiseSecure, DigestAlgorithm... algorithms) {
+	public static DigestAlgorithm getBest(boolean prioritiseSecure, DigestAlgorithm... algorithms)
+	{
 		return getBest(prioritiseSecure, Arrays.asList(algorithms));
 	}
 
 
 	/**
 	 * Determines the "best" algorithm from a list of choices
-	 * 
-	 * @param prioritiseSecure if true, cryptographically secure algorithms will be prioritised
-	 * @param algorithms The algorithms
+	 *
+	 * @param prioritiseSecure
+	 * 		if true, cryptographically secure algorithms will be prioritised
+	 * @param algorithms
+	 * 		The algorithms
+	 *
 	 * @return The best algorithm (or null if no algorithm was specified)
 	 */
-	public static DigestAlgorithm getBest(final boolean prioritiseSecure, Iterable<DigestAlgorithm> algorithms) {
+	public static DigestAlgorithm getBest(final boolean prioritiseSecure, Iterable<DigestAlgorithm> algorithms)
+	{
 		final Comparator<DigestAlgorithm> comparator = prioritiseSecure ? COMPARE_PREFER_SECURE : COMPARE;
 
 		DigestAlgorithm best = null;
-		for (final DigestAlgorithm algorithm : algorithms) {
-			if (algorithm == null || best == null || algorithm.isBlacklisted()) {
+		for (final DigestAlgorithm algorithm : algorithms)
+		{
+			if (algorithm == null || best == null || algorithm.isBlacklisted())
+			{
 				if (algorithm != null && !algorithm.isBlacklisted())
 					best = algorithm;
 			}
-			else {
+			else
+			{
 				if (comparator.compare(algorithm, best) > 0)
 					best = algorithm;
 			}
@@ -206,24 +231,27 @@ public enum DigestAlgorithm {
 
 	/**
 	 * The default implementation of a digest algorithm comparator. Prefers algorithms based on their
-	 * 
 	 */
-	private static class BasicAlgComparator implements Comparator<DigestAlgorithm>, Serializable {
+	private static class BasicAlgComparator implements Comparator<DigestAlgorithm>, Serializable
+	{
 		/**
-		 * 
+		 *
 		 */
 		private static final long serialVersionUID = 1L;
 		private final boolean prioritiseSecure;
 
 
-		public BasicAlgComparator(final boolean prioritiseSecure) {
+		public BasicAlgComparator(final boolean prioritiseSecure)
+		{
 			this.prioritiseSecure = prioritiseSecure;
 		}
 
 
 		@Override
-		public int compare(final DigestAlgorithm a, final DigestAlgorithm b) {
-			if (prioritiseSecure && a.isCryptographicallySecure() != b.isCryptographicallySecure()) {
+		public int compare(final DigestAlgorithm a, final DigestAlgorithm b)
+		{
+			if (prioritiseSecure && a.isCryptographicallySecure() != b.isCryptographicallySecure())
+			{
 				return a.isCryptographicallySecure() ? 1 : -1;
 			}
 			else

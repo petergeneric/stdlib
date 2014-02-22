@@ -7,7 +7,6 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.JAXBModule;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.ServicePropertiesModule;
-import com.peterphi.std.guice.common.auth.AuthConstraintInterceptorModule;
 import com.peterphi.std.guice.common.converter.PropertiesTypeConversionModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;

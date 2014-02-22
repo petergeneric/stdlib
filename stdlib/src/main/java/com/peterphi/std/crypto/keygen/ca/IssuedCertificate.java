@@ -1,32 +1,42 @@
 package com.peterphi.std.crypto.keygen.ca;
 
-import java.security.*;
-import java.security.cert.X509Certificate;
-import java.util.*;
-import java.io.*;
+import com.peterphi.std.crypto.keygen.CaHelper;
 import org.bouncycastle.openssl.PEMWriter;
 
-import com.peterphi.std.crypto.keygen.CaHelper;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.cert.X509Certificate;
+import java.util.Date;
 
-public class IssuedCertificate {
+public class IssuedCertificate
+{
 	public KeyPair keypair;
 	public X509Certificate mycert;
 	public X509Certificate cacert;
 
 
-	public IssuedCertificate(X509Certificate ca, KeyPair keypair, X509Certificate certificate) {
+	public IssuedCertificate(X509Certificate ca, KeyPair keypair, X509Certificate certificate)
+	{
 		this.cacert = ca;
 		this.keypair = keypair;
 		this.mycert = certificate;
 	}
 
 
-	public void saveP12(File p12) throws Exception {
-		saveP12(p12, new char[] {});
+	public void saveP12(File p12) throws Exception
+	{
+		saveP12(p12, new char[]{});
 	}
 
 
-	public void saveP12(File p12, char[] pass) throws Exception {
+	public void saveP12(File p12, char[] pass) throws Exception
+	{
 		OutputStream os = new FileOutputStream(p12);
 		saveP12(os, pass);
 
@@ -34,40 +44,45 @@ public class IssuedCertificate {
 	}
 
 
-	public void saveP12(OutputStream os, char[] pass) throws Exception {
+	public void saveP12(OutputStream os, char[] pass) throws Exception
+	{
 		KeyStore ks = KeyStore.getInstance("PKCS12", CertificateAuthority.PROVIDER);
 		ks.load(null, null);
 
 		ks.setCertificateEntry("", cacert);
 		ks.setCertificateEntry("", mycert);
-		ks.setKeyEntry("", keypair.getPrivate(), new char[] {}, new java.security.cert.Certificate[] { mycert, cacert });
+		ks.setKeyEntry("", keypair.getPrivate(), new char[]{}, new java.security.cert.Certificate[]{mycert, cacert});
 
 		ks.store(os, pass);
 	}
 
 
-	public void saveJKS(File jks) throws Exception {
+	public void saveJKS(File jks) throws Exception
+	{
 		saveJKS(new FileOutputStream(jks));
 	}
 
 
-	public void saveJKS(OutputStream os) throws Exception {
+	public void saveJKS(OutputStream os) throws Exception
+	{
 		KeyStore ks = KeyStore.getInstance("JKS");
 		ks.load(null);
 		// ks.setCertificateEntry("me", certificate);
 		// ks.setCertificateEntry("issuer", cacert);
-		ks.setKeyEntry("me", keypair.getPrivate(), new char[] {}, new java.security.cert.Certificate[] { mycert, cacert });
+		ks.setKeyEntry("me", keypair.getPrivate(), new char[]{}, new java.security.cert.Certificate[]{mycert, cacert});
 
-		ks.store(os, new char[] {});
+		ks.store(os, new char[]{});
 	}
 
 
-	public void saveCertPEM(File pem) throws Exception {
+	public void saveCertPEM(File pem) throws Exception
+	{
 		saveCertPEM(new FileWriter(pem));
 	}
 
 
-	public void saveCertPEM(Writer ww) throws Exception {
+	public void saveCertPEM(Writer ww) throws Exception
+	{
 		PEMWriter w = new PEMWriter(ww);
 
 		writePemHeader(w);
@@ -78,12 +93,14 @@ public class IssuedCertificate {
 	}
 
 
-	public void saveKeyPEM(File pem) throws Exception {
+	public void saveKeyPEM(File pem) throws Exception
+	{
 		saveKeyPEM(new FileWriter(pem));
 	}
 
 
-	public void saveKeyPEM(Writer ww) throws Exception {
+	public void saveKeyPEM(Writer ww) throws Exception
+	{
 		PEMWriter w = new PEMWriter(ww);
 
 		writePemHeader(w);
@@ -94,8 +111,10 @@ public class IssuedCertificate {
 	}
 
 
-	private void writePemHeader(Writer w) throws IOException {
-		if (CertificateAuthority.ENABLE_PEM_PROLOGUE) {
+	private void writePemHeader(Writer w) throws IOException
+	{
+		if (CertificateAuthority.ENABLE_PEM_PROLOGUE)
+		{
 			w.write("Certificate: " + mycert.getSubjectDN().getName() + "\n");
 			w.write("\tIssuer:" + mycert.getIssuerDN().getName() + "\n");
 			w.write("\tSerial number:" + mycert.getSerialNumber().toString(16) + "\n");
@@ -109,17 +128,20 @@ public class IssuedCertificate {
 	}
 
 
-	public String getHash() {
+	public String getHash()
+	{
 		return CaHelper.opensslHash(mycert);
 	}
 
 
-	public String getCAHash() {
+	public String getCAHash()
+	{
 		return CaHelper.opensslHash(cacert);
 	}
 
 
-	public static IssuedCertificate generateUserCert(CertificateAuthority auth, String subject, int strength) throws Exception {
+	public static IssuedCertificate generateUserCert(CertificateAuthority auth, String subject, int strength) throws Exception
+	{
 		if (strength < 1024)
 			strength = 1024;
 
@@ -131,8 +153,8 @@ public class IssuedCertificate {
 	}
 
 
-	public static IssuedCertificate generateServerCert(CertificateAuthority auth, String subject, int strength)
-			throws Exception {
+	public static IssuedCertificate generateServerCert(CertificateAuthority auth, String subject, int strength) throws Exception
+	{
 		if (strength < 1024)
 			strength = 1024;
 

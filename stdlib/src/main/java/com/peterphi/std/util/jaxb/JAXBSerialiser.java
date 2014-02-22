@@ -458,7 +458,8 @@ public class JAXBSerialiser
 
 
 	/**
-	 * Helper method to get a JAXBSerialiser for a set of classes with the underlying JAXB implementation picked using the default
+	 * Helper method to get a JAXBSerialiser for a set of classes with the underlying JAXB implementation picked using the
+	 * default
 	 * rules for JAXB acquisition<br />
 	 * This is an expensive operation and so the result should ideally be cached
 	 *

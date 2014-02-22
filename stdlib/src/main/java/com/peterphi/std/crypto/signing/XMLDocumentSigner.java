@@ -1,31 +1,46 @@
 package com.peterphi.std.crypto.signing;
 
-import java.io.*;
-import java.security.*;
-import java.util.*;
-
-import java.security.cert.*;
-
-import javax.xml.parsers.DocumentBuilderFactory;
-
 import com.peterphi.std.crypto.keystore.Keystore;
 import com.peterphi.std.net.IpHelper;
-
 import org.apache.log4j.Logger;
 import org.apache.xml.security.exceptions.XMLSecurityException;
-import org.apache.xml.security.signature.*;
+import org.apache.xml.security.signature.XMLSignature;
+import org.apache.xml.security.signature.XMLSignatureException;
 import org.apache.xml.security.transforms.Transforms;
-import org.apache.xml.security.utils.*;
+import org.apache.xml.security.utils.Constants;
+import org.apache.xml.security.utils.XMLUtils;
 import org.bouncycastle.jce.provider.BouncyCastleProvider;
-import org.w3c.dom.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
+
+import javax.xml.parsers.DocumentBuilderFactory;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.StringReader;
+import java.security.KeyPair;
+import java.security.KeyStore;
+import java.security.KeyStoreException;
+import java.security.NoSuchAlgorithmException;
+import java.security.PrivateKey;
+import java.security.PublicKey;
+import java.security.Security;
+import java.security.UnrecoverableEntryException;
+import java.security.cert.CertificateException;
+import java.util.ArrayList;
+import java.util.Enumeration;
+import java.util.List;
 
 /**
  * An XML Document signing class
- * 
- * 
  */
-public class XMLDocumentSigner {
+public class XMLDocumentSigner
+{
 	private static final Logger log = Logger.getLogger(XMLDocumentSigner.class);
 
 	/**
@@ -39,12 +54,14 @@ public class XMLDocumentSigner {
 	 */
 	private static double instanceId = Math.random();
 
-	static {
+	static
+	{
 		log.debug("[XMLDocumentSigning] <init> Initialising apache xml security");
 		org.apache.xml.security.Init.init();
 		log.debug("[XMLDocumentSigning] <init> Apache xml security initialised.");
 
-		if (Security.getProvider("BC") == null) {
+		if (Security.getProvider("BC") == null)
+		{
 			log.info("[XMLDocumentSigner] Loading Bouncy Castle Provider");
 			Security.addProvider(new BouncyCastleProvider());
 			log.debug("[XMLDocumentSigner] Bouncy Castle Provider loaded");
@@ -61,15 +78,20 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Creates a new XML Document Signer, using an XML document represented by the given String.
-	 * 
-	 * @param xml The XML document as a String
-	 * @throws Exception If the xml document could not be loaded
+	 *
+	 * @param xml
+	 * 		The XML document as a String
+	 *
+	 * @throws Exception
+	 * 		If the xml document could not be loaded
 	 */
-	public XMLDocumentSigner(String xml) throws Exception {
+	public XMLDocumentSigner(String xml) throws Exception
+	{
 		assert (xml != null) : "XML string must be provided";
 		assert (xml.length() != 0) : "XML string must not be empty";
 
-		try {
+		try
+		{
 			log.debug("[XmlDocSigner] <ctor> Constructing document builder factory");
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
@@ -82,7 +104,8 @@ public class XMLDocumentSigner {
 
 			this.doc = xmlDoc;
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			log.error("[XMLDocumentSigning] {ctor} Could not load XML document: " + e.getMessage(), e);
 			throw new Exception("Could not load the XML document: " + e.getMessage(), e);
 		}
@@ -91,15 +114,20 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Creates a new XML Document Signer, using the contents of a File as the XML Document
-	 * 
-	 * @param xmlFile The XML document file
-	 * @throws Exception If the xml document could not be loaded
+	 *
+	 * @param xmlFile
+	 * 		The XML document file
+	 *
+	 * @throws Exception
+	 * 		If the xml document could not be loaded
 	 */
-	public XMLDocumentSigner(File xmlFile) throws Exception {
+	public XMLDocumentSigner(File xmlFile) throws Exception
+	{
 		assert (xmlFile != null) : "File must be provided";
 		assert (xmlFile.exists()) : "XML file must exist";
 
-		try {
+		try
+		{
 			DocumentBuilderFactory dbf = DocumentBuilderFactory.newInstance();
 
 			// XML Signature needs to be namespace aware
@@ -109,7 +137,8 @@ public class XMLDocumentSigner {
 
 			this.doc = xmlDoc;
 		}
-		catch (Exception e) {
+		catch (Exception e)
+		{
 			log.error("[XMLDocumentSigning] {ctor} Could not load XML document: " + e.getMessage(), e);
 			throw new Exception("Could not load the XML document: " + e.getMessage(), e);
 		}
@@ -117,11 +146,14 @@ public class XMLDocumentSigner {
 
 
 	/**
-	 * Creates a new XML Document Signer out of a given Document; <strong>the caller guarantees the Document can handle namespaces</strong>
-	 * 
-	 * @param d the xml document
+	 * Creates a new XML Document Signer out of a given Document; <strong>the caller guarantees the Document can handle
+	 * namespaces</strong>
+	 *
+	 * @param d
+	 * 		the xml document
 	 */
-	public XMLDocumentSigner(Document d) {
+	public XMLDocumentSigner(Document d)
+	{
 		assert (d != null) : "XML Document must be provided";
 
 		this.doc = d;
@@ -130,28 +162,38 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Given a keypair, signs this document and adds the public key to the signature tag
-	 * 
-	 * @param keys KeyPair The public/private keypair
+	 *
+	 * @param keys
+	 * 		KeyPair The public/private keypair
+	 *
 	 * @return Document The signed document. The internal document is also signed.
 	 */
-	public Document sign(String machineId, KeyPair keys) {
+	public Document sign(String machineId, KeyPair keys)
+	{
 		return sign(machineId, keys.getPublic(), keys.getPrivate());
 	}
 
 
 	/**
 	 * Helper method; retrieves a named public/private keypair from a KeyStore.
-	 * 
-	 * @param ks The KeyStore
-	 * @param alias The name of the key
-	 * @param passphrase The passphrase (if necessary)
+	 *
+	 * @param ks
+	 * 		The KeyStore
+	 * @param alias
+	 * 		The name of the key
+	 * @param passphrase
+	 * 		The passphrase (if necessary)
+	 *
 	 * @return The KeyPair
+	 *
 	 * @throws NoSuchAlgorithmException
 	 * @throws UnrecoverableEntryException
 	 * @throws KeyStoreException
 	 */
-	public static KeyPair getKeypair(KeyStore ks, String alias, char[] passphrase)
-			throws NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException {
+	public static KeyPair getKeypair(KeyStore ks,
+	                                 String alias,
+	                                 char[] passphrase) throws NoSuchAlgorithmException, UnrecoverableEntryException, KeyStoreException
+	{
 		KeyStore.Entry e = ks.getEntry(alias, new KeyStore.PasswordProtection(passphrase));
 
 		KeyStore.PrivateKeyEntry pkEntry = (KeyStore.PrivateKeyEntry) e;
@@ -165,13 +207,18 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Given a pair of keys, signs this document and adds the public key to the signature tag
-	 * 
-	 * @param publicKey PublicKey The public key
-	 * @param privateKey PrivateKey The private key
+	 *
+	 * @param publicKey
+	 * 		PublicKey The public key
+	 * @param privateKey
+	 * 		PrivateKey The private key
+	 *
 	 * @return Document The signed document. The internal document is also signed.
 	 */
-	public Document sign(String machineId, PublicKey publicKey, PrivateKey privateKey) {
-		try {
+	public Document sign(String machineId, PublicKey publicKey, PrivateKey privateKey)
+	{
+		try
+		{
 			String baseUri = "";
 			// Create an XML Signature object from the document, BaseURI and signature algorithm
 			XMLSignature signature = new XMLSignature(doc, baseUri, XMLSignature.ALGO_ID_SIGNATURE_RSA_SHA512);
@@ -208,7 +255,8 @@ public class XMLDocumentSigner {
 
 			return signature.getDocument();
 		}
-		catch (XMLSecurityException e) {
+		catch (XMLSecurityException e)
+		{
 			log.error("[XMLDocumentSigning] {sign} Error signing document: " + e.getMessage(), e);
 			return null;
 		}
@@ -217,21 +265,27 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Saves the Document, as manipulated by this class, as a File
-	 * 
-	 * @param dest The destination file
+	 *
+	 * @param dest
+	 * 		The destination file
+	 *
 	 * @return <code>true</code> if the document was saved, otherwise <code>false</code>
 	 */
-	public boolean save(File dest) {
-		if (dest.exists()) {
+	public boolean save(File dest)
+	{
+		if (dest.exists())
+		{
 			dest.delete();
 		}
 
-		try {
+		try
+		{
 			XMLUtils.outputDOMc14nWithComments(doc, new FileOutputStream(dest));
 
 			return true;
 		}
-		catch (FileNotFoundException e) {
+		catch (FileNotFoundException e)
+		{
 			log.error("[XMLDocumentSigner] {save} Couldn't save to file " + dest);
 			return false;
 		}
@@ -240,16 +294,19 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Removes the signature tag from this document if they are present
-	 * 
+	 *
 	 * @return Document A docuemnt without the signature tag. the internal document is also modified
 	 */
-	public Document stripSignature() {
-		if (hasSignature()) {
+	public Document stripSignature()
+	{
+		if (hasSignature())
+		{
 			Element sig = (Element) doc.getLastChild().getLastChild();
 
 			sig.getParentNode().removeChild(sig);
 		}
-		else {
+		else
+		{
 			log.warn("[XMLDocumentSigner] {stripSignature} Signature not found: nothing stripped");
 		}
 
@@ -259,17 +316,20 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Determines whether this document has a signature tag
-	 * 
+	 *
 	 * @return boolean True if the document has a signature tag, otherwise false
 	 */
-	public boolean hasSignature() {
+	public boolean hasSignature()
+	{
 		Node n = doc.getLastChild().getLastChild();
 
-		if (n instanceof Element) {
+		if (n instanceof Element)
+		{
 			Element e = (Element) n;
 
 			// If the namespace is the signature namespace and the element is a Signature element, it's an xml sig
-			if (e.getNamespaceURI().equals(Constants.SignatureSpecNS) && e.getLocalName().equals("Signature")) {
+			if (e.getNamespaceURI().equals(Constants.SignatureSpecNS) && e.getLocalName().equals("Signature"))
+			{
 				return true;
 			}
 		}
@@ -281,11 +341,12 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Produces an XML String representation of the document
-	 * 
+	 *
 	 * @return String an XML String representation of the document
 	 */
 	@Override
-	public String toString() {
+	public String toString()
+	{
 		// Holds the output temporarily so we can get a String out of it
 		ByteArrayOutputStream bos = new ByteArrayOutputStream();
 
@@ -299,19 +360,28 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Validates the document using the public keys of the <code>Certificate</code>s in <code>truststore</code>
-	 * 
-	 * @param truststore The trust store
+	 *
+	 * @param truststore
+	 * 		The trust store
+	 *
 	 * @return True if the document validates, otherwise false
-	 * @throws CertificateException If there was a problem with the certificate
-	 * @throws FileNotFoundException If the truststore's file could't be loaded
-	 * @throws IOException If a generic IO exception occurred
-	 * @throws KeyStoreException If a problem occurred during keystore loading
-	 * @throws NoSuchAlgorithmException If the keystore couldn't be loaded
+	 *
+	 * @throws CertificateException
+	 * 		If there was a problem with the certificate
+	 * @throws FileNotFoundException
+	 * 		If the truststore's file could't be loaded
+	 * @throws IOException
+	 * 		If a generic IO exception occurred
+	 * @throws KeyStoreException
+	 * 		If a problem occurred during keystore loading
+	 * @throws NoSuchAlgorithmException
+	 * 		If the keystore couldn't be loaded
 	 */
-	public boolean validate(Keystore truststore) throws CertificateException, FileNotFoundException, IOException,
-	KeyStoreException, NoSuchAlgorithmException {
+	public boolean validate(Keystore truststore) throws CertificateException, FileNotFoundException, IOException, KeyStoreException, NoSuchAlgorithmException
+	{
 		FileInputStream tsis = null;
-		try {
+		try
+		{
 			tsis = new FileInputStream(truststore.file);
 			KeyStore ts = KeyStore.getInstance(truststore.getType());
 			ts.load(tsis, truststore.password.toCharArray());
@@ -319,28 +389,34 @@ public class XMLDocumentSigner {
 			List<PublicKey> keys = new ArrayList<PublicKey>();
 
 			Enumeration<String> aliases = ts.aliases();
-			while (aliases.hasMoreElements()) {
+			while (aliases.hasMoreElements())
+			{
 				String alias = aliases.nextElement();
 				PublicKey pk = ts.getCertificate(alias).getPublicKey();
 
-				if (pk != null) {
+				if (pk != null)
+				{
 					keys.add(pk);
 				}
 			}
 
 			PublicKey[] keyarray = new PublicKey[keys.size()];
-			for (int i = 0; i < keyarray.length; i++) {
+			for (int i = 0; i < keyarray.length; i++)
+			{
 				keyarray[i] = keys.get(i);
 			}
 
 			return validate(keyarray);
 		}
-		finally {
-			try {
+		finally
+		{
+			try
+			{
 				if (tsis != null)
 					tsis.close();
 			}
-			catch (IOException e) {
+			catch (IOException e)
+			{
 				log.warn("[XMLDocumentSigner] {validate} Error closing truststore file: " + e.getMessage(), e);
 			}
 		}
@@ -349,32 +425,43 @@ public class XMLDocumentSigner {
 
 	/**
 	 * Validates the signature tag on the document
-	 * 
-	 * @param allowedKeys the <code>PublicKey</code>s whose signatures will be considered valid
-	 * @return <code>true</code> if the document was signed by one of the keys listed & the signature is valid, otherwise <code>false</code>
+	 *
+	 * @param allowedKeys
+	 * 		the <code>PublicKey</code>s whose signatures will be considered valid
+	 *
+	 * @return <code>true</code> if the document was signed by one of the keys listed & the signature is valid, otherwise
+	 * <code>false</code>
 	 */
-	public boolean validate(PublicKey... allowedKeys) {
+	public boolean validate(PublicKey... allowedKeys)
+	{
 		Element sigElement = (Element) doc.getLastChild().getLastChild();
 
-		try {
+		try
+		{
 			XMLSignature signature = new XMLSignature(sigElement, "");
 
-			for (PublicKey element : allowedKeys) {
-				try {
-					if (element != null) {
+			for (PublicKey element : allowedKeys)
+			{
+				try
+				{
+					if (element != null)
+					{
 						boolean validationResult = signature.checkSignatureValue(element);
 
-						if (validationResult) {
+						if (validationResult)
+						{
 							return true;
 						}
 					}
 				}
-				catch (XMLSignatureException e) {
+				catch (XMLSignatureException e)
+				{
 					log.error("[XMLDocumentSigning] {validate} Error with signature/key combo: " + e.getMessage(), e);
 				}
 			}
 		}
-		catch (XMLSecurityException ex) {
+		catch (XMLSecurityException ex)
+		{
 			log.error("[XMLDocumentSigning] {validate} Error loading signature from document");
 			return false;
 		}

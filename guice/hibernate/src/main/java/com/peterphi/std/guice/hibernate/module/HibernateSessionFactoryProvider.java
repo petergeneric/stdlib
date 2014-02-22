@@ -1,15 +1,14 @@
 package com.peterphi.std.guice.hibernate.module;
 
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
+import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
-
-import com.google.inject.Inject;
-import com.google.inject.Provider;
-import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
-import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 
 /**
  * A SessionFactory Provider for Guice

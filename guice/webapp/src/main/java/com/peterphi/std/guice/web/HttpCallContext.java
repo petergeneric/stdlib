@@ -1,10 +1,10 @@
 package com.peterphi.std.guice.web;
 
+import com.peterphi.std.types.SimpleId;
+
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-
-import com.peterphi.std.types.SimpleId;
 
 /**
  * Represents the current Http Call being processed by this Thread
@@ -15,10 +15,11 @@ public class HttpCallContext
 
 	/**
 	 * Retrieve the HttpCallContext associated with this Thread
-	 * 
+	 *
 	 * @return
+	 *
 	 * @throws IllegalStateException
-	 *             if not inside an http call
+	 * 		if not inside an http call
 	 */
 	public static HttpCallContext get() throws IllegalStateException
 	{
@@ -32,10 +33,11 @@ public class HttpCallContext
 
 	/**
 	 * Retrieve the HttpCallContext associated with this Thread (or null if none is associated)
-	 * 
+	 *
 	 * @return
+	 *
 	 * @throws IllegalStateException
-	 *             if not inside an http call
+	 * 		if not inside an http call
 	 */
 	public static HttpCallContext peek()
 	{
@@ -49,9 +51,10 @@ public class HttpCallContext
 
 	/**
 	 * Creates and associates an HttpCallContext with the current Thread
-	 * 
+	 *
 	 * @param request
 	 * @param response
+	 *
 	 * @return
 	 */
 	public static HttpCallContext set(HttpServletRequest request, HttpServletResponse response, ServletContext servletContext)
@@ -79,7 +82,7 @@ public class HttpCallContext
 
 	/**
 	 * Generates an id for a call to be used when logging
-	 * 
+	 *
 	 * @return
 	 */
 	private static String generateLogId()
@@ -117,7 +120,7 @@ public class HttpCallContext
 
 	/**
 	 * Returns a string representation of the request (e.g. "GET /webapp/rest/resource?a=b")
-	 * 
+	 *
 	 * @return
 	 */
 	public String getRequestInfo()

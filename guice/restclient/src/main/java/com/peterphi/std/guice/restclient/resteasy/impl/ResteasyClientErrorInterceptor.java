@@ -1,19 +1,18 @@
 package com.peterphi.std.guice.restclient.resteasy.impl;
 
-import java.io.IOException;
-import java.io.InputStream;
-
-import org.jboss.resteasy.client.ClientResponse;
-import org.jboss.resteasy.client.ClientResponseFailure;
-import org.jboss.resteasy.client.core.BaseClientResponse;
-import org.jboss.resteasy.client.core.ClientErrorInterceptor;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.restclient.exception.RestExceptionFactory;
 import com.peterphi.std.guice.restclient.exception.RestThrowableConstants;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
+import org.jboss.resteasy.client.ClientResponse;
+import org.jboss.resteasy.client.ClientResponseFailure;
+import org.jboss.resteasy.client.core.BaseClientResponse;
+import org.jboss.resteasy.client.core.ClientErrorInterceptor;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 @Singleton
 public class ResteasyClientErrorInterceptor implements ClientErrorInterceptor
@@ -48,9 +47,8 @@ public class ResteasyClientErrorInterceptor implements ClientErrorInterceptor
 			}
 			catch (IOException e)
 			{
-				throw new ClientResponseFailure(
-						new RuntimeException("Error mapping response to exception: " + response, e),
-						response);
+				throw new ClientResponseFailure(new RuntimeException("Error mapping response to exception: " + response, e),
+				                                response);
 			}
 		}
 	}

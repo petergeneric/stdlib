@@ -1,18 +1,19 @@
 package com.peterphi.std.guice.apploader.impl;
 
-import java.util.HashSet;
-import java.util.Set;
-
-import org.apache.log4j.Logger;
-
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
+import org.apache.log4j.Logger;
+
+import java.util.HashSet;
+import java.util.Set;
 
 /**
- * Static registry that holds the Injector and the applications currently registered to be injected with the latest Guice objects.<br />
- * Uses {@link GuiceInjectorBootstrap} to acquire a {@link GuiceSetup} which defines the Guice Modules to use to build this environment.
+ * Static registry that holds the Injector and the applications currently registered to be injected with the latest Guice
+ * objects.<br />
+ * Uses {@link GuiceInjectorBootstrap} to acquire a {@link GuiceSetup} which defines the Guice Modules to use to build this
+ * environment.
  */
 public class GuiceRegistry
 {
@@ -24,11 +25,12 @@ public class GuiceRegistry
 
 	/**
 	 * Request that an application be registered with this GuiceRegistry
-	 * 
+	 *
 	 * @param service
-	 *            the service to register (must not be null)
+	 * 		the service to register (must not be null)
 	 * @param durable
-	 *            true if the application registration should be durable (durable applications receive lifecycle updates and are reconfigured should {@link GuiceRegistry#restart} be called
+	 * 		true if the application registration should be durable (durable applications receive lifecycle updates and are
+	 * 		reconfigured should {@link GuiceRegistry#restart} be called
 	 */
 	public static synchronized void register(GuiceApplication service, boolean durable)
 	{

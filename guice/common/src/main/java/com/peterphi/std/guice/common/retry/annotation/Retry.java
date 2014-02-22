@@ -7,7 +7,8 @@ import java.lang.annotation.Target;
 import java.util.concurrent.TimeUnit;
 
 /**
- * When annotated on a public/protected/package-private method in a Guice-constructed object this annotation will automatically retry if that method throws an exception
+ * When annotated on a public/protected/package-private method in a Guice-constructed object this annotation will automatically
+ * retry if that method throws an exception
  */
 @Target({ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
@@ -43,7 +44,8 @@ public @interface Retry
 
 
 	/**
-	 * The exception types which, if thrown, will cause retry. Exceptions specified in this list will bypass any exceptions listed in exceptOn or exceptOnCore
+	 * The exception types which, if thrown, will cause retry. Exceptions specified in this list will bypass any exceptions listed
+	 * in exceptOn or exceptOnCore
 	 *
 	 * @return
 	 */

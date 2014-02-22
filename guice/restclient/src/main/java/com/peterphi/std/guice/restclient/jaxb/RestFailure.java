@@ -1,13 +1,13 @@
 package com.peterphi.std.guice.restclient.jaxb;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
 import javax.xml.bind.JAXBElement;
 import javax.xml.bind.annotation.XmlAnyElement;
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.List;
 
 /**
  * Wire type for the common REST exception representation

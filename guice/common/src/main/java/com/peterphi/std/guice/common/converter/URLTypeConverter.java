@@ -1,10 +1,10 @@
 package com.peterphi.std.guice.common.converter;
 
-import java.net.MalformedURLException;
-import java.net.URL;
-
 import com.google.inject.TypeLiteral;
 import com.google.inject.spi.TypeConverter;
+
+import java.net.MalformedURLException;
+import java.net.URL;
 
 class URLTypeConverter implements TypeConverter
 {

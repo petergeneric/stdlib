@@ -226,7 +226,8 @@ public class TimecodeBuilder
 
 
 	/**
-	 * Part a Timecode encoded in the SMPTE style (<code>[dd:]hh:mm:ss:ff</code> - or <code>[dd:]hh:mm:ss;ff</code> for drop-frame
+	 * Part a Timecode encoded in the SMPTE style (<code>[dd:]hh:mm:ss:ff</code> - or <code>[dd:]hh:mm:ss;ff</code> for
+	 * drop-frame
 	 * timecode)
 	 *
 	 * @param smpte

@@ -1,14 +1,16 @@
 package com.peterphi.std.types;
 
-import java.util.*;
+import java.util.Enumeration;
+import java.util.Iterator;
+import java.util.NoSuchElementException;
 
 /**
  * An Iterator and Enumeration class
- * 
- * 
+ *
  * @param <T>
  */
-public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<T> {
+public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<T>
+{
 	private final T[] items;
 	private int i = 0;
 	private final int itemsSize;
@@ -17,13 +19,15 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	private final Enumeration<T> itemsEnumerator;
 
 
-	public HybridIterator(T[] items) {
+	public HybridIterator(T[] items)
+	{
 		this(items, 0, items.length);
 	}
 
 
-	public HybridIterator(T[] items, int offset, int length) {
-		assert (offset+length <= items.length && length >= 0);
+	public HybridIterator(T[] items, int offset, int length)
+	{
+		assert (offset + length <= items.length && length >= 0);
 
 		this.items = items;
 		this.i = offset;
@@ -35,7 +39,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	}
 
 
-	public HybridIterator(Iterator<T> items) {
+	public HybridIterator(Iterator<T> items)
+	{
 		this.items = null;
 		this.itemsSize = 0;
 
@@ -45,7 +50,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	}
 
 
-	public HybridIterator(Iterable<T> items) {
+	public HybridIterator(Iterable<T> items)
+	{
 		this.items = null;
 		this.itemsSize = 0;
 
@@ -55,7 +61,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	}
 
 
-	public HybridIterator(Enumeration<T> items) {
+	public HybridIterator(Enumeration<T> items)
+	{
 		this.items = null;
 		this.itemsSize = 0;
 
@@ -70,7 +77,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	// ----------------------------------
 
 	@Override
-	public boolean hasNext() {
+	public boolean hasNext()
+	{
 		if (this.items != null)
 			return i != this.itemsSize;
 		else if (this.itemsIterator != null)
@@ -81,8 +89,10 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 
 
 	@Override
-	public T next() {
-		if (this.items != null) {
+	public T next()
+	{
+		if (this.items != null)
+		{
 			if (this.itemsSize == i)
 				throw new NoSuchElementException();
 			else
@@ -96,7 +106,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 
 
 	@Override
-	public void remove() {
+	public void remove()
+	{
 		if (itemsIterator != null)
 			itemsIterator.remove();
 		else
@@ -109,13 +120,15 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	// -------------------------------------
 
 	@Override
-	public boolean hasMoreElements() {
+	public boolean hasMoreElements()
+	{
 		return hasNext();
 	}
 
 
 	@Override
-	public T nextElement() {
+	public T nextElement()
+	{
 		return next();
 	}
 
@@ -125,7 +138,8 @@ public class HybridIterator<T> implements Iterator<T>, Enumeration<T>, Iterable<
 	// ----------------------------------
 
 	@Override
-	public Iterator<T> iterator() {
+	public Iterator<T> iterator()
+	{
 		return this;
 	}
 }

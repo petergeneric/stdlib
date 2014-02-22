@@ -1,14 +1,14 @@
 package com.peterphi.std.guice.common.converter;
 
-import java.io.File;
-import java.net.InetAddress;
-import java.net.URI;
-import java.net.URL;
-
 import com.google.inject.AbstractModule;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.Matchers;
 import com.peterphi.std.threading.Timeout;
+
+import java.io.File;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URL;
 
 public class PropertiesTypeConversionModule extends AbstractModule
 {

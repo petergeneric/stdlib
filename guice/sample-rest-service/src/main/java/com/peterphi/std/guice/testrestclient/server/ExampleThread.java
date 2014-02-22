@@ -1,15 +1,14 @@
 package com.peterphi.std.guice.testrestclient.server;
 
-import java.util.concurrent.TimeUnit;
-
-import org.apache.log4j.Logger;
-
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.threading.Daemon;
 import com.peterphi.std.threading.Timeout;
+import org.apache.log4j.Logger;
+
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class ExampleThread extends Daemon implements StoppableService

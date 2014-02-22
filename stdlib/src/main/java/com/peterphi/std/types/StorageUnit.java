@@ -6,11 +6,15 @@ import java.math.RoundingMode;
 
 /**
  * Represents Storage unit conversions in a similar fashion to how TimeUnit represents time unit conversions<br />
- * This enumeration reflects the confused landscape of storage units: it contains computer science units (binary), storage industry units (decimal) and network industry units (decimal, bit-based)<br />
- * 
- * KILOBYTE as used here is, in fact, according to the ISO a Kibibyte. If your code needs to present ISO units to users, call the <code>getISOUnit()</code> method (which returns the short-form ISO unit - eg. "KiB" for KILOBYTES, "KB" for DECIMAL_KILOBYTES and "Kb" for KILOBIT)
+ * This enumeration reflects the confused landscape of storage units: it contains computer science units (binary), storage
+ * industry units (decimal) and network industry units (decimal, bit-based)<br />
+ * <p/>
+ * KILOBYTE as used here is, in fact, according to the ISO a Kibibyte. If your code needs to present ISO units to users, call the
+ * <code>getISOUnit()</code> method (which returns the short-form ISO unit - eg. "KiB" for KILOBYTES, "KB" for DECIMAL_KILOBYTES
+ * and "Kb" for KILOBIT)
  */
-public enum StorageUnit {
+public enum StorageUnit
+{
 	/*
 	 * Standard units that everyone agrees upon (bits and bytes)
 	 */
@@ -118,56 +122,85 @@ public enum StorageUnit {
 
 	/**
 	 * One Kilobit (ISO: Kb). As used by the network industry. 1 kilobit = 125 bytes (1000 bits).<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	KILOBITS(BigInteger.valueOf(125), "Kb", "Kilobit"),
 	/**
 	 * One Megabit (ISO: Mb). As used by the network industry. 1 megabit = 125000 bytes (1,000,000 bits).<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	MEGABITS(BigInteger.valueOf(125000), "Mb", "Megabit"),
 	/**
 	 * One Gigabit (ISO: Gb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	GIGABITS(BigInteger.valueOf(125000000), "Gb", "Gigabit"),
 	/**
 	 * One Terabit (ISO: Tb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	TERABITS(BigInteger.valueOf(125000000000L), "Tb", "Terabit"),
 	/**
 	 * One Petabit (ISO: Pb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	PETABITS(BigInteger.valueOf(125000000000000L), "Pb", "Petabit"),
 	/**
 	 * One Exabit (ISO: Eb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	EXABITS(BigInteger.valueOf(125000000000000000L), "Eb", "Exabit"),
 	/**
 	 * One zettabit (ISO Zb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
 	ZETTABITS(new BigInteger("125000000000000000000"), "Zb", "Zettabit"),
 	/**
 	 * One yottabit (ISO Yb). As used by the network industry.<br />
-	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1 kilobit as 128 bytes -- which is a kibibit)
+	 * <strong>N.B.</strong> this is a different value to what Google means by kilobit in its calculator (where it interprets 1
+	 * kilobit as 128 bytes -- which is a kibibit)
 	 */
-	YOTTABITS(new BigInteger("125000000000000000000000"), "Yb", "Yottabit"),
+	YOTTABITS(new BigInteger("125000000000000000000000"), "Yb", "Yottabit"),;
 
-	;
+	public static final StorageUnit[] NETWORK_DECIMAL = new StorageUnit[]{BITS,
+	                                                                      KILOBITS,
+	                                                                      MEGABITS,
+	                                                                      GIGABITS,
+	                                                                      TERABITS,
+	                                                                      PETABITS,
+	                                                                      EXABITS,
+	                                                                      ZETTABITS,
+	                                                                      YOTTABITS};
 
-	public static final StorageUnit[] NETWORK_DECIMAL = new StorageUnit[] { BITS, KILOBITS, MEGABITS, GIGABITS, TERABITS,
-		PETABITS, EXABITS, ZETTABITS, YOTTABITS };
+	public static final StorageUnit[] STORAGE_DECIMAL = new StorageUnit[]{BITS,
+	                                                                      BYTES,
+	                                                                      DECIMAL_KILOBYTES,
+	                                                                      DECIMAL_MEGABYTES,
+	                                                                      DECIMAL_GIGABYTES,
+	                                                                      DECIMAL_TERABYTES,
+	                                                                      DECIMAL_PETABYTES,
+	                                                                      DECIMAL_EXABYTES,
+	                                                                      DECIMAL_EXABYTES,
+	                                                                      DECIMAL_ZETTABYTES,
+	                                                                      DECIMAL_YOTTABYTES};
 
-	public static final StorageUnit[] STORAGE_DECIMAL = new StorageUnit[] { BITS, BYTES, DECIMAL_KILOBYTES, DECIMAL_MEGABYTES,
-		DECIMAL_GIGABYTES, DECIMAL_TERABYTES, DECIMAL_PETABYTES, DECIMAL_EXABYTES, DECIMAL_EXABYTES, DECIMAL_ZETTABYTES,
-		DECIMAL_YOTTABYTES };
-
-	public static final StorageUnit[] COMPSCI_BINARY = new StorageUnit[] { BITS, BYTES, KILOBYTES, MEGABYTES, GIGABYTES,
-		TERABYTES, PETABYTES, EXABYTES, ZETTABYTES, YOTTABYTES };
+	public static final StorageUnit[] COMPSCI_BINARY = new StorageUnit[]{BITS,
+	                                                                     BYTES,
+	                                                                     KILOBYTES,
+	                                                                     MEGABYTES,
+	                                                                     GIGABYTES,
+	                                                                     TERABYTES,
+	                                                                     PETABYTES,
+	                                                                     EXABYTES,
+	                                                                     ZETTABYTES,
+	                                                                     YOTTABYTES};
 
 	/**
 	 * The range of quantifiers for ISO decimal units (bytes to terabytes (ISO: B to TB))
@@ -185,12 +218,14 @@ public enum StorageUnit {
 	private static final BigInteger MAX_LONG = BigInteger.valueOf(Long.MAX_VALUE);
 
 	/**
-	 * The unit upconvert threshold. By default this is 8, meaning that we keep using the lower unit until we have that many of the new unit (e.g. with a threshold of 8, the cutoff with KB -> MB is around 8192KB)
+	 * The unit upconvert threshold. By default this is 8, meaning that we keep using the lower unit until we have that many of
+	 * the new unit (e.g. with a threshold of 8, the cutoff with KB -> MB is around 8192KB)
 	 */
 	private static final long UNIT_UPCONVERT_THRESHOLD = 8;
 
 	/**
-	 * The unit upconvert threshold. By default this is 8, meaning that we keep using the lower unit until we have that many of the new unit (e.g. with a threshold of 8, the cutoff with KB -> MB is around 8192KB)
+	 * The unit upconvert threshold. By default this is 8, meaning that we keep using the lower unit until we have that many of
+	 * the new unit (e.g. with a threshold of 8, the cutoff with KB -> MB is around 8192KB)
 	 */
 	private static final BigInteger UNIT_UPCONVERT_THRESHOLD_BIG = BigInteger.valueOf(UNIT_UPCONVERT_THRESHOLD);
 
@@ -214,12 +249,15 @@ public enum StorageUnit {
 
 
 	/**
-	 * 
-	 * @param numBits the number of bits this unit represents
-	 * @param isoUnit The ISO unit name
-	 * @param stem the stem for the unit's english description (e.g. "Megabyte")
+	 * @param numBits
+	 * 		the number of bits this unit represents
+	 * @param isoUnit
+	 * 		The ISO unit name
+	 * @param stem
+	 * 		the stem for the unit's english description (e.g. "Megabyte")
 	 */
-	private StorageUnit(final int numBits, final String isoUnit, final String stem) {
+	private StorageUnit(final int numBits, final String isoUnit, final String stem)
+	{
 		this.numBits = BigInteger.valueOf(numBits);
 		this.numBitsDecimal = new BigDecimal(numBits);
 
@@ -230,12 +268,15 @@ public enum StorageUnit {
 
 
 	/**
-	 * 
-	 * @param numBytes the number of bytes this unit represents
-	 * @param isoUnit The ISO unit name
-	 * @param stem the stem for the unit's english description (e.g. "Megabyte")
+	 * @param numBytes
+	 * 		the number of bytes this unit represents
+	 * @param isoUnit
+	 * 		The ISO unit name
+	 * @param stem
+	 * 		the stem for the unit's english description (e.g. "Megabyte")
 	 */
-	private StorageUnit(final BigInteger numBytes, final String isoUnit, final String stem) {
+	private StorageUnit(final BigInteger numBytes, final String isoUnit, final String stem)
+	{
 		this.numBits = numBytes.multiply(BigInteger.valueOf(8));
 		this.numBitsDecimal = new BigDecimal(numBits);
 
@@ -248,35 +289,39 @@ public enum StorageUnit {
 	/**
 	 * Return the ISO unit for this storage unit.<br />
 	 * for MEGABYTE this will return MiB (to avoid further confusion)
-	 * 
+	 *
 	 * @return
 	 */
-	public String getISOUnit() {
+	public String getISOUnit()
+	{
 		return isoUnit;
 	}
 
 
 	/**
 	 * Get the plural version of this unit (e.g. "Bytes")
-	 * 
+	 *
 	 * @return
 	 */
-	public String getPlural() {
+	public String getPlural()
+	{
 		return plural;
 	}
 
 
 	/**
 	 * Get the singular version of this unit (e.g. "Byte")
-	 * 
+	 *
 	 * @return
 	 */
-	public String getSingular() {
+	public String getSingular()
+	{
 		return singular;
 	}
 
 
-	private static BigDecimal convert(StorageUnit from, StorageUnit to, BigDecimal amount) {
+	private static BigDecimal convert(StorageUnit from, StorageUnit to, BigDecimal amount)
+	{
 		if (from == to || amount == BigDecimal.ZERO)
 			return amount;
 
@@ -286,7 +331,8 @@ public enum StorageUnit {
 	}
 
 
-	private static BigInteger convert(StorageUnit from, StorageUnit to, BigInteger amount) {
+	private static BigInteger convert(StorageUnit from, StorageUnit to, BigInteger amount)
+	{
 		if (from == to || amount == BigInteger.ZERO)
 			return amount;
 
@@ -296,7 +342,8 @@ public enum StorageUnit {
 	}
 
 
-	private static long convert(StorageUnit from, StorageUnit to, long amount) {
+	private static long convert(StorageUnit from, StorageUnit to, long amount)
+	{
 		if (from == to || amount == 0)
 			return amount;
 
@@ -311,22 +358,26 @@ public enum StorageUnit {
 	}
 
 
-	public long convert(long amount, StorageUnit unit) {
+	public long convert(long amount, StorageUnit unit)
+	{
 		return convert(unit, this, amount);
 	}
 
 
-	public BigInteger convert(BigInteger amount, StorageUnit unit) {
+	public BigInteger convert(BigInteger amount, StorageUnit unit)
+	{
 		return convert(unit, this, amount);
 	}
 
 
-	public BigDecimal convert(BigDecimal amount, StorageUnit unit) {
+	public BigDecimal convert(BigDecimal amount, StorageUnit unit)
+	{
 		return convert(unit, this, amount);
 	}
 
 
-	public BigInteger toBits(BigInteger amount) {
+	public BigInteger toBits(BigInteger amount)
+	{
 		if (this == BITS)
 			return amount;
 		else
@@ -334,7 +385,8 @@ public enum StorageUnit {
 	}
 
 
-	public BigDecimal toBits(BigDecimal amount) {
+	public BigDecimal toBits(BigDecimal amount)
+	{
 		if (this == BITS)
 			return amount;
 		else
@@ -342,7 +394,8 @@ public enum StorageUnit {
 	}
 
 
-	public BigInteger fromBits(BigInteger bits) {
+	public BigInteger fromBits(BigInteger bits)
+	{
 		if (this == BITS)
 			return bits;
 		else
@@ -350,7 +403,8 @@ public enum StorageUnit {
 	}
 
 
-	public BigDecimal fromBits(BigDecimal bits) {
+	public BigDecimal fromBits(BigDecimal bits)
+	{
 		if (this == BITS)
 			return bits;
 		else
@@ -358,85 +412,100 @@ public enum StorageUnit {
 	}
 
 
-	public long toBytes(final long amount) {
+	public long toBytes(final long amount)
+	{
 		return BYTES.convert(amount, this);
 	}
 
 
-	public BigDecimal toBytes(final BigDecimal amount) {
+	public BigDecimal toBytes(final BigDecimal amount)
+	{
 		return BYTES.convert(amount, this);
 	}
 
 
-	public BigInteger toBytes(final BigInteger amount) {
+	public BigInteger toBytes(final BigInteger amount)
+	{
 		return BYTES.convert(amount, this);
 	}
 
 
-	private String getQuantifier(boolean isPlural, final boolean shortType) {
-		if (!shortType) {
+	private String getQuantifier(boolean isPlural, final boolean shortType)
+	{
+		if (!shortType)
+		{
 			if (isPlural)
 				return this.plural;
 			else
 				return this.singular;
 		}
-		else {
+		else
+		{
 			return this.isoUnit;
 		}
 	}
 
 
-	private String getQuantifierFor(long amount, final boolean shortType) {
+	private String getQuantifierFor(long amount, final boolean shortType)
+	{
 		boolean isPlural = (amount != 1);
 
 		return getQuantifier(isPlural, shortType);
 	}
 
 
-	private String getQuantifierFor(final BigInteger amount, final boolean shortType) {
+	private String getQuantifierFor(final BigInteger amount, final boolean shortType)
+	{
 		boolean isPlural = amount.compareTo(BigInteger.ONE) != 0;
 
 		return getQuantifier(isPlural, shortType);
 	}
 
 
-	private String getQuantifierFor(final BigDecimal amount, final boolean shortType) {
+	private String getQuantifierFor(final BigDecimal amount, final boolean shortType)
+	{
 		final boolean isPlural = !amount.equals(BigDecimal.ONE);
 
 		return getQuantifier(isPlural, shortType);
 	}
 
 
-	public String toString(final long amount) {
+	public String toString(final long amount)
+	{
 		return toString(amount, false);
 	}
 
 
-	public String toString(final BigInteger amount) {
+	public String toString(final BigInteger amount)
+	{
 		return toString(amount, false);
 	}
 
 
-	public String toString(final BigDecimal amount) {
+	public String toString(final BigDecimal amount)
+	{
 		return toString(amount, false);
 	}
 
 
-	public String toString(final long amount, final boolean shortType) {
+	public String toString(final long amount, final boolean shortType)
+	{
 		final String quantifier = getQuantifierFor(amount, shortType);
 
 		return Long.toString(amount) + " " + quantifier;
 	}
 
 
-	public String toString(final BigInteger amount, final boolean shortType) {
+	public String toString(final BigInteger amount, final boolean shortType)
+	{
 		final String quantifier = getQuantifierFor(amount, shortType);
 
 		return amount.toString() + " " + quantifier;
 	}
 
 
-	public String toString(BigDecimal amount, final boolean shortType) {
+	public String toString(BigDecimal amount, final boolean shortType)
+	{
 		final String quantifier = getQuantifierFor(amount, shortType);
 
 		// Re-scale the amount so it only stores 3 decimal places
@@ -446,7 +515,8 @@ public enum StorageUnit {
 		String plainString = rounded.toPlainString();
 
 		// If the number ends in ".000" -- i.e. it is an integer -- then strip out the .000 component
-		if (plainString.endsWith(".000")) {
+		if (plainString.endsWith(".000"))
+		{
 			plainString = plainString.substring(0, plainString.length() - 4);
 		}
 
@@ -455,13 +525,16 @@ public enum StorageUnit {
 
 
 	/**
-	 * Determines if this unit is an appropriate one to display a given quantity in; it is assumed that the unit lower than this (eg. for "gigabytes", the unit lower is "megabytes") has already been queried
-	 * 
+	 * Determines if this unit is an appropriate one to display a given quantity in; it is assumed that the unit lower than this
+	 * (eg. for "gigabytes", the unit lower is "megabytes") has already been queried
+	 *
 	 * @param amount
 	 * @param sourceUnit
+	 *
 	 * @return
 	 */
-	private boolean isSensibleUnitFor(final BigInteger amount, final StorageUnit sourceUnit) {
+	private boolean isSensibleUnitFor(final BigInteger amount, final StorageUnit sourceUnit)
+	{
 		if (amount.equals(BigInteger.ZERO))
 			return true;
 
@@ -477,40 +550,60 @@ public enum StorageUnit {
 
 
 	/**
-	 * Attempts to locate the most appropriate binary unit (binary units are what everyone but the ISO and the storage industry mean by "KB", "MB", etc. - and what the ISO refer to as "KiB", "MiB", etc.) to express the provided amount in for human use (balancing precision and sensible expression)
-	 * 
-	 * @param amount the amount
-	 * @param sourceUnit the unit the amount is expressed in
+	 * Attempts to locate the most appropriate binary unit (binary units are what everyone but the ISO and the storage industry
+	 * mean by "KB", "MB", etc. - and what the ISO refer to as "KiB", "MiB", etc.) to express the provided amount in for human use
+	 * (balancing precision and sensible expression)
+	 *
+	 * @param amount
+	 * 		the amount
+	 * @param sourceUnit
+	 * 		the unit the amount is expressed in
+	 *
 	 * @return the unit which is considered best for expressing the provided amount to a human
 	 */
-	public static StorageUnit getAppropriateBinaryUnit(BigInteger amount, StorageUnit sourceUnit) {
+	public static StorageUnit getAppropriateBinaryUnit(BigInteger amount, StorageUnit sourceUnit)
+	{
 		return getAppropriateUnit(amount, sourceUnit, BINARY_QUANTIFIERS);
 	}
 
 
 	/**
-	 * Attempts to locate the most appropriate decimal unit (decimal units are what the ISO and the storage industry (but nobody else) mean by "KB", "MB", etc. (i.e. KB = 1000 bytes) to express the provided amount in for human use (balancing precision and sensible expression)
-	 * 
-	 * @param amount the amount
-	 * @param sourceUnit the unit the amount is expressed in
+	 * Attempts to locate the most appropriate decimal unit (decimal units are what the ISO and the storage industry (but nobody
+	 * else) mean by "KB", "MB", etc. (i.e. KB = 1000 bytes) to express the provided amount in for human use (balancing precision
+	 * and sensible expression)
+	 *
+	 * @param amount
+	 * 		the amount
+	 * @param sourceUnit
+	 * 		the unit the amount is expressed in
+	 *
 	 * @return the unit which is considered best for expressing the provided amount to a human
 	 */
-	public static StorageUnit getAppropriateDecimalUnit(BigInteger amount, StorageUnit sourceUnit) {
+	public static StorageUnit getAppropriateDecimalUnit(BigInteger amount, StorageUnit sourceUnit)
+	{
 		return getAppropriateUnit(amount, sourceUnit, DECIMAL_QUANTIFIERS);
 	}
 
 
 	/**
-	 * Attempts to locate the most appropriate of the provided units to express the provided amount in for human use (balancing precision and sensible expression)
-	 * 
-	 * @param amount the amount
-	 * @param sourceUnit the unit the amount is expressed in
-	 * @param options the storage units which may be used
+	 * Attempts to locate the most appropriate of the provided units to express the provided amount in for human use (balancing
+	 * precision and sensible expression)
+	 *
+	 * @param amount
+	 * 		the amount
+	 * @param sourceUnit
+	 * 		the unit the amount is expressed in
+	 * @param options
+	 * 		the storage units which may be used
+	 *
 	 * @return the unit which is considered best for expressing the provided amount to a human
 	 */
-	public static StorageUnit getAppropriateUnit(BigInteger amount, StorageUnit sourceUnit, StorageUnit[] options) {
-		for (int i = options.length - 1; i >= 0; i--) {
-			if (options[i].isSensibleUnitFor(amount, sourceUnit)) {
+	public static StorageUnit getAppropriateUnit(BigInteger amount, StorageUnit sourceUnit, StorageUnit[] options)
+	{
+		for (int i = options.length - 1; i >= 0; i--)
+		{
+			if (options[i].isSensibleUnitFor(amount, sourceUnit))
+			{
 				return options[i];
 			}
 		}
@@ -521,13 +614,19 @@ public enum StorageUnit {
 
 	/**
 	 * Returns the the most diminutive unit of <code>unit</code> and </code>unit2</code>
-	 * 
-	 * @param unit a unit (should not be null)
-	 * @param unit2 a unit (should not be null)
+	 *
+	 * @param unit
+	 * 		a unit (should not be null)
+	 * @param unit2
+	 * 		a unit (should not be null)
+	 *
 	 * @return the most diminutive unit of <code>unit</code> and </code>unit2</code> (or null if both units were null)
-	 * @throws NullPointerException if one unit is null
+	 *
+	 * @throws NullPointerException
+	 * 		if one unit is null
 	 */
-	public static StorageUnit smallest(StorageUnit unit, StorageUnit unit2) {
+	public static StorageUnit smallest(StorageUnit unit, StorageUnit unit2)
+	{
 
 		if (unit == unit2 || unit.equals(unit2))
 			return unit; // identical units
@@ -540,13 +639,19 @@ public enum StorageUnit {
 
 	/**
 	 * Returns the the larger unit of <code>unit</code> and </code>unit2</code>
-	 * 
-	 * @param unit a unit (should not be null)
-	 * @param unit2 a unit (should not be null)
+	 *
+	 * @param unit
+	 * 		a unit (should not be null)
+	 * @param unit2
+	 * 		a unit (should not be null)
+	 *
 	 * @return the larger unit of <code>unit</code> and </code>unit2</code> (or null if both units were null)
-	 * @throws NullPointerException if one unit is null
+	 *
+	 * @throws NullPointerException
+	 * 		if one unit is null
 	 */
-	public static StorageUnit largest(StorageUnit unit, StorageUnit unit2) {
+	public static StorageUnit largest(StorageUnit unit, StorageUnit unit2)
+	{
 		if (unit == unit2 || unit.equals(unit2))
 			return unit; // identical units
 		else if (unit.numBits.compareTo(unit2.numBits) > 0)
@@ -558,38 +663,45 @@ public enum StorageUnit {
 
 	/**
 	 * Parse the ISO abbreviation: (e.g. MiB -> MEGABYTE (1024*1024 bytes))
-	 * 
+	 *
 	 * @param unit
+	 *
 	 * @return
 	 */
-	public static StorageUnit parseISO(final String toParse) {
+	public static StorageUnit parseISO(final String toParse)
+	{
 		if (toParse == null || toParse.isEmpty())
 			throw new IllegalArgumentException("Must provide a string to parse!");
 
 		// Match must be case sensitive to allow differentiation between Kb and KB
 
-		for (StorageUnit unit : StorageUnit.values()) {
-			if (unit.isoUnit.equals(toParse)) {
+		for (StorageUnit unit : StorageUnit.values())
+		{
+			if (unit.isoUnit.equals(toParse))
+			{
 				return unit;
 			}
 		}
 
 		throw new IllegalArgumentException("Cannot parse as ISO short-form storage unit: " + toParse +
-				" (is the case incorrect?)");
+		                                   " (is the case incorrect?)");
 	}
 
 
 	/**
 	 * Parse the non-ISO abbreviation: MiB and MB both -> MEGABYTE (which is technically a "Mebibyte")
-	 * 
+	 *
 	 * @param toParse
-	 * @return A StorageUnit representing the unit, assuming that both MiB and MB mean "binary megabyte" (<code>StorageUnit.MEGABYTES</code>)
+	 *
+	 * @return A StorageUnit representing the unit, assuming that both MiB and MB mean "binary megabyte"
+	 * (<code>StorageUnit.MEGABYTES</code>)
 	 */
-	public static StorageUnit parse(final String original) {
+	public static StorageUnit parse(final String original)
+	{
 		final String toParse;
 
 		if (original.length() == 2 && Character.isUpperCase(original.charAt(1)))
-			toParse = new String(new char[] { original.charAt(0), 'i', original.charAt(1) });
+			toParse = new String(new char[]{original.charAt(0), 'i', original.charAt(1)});
 		else
 			toParse = original;
 
@@ -600,6 +712,6 @@ public enum StorageUnit {
 				return unit;
 
 		throw new IllegalArgumentException("Cannot parse as short-form storage unit: " + original + " (nor could be parsed as " +
-				toParse + "). Case incorrect?");
+		                                   toParse + "). Case incorrect?");
 	}
 }

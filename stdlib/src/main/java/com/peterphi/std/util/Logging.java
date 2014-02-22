@@ -24,7 +24,8 @@ public final class Logging
 
 
 	/**
-	 * Configures the logging environment to use the first available config file in the list, printing an error if none of the files
+	 * Configures the logging environment to use the first available config file in the list, printing an error if none of the
+	 * files
 	 * are suitable
 	 *
 	 * @param files

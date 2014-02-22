@@ -61,9 +61,10 @@ public class RestExceptionFactory
 
 	/**
 	 * Build an exception for a known exception type
-	 * 
+	 *
 	 * @param constructor
 	 * @param failure
+	 *
 	 * @return
 	 */
 	private RestException buildKnown(Constructor<RestException> constructor, RestFailure failure)
@@ -80,8 +81,9 @@ public class RestExceptionFactory
 
 	/**
 	 * Build an exception to represent an unknown or problematic exception type
-	 * 
+	 *
 	 * @param failure
+	 *
 	 * @return
 	 */
 	private UnboundRestException buildUnknown(RestFailure failure)

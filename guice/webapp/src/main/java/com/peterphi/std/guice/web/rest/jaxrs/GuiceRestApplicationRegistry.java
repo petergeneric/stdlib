@@ -1,11 +1,11 @@
 package com.peterphi.std.guice.web.rest.jaxrs;
 
+import com.peterphi.std.guice.serviceregistry.rest.RestResource;
+
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
-
-import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 
 class GuiceRestApplicationRegistry
 {

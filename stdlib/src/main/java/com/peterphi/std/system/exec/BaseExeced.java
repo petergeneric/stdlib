@@ -1,12 +1,17 @@
 package com.peterphi.std.system.exec;
 
-import java.util.*;
-import java.util.concurrent.TimeoutException;
-import java.io.*;
 import com.peterphi.std.io.StreamUtil;
 import com.peterphi.std.threading.Deadline;
 
-public class BaseExeced {
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.io.Writer;
+import java.util.List;
+import java.util.concurrent.TimeoutException;
+
+public class BaseExeced
+{
 	public final Object monitor = new Object();
 	protected final List<String> cmd;
 	protected final Process process;
@@ -16,47 +21,56 @@ public class BaseExeced {
 	protected int exitCode = Integer.MIN_VALUE;
 
 
-	protected BaseExeced(final List<String> cmd, final Process p, final boolean combinedOutput) {
+	protected BaseExeced(final List<String> cmd, final Process p, final boolean combinedOutput)
+	{
 		this.cmd = cmd;
 		this.process = p;
 		this.combinedOutput = combinedOutput;
 	}
 
 
-	public void kill() {
+	public void kill()
+	{
 		process.destroy();
 	}
 
 
 	/**
 	 * Determines if the application has completed yet
-	 * 
+	 *
 	 * @return true if the process has terminated, otherwise false
 	 */
-	public boolean isFinished() {
+	public boolean isFinished()
+	{
 		if (finished)
 			return true;
 
-		try {
+		try
+		{
 			final int code = exitCode();
 
 			finished(code);
 
 			return true;
 		}
-		catch (IllegalThreadStateException e) {
+		catch (IllegalThreadStateException e)
+		{
 			return false;
 		}
 	}
 
 
 	/**
-	 * Returns the exit code of the application, assuming it has already terminated. If the process has not yet terminated then an IllegalStateException will be thrown
-	 * 
+	 * Returns the exit code of the application, assuming it has already terminated. If the process has not yet terminated then an
+	 * IllegalStateException will be thrown
+	 *
 	 * @return the exit code of the process
-	 * @throws IllegalStateException if the process has not yet terminated
+	 *
+	 * @throws IllegalStateException
+	 * 		if the process has not yet terminated
 	 */
-	public int exitCode() throws IllegalThreadStateException {
+	public int exitCode() throws IllegalThreadStateException
+	{
 		if (finished)
 			return exitCode;
 
@@ -65,33 +79,43 @@ public class BaseExeced {
 
 
 	/**
-	 * Wait an indefinite amount of time for the process to exit, expecting the return code to be <code>expected</code>. If the output is not <code>expected</code> then a RuntimeException is thrown<br />
-	 * 
-	 * @param expected the expected return code
+	 * Wait an indefinite amount of time for the process to exit, expecting the return code to be <code>expected</code>. If the
+	 * output is not <code>expected</code> then a RuntimeException is thrown<br />
+	 *
+	 * @param expected
+	 * 		the expected return code
+	 *
 	 * @return the exit code of the process
-	 * @throws RuntimeException if the return code was not what was expected
+	 *
+	 * @throws RuntimeException
+	 * 		if the return code was not what was expected
 	 */
-	public int waitForExit(final int expected) {
+	public int waitForExit(final int expected)
+	{
 		return waitForExit(Deadline.MAX_VALUE, expected);
 	}
 
 
 	/**
-	 * Wait until <code>deadline</code> for the process to exit, expecting the return code to be <code>expected</code>. If the output is not <code>expected</code> (or if the operation times out) then a RuntimeException is thrown<br />
+	 * Wait until <code>deadline</code> for the process to exit, expecting the return code to be <code>expected</code>. If the
+	 * output is not <code>expected</code> (or if the operation times out) then a RuntimeException is thrown<br />
 	 * In the event of a timeout the process is not terminated
-	 * 
+	 *
 	 * @param deadline
 	 * @param expected
+	 *
 	 * @return the exit code of the process
-	 * @throws RuntimeException if a timeout occurrs or if the return code was not what was expected
+	 *
+	 * @throws RuntimeException
+	 * 		if a timeout occurrs or if the return code was not what was expected
 	 */
-	public int waitForExit(final Deadline deadline, final int expected) {
+	public int waitForExit(final Deadline deadline, final int expected)
+	{
 		final int code = waitForExit(deadline);
 
 		if (code == Integer.MIN_VALUE)
-			throw new RuntimeException(
-					"Unexpected timeout while waiting for exit and expecting code " + expected,
-					new TimeoutException("waitForExit timed out"));
+			throw new RuntimeException("Unexpected timeout while waiting for exit and expecting code " + expected,
+			                           new TimeoutException("waitForExit timed out"));
 		else if (code != expected)
 			throw new RuntimeException("Unexpected code: wanted " + expected + " but got " + code);
 		else
@@ -101,36 +125,44 @@ public class BaseExeced {
 
 	/**
 	 * Wait an indefinite amount of time for the process to exit
-	 * 
+	 *
 	 * @return the exit code of the process
 	 */
-	public int waitForExit() {
+	public int waitForExit()
+	{
 		return waitForExit(Deadline.MAX_VALUE);
 
 	}
 
 
 	/**
-	 * Waits for the process to exit; this method blocks until the process has completed (at which point it returns the process exit code) or until <code>deadline</code> has elapsed, at which point it returns Integer.MIN_VALUE
-	 * 
+	 * Waits for the process to exit; this method blocks until the process has completed (at which point it returns the process
+	 * exit code) or until <code>deadline</code> has elapsed, at which point it returns Integer.MIN_VALUE
+	 *
 	 * @param deadline
+	 *
 	 * @return the exit code of the process
 	 */
-	public int waitForExit(Deadline deadline) {
+	public int waitForExit(Deadline deadline)
+	{
 		final int intervalMax = 4500; // the maximum time between polls
 		int interval = 5; // initial sleep will be 3* this, so 15
 
 		while (!isFinished() && deadline.isValid())
-			synchronized (this.monitor) {
-				try {
+			synchronized (this.monitor)
+			{
+				try
+				{
 					// Check very frequently initially, tripling the wait each time
 					// this allows us to return very quickly for short-running processes, but not hammer the CPU for long-running processes
-					if (interval != intervalMax) {
+					if (interval != intervalMax)
+					{
 						interval = Math.min(interval * 3, intervalMax);
 					}
 					this.monitor.wait(Math.min(deadline.getTimeLeft(), interval));
 				}
-				catch (InterruptedException e) {
+				catch (InterruptedException e)
+				{
 				}
 			}
 
@@ -141,17 +173,20 @@ public class BaseExeced {
 	}
 
 
-	public InputStream getStandardOutputStream() {
+	public InputStream getStandardOutputStream()
+	{
 		return process.getInputStream();
 	}
 
 
-	public InputStream getStandardErrorStream() {
+	public InputStream getStandardErrorStream()
+	{
 		return process.getErrorStream();
 	}
 
 
-	public OutputStream getStandardInputStream() {
+	public OutputStream getStandardInputStream()
+	{
 		return process.getOutputStream();
 	}
 
@@ -159,14 +194,17 @@ public class BaseExeced {
 	/**
 	 * Indicates that the output of this process should be discarded
 	 */
-	public void discardOutput() {
+	public void discardOutput()
+	{
 		discard(getStandardOutputStream());
 		discard(getStandardErrorStream());
 	}
 
 
-	protected void finished(int exitCode) {
-		synchronized (this.monitor) {
+	protected void finished(int exitCode)
+	{
+		synchronized (this.monitor)
+		{
 			this.finished = true;
 			this.exitCode = exitCode;
 
@@ -175,7 +213,8 @@ public class BaseExeced {
 	}
 
 
-	protected void unexpectedFailure(IOException e) {
+	protected void unexpectedFailure(IOException e)
+	{
 		if (finished)
 			return;
 
@@ -185,19 +224,27 @@ public class BaseExeced {
 
 
 	// Commence a background copy
-	protected Thread copy(final InputStream in, final Writer out) {
-		Runnable r = new Runnable() {
+	protected Thread copy(final InputStream in, final Writer out)
+	{
+		Runnable r = new Runnable()
+		{
 
 			@Override
-			public void run() {
-				try {
+			public void run()
+			{
+				try
+				{
 					StreamUtil.streamCopy(in, out);
 				}
-				catch (IOException e) {
-					try {
+				catch (IOException e)
+				{
+					try
+					{
 						out.flush();
 					}
-					catch (Throwable t) {}
+					catch (Throwable t)
+					{
+					}
 
 					unexpectedFailure(e);
 				}
@@ -212,13 +259,16 @@ public class BaseExeced {
 	}
 
 
-	protected Thread discard(final InputStream in) {
+	protected Thread discard(final InputStream in)
+	{
 		if (in == null)
 			return null;
 
-		Runnable r = new Runnable() {
+		Runnable r = new Runnable()
+		{
 			@Override
-			public void run() {
+			public void run()
+			{
 				StreamUtil.eatInputStream(in);
 			}
 		};
@@ -230,7 +280,8 @@ public class BaseExeced {
 		return t;
 	}
 
-	public static BaseExeced spawn(Exec e) throws IOException {
+	public static BaseExeced spawn(Exec e) throws IOException
+	{
 		ProcessBuilder pb = e.getProcessBuilder();
 
 		pb.start();
