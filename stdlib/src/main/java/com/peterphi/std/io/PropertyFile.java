@@ -1,13 +1,41 @@
 package com.peterphi.std.io;
 
-import java.util.*;
-import java.io.*;
-import java.net.*;
 import com.peterphi.std.io.properties.IMergeConflictResolver;
-import com.peterphi.std.util.*;
-
+import com.peterphi.std.util.Base64;
+import com.peterphi.std.util.HexHelper;
+import com.peterphi.std.util.ListUtility;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
+
+import java.io.BufferedReader;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOError;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.Reader;
+import java.io.StringReader;
+import java.io.StringWriter;
+import java.io.Writer;
+import java.net.InetAddress;
+import java.net.URI;
+import java.net.URISyntaxException;
+import java.net.URL;
+import java.net.URLDecoder;
+import java.net.UnknownHostException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Calendar;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 public class PropertyFile
 {
