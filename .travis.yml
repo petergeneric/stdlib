@@ -4,3 +4,20 @@ jdk:
   - oraclejdk8
   - oraclejdk7
   - openjdk7
+
+env:
+  global:
+   # The next declration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "Bgub+LcUBJJVDHKxdcKZnfvnxLZm8nBCh3YADVQ7aG8r58LPoGlYTYGro0cZ6Vov6GDzeaxX2Ovf6EH5ANlP/SUMHaZ7F3D3+NzqfxfeOPbGXUP5ZBYI2FoWXQdoO2S8Oy0GhUNZMRAfgeKZP2h5SIav2MdqGgDY8Sm+H1Oit9o="
+
+addons:
+  coverity_scan:
+    project:
+      name: "petergeneric/stdlib"
+      description: "A guice-based application development library/framework"
+    notification_email: peter@peterphi.com
+    build_command_prepend:
+    build_command:
+    branch_pattern: master
+
