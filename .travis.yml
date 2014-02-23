@@ -3,6 +3,8 @@ language: java
 jdk:
   - oraclejdk7
 
+script: cat cov-int/build-log.txt
+
 env:
   global:
    # The next declration is the encrypted COVERITY_SCAN_TOKEN, created
@@ -15,7 +17,7 @@ addons:
       name: "petergeneric/stdlib"
       description: "A guice-based application development library/framework"
     notification_email: peter@peterphi.com
-    build_command_prepend:
-    build_command: mvn clean compile
+    build_command_prepend: mvn clean
+    build_command: mvn clean compile -DskipTests
     branch_pattern: master
 
