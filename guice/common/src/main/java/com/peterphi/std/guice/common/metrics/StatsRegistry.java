@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.metrics;
+package com.peterphi.std.guice.common.metrics;
 
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;

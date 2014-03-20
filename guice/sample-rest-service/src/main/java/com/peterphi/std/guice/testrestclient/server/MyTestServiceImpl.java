@@ -2,7 +2,7 @@ package com.peterphi.std.guice.testrestclient.server;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.peterphi.std.guice.metrics.StatsRegistry;
+import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;

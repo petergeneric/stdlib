@@ -5,7 +5,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.peterphi.std.guice.metrics.StatsRegistry;
+import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
 import org.apache.log4j.Logger;
 

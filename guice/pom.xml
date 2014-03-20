@@ -12,6 +12,7 @@
 
 	<properties>
 		<guice.version>3.1.2</guice.version>
+		<metrics.version>3.0.1</metrics.version>
 	</properties>
 
 	<parent>

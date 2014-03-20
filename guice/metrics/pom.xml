@@ -19,7 +19,6 @@
 
 	<properties>
 		<jackson.version>2.1.1</jackson.version>
-		<metrics.version>3.0.1</metrics.version>
 	</properties>
 
 	<dependencies>
@@ -45,34 +44,9 @@
 		<!-- metrics -->
 		<dependency>
 			<groupId>com.codahale.metrics</groupId>
-			<artifactId>metrics-core</artifactId>
-			<version>${metrics.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.codahale.metrics</groupId>
-			<artifactId>metrics-healthchecks</artifactId>
-			<version>${metrics.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.codahale.metrics</groupId>
 			<artifactId>metrics-json</artifactId>
 			<version>${metrics.version}</version>
 		</dependency>
-
-		<dependency>
-			<groupId>com.codahale.metrics</groupId>
-			<artifactId>metrics-jvm</artifactId>
-			<version>${metrics.version}</version>
-		</dependency>
-
-		<dependency>
-			<groupId>com.codahale.metrics</groupId>
-			<artifactId>metrics-log4j</artifactId>
-			<version>${metrics.version}</version>
-		</dependency>
-
 
 		<!-- metrics -->
 
