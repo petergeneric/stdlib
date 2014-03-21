@@ -1,31 +1,45 @@
 package com.peterphi.std.guice.common.metrics;
 
+import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
+import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
+import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
+import com.codahale.metrics.jvm.ThreadStatesGaugeSet;
+import com.codahale.metrics.log4j.InstrumentedAppender;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Gauge;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.MetricsRegistry;
-import com.yammer.metrics.core.Timer;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import org.apache.log4j.LogManager;
 
 import java.util.concurrent.TimeUnit;
 
 /**
- * Fronts the Coda Hale Metrics MetricsRegistry instance to allow more
+ * Fronts the Coda Hale Metrics MetricRegistry instance to allow more
  */
 @Singleton
 public class StatsRegistry implements StoppableService
 {
-	private final MetricsRegistry registry;
+	private final MetricRegistry registry;
 
 
 	@Inject
 	public StatsRegistry(ShutdownManager manager)
 	{
-		this.registry = new MetricsRegistry();
+		this.registry = new MetricRegistry();
+		registry.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
+		registry.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
+		registry.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+		registry.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
+
+		InstrumentedAppender log4jmetrics = new InstrumentedAppender(registry);
+		log4jmetrics.activateOptions();
+		LogManager.getRootLogger().addAppender(log4jmetrics);
 
 		manager.register(this);
 	}
@@ -36,105 +50,15 @@ public class StatsRegistry implements StoppableService
 	 *
 	 * @return
 	 */
-	public MetricsRegistry getRegistry()
+	public MetricRegistry getRegistry()
 	{
 		return registry;
-	}
-
-
-	/**
-	 * Given a new {@link Gauge}, registers it under the given class and name.
-	 *
-	 * @param clazz
-	 * 		the class which owns the metric
-	 * @param name
-	 * 		the name of the metric
-	 * @param metric
-	 * 		the metric
-	 * @param <T>
-	 * 		the type of the value returned by the metric
-	 *
-	 * @return {@code metric}
-	 */
-	public <T> Gauge<T> newGauge(Class<?> clazz, String name, Gauge<T> metric)
-	{
-		return registry.newGauge(clazz, name, metric);
-	}
-
-
-	/**
-	 * Creates a new {@link Meter} and registers it under the given class and name.
-	 *
-	 * @param clazz
-	 * 		the class which owns the metric
-	 * @param name
-	 * 		the name of the metric
-	 * @param eventType
-	 * 		the plural name of the type of events the meter is measuring (e.g., {@code
-	 * 		"requests"})
-	 * @param unit
-	 * 		the rate unit of the new meter
-	 *
-	 * @return a new {@link Meter}
-	 */
-	public Meter newMeter(Class<?> clazz, String name, String eventType, TimeUnit unit)
-	{
-		return registry.newMeter(clazz, name, eventType, unit);
-	}
-
-
-	/**
-	 * Creates a new non-biased {@link Histogram} and registers it under the given class and name.
-	 *
-	 * @param clazz
-	 * 		the class which owns the metric
-	 * @param name
-	 * 		the name of the metric
-	 *
-	 * @return a new {@link Histogram}
-	 */
-	public Histogram newHistogram(Class<?> clazz, String name)
-	{
-		return registry.newHistogram(clazz, name);
-	}
-
-
-	/**
-	 * Creates a new {@link Counter} and registers it under the given class and name.
-	 *
-	 * @param clazz
-	 * 		the class which owns the metric
-	 * @param name
-	 * 		the name of the metric
-	 *
-	 * @return a new {@link Counter}
-	 */
-	public Counter newCounter(Class<?> clazz, String name)
-	{
-		return registry.newCounter(clazz, name);
-	}
-
-
-	/**
-	 * Creates a new {@link Timer} and registers it under the given class and name, measuring
-	 * elapsed time in milliseconds and invocations per second.
-	 *
-	 * @param clazz
-	 * 		the class which owns the metric
-	 * @param name
-	 * 		the name of the metric
-	 *
-	 * @return a new {@link Timer}
-	 */
-	public Timer newTimer(Class<?> clazz, String name)
-	{
-		return registry.newTimer(clazz, name);
 	}
 
 
 	@Override
 	public void shutdown()
 	{
-		registry.shutdown();
+
 	}
 }

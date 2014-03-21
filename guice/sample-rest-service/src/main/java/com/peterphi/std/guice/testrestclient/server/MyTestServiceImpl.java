@@ -6,10 +6,10 @@ import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
-import com.yammer.metrics.core.Counter;
-import com.yammer.metrics.core.Histogram;
-import com.yammer.metrics.core.Meter;
-import com.yammer.metrics.core.MetricsRegistry;
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 
 import javax.ws.rs.core.Response;
 import java.util.Date;
@@ -29,11 +29,11 @@ public class MyTestServiceImpl implements MyTestService
 	@Inject
 	public MyTestServiceImpl(StatsRegistry stats)
 	{
-		final MetricsRegistry registry = stats.getRegistry();
+		final MetricRegistry registry = stats.getRegistry();
 
-		this.meter = registry.newMeter(getClass(), "index-page", "calls", TimeUnit.SECONDS); // calls per second
-		this.counter = registry.newCounter(getClass(), "failures"); // failures
-		this.thymeleafRenderTime = registry.newHistogram(getClass(), "thymeleaf.render-time");
+		this.meter = registry.meter(MetricRegistry.name(getClass(), "index-page", "calls"));
+		this.counter = registry.counter(MetricRegistry.name(getClass(),"failures"));
+		this.thymeleafRenderTime = registry.histogram(MetricRegistry.name(getClass(),"thymeleaf.render-time"));
 	}
 
 
