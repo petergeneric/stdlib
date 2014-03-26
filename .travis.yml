@@ -17,5 +17,5 @@ addons:
     notification_email: peter@peterphi.com
     build_command_prepend: mvn clean
     build_command: mvn clean compile -DskipTests
-    branch_pattern: master
+    branch_pattern: coverity
 
