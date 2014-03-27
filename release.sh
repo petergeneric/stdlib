@@ -64,32 +64,32 @@ function usage() {
 ###############################
 
 while getopts "ahsr:n:c:" o; do
-    case "${o}" in
-    	a)
-            RELEASE_VERSION="auto"
-            NEXT_VERSION="auto"
-    		;;
-        r)
-            RELEASE_VERSION="${OPTARG}"
-            ;;
-        n)
-            NEXT_VERSION="${OPTARG}"
-            ;;
-        c)
-        	CURRENT_VERSION="${OPTARG}"
-        	;;
-        s)
-        	MVN_TARGET_PRE_DEPLOY="gpg:sign"
-        	;;
-        h)
-        	usage
-        	exit 0
-        	;;
-        *)
-            usage
-            die_with "Unrecognised option ${o}"
-            ;;
-    esac
+	case "${o}" in
+		a)
+			RELEASE_VERSION="auto"
+			NEXT_VERSION="auto"
+			;;
+		r)
+			RELEASE_VERSION="${OPTARG}"
+			;;
+		n)
+			NEXT_VERSION="${OPTARG}"
+			;;
+		c)
+			CURRENT_VERSION="${OPTARG}"
+			;;
+		s)
+			MVN_TARGET_PRE_DEPLOY="gpg:sign"
+			;;
+		h)
+			usage
+			exit 0
+			;;
+		*)
+			usage
+			die_with "Unrecognised option ${o}"
+			;;
+	esac
 done
 shift $((OPTIND-1))
 
