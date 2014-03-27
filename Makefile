@@ -39,7 +39,4 @@ clean:
 	$(MVN) clean
 
 release:
-	$(MVN) clean
-	$(MVN) release:prepare -DautoVersionSubmodules=true
-	$(MVN) release:perform
-	rm -rf target/checkout
+	env MVN="$(MVN)" ./release.sh -s
