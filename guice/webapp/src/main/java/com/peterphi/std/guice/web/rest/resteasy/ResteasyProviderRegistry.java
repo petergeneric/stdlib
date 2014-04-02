@@ -6,11 +6,12 @@ import java.util.List;
 import java.util.Set;
 
 /**
- * Holds information about the REST providers this webapp uses
+ * Holds information about the REST classes this webapp uses
  */
 public class ResteasyProviderRegistry
 {
-	private static Set<Class<?>> providers = new HashSet<Class<?>>();
+	private static Set<Class<?>> classes = new HashSet<>();
+	private static Set<Object> singletons = new HashSet<>();
 
 	private static int revision = 0;
 
@@ -24,23 +25,47 @@ public class ResteasyProviderRegistry
 	{
 		if (clazz.isAnnotationPresent(javax.ws.rs.ext.Provider.class))
 		{
-			providers.add(clazz);
+			classes.add(clazz);
 			revision++;
 		}
 		else
 		{
-			throw new RuntimeException("Class "+clazz.getName()+ " is not annotated with javax.ws.rs.ext.Provider");
+			throw new RuntimeException("Class " + clazz.getName() + " is not annotated with javax.ws.rs.ext.Provider");
 		}
+	}
+
+	public static synchronized void registerSingleton(Object o) {
+		if (o.getClass().isAnnotationPresent(javax.ws.rs.ext.Provider.class))
+		{
+			singletons.add(o);
+			revision++;
+		}
+		else
+		{
+			throw new RuntimeException("Class " + o.getClass().getName() + " is not annotated with javax.ws.rs.ext.Provider");
+		}
+
 	}
 
 
 	/**
-	 * List the registered providers
+	 * List the registered classes
 	 *
 	 * @return
 	 */
-	public static synchronized List<Class<?>> getProviders()
+	public static synchronized List<Class<?>> getClasses()
 	{
-		return new ArrayList<Class<?>>(providers);
+		return new ArrayList<>(classes);
+	}
+
+
+	/**
+	 * List the registered singleton classes
+	 *
+	 * @return
+	 */
+	public static synchronized List<Object> getSingletons()
+	{
+		return new ArrayList<>(singletons);
 	}
 }

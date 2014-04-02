@@ -28,7 +28,6 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.ext.Provider;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -239,6 +238,21 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory = dispatcher.getDispatcher().getProviderFactory();
 		}
 
+
+		// Register the REST provider classes
+		for (Class<?> providerClass : ResteasyProviderRegistry.getClasses())
+		{
+			log.debug("Registering REST providers: " + providerClass.getName());
+			providerFactory.registerProvider(providerClass);
+		}
+
+		// Register the REST provider singletons
+		for (Object provider : ResteasyProviderRegistry.getSingletons())
+		{
+			log.debug("Registering REST provider singleton: " + provider);
+			providerFactory.registerProviderInstance(provider);
+		}
+
 		// Register the JAXBContext provider
 		providerFactory.registerProviderInstance(jaxbContextResolver);
 
@@ -246,7 +260,6 @@ class GuicedResteasy implements GuiceApplication
 		{
 			// In particular, register as the handler for RestExceptions
 			providerFactory.addExceptionMapper(this.exceptionMapper, (Type) ApplicationException.class);
-
 
 			log.trace("ExceptionMapper registered for ApplicationException");
 		}
@@ -257,13 +270,6 @@ class GuicedResteasy implements GuiceApplication
 			log.debug("Registering REST resource: " + resource.getResourceClass().getName());
 
 			resteasyRegistry.addResourceFactory(new ResteasyGuiceResource(injector, resource.getResourceClass()));
-		}
-
-		// Register the REST providers
-		for (Class<?> providerClass : ResteasyProviderRegistry.getProviders())
-		{
-			log.debug("Registering REST providers: " + providerClass.getName());
-			providerFactory.registerProvider(providerClass);
 		}
 	}
 
