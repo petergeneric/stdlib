@@ -650,6 +650,29 @@ public class Timecode
 
 
 	/**
+	 * Parse a Timecode encoded in the encoded style for this library (<code>[-][dd:]hh:mm:ss:ff@timebase</code>). See {@link
+	 * Timebase#getInstance} for information on valid timebase representations
+	 *
+	 * @param encoded
+	 * 		a timecode encoded as <code>hh:mm:ss:ff@timebase</code>
+	 *
+	 * @return a parsed timecode object (or null if the input is null)
+	 *
+	 * @throws RuntimeException
+	 * 		if the encoded string is not well-formed or could not be parsed
+	 */
+	public static final Timecode valueOf(String encoded)
+	{
+		if (encoded == null)
+		{
+			return null;
+		}
+
+		return getInstance(encoded);
+	}
+
+
+	/**
 	 * Part an SMPTE formatted timecode (<code>[-][dd:]hh:mm:ss:ff</code> -or <code>[-][dd:]hh:mm:ss;ff</code> for drop-frame
 	 * timecode
 	 * alongside a timebase

@@ -145,12 +145,15 @@ public class SampleCount
 	}
 
 
+	/**
+	 * Encode the SampleCount as <code>samples@[str_timebase|nom[:denom]]</code> (e.g.  124222@44100, 400@30000:1001)
+	 * @return
+	 */
 	@Override
 	public String toString()
 	{
-		return toVidispineString();
+		return samples + "@" + rate.toEncodedString();
 	}
-
 
 	/**
 	 * Parse a vidispine sample count & timebase as represented in point 1 of <a href="http://wiki.vidispine.com/vidiwiki/Time#Time_codes">http://wiki.vidispine.com/vidiwiki/Time#Time_codes</a><br
@@ -163,8 +166,27 @@ public class SampleCount
 	 *
 	 * @return
 	 */
+	@Deprecated
 	public static SampleCount parseVidispine(final String countAndRate)
 	{
+		return valueOf(countAndRate);
+	}
+
+	/**
+	 * Parse a  sample count & timebase as <code>samples@[str_timebase|nom[:denom]]</code>
+	 * N.B. This does NOT consider the case where only a sample count is specified: it MUST include a timebase
+	 *
+	 * @param countAndRate
+	 * 		A sample count and a time base. The syntax is {number of samples}@{textual representation of time base} 124222@44100,
+	 * 		400@30000:1001, 400@NTSC
+	 *
+	 * @return
+	 */
+	public static SampleCount valueOf(final String countAndRate)
+	{
+		if (countAndRate == null)
+			return null;
+
 		final String[] parts = countAndRate.split("@");
 
 		if (parts.length == 2)
@@ -190,10 +212,10 @@ public class SampleCount
 		return new SampleCount((long) samples, rate);
 	}
 
-
+	@Deprecated
 	public String toVidispineString()
 	{
-		return samples + "@" + rate.toEncodedString();
+		return toString();
 	}
 
 
