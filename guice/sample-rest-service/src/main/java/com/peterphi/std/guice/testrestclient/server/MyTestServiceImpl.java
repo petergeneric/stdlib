@@ -1,19 +1,22 @@
 package com.peterphi.std.guice.testrestclient.server;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.Histogram;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
-import com.codahale.metrics.Counter;
-import com.codahale.metrics.Histogram;
-import com.codahale.metrics.Meter;
-import com.codahale.metrics.MetricRegistry;
+import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
+import org.joda.time.Interval;
+import org.joda.time.LocalDate;
 
 import javax.ws.rs.core.Response;
 import java.util.Date;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class MyTestServiceImpl implements MyTestService
@@ -32,8 +35,8 @@ public class MyTestServiceImpl implements MyTestService
 		final MetricRegistry registry = stats.getRegistry();
 
 		this.meter = registry.meter(MetricRegistry.name(getClass(), "index-page", "calls"));
-		this.counter = registry.counter(MetricRegistry.name(getClass(),"failures"));
-		this.thymeleafRenderTime = registry.histogram(MetricRegistry.name(getClass(),"thymeleaf.render-time"));
+		this.counter = registry.counter(MetricRegistry.name(getClass(), "failures"));
+		this.thymeleafRenderTime = registry.histogram(MetricRegistry.name(getClass(), "thymeleaf.render-time"));
 	}
 
 
@@ -78,5 +81,35 @@ public class MyTestServiceImpl implements MyTestService
 		{
 			thymeleafRenderTime.update(System.nanoTime() - startTime);
 		}
+	}
+
+
+	@Override
+	public String datePage(final DateTime date)
+	{
+		if (date == null)
+		{
+			return "No date specified. Please add ?date=(ISO Date) (e.g. ?date=now)";
+		}
+
+		if (isPearlHarbourDay(date))
+			return "The supplied date, " + date + ", will live in infamy";
+		else
+			return "The supplied date, " + date + ", will not live in infamy";
+	}
+
+
+	/**
+	 * Tests if the supplied date occurred on the day 1941-12-07 in the Hawaii timezone (UTC-10)
+	 * @param date
+	 * @return
+	 */
+	private boolean isPearlHarbourDay(DateTime date)
+	{
+		final LocalDate pearlHarbour = new LocalDate("1941-12-07");
+		final DateTimeZone hawaii = DateTimeZone.forOffsetHours(-10);
+		final Interval pearlHarbourDay = pearlHarbour.toInterval(hawaii);
+
+		return pearlHarbourDay.contains(date);
 	}
 }
