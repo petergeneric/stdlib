@@ -3,6 +3,7 @@ package com.peterphi.std.guice.metrics.module;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
+import com.google.inject.Singleton;
 import com.peterphi.std.guice.metrics.rest.api.HealthRestService;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
@@ -22,6 +23,7 @@ public class WebappStatsModule extends AbstractModule
 	}
 
 	@Provides
+	@Singleton
 	public HealthCheckRegistry produceHealthCheckRegistry() {
 		log.info("Starting HealthCheckRegistry");
 		HealthCheckRegistry healthChecks = new HealthCheckRegistry();
