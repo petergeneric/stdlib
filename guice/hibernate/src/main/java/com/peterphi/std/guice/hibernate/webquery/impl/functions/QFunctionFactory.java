@@ -38,6 +38,14 @@ public class QFunctionFactory
 				{
 					case "eq":
 						return new EqFunction(property, param);
+					case "ge":
+						return new Ge(property, param);
+					case "gt":
+						return new Gt(property, param);
+					case "le":
+						return new Le(property, param);
+					case "lt":
+						return new Lt(property, param);
 					case "neq":
 						return new NeqFunction(property, param);
 					case "starts":
