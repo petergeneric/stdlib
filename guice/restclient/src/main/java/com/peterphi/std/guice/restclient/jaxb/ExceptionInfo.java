@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 
-@XmlType(namespace = "http://ns.mediasmithsforge.com/stdlib/rest/exception", name = "exception")
+@XmlType(namespace = "http://ns.peterphi.com/stdlib/rest/exception", name = "exception")
 public class ExceptionInfo
 {
 	@XmlElement(required = true, name = "shortName")
