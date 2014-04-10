@@ -13,6 +13,9 @@ import javax.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 public class RestServiceResourceParamInfo
 {
@@ -137,12 +140,7 @@ public class RestServiceResourceParamInfo
 
 		if (doc != null)
 		{
-			if (doc.lines().length != 0)
-				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
-			else if (!StringUtils.isEmpty(doc.value()))
-				return doc.value();
-			else if (!StringUtils.isEmpty(doc.href()))
-				return "See " + doc.href();
+			return StringUtils.join(doc.value(), "\n");
 		}
 
 		return "";
@@ -171,5 +169,20 @@ public class RestServiceResourceParamInfo
 
 		// has not been excluded, assume this is the entity
 		return true;
+	}
+
+
+	public List<String> getSeeAlsoURLs()
+	{
+		Doc doc = getAnnotation(Doc.class);
+
+		if (doc != null)
+		{
+			return Arrays.asList(doc.href());
+		}
+		else
+		{
+			return Collections.emptyList();
+		}
 	}
 }

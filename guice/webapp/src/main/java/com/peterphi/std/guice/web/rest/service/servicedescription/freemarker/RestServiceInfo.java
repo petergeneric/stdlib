@@ -65,12 +65,7 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 
 		if (doc != null)
 		{
-			if (doc.lines().length != 0)
-				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
-			else if (!StringUtils.isEmpty(doc.value()))
-				return doc.value();
-			else if (!StringUtils.isEmpty(doc.href()))
-				return doc.href();
+			return StringUtils.join(doc.value(), "\n");
 		}
 
 		return "";
@@ -83,14 +78,7 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 
 		if (doc != null)
 		{
-			List<String> hrefs = new ArrayList<>();
-
-			if (!StringUtils.isEmpty(doc.href()))
-				hrefs.add(doc.href());
-
-			hrefs.addAll(Arrays.asList(doc.hrefs()));
-
-			return hrefs;
+			return Arrays.asList(doc.href());
 		}
 		else
 		{

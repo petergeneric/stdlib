@@ -142,6 +142,12 @@ ${bootstrap.CSS}
                     <td>${param.name?html}</td>
                     <td>${param.type?html}</td>
                     <td>${param.description?html?replace('\n', '<br/>')}
+						<#if param.seeAlsoURLs?has_content>
+							(See <#list param.seeAlsoURLs as seeAlsoURL>
+								<sup><a href="${seeAlsoURL?html}">${seeAlsoURL_index}</a> </sup>
+							</#list>)
+						</#if>
+
 						<#if param.defaultValue?has_content>
                             <p>Default Value: ${param.defaultValue?html}</p>
 						</#if>

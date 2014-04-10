@@ -14,27 +14,13 @@ public @interface Doc
 	 *
 	 * @return
 	 */
-	public String value();
-
-	/**
-	 * Optional additional information
-	 *
-	 * @return
-	 */
-	public String[] lines() default {};
-
-	/**
-	 * An (optional) link to some external resource where more information may be obtained
-	 *
-	 * @return
-	 */
-	public String href() default "";
+	public String[] value() default "";
 
 	/**
 	 * An (optional) set of links to some external resources where more information may be obtained
 	 *
 	 * @return
 	 */
-	public String[] hrefs() default {};
+	public String[] href() default {};
 
 }

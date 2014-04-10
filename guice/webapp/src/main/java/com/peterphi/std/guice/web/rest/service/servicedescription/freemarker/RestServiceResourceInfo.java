@@ -156,7 +156,10 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	public String getConsumes()
 	{
-		final Consumes consumes = method.getAnnotation(Consumes.class);
+		Consumes consumes = method.getAnnotation(Consumes.class);
+
+		if(consumes == null)
+			consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
 
 		if (consumes == null || consumes.value() == null || consumes.value().length == 0)
 			return "*/* (default)";
@@ -167,7 +170,10 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	public String getProduces()
 	{
-		final Produces produces = method.getAnnotation(Produces.class);
+		Produces produces = method.getAnnotation(Produces.class);
+
+		if(produces == null)
+			produces = method.getDeclaringClass().getAnnotation(Produces.class);
 
 		if (produces == null || produces.value() == null || produces.value().length == 0)
 			return "*/* (default)";
@@ -182,12 +188,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 		if (doc != null)
 		{
-			if (doc.lines().length != 0)
-				return doc.value() + "\n" + StringUtils.join(doc.lines(), "\n");
-			else if (!StringUtils.isEmpty(doc.value()))
-				return doc.value();
-			else if (!StringUtils.isEmpty(doc.href()))
-				return doc.href();
+			return StringUtils.join(doc.value(), "\n");
 		}
 
 		return "";
@@ -200,14 +201,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 		if (doc != null)
 		{
-			List<String> hrefs = new ArrayList<>();
-
-			if (!StringUtils.isEmpty(doc.href()))
-				hrefs.add(doc.href());
-
-			hrefs.addAll(Arrays.asList(doc.hrefs()));
-
-			return hrefs;
+			return Arrays.asList(doc.href());
 		}
 		else
 		{

@@ -19,9 +19,9 @@ public interface RestServiceList
 	@Path("/")
 	public String index() throws Exception;
 
-	@Doc("Describes a single service")
+	@Doc(value="Describes a single service")
 	@GET
 	@Produces("text/html")
 	@Path("/service/{service_id}")
-	public String getServiceDescription(@Doc("the internal index of the service") @PathParam("service_id") int serviceId) throws Exception;
+	public String getServiceDescription(@Doc(value="the internal index of the service") @PathParam("service_id") int serviceId) throws Exception;
 }
