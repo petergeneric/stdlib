@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.jaxrs.converter;
+package com.peterphi.std.guice.restclient.converter;
 
 import org.jboss.resteasy.spi.StringConverter;
 import org.joda.time.DateTime;
@@ -8,7 +8,7 @@ import org.joda.time.format.ISODateTimeFormat;
 import javax.ws.rs.ext.Provider;
 
 @Provider
- class DateTimeStringConverter implements StringConverter<DateTime>
+class DateTimeStringConverter implements StringConverter<DateTime>
 {
 	private static final DateTimeFormatter PARSER = ISODateTimeFormat.dateTimeParser();
 	private static final DateTimeFormatter FORMATTER = ISODateTimeFormat.dateTime();

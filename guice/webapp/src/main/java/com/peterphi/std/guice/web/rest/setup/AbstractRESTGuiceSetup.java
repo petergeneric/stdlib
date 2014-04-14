@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
-import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSConverterModule;
+import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
 import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
 import com.peterphi.std.indexservice.rest.client.guice.IndexServiceModule;
 import com.peterphi.std.io.PropertyFile;
@@ -36,7 +36,7 @@ public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 	public void registerModules(List<Module> modules, PropertyFile config)
 	{
 		modules.add(new ServletScopingModule());
-		modules.add(new JAXRSConverterModule());
+		modules.add(new JAXRSJodaConverterModule());
 
 		if (!config.getBoolean(DISABLE_CORE_SERVICES, false))
 		{
