@@ -1,14 +1,14 @@
 package com.peterphi.std.guice.restclient.converter;
 
-import org.jboss.resteasy.spi.StringConverter;
 import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-class LocalDateStringConverter implements StringConverter<LocalDate>
+class LocalDateStringConverter implements ParamConverter<LocalDate>
 {
 	private static final DateTimeFormatter PARSER = ISODateTimeFormat.localDateParser();
 	private static final DateTimeFormatter FORMATTER = ISODateTimeFormat.date();

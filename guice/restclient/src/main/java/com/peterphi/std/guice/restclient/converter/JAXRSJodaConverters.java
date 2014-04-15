@@ -3,9 +3,9 @@ package com.peterphi.std.guice.restclient.converter;
 import java.util.Arrays;
 import java.util.List;
 
-public final class ResteasyJodaConverterPlugin
+public final class JAXRSJodaConverters
 {
-	private ResteasyJodaConverterPlugin()
+	private JAXRSJodaConverters()
 	{
 	}
 

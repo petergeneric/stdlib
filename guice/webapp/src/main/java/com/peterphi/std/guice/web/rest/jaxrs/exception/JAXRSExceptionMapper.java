@@ -13,7 +13,7 @@ import javax.ws.rs.ext.Provider;
  * Takes an Exception thrown by a JAX-RS provider and renders it prettily
  */
 @Provider
-public class JAXRSExceptionMapper implements ExceptionMapper<Exception>
+public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationException>
 {
 	private static final Logger log = Logger.getLogger(JAXRSExceptionMapper.class);
 
@@ -31,7 +31,7 @@ public class JAXRSExceptionMapper implements ExceptionMapper<Exception>
 
 
 	@Override
-	public Response toResponse(Exception exception)
+	public Response toResponse(ApplicationException exception)
 	{
 		if (exception.getCause() != null && exception instanceof ApplicationException)
 		{

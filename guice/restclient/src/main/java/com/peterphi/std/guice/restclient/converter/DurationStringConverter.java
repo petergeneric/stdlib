@@ -1,12 +1,12 @@
 package com.peterphi.std.guice.restclient.converter;
 
-import org.jboss.resteasy.spi.StringConverter;
 import org.joda.time.Duration;
 
+import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-class DurationStringConverter implements StringConverter<Duration>
+class DurationStringConverter implements ParamConverter<Duration>
 {
 	@Override
 	public Duration fromString(final String str)

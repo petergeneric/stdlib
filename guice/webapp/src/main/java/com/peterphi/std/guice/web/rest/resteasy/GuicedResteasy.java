@@ -17,8 +17,6 @@ import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
-import org.jboss.resteasy.spi.ApplicationException;
-import org.jboss.resteasy.spi.NotFoundException;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
@@ -28,8 +26,8 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.ws.rs.NotFoundException;
 import java.io.IOException;
-import java.lang.reflect.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
@@ -258,8 +256,8 @@ class GuicedResteasy implements GuiceApplication
 
 		// Register the exception mapper
 		{
-			// In particular, register as the handler for RestExceptions
-			providerFactory.addExceptionMapper(this.exceptionMapper, (Type) ApplicationException.class);
+			// Register the ExceptionMapper for ApplicationException
+			providerFactory.register(this.exceptionMapper);
 
 			log.trace("ExceptionMapper registered for ApplicationException");
 		}

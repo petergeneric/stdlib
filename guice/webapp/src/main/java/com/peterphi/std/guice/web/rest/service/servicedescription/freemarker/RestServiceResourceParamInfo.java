@@ -114,9 +114,10 @@ public class RestServiceResourceParamInfo
 	}
 
 
-	private boolean hasAnnotations(Class<? extends Annotation>... tests)
+	@SuppressWarnings("unchecked")
+	private boolean hasAnnotations(Class... tests)
 	{
-		for (Class<? extends Annotation> test : tests)
+		for (Class test : tests)
 			if (hasAnnotation(test))
 				return true;
 
