@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
-import com.peterphi.std.guice.restclient.converter.JAXRSJodaConverters;
+import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -54,9 +54,8 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 		resteasyProviderFactory.addClientErrorInterceptor(errorInterceptor);
 		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
-		// Register a number of converter plugins
-		for (Object converter: JAXRSJodaConverters.getProviderSingletons())
-			resteasyProviderFactory.registerProviderInstance(converter);
+		// Register the joda param converters
+		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
 
 		this.connectionManager = new PoolingClientConnectionManager();
 
