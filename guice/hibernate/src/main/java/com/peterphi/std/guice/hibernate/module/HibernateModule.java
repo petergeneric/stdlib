@@ -8,6 +8,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaDateTimeUserType;
+import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
 import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
@@ -83,6 +84,9 @@ public abstract class HibernateModule extends AbstractModule
 
 		registerType(config, TimecodeUserType.INSTANCE);
 		registerType(config, SampleCountUserType.INSTANCE);
+
+		// Map LocalDate to DATE
+		registerType(config, JodaLocalDateUserType.INSTANCE);
 	}
 
 
