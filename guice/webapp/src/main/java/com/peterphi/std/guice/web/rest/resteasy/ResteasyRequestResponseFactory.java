@@ -6,13 +6,13 @@ import org.jboss.resteasy.plugins.server.servlet.HttpResponseFactory;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletInputMessage;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletResponseWrapper;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
-import org.jboss.resteasy.specimpl.UriInfoImpl;
+import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
+import org.jboss.resteasy.spi.ResteasyUriInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
-import javax.ws.rs.core.HttpHeaders;
 
 /**
  * Factory that converts HttpServletRequests and HttpServletResponses to HttpRequests and HttpResponses
@@ -21,19 +21,23 @@ class ResteasyRequestResponseFactory implements HttpRequestFactory, HttpResponse
 {
 	private final ServletContainerDispatcher dispatcher;
 
+
 	public ResteasyRequestResponseFactory(ServletContainerDispatcher dispatcher)
 	{
 		this.dispatcher = dispatcher;
 	}
 
-	public HttpRequest createResteasyHttpRequest(String httpMethod,
-	                                             HttpServletRequest request,
-	                                             HttpHeaders headers,
-	                                             UriInfoImpl uriInfo,
-	                                             HttpResponse theResponse,
-	                                             HttpServletResponse response)
+	@Override
+	public HttpRequest createResteasyHttpRequest(final String httpMethod,
+	                                             final HttpServletRequest request,
+	                                             final ResteasyHttpHeaders headers,
+	                                             final ResteasyUriInfo uriInfo,
+	                                             final HttpResponse theResponse,
+	                                             final HttpServletResponse response)
 	{
 		return new HttpServletInputMessage(request,
+		                                   response,
+		                                   request.getServletContext(),
 		                                   theResponse,
 		                                   headers,
 		                                   uriInfo,
@@ -41,6 +45,8 @@ class ResteasyRequestResponseFactory implements HttpRequestFactory, HttpResponse
 		                                   (SynchronousDispatcher) dispatcher.getDispatcher());
 	}
 
+
+	@Override
 	public HttpResponse createResteasyHttpResponse(HttpServletResponse response)
 	{
 		return new HttpServletResponseWrapper(response, dispatcher.getDispatcher().getProviderFactory());

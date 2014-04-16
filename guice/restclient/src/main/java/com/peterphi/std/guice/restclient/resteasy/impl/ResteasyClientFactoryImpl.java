@@ -6,14 +6,14 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
-import com.peterphi.std.guice.restclient.converter.ResteasyJodaConverterPlugin;
+import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.tsccm.ThreadSafeClientConnManager;
+import org.apache.http.impl.conn.PoolingClientConnectionManager;
 import org.apache.http.params.HttpConnectionParams;
 import org.apache.http.params.HttpParams;
 import org.jboss.resteasy.client.ProxyFactory;
@@ -29,7 +29,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, StoppableService
 {
-	private final ThreadSafeClientConnManager connectionManager;
+	private final PoolingClientConnectionManager connectionManager;
 	private final ResteasyProviderFactory resteasyProviderFactory;
 
 	@Inject(optional = true)
@@ -54,11 +54,10 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 		resteasyProviderFactory.addClientErrorInterceptor(errorInterceptor);
 		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
-		// Register a number of converter plugins
-		for (Object converter: ResteasyJodaConverterPlugin.getProviderSingletons())
-			resteasyProviderFactory.registerProviderInstance(converter);
+		// Register the joda param converters
+		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
 
-		this.connectionManager = new ThreadSafeClientConnManager();
+		this.connectionManager = new PoolingClientConnectionManager();
 
 		manager.register(this);
 	}

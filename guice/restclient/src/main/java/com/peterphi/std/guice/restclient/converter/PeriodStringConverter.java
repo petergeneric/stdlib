@@ -1,12 +1,12 @@
 package com.peterphi.std.guice.restclient.converter;
 
-import org.jboss.resteasy.spi.StringConverter;
 import org.joda.time.Period;
 
+import javax.ws.rs.ext.ParamConverter;
 import javax.ws.rs.ext.Provider;
 
 @Provider
-class PeriodStringConverter implements StringConverter<Period>
+class PeriodStringConverter implements ParamConverter<Period>
 {
 	@Override
 	public Period fromString(final String str)

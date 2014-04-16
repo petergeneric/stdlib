@@ -114,7 +114,8 @@ public class RestServiceResourceParamInfo
 	}
 
 
-	private boolean hasAnnotations(Class<? extends Annotation>... tests)
+	@SafeVarargs
+	private final boolean hasAnnotations(Class<? extends Annotation>... tests)
 	{
 		for (Class<? extends Annotation> test : tests)
 			if (hasAnnotation(test))
