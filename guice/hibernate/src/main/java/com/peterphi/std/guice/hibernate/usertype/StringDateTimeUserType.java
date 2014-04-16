@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.usertype;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.UserVersionType;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
@@ -12,6 +13,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Comparator;
 
 
 /**
@@ -19,10 +21,10 @@ import java.sql.Types;
  * <code>yyyyMMdd'T'HHmmss.SSSZ</code>. The time zone offset is 'Z' for zero, and of the form '±HHmm' for non-zero.<br />
  * The column size ranges between 20 and 24 characters.
  */
-public class StringDateTimeUserType implements UserType
+public class StringDateTimeUserType implements UserType, UserVersionType, Comparator
 {
 	private static final DateTimeFormatter FORMAT = ISODateTimeFormat.basicDateTime();
-	public static JodaDateTimeUserType INSTANCE = new JodaDateTimeUserType();
+	public static StringDateTimeUserType INSTANCE = new StringDateTimeUserType();
 
 	private static final int[] SQL_TYPES = {Types.VARCHAR};
 
@@ -45,17 +47,11 @@ public class StringDateTimeUserType implements UserType
 	public boolean equals(Object x, Object y) throws HibernateException
 	{
 		if (x == y)
-		{
 			return true;
-		}
 		else if (x == null || y == null)
-		{
 			return false;
-		}
 		else
-		{
 			return x.equals(y);
-		}
 	}
 
 
@@ -138,5 +134,26 @@ public class StringDateTimeUserType implements UserType
 	public DateTime replace(final Object original, final Object target, final Object owner) throws HibernateException
 	{
 		return (DateTime) original;
+	}
+
+
+	@Override
+	public DateTime seed(final SessionImplementor session)
+	{
+		return DateTime.now();
+	}
+
+
+	@Override
+	public DateTime next(final Object current, final SessionImplementor session)
+	{
+		return seed(session);
+	}
+
+
+	@Override
+	public int compare(final Object a, final Object b)
+	{
+		return ((DateTime) a).compareTo((DateTime) b);
 	}
 }

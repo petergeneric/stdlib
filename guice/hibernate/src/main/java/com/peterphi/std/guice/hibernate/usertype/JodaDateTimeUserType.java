@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.usertype;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SessionImplementor;
 import org.hibernate.usertype.UserType;
+import org.hibernate.usertype.UserVersionType;
 import org.joda.time.DateTime;
 
 import java.io.Serializable;
@@ -10,11 +11,12 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
+import java.util.Comparator;
 
 /**
  * Encodes Joda DateTime values into a BIGINT column where the date is expressed in milliseconds since 1970.
  */
-public class JodaDateTimeUserType implements UserType
+public class JodaDateTimeUserType implements UserType, UserVersionType, Comparator
 {
 	public static JodaDateTimeUserType INSTANCE = new JodaDateTimeUserType();
 
@@ -134,5 +136,26 @@ public class JodaDateTimeUserType implements UserType
 	public DateTime replace(final Object original, final Object target, final Object owner) throws HibernateException
 	{
 		return (DateTime) original;
+	}
+
+
+	@Override
+	public DateTime seed(final SessionImplementor session)
+	{
+		return DateTime.now();
+	}
+
+
+	@Override
+	public DateTime next(final Object current, final SessionImplementor session)
+	{
+		return seed(session);
+	}
+
+
+	@Override
+	public int compare(final Object a, final Object b)
+	{
+		return ((DateTime) a).compareTo((DateTime) b);
 	}
 }
