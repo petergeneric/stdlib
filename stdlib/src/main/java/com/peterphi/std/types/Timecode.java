@@ -52,20 +52,32 @@ public class Timecode
 	         final boolean dropFrame)
 	{
 		if (days < 0 || days > 99)
+		{
 			throw new IllegalArgumentException("Days must be 0-99! Got: " + days);
+		}
 		if (hours < 0 || hours > 23)
+		{
 			throw new IllegalArgumentException("Hours must be 0-23! Hours: " + hours);
+		}
 		if (minutes < 0 || minutes > 59)
+		{
 			throw new IllegalArgumentException("Minutes must be 0-60! Got: " + minutes);
+		}
 		if (seconds < 0 || seconds > 59)
+		{
 			throw new IllegalArgumentException("Seconds must be 0-60! Got: " + seconds);
+		}
 		if (frames < 0)
+		{
 			throw new IllegalArgumentException("Frames may not be negative! Got " + frames);
+		}
 		if (frames >= timebase.getSamplesPerSecond())
+		{
 			throw new IllegalArgumentException("Frame component must represent < 1 second! Got " +
 			                                   frames +
 			                                   " with timebase " +
 			                                   timebase.toEncodedString());
+		}
 
 		this.timebase = timebase;
 		this.dropFrame = dropFrame;
@@ -129,7 +141,9 @@ public class Timecode
 
 		// Flip the sign if negative
 		if (negative)
+		{
 			totalFrames = totalFrames * -1;
+		}
 
 		return Math.round(totalFrames);
 	}
@@ -154,6 +168,19 @@ public class Timecode
 		final int microsecondsPerFrame = (int) (1000000D / timebase.getSamplesPerSecond());
 
 		return microsecondsPerFrame * frames;
+	}
+
+
+	/**
+	 * Get the frames part of this timecode in milliseconds
+	 *
+	 * @return
+	 */
+	public long getFramesPartAsMilliseconds()
+	{
+		final int milliSecondsPerFrame = (int) (1000D / timebase.getSamplesPerSecond());
+
+		return milliSecondsPerFrame * frames;
 	}
 
 	// ///////////////
@@ -242,8 +269,11 @@ public class Timecode
 		final String negativeIndicator = negative ? "-" : "";
 
 		if (days == 0 || !includeDays)
+		{
 			return String.format("%s%02d:%02d:%02d%s%02d", negativeIndicator, hours, minutes, seconds, frameIndicator, frames);
+		}
 		else
+		{
 			return String.format("%s%02d:%02d:%02d:%02d%s%02d",
 			                     negativeIndicator,
 			                     days,
@@ -252,6 +282,7 @@ public class Timecode
 			                     seconds,
 			                     frameIndicator,
 			                     frames);
+		}
 	}
 
 
@@ -512,28 +543,48 @@ public class Timecode
 	public boolean equals(final Object o)
 	{
 		if (this == o)
+		{
 			return true;
+		}
 		if (!(o instanceof Timecode))
+		{
 			return false;
+		}
 
 		Timecode timecode = (Timecode) o;
 
 		if (days != timecode.days)
+		{
 			return false;
+		}
 		if (dropFrame != timecode.dropFrame)
+		{
 			return false;
+		}
 		if (frames != timecode.frames)
+		{
 			return false;
+		}
 		if (hours != timecode.hours)
+		{
 			return false;
+		}
 		if (minutes != timecode.minutes)
+		{
 			return false;
+		}
 		if (negative != timecode.negative)
+		{
 			return false;
+		}
 		if (seconds != timecode.seconds)
+		{
 			return false;
+		}
 		if (!timebase.equals(timecode.timebase))
+		{
 			return false;
+		}
 
 		return true;
 	}
@@ -624,10 +675,14 @@ public class Timecode
 		final Timecode timecode = getInstance(samples, dropFrame);
 
 		if (!supportDays && timecode.getDaysPart() != 0)
+		{
 			throw new IllegalArgumentException("supportDays disabled but resulting timecode had a days component: " +
 			                                   timecode.toEncodedString());
+		}
 		else
+		{
 			return timecode;
+		}
 	}
 
 
@@ -731,9 +786,13 @@ public class Timecode
 		final Timecode timecode = getInstance(frameNumber, dropFrame, timebase);
 
 		if (!supportDays && timecode.getDaysPart() != 0)
+		{
 			throw new IllegalArgumentException("supportDays disabled but resulting timecode had a days component: " +
 			                                   timecode.toEncodedString());
+		}
 		else
+		{
 			return timecode;
+		}
 	}
 }
