@@ -68,43 +68,4 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	 * 		if an exception occurs (the exception will be logged but otherwise ignored)
 	 */
 	protected abstract void execute() throws Exception;
-
-
-	/**
-	 * Sleep for the specified amount of time (unless the daemon is stopping, in which case do not sleep at all). Returns
-	 * immediately if the thread is interrupted.
-	 *
-	 * @param millis
-	 * 		the amount of time to sleep for
-	 */
-	protected void sleep(long millis)
-	{
-		if (!isRunning() || millis <= 0)
-			return;
-
-		try
-		{
-			Thread.sleep(millis);
-		}
-		catch (InterruptedException e)
-		{
-			// ignore & return early
-		}
-	}
-
-
-	/**
-	 * Sleep for the specified amount of time (unless the daemon is stopping, in which case do not sleep at all). Returns
-	 * immediately if the thread is interrupted.
-	 *
-	 * @param timeout
-	 * 		the amount of time to sleep for
-	 */
-	protected void sleep(Timeout timeout)
-	{
-		if (!isRunning() || timeout.getMilliseconds() <= 0)
-			return;
-
-		sleep(timeout.getMilliseconds());
-	}
 }
