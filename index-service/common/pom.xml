@@ -5,14 +5,14 @@
 	<groupId>com.peterphi.std.index</groupId>
 	<artifactId>index-common</artifactId>
 	<packaging>jar</packaging>
-	<version>6.0.2</version>
+	<version>6.0.3-SNAPSHOT</version>
 	<name>index service - common</name>
 	<description>Index Service (Common)</description>
 
 	<parent>
 		<groupId>com.peterphi.std.index</groupId>
 		<artifactId>index-parent</artifactId>
-		<version>6.0.2</version>
+		<version>6.0.3-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
