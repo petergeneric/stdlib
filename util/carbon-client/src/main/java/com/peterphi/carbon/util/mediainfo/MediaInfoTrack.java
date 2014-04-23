@@ -18,6 +18,7 @@ public class MediaInfoTrack extends XMLWrapper
 		return element.getAttributeValue("type");
 	}
 
+
 	/**
 	 * Gets duration of video track in milliseconds.
 	 *
@@ -36,8 +37,26 @@ public class MediaInfoTrack extends XMLWrapper
 			return duration;
 		}
 		else
+		{
 			throw new RuntimeException("No Duration elements present on track!");
+		}
 	}
 
 
+	/**
+	 * Gets the start timecode of the video track in hh:mm:ss:ff
+	 */
+	public String getStartTimecode()
+	{
+		final Element element = getElement("Time_code_of_first_frame", 0);
+
+		if (element != null)
+		{
+			return element.getText();
+		}
+		else
+		{
+			return null;
+		}
+	}
 }

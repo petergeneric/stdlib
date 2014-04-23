@@ -36,11 +36,17 @@ public class MediaInfo extends XMLWrapper
 			MediaInfoTrack generic = new MediaInfoTrack(track);
 
 			if (StringUtils.equalsIgnoreCase(generic.getTrackType(), "video"))
+			{
 				tracks.add(new VideoTrack(track));
+			}
 			else if (StringUtils.equalsIgnoreCase(generic.getTrackType(), "audio"))
+			{
 				tracks.add(new AudioTrack(track));
+			}
 			else
+			{
 				tracks.add(generic);
+			}
 		}
 
 		return tracks;
@@ -52,8 +58,12 @@ public class MediaInfo extends XMLWrapper
 		List<VideoTrack> tracks = new ArrayList<>();
 
 		for (MediaInfoTrack track : getTracks())
+		{
 			if (track instanceof VideoTrack)
+			{
 				tracks.add((VideoTrack) track);
+			}
+		}
 
 		return tracks;
 	}
@@ -64,8 +74,28 @@ public class MediaInfo extends XMLWrapper
 		List<AudioTrack> tracks = new ArrayList<>();
 
 		for (MediaInfoTrack track : getTracks())
+		{
 			if (track instanceof AudioTrack)
+			{
 				tracks.add((AudioTrack) track);
+			}
+		}
+
+		return tracks;
+	}
+
+
+	public List<MediaInfoTrack> getTimeCodeTracks()
+	{
+		List<MediaInfoTrack> tracks = new ArrayList<>();
+
+		for (MediaInfoTrack track : getTracks())
+		{
+			if (StringUtils.equalsIgnoreCase(track.getTrackType(), "time code"))
+			{
+				tracks.add((VideoTrack) track);
+			}
+		}
 
 		return tracks;
 	}
@@ -76,8 +106,27 @@ public class MediaInfo extends XMLWrapper
 		List<VideoTrack> tracks = getVideoTracks();
 
 		if (tracks.isEmpty())
+		{
 			throw new RuntimeException("Media has no video tracks!");
+		}
 		else
+		{
 			return tracks.get(0);
+		}
+	}
+
+
+	public MediaInfoTrack getFirstTimecodeTrack()
+	{
+		List<MediaInfoTrack> tracks = getTimeCodeTracks();
+
+		if (tracks.isEmpty())
+		{
+			throw new RuntimeException("Media has no timecode tracks!");
+		}
+		else
+		{
+			return tracks.get(0);
+		}
 	}
 }
