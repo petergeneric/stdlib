@@ -8,6 +8,7 @@ import com.peterphi.std.guice.common.JAXBModule;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.ServicePropertiesModule;
 import com.peterphi.std.guice.common.converter.PropertiesTypeConversionModule;
+import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
@@ -124,6 +125,7 @@ public class GuiceInjectorBootstrap
 		{
 			final List<Module> modules = new ArrayList<Module>();
 
+			modules.add(new GuiceLifecycleModule());
 			modules.add(shutdown);
 			modules.add(new RetryModule());
 			modules.add(new JAXBModule(properties));
