@@ -26,21 +26,10 @@ public interface Dao<T, ID extends Serializable>
 	public Class<T> getEntityType();
 
 	/**
-	 * Execute a Dynamic query using the specified constraints
-	 *
-	 * @param constraints
-	 *
-	 * @return an entity list containing the requested number of results
-	 *
-	 * @deprecated use findbyUriQuery instead
-	 */
-	@Deprecated
-	public List<T> getConstraintResults(ResultSetConstraint constraints);
-
-	/**
 	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
 	 *
 	 * @param constraints
+	 * 		the constraints to apply
 	 *
 	 * @return a resultset containing the requested number of results
 	 */
@@ -50,6 +39,7 @@ public interface Dao<T, ID extends Serializable>
 	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
 	 *
 	 * @param constraints
+	 * 		the constraints to apply
 	 * @param base
 	 * 		the base criteria to use (the constraints will be ANDed with this Criteria
 	 *
@@ -92,10 +82,10 @@ public interface Dao<T, ID extends Serializable>
 	 * Query the database for all items with the given primary keys (convenience method for an ORred id query)
 	 *
 	 * @param ids
-	 * 		a collection (may be empty) of primary keys
+	 * 		a collection of primary keys (may be empty)
 	 *
 	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller
-	 * than <code>ids</code>
+	 * than <code>ids</code>. May be ordered differently from <code>ids</code>
 	 */
 	public List<T> getByIds(final Collection<ID> ids);
 

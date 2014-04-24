@@ -118,24 +118,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
-	/**
-	 * convience method when wanting the results of a constraint query
-	 *
-	 * @param constraints
-	 *
-	 * @return
-	 */
-	@Override
-	@Transactional(readOnly = true)
-	@Deprecated
-	public List<T> getConstraintResults(ResultSetConstraint constraints)
-	{
-		ConstrainedResultSet<T> resultset = findByUriQuery(constraints);
-
-		return resultset.getList();
-	}
-
-
 	@Override
 	@Transactional(readOnly = true)
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints)
@@ -247,6 +229,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		getWriteSession().update(obj);
 	}
+
 
 	@Override
 	@Transactional
