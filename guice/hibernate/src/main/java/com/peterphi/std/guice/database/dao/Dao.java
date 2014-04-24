@@ -148,4 +148,20 @@ public interface Dao<T, ID extends Serializable>
 	 * @see org.hibernate.Session#merge(Object)
 	 */
 	public void merge(T obj);
+
+
+	/**
+	 * Convenience method which retrieves an entity by the equality of a single property (may return null if no entities match)
+	 *
+	 * @param propertyName
+	 * 		the property name (MUST be a simple property)
+	 * @param value
+	 * 		the property value
+	 *
+	 * @return the entity, or null if no results were found
+	 *
+	 * @throws HibernateException
+	 * 		if more than one property is returned
+	 */
+	public T getByUniqueProperty(String propertyName, Object value);
 }

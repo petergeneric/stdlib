@@ -239,6 +239,18 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Override
+	public T getByUniqueProperty(final String propertyName, final Object value)
+	{
+		Criteria criteria = createCriteria();
+
+		criteria.add(Restrictions.eq(propertyName, value));
+		criteria.setMaxResults(2);
+
+		return uniqueResult(criteria);
+	}
+
+
 	protected Session getSession()
 	{
 		return sessionFactory.getCurrentSession();
