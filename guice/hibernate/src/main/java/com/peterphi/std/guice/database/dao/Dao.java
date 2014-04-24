@@ -21,7 +21,7 @@ public interface Dao<T, ID extends Serializable>
 	/**
 	 * Get the type of Entity this DAO processes
 	 *
-	 * @return
+	 * @return the entity type
 	 */
 	public Class<T> getEntityType();
 
@@ -30,7 +30,7 @@ public interface Dao<T, ID extends Serializable>
 	 *
 	 * @param constraints
 	 *
-	 * @return
+	 * @return an entity list containing the requested number of results
 	 *
 	 * @deprecated use findbyUriQuery instead
 	 */
@@ -42,7 +42,7 @@ public interface Dao<T, ID extends Serializable>
 	 *
 	 * @param constraints
 	 *
-	 * @return
+	 * @return a resultset containing the requested number of results
 	 */
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints);
 
@@ -53,14 +53,14 @@ public interface Dao<T, ID extends Serializable>
 	 * @param base
 	 * 		the base criteria to use (the constraints will be ANDed with this Criteria
 	 *
-	 * @return
+	 * @return a resultset containing the requested number of results
 	 */
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base);
 
 	/**
 	 * Retrieve every object accessible through this DAO
 	 *
-	 * @return
+	 * @return all entities of this type in the database
 	 */
 	public List<T> getAll();
 
@@ -80,8 +80,11 @@ public interface Dao<T, ID extends Serializable>
 	 * Retrieve an item by its primary key
 	 *
 	 * @param id
+	 * 		the id of an entity
 	 *
 	 * @return the item (or null if it is not present)
+	 *
+	 * @see org.hibernate.Session#get(Class, java.io.Serializable)
 	 */
 	public T getById(ID id);
 
@@ -92,8 +95,7 @@ public interface Dao<T, ID extends Serializable>
 	 * 		a collection (may be empty) of primary keys
 	 *
 	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller
-	 * than
-	 * <code>ids</code>
+	 * than <code>ids</code>
 	 */
 	public List<T> getByIds(final Collection<ID> ids);
 
@@ -101,6 +103,7 @@ public interface Dao<T, ID extends Serializable>
 	 * Delete an item by its primary key
 	 *
 	 * @param id
+	 * 		the id of an entity
 	 */
 	public void deleteById(ID id);
 
@@ -108,6 +111,9 @@ public interface Dao<T, ID extends Serializable>
 	 * Delete an item from the database
 	 *
 	 * @param obj
+	 * 		the entity
+	 *
+	 * @see org.hibernate.Session#delete(Object)
 	 */
 	public void delete(T obj);
 
@@ -115,6 +121,9 @@ public interface Dao<T, ID extends Serializable>
 	 * Create or Update an item in the database
 	 *
 	 * @param obj
+	 * 		the entity
+	 *
+	 * @see org.hibernate.Session#saveOrUpdate(Object)
 	 */
 	public void saveOrUpdate(T obj);
 
@@ -122,8 +131,11 @@ public interface Dao<T, ID extends Serializable>
 	 * Save a new item in the database, returning its primary key
 	 *
 	 * @param obj
+	 * 		the entity
 	 *
 	 * @return the primary key of the newly saved object
+	 *
+	 * @see org.hibernate.Session#save(Object)
 	 */
 	public ID save(T obj);
 
@@ -131,6 +143,19 @@ public interface Dao<T, ID extends Serializable>
 	 * Update an existing item in the database
 	 *
 	 * @param obj
+	 * 		the entity
+	 *
+	 * @see org.hibernate.Session#update(Object)
 	 */
 	public void update(T obj);
+
+	/**
+	 * Merge an unmanaged entity into a (new or existing) managed entity
+	 *
+	 * @param obj
+	 * 		the entity
+	 *
+	 * @see org.hibernate.Session#merge(Object)
+	 */
+	public void merge(T obj);
 }

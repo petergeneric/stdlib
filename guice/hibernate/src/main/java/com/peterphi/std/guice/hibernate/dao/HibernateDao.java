@@ -12,6 +12,7 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
+import org.hibernate.NonUniqueResultException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -247,6 +248,13 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		getWriteSession().update(obj);
 	}
 
+	@Override
+	@Transactional
+	public void merge(T obj)
+	{
+		getWriteSession().merge(obj);
+	}
+
 
 	protected Session getSession()
 	{
@@ -334,6 +342,28 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected T uniqueResult(Criteria criteria)
 	{
 		return clazz.cast(criteria.uniqueResult());
+	}
+
+
+	/**
+	 * Convenience method to return a single, non-null instance that matches the query
+	 *
+	 * @param criteria
+	 * 		a criteria created by this DAO
+	 *
+	 * @return the single result (N.B. never null)
+	 *
+	 * @throws HibernateException
+	 * 		if the number of results was not exactly 1
+	 */
+	protected T one(Criteria criteria)
+	{
+		final T obj = uniqueResult(criteria);
+
+		if (obj != null)
+			return obj;
+		else
+			throw new NonUniqueResultException(0);
 	}
 
 
