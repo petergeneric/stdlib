@@ -62,10 +62,24 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 
 	/**
+	 * <p>Called when the {@link #execute()} method throws an exception. This method can be overridden by subclasses to record
+	 * exception details or to take remedial action. By default it will log the exception at the ERROR level.</p>
+	 * <p><b>Note: Any exception thrown by this method will cause the thread to terminate</b></p>
+	 *
+	 * @param t
+	 * 		the exception that was caught
+	 */
+	protected void executeException(Throwable t)
+	{
+		log.error("Ignoring exception in GuiceRecurringDaemon call", t);
+	}
+
+
+	/**
 	 * Run one iteration of the daemon
 	 *
 	 * @throws Exception
-	 * 		if an exception occurs (the exception will be logged but otherwise ignored)
+	 * 		if an exception occurs (the exception will be passed to {@link #executeException(Throwable)} but otherwise ignored)
 	 */
 	protected abstract void execute() throws Exception;
 }
