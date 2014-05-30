@@ -158,7 +158,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	public T getById(ID id)
 	{
 		if (id == null)
-			throw new IllegalArgumentException("Cannot delete with a null id!");
+			throw new IllegalArgumentException("Must supply an id to retrieve!");
 
 		return clazz.cast(getSession().get(clazz, id));
 	}
@@ -192,6 +192,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional
 	public void deleteById(ID id)
 	{
+		if (id == null)
+			throw new IllegalArgumentException("Cannot delete a null id!");
+
 		final T obj = getById(id);
 
 		delete(obj);
