@@ -5,6 +5,7 @@ import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.spi.ApplicationException;
 
+import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.ext.ExceptionMapper;
 import javax.ws.rs.ext.Provider;
@@ -43,8 +44,13 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 		}
 	}
 
+
 	public Response getResponse(Throwable exception)
 	{
+		// WebApplicationException already includes the desired Response to send to the client, so return them directly
+		if (exception instanceof WebApplicationException)
+			return ((WebApplicationException) exception).getResponse();
+
 		// Represent the exception as a string
 		final RestFailure failure = marshaller.renderFailure(exception);
 
@@ -73,5 +79,4 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 		else
 			return xmlRenderer.render(failure); // Fall back on the XML renderer
 	}
-
 }
