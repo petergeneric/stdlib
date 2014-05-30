@@ -6,14 +6,14 @@
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>6.0.3-SNAPSHOT</version>
+		<version>6.0.3</version>
 
 		<relativePath>../../</relativePath>
 	</parent>
 
 	<groupId>com.peterphi.std.util.carbon</groupId>
 	<artifactId>carbon-client</artifactId>
-	<version>6.0.3-SNAPSHOT</version>
+	<version>6.0.3</version>
 	<packaging>jar</packaging>
 
 	<name>carbon client</name>
