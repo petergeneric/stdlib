@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<dataset>
+	<SimpleEntity ID="1" NAME="alice"/>
+	<SimpleEntity ID="2" NAME="bob"/>
+	<SimpleEntity ID="3" NAME="carol"/>
+	<SimpleEntity ID="4" NAME="dave"/>
+</dataset>
