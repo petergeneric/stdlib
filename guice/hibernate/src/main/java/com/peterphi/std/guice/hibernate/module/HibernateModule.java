@@ -12,8 +12,11 @@ import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
 import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.Transaction;
 import org.hibernate.cfg.Configuration;
+import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
 import java.util.Properties;
@@ -27,16 +30,22 @@ public abstract class HibernateModule extends AbstractModule
 
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
 
+
 	@Override
 	protected void configure()
 	{
+		bind(ServiceRegistry.class).toProvider(HibernateServiceRegistryProvider.class).in(Singleton.class);
 		bind(SessionFactory.class).toProvider(HibernateSessionFactoryProvider.class).in(Singleton.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(SessionFactory.class));
+		bind(Session.class).toProvider(SessionProvider.class);
+		bind(Transaction.class).toProvider(TransactionProvider.class);
+
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class));
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
 	}
+
 
 	@Provides
 	@Singleton
@@ -75,6 +84,7 @@ public abstract class HibernateModule extends AbstractModule
 
 		return config;
 	}
+
 
 	protected void registerTypes(final Configuration config)
 	{

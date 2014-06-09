@@ -25,7 +25,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
-import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
 
 import java.lang.reflect.Method;
@@ -38,17 +37,17 @@ class TransactionMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(TransactionMethodInterceptor.class);
 
-	private final Provider<SessionFactory> sessionFactory;
+	private final Provider<Session> sessionProvider;
 
-	public TransactionMethodInterceptor(Provider<SessionFactory> sessionFactory)
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider)
 	{
-		this.sessionFactory = sessionFactory;
+		this.sessionProvider = sessionProvider;
 	}
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
-		final Session session = sessionFactory.get().getCurrentSession();
+		final Session session = sessionProvider.get();
 
 		if (session.getTransaction().isActive())
 		{

@@ -82,7 +82,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return clazz;
 	}
 
-
 	/**
 	 * Create a Dynamic query with the specified constraints
 	 *
