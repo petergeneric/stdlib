@@ -1,22 +1,16 @@
 package com.peterphi.std.guice.web.rest.templating.freemarker;
 
-import com.google.inject.Inject;
-import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
-@Singleton
+
 public class FreemarkerURLHelper
 {
 	private URI restEndpoint;
 	private URI webappEndpoint;
 
 
-	@Inject
-	public FreemarkerURLHelper(@Named("local.restservices.endpoint") URI restEndpoint,
-	                           @Named("local.webapp.endpoint") URI webappEndpoint)
+	public FreemarkerURLHelper(URI restEndpoint, URI webappEndpoint)
 	{
 		this.restEndpoint = restEndpoint;
 		this.webappEndpoint = webappEndpoint;
@@ -92,16 +86,24 @@ public class FreemarkerURLHelper
 	protected String concat(String a, String b)
 	{
 		if (a.isEmpty() || b.isEmpty())
+		{
 			return a + b;
+		}
 
 		final boolean aEndSlash = !a.isEmpty() && a.charAt(a.length() - 1) == '/';
 		final boolean bStartSlash = !b.isEmpty() && b.charAt(0) == '/';
 
 		if (aEndSlash && bStartSlash)
+		{
 			return a + b.substring(1); // both have a /
+		}
 		else if (!aEndSlash && !bStartSlash)
+		{
 			return a + "/" + b; // neither side has a /
+		}
 		else
+		{
 			return a + b; // only one side has a /
+		}
 	}
 }
