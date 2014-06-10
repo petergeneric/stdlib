@@ -1,7 +1,13 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <dataset>
+	<GroupEntity ID="1"/>
+	<GroupEntity ID="2"/>
+
 	<SimpleEntity ID="1" NAME="alice"/>
 	<SimpleEntity ID="2" NAME="bob"/>
 	<SimpleEntity ID="3" NAME="carol"/>
 	<SimpleEntity ID="4" NAME="dave"/>
+
+	<simple_entity_join_table SIMPLE_ID="1" GROUP_ID="1"/>
+	<simple_entity_join_table SIMPLE_ID="1" GROUP_ID="2"/>
 </dataset>
