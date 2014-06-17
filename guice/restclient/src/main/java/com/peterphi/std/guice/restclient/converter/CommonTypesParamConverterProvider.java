@@ -12,7 +12,7 @@ import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-@Provider
+	@Provider
 public class CommonTypesParamConverterProvider implements ParamConverterProvider
 {
 	private final ParamConverter dateTime = new DateTimeStringConverter();

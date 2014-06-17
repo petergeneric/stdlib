@@ -7,7 +7,6 @@ import com.google.inject.Singleton;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templateresolver.ITemplateResolver;
-import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
 /**
  * Module to configure the ThymeLeaf templating engine
@@ -22,35 +21,24 @@ public class ThymeleafModule extends AbstractModule
 		this(true);
 	}
 
+
 	public ThymeleafModule(boolean asDefaultTemplater)
 	{
 		this.asDefaultTemplater = asDefaultTemplater;
 	}
 
+
 	@Override
 	protected void configure()
 	{
 		if (asDefaultTemplater)
+		{
 			bind(Templater.class).to(ThymeleafTemplater.class).in(Scopes.SINGLETON);
+		}
+
+		bind(ITemplateResolver.class).toProvider(TemplateResolverProvider.class).in(Singleton.class);
 	}
 
-	@Provides
-	@Singleton
-	public ITemplateResolver getTemplateResolver()
-	{
-		ServletContextTemplateResolver resolver = new ServletContextTemplateResolver();
-
-		resolver.setTemplateMode("HTML5");
-
-		// Load templates from WEB-INF/templates/{name}.html
-		resolver.setPrefix("/WEB-INF/template/");
-		resolver.setSuffix(".html");
-
-		// cache templates for an hour
-		resolver.setCacheTTLMs(3600000L);
-
-		return resolver;
-	}
 
 	@Provides
 	@Singleton
