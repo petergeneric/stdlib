@@ -3,17 +3,17 @@ package com.peterphi.std.guice.thymeleaf;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
+import com.peterphi.std.threading.Timeout;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
+import java.util.concurrent.TimeUnit;
+
 public class TemplateResolverProvider implements Provider<ITemplateResolver>
 {
-
-	public static final String THYMELEAF_CACHE_TEMPLATES = "thymeleaf.cache.templates";
-
 	@Inject(optional = true)
-	@Named(THYMELEAF_CACHE_TEMPLATES)
-	boolean cacheTemplates = true;
+	@Named("thymeleaf.cache-ttl")
+	Timeout cacheTTL = new Timeout(1, TimeUnit.HOURS);
 
 
 	@Override
@@ -27,10 +27,17 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 		resolver.setPrefix("/WEB-INF/template/");
 		resolver.setSuffix(".html");
 
-		// cache templates for an hour
-		resolver.setCacheTTLMs(3600000L);
-
-		resolver.setCacheable(cacheTemplates);
+		if (cacheTTL.getMilliseconds() > 0)
+		{
+			// cache templates for an hour
+			resolver.setCacheTTLMs(cacheTTL.getMilliseconds());
+			resolver.setCacheable(true);
+		}
+		else
+		{
+			// Don't cache
+			resolver.setCacheable(false);
+		}
 
 		return resolver;
 	}
