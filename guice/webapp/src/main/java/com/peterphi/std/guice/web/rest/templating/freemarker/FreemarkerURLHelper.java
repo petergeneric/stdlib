@@ -6,14 +6,26 @@ import java.net.URI;
 
 public class FreemarkerURLHelper
 {
-	private URI restEndpoint;
-	private URI webappEndpoint;
+	private final URI restEndpoint;
+	private final URI webappEndpoint;
 
 
 	public FreemarkerURLHelper(URI restEndpoint, URI webappEndpoint)
 	{
 		this.restEndpoint = restEndpoint;
 		this.webappEndpoint = webappEndpoint;
+	}
+
+
+	public UriBuilder context()
+	{
+		return UriBuilder.fromUri(webappEndpoint);
+	}
+
+
+	public UriBuilder rest()
+	{
+		return UriBuilder.fromUri(restEndpoint);
 	}
 
 
@@ -27,12 +39,6 @@ public class FreemarkerURLHelper
 	public String context(String path)
 	{
 		return context().path(path).build().toString();
-	}
-
-
-	public UriBuilder context()
-	{
-		return UriBuilder.fromUri(webappEndpoint);
 	}
 
 
@@ -61,12 +67,6 @@ public class FreemarkerURLHelper
 	public String restConcat(String path)
 	{
 		return concat(rest().build().toString(), path);
-	}
-
-
-	public UriBuilder rest()
-	{
-		return UriBuilder.fromUri(restEndpoint);
 	}
 
 

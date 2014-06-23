@@ -9,6 +9,7 @@ import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreServiceImpl;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestServiceList;
+import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerModule;
 import org.apache.log4j.Logger;
 
 import javax.servlet.ServletContext;
@@ -31,6 +32,9 @@ public class CoreRestServicesModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
+		// Make freemarker available for REST List service
+		install(new FreemarkerModule());
+
 		bind(LocalEndpointDiscovery.class).to(ServletEndpointDiscoveryImpl.class);
 
 		bind(GuiceRestCoreService.class).to(GuiceRestCoreServiceImpl.class).asEagerSingleton();
