@@ -12,9 +12,14 @@ import java.net.URI;
  */
 public class DebugPerRequestFreemarkerURLHelper extends FreemarkerURLHelper
 {
-	public DebugPerRequestFreemarkerURLHelper()
+	private final String restPrefix;
+
+
+	public DebugPerRequestFreemarkerURLHelper(String restPrefix)
 	{
 		super(null, null);
+
+		this.restPrefix = restPrefix;
 	}
 
 
@@ -23,7 +28,7 @@ public class DebugPerRequestFreemarkerURLHelper extends FreemarkerURLHelper
 	{
 		final HttpServletRequest req = HttpCallContext.get().getRequest();
 		final URI requestURL = URI.create(req.getRequestURL().toString());
-		final String path = concat(req.getContextPath(), req.getServletPath());
+		final String path = concat(req.getContextPath(), restPrefix);
 
 		return UriBuilder.fromUri(requestURL).replacePath(path);
 	}

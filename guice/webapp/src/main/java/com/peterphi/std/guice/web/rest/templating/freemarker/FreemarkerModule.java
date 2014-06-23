@@ -42,12 +42,13 @@ public class FreemarkerModule extends AbstractModule
 	@Singleton
 	public FreemarkerURLHelper createURLHelper(@Named("local.restservices.endpoint") URI restEndpoint,
 	                                           @Named("local.webapp.endpoint") URI webappEndpoint,
+	                                           @Named("local.restservices.prefix") String restPrefix,
 	                                           @Named("service.properties") PropertyFile props)
 	{
 		final boolean usePerRequestBuilder = props.getBoolean(USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER, false);
 		if (usePerRequestBuilder)
 		{
-			return new DebugPerRequestFreemarkerURLHelper();
+			return new DebugPerRequestFreemarkerURLHelper(restPrefix);
 		}
 		else
 		{
