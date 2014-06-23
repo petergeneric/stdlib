@@ -76,7 +76,6 @@ public class TransactionHelper
 			@Override
 			public void beforeCompletion()
 			{
-				System.out.println(this + " - beforeCompletion");
 				// no action required
 			}
 
@@ -84,7 +83,6 @@ public class TransactionHelper
 			@Override
 			public void afterCompletion(final int status)
 			{
-				System.out.println(this + " - afterCompletion " + status);
 				if (status == Status.STATUS_COMMITTED)
 					action.run();
 			}
