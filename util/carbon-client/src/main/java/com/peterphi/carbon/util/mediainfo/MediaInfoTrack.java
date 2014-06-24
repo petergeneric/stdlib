@@ -44,6 +44,26 @@ public class MediaInfoTrack extends XMLWrapper
 
 
 	/**
+	 * Mediainfo classes tracks as audio/video/other in the track's 'type' attribute .
+	 * <p/>
+	 * Tracks of type 'other' have a further 'Type' classification presented as an element under the track
+	 */
+	public String getOtherTrackType()
+	{
+		final Element element = getElement("Type", 0);
+
+		if (element != null)
+		{
+			return element.getText();
+		}
+		else
+		{
+			return null;
+		}
+	}
+
+
+	/**
 	 * Gets the start timecode of the video track in hh:mm:ss:ff
 	 */
 	public String getStartTimecode()

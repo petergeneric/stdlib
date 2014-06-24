@@ -91,9 +91,10 @@ public class MediaInfo extends XMLWrapper
 
 		for (MediaInfoTrack track : getTracks())
 		{
-			if (StringUtils.equalsIgnoreCase(track.getTrackType(), "time code"))
+			if (StringUtils.equalsIgnoreCase(track.getTrackType(), "other") &&
+			    StringUtils.equalsIgnoreCase(track.getOtherTrackType(), "time code"))
 			{
-				tracks.add((VideoTrack) track);
+				tracks.add(track);
 			}
 		}
 
