@@ -142,6 +142,7 @@ public class TimecodeTest
 
 
 	@Test
+	@Deprecated
 	public void testGetInstanceWithNegativeSampleCount()
 	{
 		final Timecode tc = Timecode.getInstance(new SampleCount(-2, Timebase.HZ_25), false);
