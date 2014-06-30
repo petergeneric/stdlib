@@ -1,14 +1,14 @@
 package com.peterphi.std.guice.restclient;
 
 import com.google.inject.ImplementedBy;
-import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 
 import java.net.URI;
 
 /**
  * A factory that builds dynamic proxy clients (using JAX-RS RESTful client interfaces) for services at a known location
  */
-@ImplementedBy(ResteasyClientFactoryImpl.class)
+@ImplementedBy(ResteasyProxyClientFactoryImpl.class)
 public interface JAXRSProxyClientFactory
 {
 	/**
