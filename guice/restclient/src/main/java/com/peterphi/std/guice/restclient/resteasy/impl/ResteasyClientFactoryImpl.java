@@ -47,15 +47,17 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
-	                                 final ResteasyClientErrorInterceptor errorInterceptor,
+	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBContextResolver jaxbContextResolver)
 	{
 		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
-		resteasyProviderFactory.addClientErrorInterceptor(errorInterceptor);
 		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
+		// Register the exception processor
+		resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
+
 
 		this.connectionManager = new PoolingClientConnectionManager();
 

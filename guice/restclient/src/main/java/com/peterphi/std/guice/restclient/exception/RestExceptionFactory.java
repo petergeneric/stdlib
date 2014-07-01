@@ -3,7 +3,7 @@ package com.peterphi.std.guice.restclient.exception;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.client.ClientResponseContext;
 import java.lang.reflect.Constructor;
 
 /**
@@ -13,7 +13,7 @@ import java.lang.reflect.Constructor;
 @Singleton
 public class RestExceptionFactory
 {
-	public RestException build(final RestFailure failure, final Response response)
+	public RestException build(final RestFailure failure, final ClientResponseContext responseContext)
 	{
 		final Constructor<RestException> constructor = getExceptionConstructor(failure);
 
@@ -30,8 +30,8 @@ public class RestExceptionFactory
 		// Copy the information from the failure+response to the newly-built exception
 		exception.setFailure(failure);
 		exception.setCausedByRemote(true);
-		exception.setResponse(response);
-		exception.setHttpCode(response.getStatus());
+		exception.setResponseContext(responseContext);
+		exception.setHttpCode(responseContext.getStatus());
 		exception.setErrorCode(failure.errorCode);
 
 		return exception;
