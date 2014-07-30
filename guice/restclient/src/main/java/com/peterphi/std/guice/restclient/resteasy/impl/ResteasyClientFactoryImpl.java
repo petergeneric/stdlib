@@ -44,6 +44,13 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	@Named("jaxrs.nokeepalive")
 	boolean noKeepalive = true;
 
+	@Inject(optional=true)
+	@Named("jaxrs.max-connections-per-route")
+	int maxConnectionsPerRoute = Integer.MAX_VALUE;
+
+	@Inject(optional=true)
+	@Named("jaxrs.max-total-connections")
+	int maxConnectionsTotal = Integer.MAX_VALUE;
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
@@ -58,6 +65,9 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
 
 		this.connectionManager = new PoolingClientConnectionManager();
+
+		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
+		connectionManager.setMaxTotal(maxConnectionsTotal);
 
 		manager.register(this);
 	}
@@ -86,7 +96,6 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 		HttpParams params = client.getParams();
 		HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
 		HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
-
 
 		// Prohibit keepalive if desired
 		if (noKeepalive)
