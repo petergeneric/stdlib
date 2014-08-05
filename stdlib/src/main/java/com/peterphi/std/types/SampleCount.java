@@ -147,6 +147,7 @@ public class SampleCount
 
 	/**
 	 * Encode the SampleCount as <code>samples@[str_timebase|nom[:denom]]</code> (e.g.  124222@44100, 400@30000:1001)
+	 *
 	 * @return
 	 */
 	@Override
@@ -154,6 +155,21 @@ public class SampleCount
 	{
 		return samples + "@" + rate.toEncodedString();
 	}
+
+
+	/**
+	 * Returns the sample count in FFmpeg's time-based duration format. The format of the sample count is hh:mm:ss:uuuuuu (where u
+	 * = microseconds).
+	 *
+	 * @return
+	 *
+	 * @see com.peterphi.std.types.Timecode#toFfmpegString()
+	 */
+	public String toFfmpegString()
+	{
+		return Timecode.getInstance(this).toFfmpegString();
+	}
+
 
 	/**
 	 * Parse a vidispine sample count & timebase as represented in point 1 of <a href="http://wiki.vidispine.com/vidiwiki/Time#Time_codes">http://wiki.vidispine.com/vidiwiki/Time#Time_codes</a><br
@@ -171,6 +187,7 @@ public class SampleCount
 	{
 		return valueOf(countAndRate);
 	}
+
 
 	/**
 	 * Parse a  sample count & timebase as <code>samples@[str_timebase|nom[:denom]]</code>
@@ -211,6 +228,7 @@ public class SampleCount
 
 		return new SampleCount((long) samples, rate);
 	}
+
 
 	@Deprecated
 	public String toVidispineString()
