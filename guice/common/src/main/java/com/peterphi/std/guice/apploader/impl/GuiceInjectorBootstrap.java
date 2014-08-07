@@ -6,13 +6,15 @@ import com.google.inject.Module;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.JAXBModule;
 import com.peterphi.std.guice.common.Log4JModule;
-import com.peterphi.std.guice.common.ServicePropertiesModule;
-import com.peterphi.std.guice.common.converter.PropertiesTypeConversionModule;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistryModule;
+import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -119,21 +121,37 @@ public class GuiceInjectorBootstrap
 	 */
 	public static Injector createInjector(final PropertyFile properties, final GuiceSetup setup)
 	{
+		MapConfiguration configuration = new MapConfiguration(properties.toProperties());
+
+		return createInjector(configuration, setup);
+	}
+
+
+	/**
+	 * Creates an Injector by taking a preloaded service.properties and a pre-constructed GuiceSetup
+	 *
+	 * @param properties
+	 * @param setup
+	 *
+	 * @return
+	 */
+	public static Injector createInjector(final Configuration configuration, final GuiceSetup setup)
+	{
 		// We need to hold onto this module while creating - if we partially create we may need to shutdown some services
 		ShutdownModule shutdown = new ShutdownModule();
 		try
 		{
 			final List<Module> modules = new ArrayList<Module>();
 
+			modules.add(new ConfigurationPropertyRegistryModule());
 			modules.add(new GuiceLifecycleModule());
 			modules.add(shutdown);
 			modules.add(new RetryModule());
-			modules.add(new JAXBModule(properties));
-			modules.add(new PropertiesTypeConversionModule());
-			modules.add(new ServicePropertiesModule(properties));
-			modules.add(new Log4JModule(properties));
+			modules.add(new JAXBModule(configuration));
+			modules.add(new ServicePropertiesModule(configuration));
+			modules.add(new Log4JModule(configuration));
 
-			setup.registerModules(modules, properties);
+			setup.registerModules(modules, configuration);
 
 			final Injector injector = Guice.createInjector(modules);
 			setup.injectorCreated(injector);

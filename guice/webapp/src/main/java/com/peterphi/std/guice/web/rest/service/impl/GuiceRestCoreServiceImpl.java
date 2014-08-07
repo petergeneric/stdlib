@@ -4,8 +4,9 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.web.rest.exception.TextWebException;
-import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 
 import java.io.StringWriter;
 
@@ -17,9 +18,17 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 {
 	private final long started = System.currentTimeMillis();
 
+	@Inject(optional = true)
+	@Named("restutils.show-serviceprops")
+	boolean showProperties = false;
+
+	@Inject(optional = true)
+	@Named("restutils.allow-restart")
+	boolean allowRestart = false;
+
 	@Inject
-	@Named("service.properties")
-	protected PropertyFile properties;
+	Configuration configuration;
+
 
 	@Override
 	public String ping()
@@ -30,15 +39,14 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 		return "REST services running for " + uptime + " ms";
 	}
 
+
 	@Override
 	public String properties() throws Exception
 	{
-		final boolean mayDisplay = properties.getBoolean("restutils.show-serviceprops", false);
-
-		if (mayDisplay)
+		if (showProperties)
 		{
 			StringWriter sw = new StringWriter();
-			properties.save(null, sw);
+			ConfigurationConverter.toProperties(configuration).store(sw, "Properties exported for REST request");
 
 			return sw.toString();
 		}
@@ -49,12 +57,11 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 		}
 	}
 
+
 	@Override
 	public String restart() throws Exception
 	{
-		final boolean mayRestart = properties.getBoolean("restutils.allow-restart", false);
-
-		if (mayRestart)
+		if (allowRestart)
 		{
 			GuiceRegistry.restart();
 

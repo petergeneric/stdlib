@@ -2,10 +2,9 @@ package com.peterphi.std.guice.web.rest;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
-import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import java.net.URI;
@@ -15,36 +14,38 @@ public class ServletEndpointDiscoveryImpl implements LocalEndpointDiscovery
 {
 	private static final Logger log = Logger.getLogger(ServletEndpointDiscoveryImpl.class);
 
-	private final PropertyFile serviceProperties;
+	private final Configuration config;
+
 
 	@Inject
-	public ServletEndpointDiscoveryImpl(@Named("service.properties") PropertyFile serviceProperties)
+	public ServletEndpointDiscoveryImpl(Configuration configuration)
 	{
-		this.serviceProperties = serviceProperties;
+		this.config = configuration;
 	}
+
 
 	@Override
 	public URI getLocalEndpoint()
 	{
-		if (serviceProperties.containsKey(LocalEndpointDiscovery.STATIC_ENDPOINT_CONFIG_NAME))
+		if (config.containsKey(LocalEndpointDiscovery.STATIC_ENDPOINT_CONFIG_NAME))
 		{
-			final String uri = serviceProperties.get(LocalEndpointDiscovery.STATIC_ENDPOINT_CONFIG_NAME);
+			final String uri = config.getString(LocalEndpointDiscovery.STATIC_ENDPOINT_CONFIG_NAME);
 
 			return URI.create(uri);
 		}
 		else
 		{
 			// Need to build up endpoint
-			String baseUri = serviceProperties.get(LocalEndpointDiscovery.STATIC_CONTAINER_PREFIX_CONFIG_NAME);
+			String baseUri = config.getString(LocalEndpointDiscovery.STATIC_CONTAINER_PREFIX_CONFIG_NAME);
 			String contextPath;
 
-			if (serviceProperties.containsKey(LocalEndpointDiscovery.STATIC_CONTEXTPATH_CONFIG_NAME))
+			if (config.containsKey(LocalEndpointDiscovery.STATIC_CONTEXTPATH_CONFIG_NAME))
 			{
-				contextPath = serviceProperties.get(LocalEndpointDiscovery.STATIC_CONTEXTPATH_CONFIG_NAME);
+				contextPath = config.getString(LocalEndpointDiscovery.STATIC_CONTEXTPATH_CONFIG_NAME);
 			}
 			else
 			{
-				// need to figure out webapp namew
+				// need to figure out webapp name
 				contextPath = recoverContextPath();
 			}
 
@@ -61,6 +62,7 @@ public class ServletEndpointDiscoveryImpl implements LocalEndpointDiscovery
 			return URI.create(baseUri + contextPath);
 		}
 	}
+
 
 	private String recoverContextPath()
 	{

@@ -2,10 +2,9 @@ package com.peterphi.std.guice.thymeleaf;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.Templater;
-import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.IContext;
@@ -19,10 +18,11 @@ import org.thymeleaf.context.WebContext;
 public class ThymeleafTemplater implements Templater
 {
 	private final TemplateEngine engine;
-	private final PropertyFile serviceProperties;
+	private final Configuration configuration;
+
 
 	@Inject
-	public ThymeleafTemplater(final TemplateEngine engine, @Named("service.properties") final PropertyFile serviceProperties)
+	public ThymeleafTemplater(final TemplateEngine engine, final Configuration configuration)
 	{
 		if (engine.getTemplateResolvers().isEmpty())
 		{
@@ -30,18 +30,20 @@ public class ThymeleafTemplater implements Templater
 		}
 
 		this.engine = engine;
-		this.serviceProperties = serviceProperties;
+		this.configuration = configuration;
 	}
+
 
 	public ThymeleafCall template(final String name)
 	{
 		final IContext ctx = makeContext();
 
 		// Expose the service configuration
-		ctx.getVariables().put("config", serviceProperties);
+		ctx.getVariables().put("config", configuration);
 
 		return new ThymeleafCall(engine, ctx, name);
 	}
+
 
 	/**
 	 * Build a new IContext (exposing the HttpCallContext, where possible)

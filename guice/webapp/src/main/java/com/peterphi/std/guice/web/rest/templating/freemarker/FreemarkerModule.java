@@ -4,7 +4,6 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.peterphi.std.io.PropertyFile;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 
@@ -23,7 +22,9 @@ public class FreemarkerModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public FreemarkerTemplater createFreemarker(ServletContext context, FreemarkerURLHelper urlHelper)
+	public FreemarkerTemplater createFreemarker(ServletContext context,
+	                                            FreemarkerURLHelper urlHelper,
+	                                            org.apache.commons.configuration.Configuration configuration)
 	{
 		Configuration freemarker = new Configuration();
 
@@ -33,6 +34,7 @@ public class FreemarkerModule extends AbstractModule
 		FreemarkerTemplater templater = new FreemarkerTemplater(freemarker);
 
 		templater.set("urls", urlHelper);
+		templater.set("config", configuration);
 
 		return templater;
 	}
@@ -43,9 +45,10 @@ public class FreemarkerModule extends AbstractModule
 	public FreemarkerURLHelper createURLHelper(@Named("local.restservices.endpoint") URI restEndpoint,
 	                                           @Named("local.webapp.endpoint") URI webappEndpoint,
 	                                           @Named("local.restservices.prefix") String restPrefix,
-	                                           @Named("service.properties") PropertyFile props)
+	                                           org.apache.commons.configuration.Configuration configuration)
 	{
-		final boolean usePerRequestBuilder = props.getBoolean(USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER, false);
+		final boolean usePerRequestBuilder = configuration.getBoolean(USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER, false);
+
 		if (usePerRequestBuilder)
 		{
 			return new DebugPerRequestFreemarkerURLHelper(restPrefix);

@@ -7,7 +7,7 @@ import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
 import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
 import com.peterphi.std.indexservice.rest.client.guice.IndexServiceModule;
-import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -33,7 +33,7 @@ public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 
 
 	@Override
-	public void registerModules(List<Module> modules, PropertyFile config)
+	public void registerModules(List<Module> modules, Configuration config)
 	{
 		modules.add(new ServletScopingModule());
 		modules.add(new JAXRSJodaConverterModule());
@@ -50,7 +50,7 @@ public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 		// Enable the index service if the webapp wants to use it
 		final boolean indexServiceDisabled = config.getBoolean(DISABLE_INDEX_SERVICE, false);
 
-		final boolean hasIndexEndpoint = (config.get(INDEX_SERVICE_ENDPOINT, null) != null);
+		final boolean hasIndexEndpoint = config.containsKey(INDEX_SERVICE_ENDPOINT);
 
 		if (hasIndexEndpoint && !indexServiceDisabled)
 		{
@@ -66,7 +66,7 @@ public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 	}
 
 
-	public abstract void addModules(List<Module> modules, PropertyFile config);
+	public abstract void addModules(List<Module> modules, Configuration config);
 
 
 	@Override

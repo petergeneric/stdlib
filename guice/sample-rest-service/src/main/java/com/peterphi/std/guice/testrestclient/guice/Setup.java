@@ -5,7 +5,7 @@ import com.google.inject.Module;
 import com.peterphi.std.guice.metrics.module.WebappStatsModule;
 import com.peterphi.std.guice.thymeleaf.ThymeleafModule;
 import com.peterphi.std.guice.web.rest.setup.AbstractRESTGuiceSetup;
-import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 
 import java.util.List;
 
@@ -19,7 +19,7 @@ public class Setup extends AbstractRESTGuiceSetup
 
 
 	@Override
-	public void addModules(List<Module> modules, PropertyFile config)
+	public void addModules(List<Module> modules, Configuration config)
 	{
 		modules.add(new MyAppModule());
 		modules.add(new ThymeleafModule());

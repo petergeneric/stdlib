@@ -1,7 +1,5 @@
-package com.peterphi.std.guice.common.converter;
+package com.peterphi.std.guice.common.serviceprops.typed;
 
-import com.google.inject.TypeLiteral;
-import com.google.inject.spi.TypeConverter;
 import com.peterphi.std.threading.Timeout;
 
 import java.util.concurrent.TimeUnit;
@@ -11,12 +9,12 @@ import java.util.regex.Pattern;
 /**
  * Interprets a number of milliseconds as a Timeout
  */
-class TimeoutConverter implements TypeConverter
+class TimeoutConverter
 {
 	private static final Pattern pattern = Pattern.compile("^([0-9]+)\\s*([a-zA-Z]+)$", Pattern.CASE_INSENSITIVE);
 
-	@Override
-	public Object convert(String value, TypeLiteral<?> toType)
+
+	public Object convert(String value)
 	{
 		value = value.trim();
 
@@ -43,6 +41,7 @@ class TimeoutConverter implements TypeConverter
 			}
 		}
 	}
+
 
 	private TimeUnit parseUnit(final String unit)
 	{

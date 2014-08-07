@@ -6,6 +6,8 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
@@ -23,6 +25,11 @@ public class MyTestServiceImpl implements MyTestService
 {
 	@Inject
 	public ThymeleafTemplater templater;
+
+	@Inject(optional = true)
+	@Named("some-string")
+	@Doc("This is just an example property")
+	public String someString = null;
 
 	private final Counter counter;
 	private final Histogram thymeleafRenderTime;
@@ -101,7 +108,9 @@ public class MyTestServiceImpl implements MyTestService
 
 	/**
 	 * Tests if the supplied date occurred on the day 1941-12-07 in the Hawaii timezone (UTC-10)
+	 *
 	 * @param date
+	 *
 	 * @return
 	 */
 	private boolean isPearlHarbourDay(DateTime date)

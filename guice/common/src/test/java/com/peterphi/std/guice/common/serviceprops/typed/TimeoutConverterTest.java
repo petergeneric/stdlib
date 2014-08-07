@@ -1,12 +1,13 @@
-package com.peterphi.std.guice.common.converter;
+package com.peterphi.std.guice.common.serviceprops.typed;
 
 import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import com.peterphi.std.guice.common.ServicePropertiesModule;
+import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.threading.Timeout;
+import org.apache.commons.configuration.MapConfiguration;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -40,6 +41,7 @@ public class TimeoutConverterTest
 	@Named("timeout50h")
 	Timeout timeout50h;
 
+
 	@Test
 	public void test()
 	{
@@ -51,7 +53,7 @@ public class TimeoutConverterTest
 		props.set("timeout60m", "60m");
 		props.set("timeout50h", "50h");
 
-		final Injector injector = Guice.createInjector(new PropertiesTypeConversionModule(), new ServicePropertiesModule(props));
+		final Injector injector = Guice.createInjector(new ServicePropertiesModule(new MapConfiguration(props.toProperties())));
 
 		injector.injectMembers(this);
 

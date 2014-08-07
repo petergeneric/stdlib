@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaDateTimeUserType;
@@ -49,14 +50,14 @@ public abstract class HibernateModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public Configuration getHibernateConfiguration(@Named("service.properties") PropertyFile serviceprops,
+	public Configuration getHibernateConfiguration(org.apache.commons.configuration.Configuration configuration,
 	                                               @Named(PROPFILE_KEY) String propertyFileName)
 	{
 		final Properties properties;
 
 		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
 		{
-			properties = serviceprops.toProperties();
+			properties = ConfigurationConverter.toProperties(configuration);
 		}
 		else
 		{
@@ -68,14 +69,12 @@ public abstract class HibernateModule extends AbstractModule
 			}
 			else
 			{
-				// Merge all the values
-				PropertyFile prop = PropertyFile.readOnlyUnion(files);
-
-				properties = prop.toProperties();
+				// Merge all the values and interpret them via commons-configuration to allow for interpolation
+				properties = ConfigurationConverter.toProperties(ConfigurationConverter.union(files));
 			}
 		}
 
-		Configuration config = new Configuration();
+		org.hibernate.cfg.Configuration config = new org.hibernate.cfg.Configuration();
 		config.addProperties(properties);
 
 		configure(config);
