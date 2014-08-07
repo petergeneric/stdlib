@@ -8,6 +8,7 @@ import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreServiceImpl;
+import com.peterphi.std.guice.web.rest.service.servicedescription.RestConfigList;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestServiceList;
 import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerModule;
 import org.apache.log4j.Logger;
@@ -41,6 +42,7 @@ public class CoreRestServicesModule extends AbstractModule
 
 		RestResourceRegistry.register(GuiceRestCoreService.class);
 		RestResourceRegistry.register(RestServiceList.class);
+		RestResourceRegistry.register(RestConfigList.class);
 	}
 
 	/**

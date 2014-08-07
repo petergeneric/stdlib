@@ -23,20 +23,25 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 		bind(ConfigurationPropertyRegistry.class).toInstance(registry);
 	}
 
+
 	private class NamedMemberExtractTypeListener implements TypeListener
 	{
 		@Override
 		public <I> void hear(final TypeLiteral<I> type, final TypeEncounter<I> encounter)
 		{
-			Class<? super I> clazz = type.getRawType();
+			Class<?> clazz = type.getRawType();
 
-			for (Field field : clazz.getFields())
+			// Walk up the hierarchy and look for the declared fields
+			for (clazz = clazz; clazz != null; clazz = clazz.getSuperclass())
 			{
-				if (field.isAnnotationPresent(Inject.class) && field.isAnnotationPresent(Named.class))
+				for (Field field : clazz.getDeclaredFields())
 				{
-					final Named named = field.getAnnotation(Named.class);
+					if (field.isAnnotationPresent(Inject.class) && field.isAnnotationPresent(Named.class))
+					{
+						final Named named = field.getAnnotation(Named.class);
 
-					registry.register(clazz, named.value(), field.getType(), field);
+						registry.register(clazz, named.value(), field.getType(), field);
+					}
 				}
 			}
 

@@ -29,6 +29,15 @@ public class ConfigurationProperty
 	}
 
 
+	public Class<?> getType()
+	{
+		for (BindingSite binding : bindings)
+			return binding.getType();
+
+		return null; // will never hit this, must always have one binding
+	}
+
+
 	public String getDocumentation()
 	{
 		for (BindingSite binding : bindings)
