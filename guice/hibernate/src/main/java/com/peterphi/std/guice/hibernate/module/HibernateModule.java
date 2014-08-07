@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
@@ -51,6 +52,7 @@ public abstract class HibernateModule extends AbstractModule
 	@Provides
 	@Singleton
 	public Configuration getHibernateConfiguration(org.apache.commons.configuration.Configuration configuration,
+	                                               @Doc("the source for hibernate.properties (either embedded or a filepath to search for using the classpath)")
 	                                               @Named(PROPFILE_KEY) String propertyFileName)
 	{
 		final Properties properties;

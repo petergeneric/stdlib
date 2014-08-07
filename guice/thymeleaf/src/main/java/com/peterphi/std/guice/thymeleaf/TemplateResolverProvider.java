@@ -3,6 +3,7 @@ package com.peterphi.std.guice.thymeleaf;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.threading.Timeout;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
@@ -13,6 +14,7 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 {
 	@Inject(optional = true)
 	@Named("thymeleaf.cache-ttl")
+	@Doc("The maximum Time-To-Live value on the thymeleaf in-memory template cache")
 	Timeout cacheTTL = new Timeout(1, TimeUnit.HOURS);
 
 

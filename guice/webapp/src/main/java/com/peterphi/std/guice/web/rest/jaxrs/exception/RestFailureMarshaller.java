@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.restclient.jaxb.ExceptionInfo;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
@@ -26,6 +27,7 @@ public class RestFailureMarshaller
 	 */
 	@Inject(optional = true)
 	@Named("rest.exception.showStackTraces")
+	@Doc("If enabled, include stack trace info in the XML exception detail sent back to non-browser clients (default true)")
 	private boolean stackTraces = true;
 
 	/**

@@ -3,6 +3,7 @@ package com.peterphi.std.indexservice.rest.client.register;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.guice.serviceregistry.index.IndexableServiceRegistry;
 import com.peterphi.std.guice.serviceregistry.index.ManualIndexableService;
@@ -34,6 +35,7 @@ public class IndexRegistrationHelper
 
 	@Inject
 	@Named("local.restservices.endpoint")
+	@Doc("The local endpoint for REST service communication to this servlet (computed and bound automatically)")
 	protected URI baseEndpoint;
 
 	/**

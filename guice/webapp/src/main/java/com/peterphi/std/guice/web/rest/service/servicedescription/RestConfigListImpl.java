@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerTemplater;
@@ -25,6 +26,7 @@ public class RestConfigListImpl implements RestConfigList
 
 	@Inject(optional = true)
 	@Named("restutils.show-serviceprops")
+	@Doc("If true, then the configuration data for the application will be available for remote inspection (default false). Should be disabled for live systems because this may leak password data.")
 	boolean showProperties = false;
 
 

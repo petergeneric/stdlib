@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
@@ -21,19 +22,22 @@ import java.util.Enumeration;
 public class CustomTemplateFailureRenderer implements RestFailureRenderer
 {
 	private static final Logger log = Logger.getLogger(CustomTemplateFailureRenderer.class);
+
 	@Inject
 	Templater templater;
 
 
 	@Inject
 	@Named("exception-templater.template")
-	String templateName;
+	@Doc("The thymeleaf template to use for exceptions (default 'exception')")
+	String templateName = "exception";
 
 	/**
 	 * If true, a custom template of "{templateName}_{exceptionSimpleName} will be attempted first
 	 */
 	@Inject
 	@Named("exception-templater.tryCustomised")
+	@Doc("If enabled, the thymeleaf template for exceptions will be suffixed with _exceptionSimpleName (e.g. templateName_IllegalArgumentException) before falling back to the templateName page (default true)")
 	boolean tryCustomised = true;
 
 
@@ -59,6 +63,7 @@ public class CustomTemplateFailureRenderer implements RestFailureRenderer
 				}
 			}
 
+			// Fallback on the template name
 			return render(failure, templateName);
 		}
 		else

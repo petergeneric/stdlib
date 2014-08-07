@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
@@ -26,26 +27,32 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Inject(optional = true)
 	@Named("rest.exception.html.highlight.terms")
+	@Doc("A comma-delimited list of terms to use to decide if a stack trace line should be highlighted (default 'peterphi')")
 	protected String highlightTerms = "peterphi";
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.highlight.enabled")
+	@Doc("If enabled, lines containing certain terms are highlighted in stack traces, all others are dimmed (default true)")
 	protected boolean highlightEnabled = true;
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.enabled")
+	@Doc("If set, pretty HTML pages will be rendered for browsers when an exception occurs (default true)")
 	protected boolean enabled = true;
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.feature.jvminfo")
+	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
 	protected boolean jvmInfoEnabled = true;
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.feature.requestinfo")
+	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
 	protected boolean requestInfoEnabled = true;
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.feature.stacktrace")
+	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	protected boolean stackTraceEnabled = true;
 
 	/**
@@ -53,6 +60,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Inject(optional = true)
 	@Named("rest.exception.html.jira.enabled")
+	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
 	protected boolean jiraEnabled = false;
 
 	/**
@@ -60,15 +68,19 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Inject(optional = true)
 	@Named("rest.exception.html.jira.pid")
+	@Doc("If non-zero and JIRA is enabled, the JIRA Project ID to use to populate a JIRA issue (default 0)")
 	protected int jiraProjectId = 0;
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.jira.issueType")
+	@Doc("If JIRA is enabled, the JIRA Issue Type ID to use to populate a JIRA issue (default 1, generally 'Bug' on JIRA systems)")
 	protected int jiraIssueType = 1; // default id for "Bug"
 
 	@Inject(optional = true)
 	@Named("rest.exception.html.jira.endpoint")
+	@Doc("If JIRA is enabled, the base address for JIRA")
 	protected String jiraEndpoint = "https://somecompany.atlassian.net";
+
 
 	@Override
 	public Response render(RestFailure failure)
@@ -118,6 +130,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 
 		return builder.build();
 	}
+
 
 	private boolean shouldRenderHtmlForRequest(HttpServletRequest request)
 	{

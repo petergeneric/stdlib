@@ -3,6 +3,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
@@ -34,23 +35,29 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 
 	@Inject(optional = true)
 	@Named("jaxrs.connection.timeout")
+	@Doc("The connection timeout for HTTP sockets (default 20s)")
 	Timeout connectionTimeout = new Timeout(20, TimeUnit.SECONDS);
 
 	@Inject(optional = true)
 	@Named("jaxrs.socket.timeout")
+	@Doc("The Socket Timeout for HTTP sockets (default 5m)")
 	Timeout socketTimeout = new Timeout(5, TimeUnit.MINUTES);
 
 	@Inject(optional = true)
 	@Named("jaxrs.nokeepalive")
+	@Doc("If true, keepalive will be disabled for HTTP connections (default true)")
 	boolean noKeepalive = true;
 
-	@Inject(optional=true)
+	@Inject(optional = true)
 	@Named("jaxrs.max-connections-per-route")
+	@Doc("The maximum number of connections per HTTP route (default MAXINT)")
 	int maxConnectionsPerRoute = Integer.MAX_VALUE;
 
-	@Inject(optional=true)
+	@Inject(optional = true)
 	@Named("jaxrs.max-total-connections")
+	@Doc("The maximum number of HTTP connections in total across all routes (default MAXINT)")
 	int maxConnectionsTotal = Integer.MAX_VALUE;
+
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,

@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.service.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.web.rest.exception.TextWebException;
@@ -20,10 +21,12 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 
 	@Inject(optional = true)
 	@Named("restutils.show-serviceprops")
+	@Doc("If true, then the configuration data for the application will be available for remote inspection (default false). Should be disabled for live systems because this may leak password data.")
 	boolean showProperties = false;
 
 	@Inject(optional = true)
 	@Named("restutils.allow-restart")
+	@Doc("If true, then a restart of the guice environment without involving the servlet container may be attempted (default false). Should be disabled for live systems.")
 	boolean allowRestart = false;
 
 	@Inject
