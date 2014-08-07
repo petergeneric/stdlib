@@ -4,23 +4,23 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.SortedMap;
+import java.util.TreeMap;
 
 public class ConfigurationPropertyRegistry
 {
 	private static final Logger log = Logger.getLogger(ConfigurationPropertyRegistry.class);
 
-	private final Map<String, ConfigurationProperty> properties = new HashMap<>();
+	private final SortedMap<String, ConfigurationProperty> properties = new TreeMap<>();
 
 
 	public <T> void register(final Class<?> owner, String name, Class<T> type, AnnotatedElement element)
 	{
-		register(new BindingSite(owner, name, type, element));
+		register(new ConfigurationPropertyBindingSite(owner, name, type, element));
 	}
 
 
-	public <T> void register(BindingSite<T> site)
+	public <T> void register(ConfigurationPropertyBindingSite<T> site)
 	{
 		if (!properties.containsKey(site.getName()))
 		{

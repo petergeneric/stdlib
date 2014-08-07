@@ -5,7 +5,7 @@ import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.AnnotatedElement;
 
-class BindingSite<T>
+public class ConfigurationPropertyBindingSite<T>
 {
 	private Class owner;
 	private String name;
@@ -13,8 +13,14 @@ class BindingSite<T>
 	private AnnotatedElement element;
 
 
-	public BindingSite(final Class owner, final String name, final Class<T> type, final AnnotatedElement element)
+	public ConfigurationPropertyBindingSite(final Class owner,
+	                                        final String name,
+	                                        final Class<T> type,
+	                                        final AnnotatedElement element)
 	{
+		if (owner == null)
+			throw new IllegalArgumentException("Binding owner must not be null!");
+
 		this.owner = owner;
 		this.name = name;
 		this.type = type;
@@ -53,5 +59,28 @@ class BindingSite<T>
 			return StringUtils.join(doc.value(), "\n");
 		else
 			return null;
+	}
+
+
+	public String[] getHrefs()
+	{
+		final Doc doc = element.getAnnotation(Doc.class);
+
+		if (doc != null && doc.href() != null && doc.href().length > 0)
+			return doc.href();
+		else
+			return null;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "BindingSite{" +
+		       "owner=" + owner +
+		       ", name='" + name + '\'' +
+		       ", type=" + type +
+		       ", element=" + element +
+		       '}';
 	}
 }

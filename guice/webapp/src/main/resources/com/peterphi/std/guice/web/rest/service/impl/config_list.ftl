@@ -37,31 +37,72 @@ ${bootstrap.CSS}
 <div class="container">
     <h1>Configuration</h1>
 
-    <p>The following configuration values are in use by this webapp.</p>
-    <table class="table">
-        <thead>
-        <tr>
-	        <th>Type</th>
-	        <th>Name</th>
-	        <#if showProperties>
-	        <th>Live Value</th>
-	        </#if>
-            <th>Description</th>
-        </tr>
-        </thead>
-        <tbody>
-		<#list configRegistry.getAll() as prop>
-        <tr>
-	        <td>${prop.type!"(Unknown Type)"}</td>
-	        <td>${prop.name}</td>
-			<#if showProperties>
-            <td>${config.getString(prop.name, "(Unknown Internal Default Value)")}</td>
-			</#if>
-            <td>${prop.documentation!""}</td>
-        </tr>
+    <p>The following configuration properties are in use by this webapp. This may grow as more services are dynamically loaded.</p>
+
+	<ul>
+	<#list configRegistry.getAll() as prop>
+		<li><a href="#${prop.name?html}">${prop.name}</a></li>
 		</#list>
-        </tbody>
-    </table>
+	</ul>
+
+	<h1>Detail</h1>
+
+    <#list configRegistry.getAll() as prop>
+    <div class="property-container" data-property-name="${prop.name?html}">
+	    <h3>
+	        <a href="#${prop.name?html}" id="${prop.name}">${prop.name}</a>
+	    </h3>
+
+		<#if prop.deprecated>
+	        <div class="alert">
+	            <strong>Deprecated</strong><br/>
+	            This property is included for legacy use and will be removed in a future release
+	        </div>
+		</#if>
+
+	    <p data-content-meaning="documentation">${prop.documentation!""?html?replace('\n', '<br/>')}</p>
+
+	    <h5>Binding Information</h5>
+	    <table class="table">
+	        <tbody>
+	        <#if showProperties>
+	        <tr>
+	            <th class="span3">Configured Value</th>
+	            <td data-content-meaning="liveValue">${config.getString(prop.name, "Not configured - using internal default")}</td>
+	        </tr>
+	        </#if>
+	        <tr>
+		        <th class="span3">Data type</th>
+		        <td data-content-meaning="propertyType">${prop.type!"Unknown"}</td>
+	        </tr>
+			<#if prop.hrefs?has_content>
+	        <tr>
+	            <th class="span3">See Also</th>
+	            <td>
+	                <ul>
+						<#list prop.hrefs as href>
+	                        <li data-content-meaning="docHref"><a href="${href?html}">${href?html}</a></li>
+						</#list>
+	                </ul>
+	            </td>
+	        </tr>
+			</#if>
+			<#if prop.bindings?has_content>
+	        <tr>
+	            <th class="span3">Binding Sites</th>
+	            <td>
+	                <ul>
+						<#list prop.bindings as binding>
+	                        <li data-content-meaning="bindingClass">${binding.owner?html}</li>
+						</#list>
+	                </ul>
+	            </td>
+	        </tr>
+			</#if>
+	        </tbody>
+	    </table>
+    </div>
+    </#list>
 </div>
 </body>
 </html>
