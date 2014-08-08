@@ -6,6 +6,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.web.rest.exception.TextWebException;
 import org.apache.commons.configuration.Configuration;
 
@@ -19,11 +20,13 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 {
 	private final long started = System.currentTimeMillis();
 
+	@Reconfigurable
 	@Inject(optional = true)
 	@Named("restutils.show-serviceprops")
 	@Doc("If true, then the configuration data for the application will be available for remote inspection (default false). Should be disabled for live systems because this may leak password data.")
 	boolean showProperties = false;
 
+	@Reconfigurable
 	@Inject(optional = true)
 	@Named("restutils.allow-restart")
 	@Doc("If true, then a restart of the guice environment without involving the servlet container may be attempted (default false). Should be disabled for live systems.")
