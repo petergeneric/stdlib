@@ -20,6 +20,7 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
 /**
  * Responsible for creating fresh Injector instances. This is handled by reading <code>service.properties</code> and parsing the
@@ -143,17 +144,25 @@ public class GuiceInjectorBootstrap
 		{
 			final List<Module> modules = new ArrayList<Module>();
 
-			modules.add(new ConfigurationPropertyRegistryModule());
+			AtomicReference<Injector> injectorRef = new AtomicReference<>();
+
+			// Create the overall composite configuration
+			ServicePropertiesModule serviceprops = new ServicePropertiesModule(configuration);
+
+			modules.add(serviceprops);
+			modules.add(new ConfigurationPropertyRegistryModule(serviceprops.getConfiguration(), injectorRef));
 			modules.add(new GuiceLifecycleModule());
 			modules.add(shutdown);
 			modules.add(new RetryModule());
-			modules.add(new JAXBModule(configuration));
-			modules.add(new ServicePropertiesModule(configuration));
-			modules.add(new Log4JModule(configuration));
+			modules.add(new JAXBModule(serviceprops.getConfiguration()));
 
-			setup.registerModules(modules, configuration);
+			modules.add(new Log4JModule(serviceprops.getConfiguration()));
+
+			setup.registerModules(modules, serviceprops.getConfiguration());
 
 			final Injector injector = Guice.createInjector(modules);
+
+			injectorRef.set(injector);
 			setup.injectorCreated(injector);
 
 			return injector;

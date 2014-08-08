@@ -62,6 +62,21 @@ ${bootstrap.CSS}
 
 	    <p data-content-meaning="documentation">${prop.documentation!""?html?replace('\n', '<br/>')}</p>
 
+		<#if allowReconfigure>
+		<h5>Change</h5>
+		<p>
+		<form action="${urls.rest("/list/config/reconfigure")}" method="POST">
+		<input type="hidden" name="key" value="${prop.name}" />
+		<input type="text" name="value"
+			<#if showProperties>
+			value="${config.getString(prop.name,"")}"
+			</#if>
+		/ >
+		<input type="submit" value="Change" />
+		</form>
+		</p>
+		</#if>
+
 	    <h5>Binding Information</h5>
 	    <table class="table">
 	        <tbody>

@@ -1,19 +1,27 @@
 package com.peterphi.std.guice.common.serviceprops;
 
+import com.google.inject.Injector;
+import com.google.inject.MembersInjector;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.AnnotatedElement;
+import java.util.concurrent.atomic.AtomicReference;
 
-public class ConfigurationPropertyBindingSite<T>
+public class ConfigurationPropertyBindingSite<T, O>
 {
-	private Class owner;
-	private String name;
-	private Class<T> type;
-	private AnnotatedElement element;
+	private final ConfigurationPropertyRegistry registry;
+	private final AtomicReference<Injector> injector;
+	private final Class<O> owner;
+	private final String name;
+	private final Class<T> type;
+	private final AnnotatedElement element;
 
 
-	public ConfigurationPropertyBindingSite(final Class owner,
+	public ConfigurationPropertyBindingSite(final ConfigurationPropertyRegistry registry,
+	                                        final AtomicReference<Injector> injector,
+	                                        final Class<O> owner,
 	                                        final String name,
 	                                        final Class<T> type,
 	                                        final AnnotatedElement element)
@@ -21,6 +29,8 @@ public class ConfigurationPropertyBindingSite<T>
 		if (owner == null)
 			throw new IllegalArgumentException("Binding owner must not be null!");
 
+		this.registry = registry;
+		this.injector = injector;
 		this.owner = owner;
 		this.name = name;
 		this.type = type;
@@ -88,5 +98,36 @@ public class ConfigurationPropertyBindingSite<T>
 		       ", type=" + type +
 		       ", element=" + element +
 		       '}';
+	}
+
+
+	public void validate(final String value)
+	{
+		// TODO apply JSR 303 validations
+		try
+		{
+			TypedConfigRef.convert(getType(), value);
+		}
+		catch (Exception e)
+		{
+			throw new IllegalArgumentException("Could not parse \"" +
+			                                   value +
+			                                   "\" as " +
+			                                   type +
+			                                   " for binding in " +
+			                                   owner +
+			                                   ": " +
+			                                   e.getMessage(), e);
+		}
+	}
+
+
+	void reinject(Iterable<Object> objects)
+	{
+		final MembersInjector<O> injector = this.injector.get().getMembersInjector(owner);
+
+		for (Object obj : objects)
+			if (obj != null)
+				injector.injectMembers(owner.cast(obj));
 	}
 }

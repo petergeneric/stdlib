@@ -1,21 +1,29 @@
 package com.peterphi.std.guice.common.serviceprops;
 
+import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.TreeSet;
+import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ConfigurationProperty
 {
+	private final ConfigurationPropertyRegistry registry;
+	private final Configuration configuration;
+	private final CopyOnWriteArrayList<ConfigurationPropertyBindingSite> bindings = new CopyOnWriteArrayList<>();
+
 	private final String name;
-	private final List<ConfigurationPropertyBindingSite> bindings = new ArrayList<>();
 
 
-	public ConfigurationProperty(final String name)
+	public ConfigurationProperty(final ConfigurationPropertyRegistry registry,
+	                             final Configuration configuration,
+	                             final String name)
 	{
+		this.registry = registry;
+		this.configuration = configuration;
 		this.name = name;
 	}
 
@@ -86,5 +94,27 @@ public class ConfigurationProperty
 		}
 
 		return allHrefs;
+	}
+
+
+	public void set(final String value)
+	{
+		// Validate the new value passes all the binding constraints
+		validate(value);
+
+		// Add a property override to the configuration
+		configuration.setProperty(name, value);
+
+		// Reinject all the members
+		for (ConfigurationPropertyBindingSite binding : bindings)
+			binding.reinject(registry.getInstances(binding.getOwner()));
+	}
+
+
+	public void validate(final String value)
+	{
+		// Validate the new value passes all the binding constraints
+		for (ConfigurationPropertyBindingSite binding : bindings)
+			binding.validate(value);
 	}
 }

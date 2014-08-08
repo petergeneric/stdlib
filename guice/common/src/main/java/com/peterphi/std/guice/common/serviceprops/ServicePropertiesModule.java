@@ -37,16 +37,24 @@ import java.util.Iterator;
 public class ServicePropertiesModule extends AbstractModule
 {
 	protected final CompositeConfiguration configuration;
-	protected final MapConfiguration overrides = new MapConfiguration(new HashMap<String, Object>());
+	protected final MapConfiguration overrides;
 
 
 	public ServicePropertiesModule(Configuration configuration)
 	{
+		this(configuration, new MapConfiguration(new HashMap<String, Object>()));
+	}
+
+
+	public ServicePropertiesModule(Configuration configuration, MapConfiguration overrides)
+	{
 		this.configuration = new CompositeConfiguration();
-		this.configuration.addConfiguration(configuration);
+		this.overrides = overrides;
 
 		// Any changes made while running (e.g. through a reconfig service / UI)
 		this.configuration.addConfiguration(overrides, true);
+
+		this.configuration.addConfiguration(configuration);
 	}
 
 
