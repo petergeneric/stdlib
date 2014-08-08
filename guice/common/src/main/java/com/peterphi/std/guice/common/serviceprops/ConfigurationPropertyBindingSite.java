@@ -46,6 +46,12 @@ public class ConfigurationPropertyBindingSite<T>
 	}
 
 
+	public boolean isDeprecated()
+	{
+		return element.isAnnotationPresent(Deprecated.class);
+	}
+
+
 	/**
 	 * Get a description (from a @Doc annotation, if one is present)
 	 *

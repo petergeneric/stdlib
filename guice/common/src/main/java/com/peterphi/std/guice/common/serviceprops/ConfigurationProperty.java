@@ -49,7 +49,12 @@ public class ConfigurationProperty
 
 	public boolean isDeprecated()
 	{
-		return false; // TODO implement me
+		for (ConfigurationPropertyBindingSite binding : bindings)
+			if (binding.isDeprecated())
+				return true;
+
+		// None are deprecated
+		return false;
 	}
 
 
