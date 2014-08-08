@@ -56,7 +56,14 @@ ${bootstrap.CSS}
 		<#if prop.deprecated>
 	        <div class="alert">
 	            <strong>Deprecated</strong><br/>
-	            This property is included for legacy use and will be removed in a future release
+	            This property is included for legacy use and will be removed in a future release.
+	        </div>
+		</#if>
+
+		<#if !prop.reconfigurable>
+	        <div class="alert">
+	            <strong>No dynamic reconfiguration</strong><br/>
+	            This property cannot be dynamically reconfigured; a servlet/guice environment restart will be required to apply the change.
 	        </div>
 		</#if>
 
@@ -108,7 +115,8 @@ ${bootstrap.CSS}
 	            <td>
 	                <ul>
 						<#list prop.bindings as binding>
-	                        <li data-content-meaning="bindingClass">${binding.owner?html}</li>
+	                        <li data-content-meaning="bindingClass">
+	                            ${binding.owner?html} (type=${binding.type?html}<#if !prop.reconfigurable>, reconfigurable=${binding.reconfigurable?c}</#if>)</li>
 						</#list>
 	                </ul>
 	            </td>

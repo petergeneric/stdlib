@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -11,6 +12,8 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ConfigurationProperty
 {
+	private static final Logger log = Logger.getLogger(ConfigurationProperty.class);
+
 	private final ConfigurationPropertyRegistry registry;
 	private final Configuration configuration;
 	private final CopyOnWriteArrayList<ConfigurationPropertyBindingSite> bindings = new CopyOnWriteArrayList<>();
@@ -37,6 +40,16 @@ public class ConfigurationProperty
 	public String getName()
 	{
 		return name;
+	}
+
+
+	public boolean isReconfigurable()
+	{
+		for (ConfigurationPropertyBindingSite binding : bindings)
+			if (!binding.isReconfigurable())
+				return false;
+
+		return true; // all reconfigurable
 	}
 
 
@@ -99,15 +112,33 @@ public class ConfigurationProperty
 
 	public void set(final String value)
 	{
+		log.info("Attempting to change config property " +
+		         name +
+		         " from current \"" +
+		         configuration.getString(name) +
+		         "\" to \"" +
+		         value +
+		         "\".");
 		// Validate the new value passes all the binding constraints
 		validate(value);
 
 		// Add a property override to the configuration
 		configuration.setProperty(name, value);
 
-		// Reinject all the members
-		for (ConfigurationPropertyBindingSite binding : bindings)
-			binding.reinject(registry.getInstances(binding.getOwner()));
+		if (isReconfigurable())
+		{
+			log.info("All binding sites for property " + name + " are reconfigurable; reinjecting...");
+
+			// Re-inject all the members
+			for (ConfigurationPropertyBindingSite binding : bindings)
+				binding.reinject(registry.getInstances(binding.getOwner()));
+		}
+		else
+		{
+			log.info("Not all binding sites for property " +
+			         name +
+			         " are reconfigurable. Restart will be required to apply this change.");
+		}
 	}
 
 

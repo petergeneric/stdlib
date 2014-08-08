@@ -3,6 +3,7 @@ package com.peterphi.std.guice.common.serviceprops;
 import com.google.inject.Injector;
 import com.google.inject.MembersInjector;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
 import org.apache.commons.lang.StringUtils;
 
@@ -59,6 +60,12 @@ public class ConfigurationPropertyBindingSite<T, O>
 	public boolean isDeprecated()
 	{
 		return element.isAnnotationPresent(Deprecated.class);
+	}
+
+
+	public boolean isReconfigurable()
+	{
+		return element.isAnnotationPresent(Reconfigurable.class);
 	}
 
 

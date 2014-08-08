@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.restclient.jaxb.ExceptionInfo;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
@@ -25,10 +26,12 @@ public class RestFailureMarshaller
 	/**
 	 * If true, stack traces will be included in the returned exception objects, if false they will be hidden
 	 */
+	@Reconfigurable
 	@Inject(optional = true)
 	@Named("rest.exception.showStackTraces")
 	@Doc("If enabled, include stack trace info in the XML exception detail sent back to non-browser clients (default true)")
 	private boolean stackTraces = true;
+
 
 	/**
 	 * Render a Throwable as a RestFailure
@@ -63,6 +66,7 @@ public class RestFailureMarshaller
 		return failure;
 	}
 
+
 	/**
 	 * Try to extract the HttpCallContext request id (if one exists)
 	 *
@@ -82,6 +86,7 @@ public class RestFailureMarshaller
 			return UUID.randomUUID().toString();
 		}
 	}
+
 
 	private ExceptionInfo renderThrowable(Throwable e)
 	{
@@ -112,14 +117,15 @@ public class RestFailureMarshaller
 		return info;
 	}
 
+
 	public boolean isStackTraces()
 	{
 		return stackTraces;
 	}
 
+
 	public void setStackTraces(boolean stackTraces)
 	{
 		this.stackTraces = stackTraces;
 	}
-
 }
