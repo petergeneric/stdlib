@@ -48,7 +48,7 @@ ${bootstrap.CSS}
 		<#list services as service>
         <tr>
             <td>${service.path}</td>
-            <td><strong><a href="${urls.rest("/list/service/" + service_index)}">${service.interfaceName}</a></strong></td>
+            <td><strong><a href="${urls.relativeRest("/list/service/" + service_index)}">${service.interfaceName}</a></strong></td>
             <td>${service.description}</td>
         </tr>
 		</#list>

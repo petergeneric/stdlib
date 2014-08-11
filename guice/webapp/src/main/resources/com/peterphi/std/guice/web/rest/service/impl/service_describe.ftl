@@ -87,11 +87,11 @@ ${bootstrap.CSS}
         <tr>
 	        <th>Full Path</th>
 	        <#if resource.httpMethod != "GET">
-		        <td>${urls.restConcat(resource.path)?html}</td>
+		        <td>${urls.relativeRestConcat(resource.path)?html}</td>
 	        <#elseif resource.path?contains("{")>
-		        <td>${urls.restConcat(resource.path)?html}</td>
+		        <td>${urls.relativeRestConcat(resource.path)?html}</td>
 	        <#else>
-		        <td><a href="${urls.restConcat(resource.path)?html}">${urls.restConcat(resource.path)?html}</a></td>
+		        <td><a href="${urls.relativeRestConcat(resource.path)?html}">${urls.restConcat(resource.path)?html}</a></td>
 	        </#if>
         </tr>
         <tr>

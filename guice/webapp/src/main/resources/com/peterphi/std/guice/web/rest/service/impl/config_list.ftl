@@ -72,7 +72,7 @@ ${bootstrap.CSS}
 		<#if allowReconfigure>
 		<h5>Change</h5>
 		<p>
-		<form action="${urls.rest("/list/config/reconfigure")}" method="POST">
+		<form action="${urls.relativeRest("/list/config/reconfigure")}" method="POST">
 		<input type="hidden" name="key" value="${prop.name}" />
 		<input type="text" name="value"
 			<#if showProperties>

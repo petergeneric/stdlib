@@ -2,6 +2,7 @@ package com.peterphi.std.guice.web.rest.templating.freemarker;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.net.URISyntaxException;
 
 
 public class FreemarkerURLHelper
@@ -56,6 +57,19 @@ public class FreemarkerURLHelper
 
 
 	/**
+	 * Returns a relative URL for a resource from the REST path, assuming it is relative to another path on the same server.
+	 *
+	 * @param path
+	 *
+	 * @return
+	 */
+	public String relativeRest(String path)
+	{
+		return relative(rest(path));
+	}
+
+
+	/**
 	 * Similar to the <code>rest</code> method, however this performs concatenation using String operations rather than
 	 * UriBuilder,
 	 * allowing the representation of URLs which are technically invalid (e.g. using templates)
@@ -71,6 +85,19 @@ public class FreemarkerURLHelper
 
 
 	/**
+	 * Similar to the <code>relativeRest</code> method, however this performs concatenation using String operations rather than
+	 * UriBuilder,
+	 * allowing the representation of URLs which are technically invalid (e.g. using templates)
+	 *
+	 * @param path
+	 *
+	 * @return
+	 */
+	public String relativeRestConcat(String path) {
+		return concat(relativeRest(""), path);
+	}
+
+	/**
 	 * Return a UriBuilder for an absolute URI
 	 *
 	 * @param path
@@ -80,6 +107,28 @@ public class FreemarkerURLHelper
 	public UriBuilder absolute(String path)
 	{
 		return UriBuilder.fromUri(path);
+	}
+
+
+	/**
+	 * Return only the path for a given URL
+	 *
+	 * @param url
+	 *
+	 * @return
+	 */
+	public String relative(String url)
+	{
+		try
+		{
+			final URI uri = absolute(url).build();
+
+			return new URI(null, null, uri.getPath(), uri.getQuery(), uri.getFragment()).toString();
+		}
+		catch (URISyntaxException e)
+		{
+			throw new IllegalArgumentException(e);
+		}
 	}
 
 
