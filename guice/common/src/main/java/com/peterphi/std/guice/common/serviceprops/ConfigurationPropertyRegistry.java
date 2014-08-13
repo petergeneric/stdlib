@@ -1,7 +1,6 @@
 package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Injector;
-import com.google.inject.Singleton;
 import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
@@ -24,11 +23,13 @@ public class ConfigurationPropertyRegistry
 	private final Map<Class, WeakHashMap<Object, Void>> instances = new HashMap<>();
 
 	private final Configuration configuration;
+	private final Configuration overrides;
 
 
-	public ConfigurationPropertyRegistry(final Configuration configuration)
+	public ConfigurationPropertyRegistry(final Configuration configuration, final Configuration overrides)
 	{
 		this.configuration = configuration;
+		this.overrides = overrides;
 	}
 
 
@@ -50,7 +51,7 @@ public class ConfigurationPropertyRegistry
 			{
 				log.debug("Discovered new property: " + site.getName());
 
-				properties.put(site.getName(), new ConfigurationProperty(this, configuration, site.getName()));
+				properties.put(site.getName(), new ConfigurationProperty(this, configuration, overrides, site.getName()));
 			}
 
 			log.trace("Discovered new binding for property " +

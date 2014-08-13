@@ -8,6 +8,8 @@ import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import java.io.IOException;
 
 @Doc("Lists the configuration properties in use by this webapp")
 @Path("/list/config")
@@ -31,4 +33,10 @@ public interface RestConfigList
 	@Produces("application/json")
 	@Path("/validate")
 	public boolean validateProperty(@FormParam("key") String name, @FormParam("value") String value);
+
+	@Doc("Saves the override configuration to disk")
+	@POST
+	@Produces(MediaType.TEXT_HTML)
+	@Path("/save")
+	public String save() throws IOException;
 }

@@ -23,9 +23,11 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 	private final AtomicReference<Injector> injectorRef;
 
 
-	public ConfigurationPropertyRegistryModule(final Configuration configuration, final AtomicReference<Injector> injectorRef)
+	public ConfigurationPropertyRegistryModule(final Configuration configuration,
+	                                           final Configuration overrides,
+	                                           final AtomicReference<Injector> injectorRef)
 	{
-		this.registry = new ConfigurationPropertyRegistry(configuration);
+		this.registry = new ConfigurationPropertyRegistry(configuration, overrides);
 		this.injectorRef = injectorRef;
 	}
 
@@ -84,7 +86,7 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 		@Override
 		public <I> void hear(final TypeLiteral<I> type, final TypeEncounter<I> encounter)
 		{
-			final Class discoveredType = type.getRawType();
+			final Class<?> discoveredType = type.getRawType();
 
 			int reconfigurables = 0;
 

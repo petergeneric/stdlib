@@ -17,6 +17,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.io.File;
 import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
@@ -172,10 +173,12 @@ public class GuiceBuilder
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		final PropertiesConfiguration overrideFile = getPropertyFile(config, GuiceProperties.OVERRIDE_FILE_PROPERY);
+		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERY));
 
 		if (overrideFile != null)
+		{
 			config.addConfiguration(overrideFile, true);
+		}
 
 		final GuiceSetup setup;
 		if (staticSetup == null)
@@ -211,7 +214,7 @@ public class GuiceBuilder
 	                                       List<GuiceRole> roles)
 	{
 		AtomicReference<Injector> injectorRef = new AtomicReference<>();
-		List<Module> modules = new ArrayList<Module>();
+		List<Module> modules = new ArrayList<>();
 
 		final Stage stage = Stage.valueOf(config.getString(GuiceProperties.STAGE_PROPERTY, Stage.DEVELOPMENT.name()));
 
@@ -338,17 +341,6 @@ public class GuiceBuilder
 	}
 
 
-	private static PropertiesConfiguration getPropertyFile(final Configuration configuration, final String property)
-	{
-		final String overrideFileStr = configuration.getString(GuiceProperties.OVERRIDE_FILE_PROPERY);
-
-		if (!StringUtils.isEmpty(overrideFileStr))
-			return load(overrideFileStr);
-		else
-			return null;
-	}
-
-
 	private static PropertiesConfiguration load(String propertyFile)
 	{
 		if (propertyFile == null)
@@ -356,7 +348,19 @@ public class GuiceBuilder
 
 		try
 		{
-			return new PropertiesConfiguration(propertyFile);
+			final File file = new File(propertyFile);
+
+			if (file.exists())
+				return new PropertiesConfiguration(file);
+			else
+			{
+				// Empty configuration, allow it to be written again
+				PropertiesConfiguration prop = new PropertiesConfiguration();
+
+				prop.setFile(file);
+
+				return prop;
+			}
 		}
 		catch (ConfigurationException e)
 		{

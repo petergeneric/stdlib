@@ -16,6 +16,8 @@ public class ConfigurationProperty
 
 	private final ConfigurationPropertyRegistry registry;
 	private final Configuration configuration;
+	private final Configuration writeConfiguration;
+
 	private final CopyOnWriteArrayList<ConfigurationPropertyBindingSite> bindings = new CopyOnWriteArrayList<>();
 
 	private final String name;
@@ -23,10 +25,12 @@ public class ConfigurationProperty
 
 	public ConfigurationProperty(final ConfigurationPropertyRegistry registry,
 	                             final Configuration configuration,
+	                             final Configuration writeConfiguration,
 	                             final String name)
 	{
 		this.registry = registry;
 		this.configuration = configuration;
+		this.writeConfiguration = writeConfiguration;
 		this.name = name;
 	}
 
@@ -123,7 +127,7 @@ public class ConfigurationProperty
 		validate(value);
 
 		// Add a property override to the configuration
-		configuration.setProperty(name, value);
+		writeConfiguration.setProperty(name, value);
 
 		if (isReconfigurable())
 		{

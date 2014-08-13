@@ -126,6 +126,14 @@ ${bootstrap.CSS}
 	    </table>
     </div>
     </#list>
+
+
+    <h1>Overrides</h1>
+    <h3>Save to disk</h3>
+    <p>Do you wish to save the current in-memory changes to the configuration back to disk?</p>
+    <form method="POST" action="${urls.relativeRest("/list/config/save")}">
+        <input type="submit" value="Save to disk" />
+    </form>
 </div>
 </body>
 </html>

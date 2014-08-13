@@ -36,7 +36,7 @@ class CoreGuiceRole implements GuiceRole
 	                     final AtomicReference<Injector> injectorRef)
 	{
 		modules.add(new ServicePropertiesModule(config, overrides));
-		modules.add(new ConfigurationPropertyRegistryModule(config, injectorRef));
+		modules.add(new ConfigurationPropertyRegistryModule(config, overrides, injectorRef));
 		modules.add(new GuiceLifecycleModule());
 		modules.add(new RetryModule());
 		modules.add(new JAXBModule(config));

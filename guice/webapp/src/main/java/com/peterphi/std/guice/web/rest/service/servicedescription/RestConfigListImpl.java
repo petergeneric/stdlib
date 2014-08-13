@@ -13,12 +13,18 @@ import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerURLHelper
 import com.peterphi.std.guice.web.rest.util.BootstrapStaticResources;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
+import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.PropertiesConfiguration;
+
+import java.io.IOException;
 
 @Singleton
 public class RestConfigListImpl implements RestConfigList
 {
 	private final FreemarkerTemplater templater;
 	private final org.apache.commons.configuration.Configuration serviceConfig;
+
+
 	private final ConfigurationPropertyRegistry configRegistry;
 
 	@Reconfigurable
@@ -32,6 +38,11 @@ public class RestConfigListImpl implements RestConfigList
 	@Named("restutils.allow-reconfigure")
 	@Doc("If true, allow reconfiguration of service properties at runtime without authentication (default false). Should be disabled for live systems because this may leak password data.")
 	boolean allowReconfigure = false;
+
+	@Inject
+	@Named("overrides")
+	@Doc("The internal property for the override config data")
+	PropertiesConfiguration overrides;
 
 
 	@Inject
@@ -96,5 +107,22 @@ public class RestConfigListImpl implements RestConfigList
 			property.validate(value);
 
 		return true; // completed without error
+	}
+
+
+	@Override
+	public String save() throws IOException
+	{
+		System.out.println("Filename: " + overrides.getFile());
+		try
+		{
+			overrides.save();
+
+			return "Save successful.";
+		}
+		catch (ConfigurationException e)
+		{
+			throw new IOException(e);
+		}
 	}
 }
