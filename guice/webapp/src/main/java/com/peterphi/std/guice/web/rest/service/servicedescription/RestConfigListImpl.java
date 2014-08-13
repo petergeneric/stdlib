@@ -113,7 +113,6 @@ public class RestConfigListImpl implements RestConfigList
 	@Override
 	public String save() throws IOException
 	{
-		System.out.println("Filename: " + overrides.getFile());
 		try
 		{
 			overrides.save();
