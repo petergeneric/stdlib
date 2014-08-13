@@ -9,6 +9,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.metrics.StatsRegistry;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
@@ -26,9 +27,10 @@ public class MyTestServiceImpl implements MyTestService
 	@Inject
 	public ThymeleafTemplater templater;
 
+	@Reconfigurable
 	@Inject(optional = true)
 	@Named("some-string")
-	@Doc("This is just an example property")
+	@Doc("This is just an example property. It can be changed at runtime.")
 	public String someString = null;
 
 	private final Counter counter;
@@ -51,7 +53,7 @@ public class MyTestServiceImpl implements MyTestService
 	public String index()
 	{
 		meter.mark();
-		return "This is an index page";
+		return "This is an index page. The sample property is: " + someString;
 	}
 
 
@@ -81,6 +83,7 @@ public class MyTestServiceImpl implements MyTestService
 		{
 			ThymeleafCall template = templater.template("index");
 			template.set("theTime", new Date());
+			template.set("someString", someString);
 
 			return template.process();
 		}

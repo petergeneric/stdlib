@@ -2,25 +2,24 @@ package com.peterphi.std.indexservice.guice;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import com.peterphi.std.guice.web.rest.setup.AbstractRESTGuiceSetup;
+import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.indexservice.guice.module.IndexServiceModule;
 import org.apache.commons.configuration.Configuration;
 
 import java.util.List;
 
-public class IndexGuiceSetup extends AbstractRESTGuiceSetup
+public class IndexGuiceSetup implements GuiceSetup
 {
-
 	@Override
-	public void injectorWasCreated(Injector injector)
+	public void registerModules(final List<Module> modules, final Configuration config)
 	{
-		// no action required
+		modules.add(new IndexServiceModule());
 	}
 
 
 	@Override
-	public void addModules(List<Module> modules, Configuration config)
+	public void injectorCreated(final Injector injector)
 	{
-		modules.add(new IndexServiceModule());
+
 	}
 }

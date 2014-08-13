@@ -3,11 +3,10 @@ package com.peterphi.std.guice.hibernate.hqlchildcount;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
-import com.peterphi.std.io.PropertyFile;
 import org.hibernate.cfg.Configuration;
 import org.junit.After;
 import org.junit.Before;
@@ -32,17 +31,17 @@ public class HqlChildCountTest
 	@Before
 	public void setUp()
 	{
-		PropertyFile props = PropertyFile.find("hibernate-tests-in-memory-hsqldb.properties");
-
-		final Injector injector = GuiceInjectorBootstrap.createInjector(props, new BasicSetup(new HibernateModule()
-		{
-			@Override
-			protected void configure(final Configuration config)
-			{
-				config.addAnnotatedClass(QEntity.class);
-				config.addAnnotatedClass(REntity.class);
-			}
-		}));
+		final Injector injector = new GuiceBuilder().withConfig("hibernate-tests-in-memory-hsqldb.properties")
+		                                            .withSetup(new BasicSetup(new HibernateModule()
+		                                            {
+			                                            @Override
+			                                            protected void configure(final Configuration config)
+			                                            {
+				                                            config.addAnnotatedClass(QEntity.class);
+				                                            config.addAnnotatedClass(REntity.class);
+			                                            }
+		                                            }))
+		                                            .build();
 
 		injector.injectMembers(this);
 	}

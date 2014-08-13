@@ -8,13 +8,15 @@ import java.lang.reflect.Method;
 
 class GuiceDynamicProxyProvider implements MethodHandler
 {
+	private final GuiceRegistry registry;
 	private final Class<?> clazz;
 	private final ProxyFactory proxyFactory = new ProxyFactory();
 
 	private Object proxyInstance;
 
-	public GuiceDynamicProxyProvider(Class<?> interfaceType)
+	public GuiceDynamicProxyProvider(final GuiceRegistry registry, Class<?> interfaceType)
 	{
+		this.registry = registry;
 		this.clazz = interfaceType;
 
 		proxyFactory.setInterfaces(new Class[]{clazz});
@@ -47,7 +49,7 @@ class GuiceDynamicProxyProvider implements MethodHandler
 	public Object invoke(Object self, Method thisMethod, Method proceed, Object[] args) throws Throwable
 	{
 		// Get an instance of the implementing class via Guice
-		final Object instance = GuiceRegistry.getInjector().getInstance(clazz);
+		final Object instance = registry.getInjector().getInstance(clazz);
 
 		return thisMethod.invoke(instance, args);
 	}

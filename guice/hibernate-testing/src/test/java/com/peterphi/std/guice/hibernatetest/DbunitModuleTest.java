@@ -4,13 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
 import com.peterphi.std.guice.hibernate.module.HibernateTransaction;
 import com.peterphi.std.guice.hibernate.module.TransactionHelper;
-import com.peterphi.std.io.PropertyFile;
 import org.dbunit.assertion.DbUnitAssert;
 import org.dbunit.database.QueryDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
@@ -40,19 +39,17 @@ public class DbunitModuleTest
 	@Before
 	public void setUp()
 	{
-		PropertyFile props = PropertyFile.find("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties");
-
-		final Injector injector = GuiceInjectorBootstrap.createInjector(props, new BasicSetup(new DbunitModule(),
-		                                                                                      new HibernateModule()
-		                                                                                      {
-			                                                                                      @Override
-			                                                                                      protected void configure(final Configuration config)
-			                                                                                      {
-				                                                                                      config.addAnnotatedClass(SimpleEntity.class);
-				                                                                                      config.addAnnotatedClass(GroupEntity.class);
-			                                                                                      }
-		                                                                                      }
-		));
+		final Injector injector = new GuiceBuilder().withConfig("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties")
+		                                            .withSetup(new BasicSetup(new DbunitModule(), new HibernateModule()
+		                                            {
+			                                            @Override
+			                                            protected void configure(final Configuration config)
+			                                            {
+				                                            config.addAnnotatedClass(SimpleEntity.class);
+				                                            config.addAnnotatedClass(GroupEntity.class);
+			                                            }
+		                                            }))
+		                                            .build();
 
 		injector.injectMembers(this);
 	}

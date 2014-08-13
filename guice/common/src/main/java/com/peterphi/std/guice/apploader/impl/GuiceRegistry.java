@@ -10,18 +10,40 @@ import java.util.HashSet;
 import java.util.Set;
 
 /**
- * Static registry that holds the Injector and the applications currently registered to be injected with the latest Guice
+ * Registry that holds the Injector and the applications currently registered to be injected with the latest Guice
  * objects.<br />
- * Uses {@link GuiceInjectorBootstrap} to acquire a {@link GuiceSetup} which defines the Guice Modules to use to build this
+ * Uses {@link GuiceBuilder} to acquire a {@link GuiceSetup} which defines the Guice Modules to use to build this
  * environment.
  */
 public class GuiceRegistry
 {
 	private static final Logger log = Logger.getLogger(GuiceRegistry.class);
-	private static final Object monitor = new Object();
+	private final Object monitor = new Object();
 
-	private static Set<GuiceApplication> services = new HashSet<GuiceApplication>();
-	private static Injector injector;
+	private final GuiceBuilder builder;
+
+	private Injector injector;
+
+	private Set<GuiceApplication> services = new HashSet<GuiceApplication>();
+
+
+	public GuiceRegistry()
+	{
+		this(new GuiceBuilder());
+	}
+
+
+	public GuiceRegistry(final GuiceBuilder builder)
+	{
+		this.builder = builder;
+	}
+
+
+	public GuiceBuilder getBuilder()
+	{
+		return builder;
+	}
+
 
 	/**
 	 * Request that an application be registered with this GuiceRegistry
@@ -32,13 +54,13 @@ public class GuiceRegistry
 	 * 		true if the application registration should be durable (durable applications receive lifecycle updates and are
 	 * 		reconfigured should {@link GuiceRegistry#restart} be called
 	 */
-	public static synchronized void register(GuiceApplication service, boolean durable)
+	public synchronized void register(GuiceApplication service, boolean durable)
 	{
 		final Injector injector = getInjector();
 
 		injector.injectMembers(service);
 
-		if (durable)
+		if (durable && !services.contains(service))
 		{
 			services.add(service);
 		}
@@ -46,7 +68,8 @@ public class GuiceRegistry
 		service.configured();
 	}
 
-	public static Injector getInjector()
+
+	public Injector getInjector()
 	{
 		if (injector == null)
 		{
@@ -55,7 +78,8 @@ public class GuiceRegistry
 				if (injector == null)
 				{
 					log.info("Trying to create Guice Injector...");
-					injector = GuiceInjectorBootstrap.createInjector();
+
+					injector = builder.build();
 				}
 			}
 		}
@@ -63,10 +87,11 @@ public class GuiceRegistry
 		return injector;
 	}
 
+
 	/**
 	 * Shutdown all services
 	 */
-	public static synchronized void stop()
+	public synchronized void stop()
 	{
 		if (injector != null)
 		{
@@ -92,10 +117,11 @@ public class GuiceRegistry
 		}
 	}
 
+
 	/**
 	 * Restart Guice services
 	 */
-	public static synchronized void restart()
+	public synchronized void restart()
 	{
 		// Bring down the existing environment
 		stop();
@@ -105,18 +131,9 @@ public class GuiceRegistry
 		{
 			// Bring up the new environment by reconfiguring the services
 			for (GuiceApplication service : services)
-			{
 				register(service, true);
-			}
 		}
-		catch (RuntimeException e)
-		{
-			log.warn("Failed to restart: " + e.getMessage(), e);
-			stop();
-
-			throw e;
-		}
-		catch (Error e)
+		catch (RuntimeException | Error e)
 		{
 			log.warn("Failed to restart: " + e.getMessage(), e);
 			stop();

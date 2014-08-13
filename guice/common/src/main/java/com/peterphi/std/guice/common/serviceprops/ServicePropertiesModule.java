@@ -10,7 +10,7 @@ import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.types.Timebase;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.MapConfiguration;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -23,7 +23,6 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
-import java.util.HashMap;
 import java.util.Iterator;
 
 /**
@@ -37,16 +36,13 @@ import java.util.Iterator;
 public class ServicePropertiesModule extends AbstractModule
 {
 	protected final CompositeConfiguration configuration;
-	protected final MapConfiguration overrides = new MapConfiguration(new HashMap<String, Object>());
+	protected final PropertiesConfiguration overrides;
 
 
-	public ServicePropertiesModule(Configuration configuration)
+	public ServicePropertiesModule(CompositeConfiguration configuration, PropertiesConfiguration overrides)
 	{
-		this.configuration = new CompositeConfiguration();
-		this.configuration.addConfiguration(configuration);
-
-		// Any changes made while running (e.g. through a reconfig service / UI)
-		this.configuration.addConfiguration(overrides, true);
+		this.configuration = configuration;
+		this.overrides = overrides;
 	}
 
 
@@ -59,41 +55,47 @@ public class ServicePropertiesModule extends AbstractModule
 		while (it.hasNext())
 		{
 			final String key = it.next();
+			final Object currentValue = configuration.getProperty(key);
 
 			ConfigRef prop = new ConfigRef(configuration, key);
 
 			final Named name = Names.named(key);
 
 			bind(ConfigRef.class).annotatedWith(name).toInstance(prop);
-			bind(String.class).annotatedWith(name).toProvider(prop);
 
-			// Yuck, there has to be a better way...
-			for (Class clazz : new Class[]{Boolean.class,
-			                               Byte.class,
-			                               Short.class,
-			                               Integer.class,
-			                               Long.class,
-
-			                               Float.class,
-			                               Double.class,
-
-			                               Timeout.class,
-			                               Timebase.class,
-
-			                               File.class,
-			                               InetAddress.class,
-			                               URI.class,
-			                               URL.class,
-
-			                               DateTime.class,
-			                               DateTimeZone.class,
-			                               LocalDate.class,
-			                               LocalTime.class,
-			                               Period.class,
-			                               Duration.class,
-			                               Interval.class})
+			// If the config value is a String then bind it to a variety of different conversion providers
+			if (currentValue instanceof String)
 			{
-				bind(clazz).annotatedWith(name).toProvider(prop.as(clazz));
+				bind(String.class).annotatedWith(name).toProvider(prop);
+
+				// Yuck, there has to be a better way...
+				for (Class clazz : new Class[]{Boolean.class,
+				                               Byte.class,
+				                               Short.class,
+				                               Integer.class,
+				                               Long.class,
+
+				                               Float.class,
+				                               Double.class,
+
+				                               Timeout.class,
+				                               Timebase.class,
+
+				                               File.class,
+				                               InetAddress.class,
+				                               URI.class,
+				                               URL.class,
+
+				                               DateTime.class,
+				                               DateTimeZone.class,
+				                               LocalDate.class,
+				                               LocalTime.class,
+				                               Period.class,
+				                               Duration.class,
+				                               Interval.class})
+				{
+					bind(clazz).annotatedWith(name).toProvider(prop.as(clazz));
+				}
 			}
 		}
 	}
@@ -110,7 +112,7 @@ public class ServicePropertiesModule extends AbstractModule
 	@Provides
 	@Singleton
 	@Named("overrides")
-	public MapConfiguration getOverrideConfiguration()
+	public PropertiesConfiguration getOverrideConfiguration()
 	{
 		return overrides;
 	}

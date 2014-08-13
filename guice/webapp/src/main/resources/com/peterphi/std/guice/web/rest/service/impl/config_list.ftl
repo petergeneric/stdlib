@@ -56,11 +56,33 @@ ${bootstrap.CSS}
 		<#if prop.deprecated>
 	        <div class="alert">
 	            <strong>Deprecated</strong><br/>
-	            This property is included for legacy use and will be removed in a future release
+	            This property is included for legacy use and will be removed in a future release.
+	        </div>
+		</#if>
+
+		<#if !prop.reconfigurable>
+	        <div class="alert">
+	            <strong>No dynamic reconfiguration</strong><br/>
+	            This property cannot be dynamically reconfigured; a servlet/guice environment restart will be required to apply the change.
 	        </div>
 		</#if>
 
 	    <p data-content-meaning="documentation">${prop.documentation!""?html?replace('\n', '<br/>')}</p>
+
+		<#if allowReconfigure>
+		<h5>Change</h5>
+		<p>
+		<form action="${urls.relativeRest("/list/config/reconfigure")}" method="POST">
+		<input type="hidden" name="key" value="${prop.name}" />
+		<input type="text" name="value"
+			<#if showProperties>
+			value="${config.getString(prop.name,"")}"
+			</#if>
+		/ >
+		<input type="submit" value="Change" />
+		</form>
+		</p>
+		</#if>
 
 	    <h5>Binding Information</h5>
 	    <table class="table">
@@ -93,7 +115,8 @@ ${bootstrap.CSS}
 	            <td>
 	                <ul>
 						<#list prop.bindings as binding>
-	                        <li data-content-meaning="bindingClass">${binding.owner?html}</li>
+	                        <li data-content-meaning="bindingClass">
+	                            ${binding.owner?html} (type=${binding.type?html}<#if !prop.reconfigurable>, reconfigurable=${binding.reconfigurable?c}</#if>)</li>
 						</#list>
 	                </ul>
 	            </td>
@@ -103,6 +126,14 @@ ${bootstrap.CSS}
 	    </table>
     </div>
     </#list>
+
+
+    <h1>Overrides</h1>
+    <h3>Save to disk</h3>
+    <p>Do you wish to save the current in-memory changes to the configuration back to disk?</p>
+    <form method="POST" action="${urls.relativeRest("/list/config/save")}">
+        <input type="submit" value="Save to disk" />
+    </form>
 </div>
 </body>
 </html>

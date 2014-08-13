@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 
@@ -12,9 +13,6 @@ import java.net.URI;
 
 public class FreemarkerModule extends AbstractModule
 {
-	public static final String USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER = "freemarker.urlhelper.use-request-host";
-
-
 	protected void configure()
 	{
 	}
@@ -47,7 +45,8 @@ public class FreemarkerModule extends AbstractModule
 	                                           @Named("local.restservices.prefix") String restPrefix,
 	                                           org.apache.commons.configuration.Configuration configuration)
 	{
-		final boolean usePerRequestBuilder = configuration.getBoolean(USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER, false);
+		final boolean usePerRequestBuilder = configuration.getBoolean(GuiceProperties.USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER,
+		                                                              false);
 
 		if (usePerRequestBuilder)
 		{

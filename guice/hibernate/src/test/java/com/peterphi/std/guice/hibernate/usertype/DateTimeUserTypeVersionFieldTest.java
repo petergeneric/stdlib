@@ -3,12 +3,11 @@ package com.peterphi.std.guice.hibernate.usertype;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
 import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
-import com.peterphi.std.io.PropertyFile;
 import org.hibernate.cfg.Configuration;
 import org.joda.time.DateTime;
 import org.junit.After;
@@ -80,16 +79,16 @@ public class DateTimeUserTypeVersionFieldTest
 	@Before
 	public void setUp()
 	{
-		PropertyFile props = PropertyFile.find("hibernate-tests-in-memory-hsqldb.properties");
-
-		final Injector injector = GuiceInjectorBootstrap.createInjector(props, new BasicSetup(new HibernateModule()
-		{
-			@Override
-			protected void configure(final Configuration config)
-			{
-				config.addAnnotatedClass(ObjWithDateTimeVersionField.class);
-			}
-		}));
+		final Injector injector = new GuiceBuilder().withConfig("hibernate-tests-in-memory-hsqldb.properties")
+		                                            .withSetup(new BasicSetup(new HibernateModule()
+		                                                       {
+			                                                       @Override
+			                                                       protected void configure(final Configuration config)
+			                                                       {
+				                                                       config.addAnnotatedClass(ObjWithDateTimeVersionField.class);
+			                                                       }
+		                                                       }))
+		                                            .build();
 
 		injector.injectMembers(this);
 	}

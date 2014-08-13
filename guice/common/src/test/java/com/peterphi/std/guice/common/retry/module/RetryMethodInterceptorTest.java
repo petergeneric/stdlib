@@ -2,9 +2,8 @@ package com.peterphi.std.guice.common.retry.module;
 
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
-import com.peterphi.std.io.PropertyFile;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -19,7 +18,7 @@ public class RetryMethodInterceptorTest
 	{
 		AtomicInteger var = new AtomicInteger();
 
-		Injector injector = GuiceInjectorBootstrap.createInjector(new PropertyFile(), new BasicSetup());
+		Injector injector = new GuiceBuilder().withSetup(new BasicSetup()).build();
 
 		RetryTest test = injector.getInstance(RetryTest.class);
 
@@ -44,8 +43,8 @@ public class RetryMethodInterceptorTest
 		test.incrementAndFailUnlessSeven(var);
 
 		assertEquals(7, var.get());
-
 	}
+
 
 	public static class RetryTest
 	{
@@ -55,11 +54,13 @@ public class RetryMethodInterceptorTest
 			var.incrementAndGet();
 		}
 
+
 		@Retry(maxAttempts = 1)
 		public void fail() throws Exception
 		{
 			throw new Exception("boom");
 		}
+
 
 		@Retry(maxAttempts = 10, backoffTime = 0)
 		public void incrementAndFailUnlessSeven(AtomicInteger var) throws Exception

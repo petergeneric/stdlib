@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common;
 
 import com.google.inject.AbstractModule;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.configuration.Configuration;
@@ -27,7 +28,7 @@ public class Log4JModule extends AbstractModule
 	public Log4JModule(Configuration configuration)
 	{
 		this.guiceConfig = configuration;
-		configFile = configuration.getString("log4j.properties", null);
+		configFile = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
 	}
 
 

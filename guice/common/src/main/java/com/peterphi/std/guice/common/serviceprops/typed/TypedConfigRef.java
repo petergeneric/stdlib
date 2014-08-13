@@ -28,25 +28,25 @@ public class TypedConfigRef<T> implements Provider<T>
 	{
 		final String str = config.get();
 
-		return clazz.cast(convert(str));
+		return clazz.cast(convert(clazz, str));
 	}
 
 
-	private final Object convert(String val)
+	public static Object convert(final Class<?> clazz, String val)
 	{
 		if (clazz.equals(String.class))
 			return val;
-		else if (clazz.equals(Integer.class))
+		else if (clazz.equals(Integer.class) || clazz.equals(Integer.TYPE))
 			return Integer.valueOf(val);
-		else if (clazz.equals(Long.class))
+		else if (clazz.equals(Long.class) || clazz.equals(Long.TYPE))
 			return Long.valueOf(val);
-		else if (clazz.equals(Boolean.class))
+		else if (clazz.equals(Boolean.class) || clazz.equals(Boolean.TYPE))
 			return parseBoolean(val);
-		else if (clazz.equals(Short.class))
+		else if (clazz.equals(Short.class) || clazz.equals(Short.TYPE))
 			return Short.valueOf(val);
-		else if (clazz.equals(Double.class))
+		else if (clazz.equals(Double.class) || clazz.equals(Double.TYPE))
 			return Double.valueOf(val);
-		else if (clazz.equals(Float.class))
+		else if (clazz.equals(Float.class) || clazz.equals(Float.TYPE))
 			return Float.valueOf(val);
 		else if (clazz.equals(Timeout.class))
 			return new TimeoutConverter().convert(val);
@@ -62,12 +62,12 @@ public class TypedConfigRef<T> implements Provider<T>
 			return DateTimeZone.forID(val);
 		else
 		{
-			return tryReflection(val);
+			return tryReflection(clazz, val);
 		}
 	}
 
 
-	private Boolean parseBoolean(String val)
+	private static Boolean parseBoolean(String val)
 	{
 		if (val.equalsIgnoreCase("true"))
 			return Boolean.TRUE;
@@ -78,13 +78,13 @@ public class TypedConfigRef<T> implements Provider<T>
 	}
 
 
-	private Object tryReflection(String val)
+	private static Object tryReflection(final Class<?> clazz, String val)
 	{
 		// Try static valueOf
 		try
 		{
 			final Method method = clazz.getDeclaredMethod("valueOf", String.class);
-			
+
 			return method.invoke(null, val);
 		}
 		catch (ReflectiveOperationException e)

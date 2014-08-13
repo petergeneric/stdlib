@@ -1,11 +1,12 @@
 package com.peterphi.std.indexservice.rest.client.register;
 
 import com.google.inject.Inject;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.threading.Daemon;
 import com.peterphi.std.threading.Timeout;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 public class IndexServiceHeartbeater extends Daemon implements StoppableService
@@ -13,16 +14,18 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 	private static final Logger log = Logger.getLogger(IndexServiceHeartbeater.class);
 
 	private final IndexRegistrationHelper helper;
+	private final String contextName;
 
 
 	@Inject
-	public IndexServiceHeartbeater(ShutdownManager manager, IndexRegistrationHelper helper)
+	public IndexServiceHeartbeater(ShutdownManager manager, IndexRegistrationHelper helper, Configuration configuration)
 	{
 		this.helper = helper;
+		this.contextName = configuration.getString(GuiceProperties.SERVLET_CONTEXT_NAME);
 
 		manager.register(this);
 
-		startThread("IndexHeartbeat " + ApplicationContextNameRegistry.getContextName());
+		startThread("IndexHeartbeat " + contextName);
 	}
 
 
@@ -39,16 +42,16 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 			}
 			catch (IllegalStateException e)
 			{
-				log.fatal("Error in IndexHeartbeat " + ApplicationContextNameRegistry.getContextName() + " : ", e);
+				log.fatal("Error in IndexHeartbeat " + contextName + " : ", e);
 				throw e;
 			}
 			catch (Exception e)
 			{
-				log.error("Ignoring exception in IndexHeartbeat " + ApplicationContextNameRegistry.getContextName() + ": ", e);
+				log.error("Ignoring exception in IndexHeartbeat " + contextName + ": ", e);
 			}
 			catch (Error e)
 			{
-				log.fatal("Error in IndexHeartbeat " + ApplicationContextNameRegistry.getContextName() + ": ", e);
+				log.fatal("Error in IndexHeartbeat " + contextName + ": ", e);
 				throw e;
 			}
 		}
