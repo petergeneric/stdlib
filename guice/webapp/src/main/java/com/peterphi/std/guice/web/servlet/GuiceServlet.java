@@ -1,9 +1,11 @@
 package com.peterphi.std.guice.web.servlet;
 
 import com.peterphi.std.guice.apploader.GuiceApplication;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
 import org.apache.log4j.MDC;
 
 import javax.servlet.ServletException;
@@ -24,6 +26,8 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 	private static final long serialVersionUID = 1L;
 
 	private AtomicBoolean ready = new AtomicBoolean(false);
+	private GuiceRegistry registry;
+
 
 	@Override
 	protected final void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
@@ -40,8 +44,10 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 			{
 				ApplicationContextNameRegistry.setContextName(getServletContext().getContextPath());
 
-				// Register as a durable application
-				GuiceRegistry.register(this, true);
+				if (registry == null)
+					registry = new GuiceRegistry(new GuiceBuilder().withRole(new WebappGuiceRole(getServletConfig())));
+
+				registry.register(this, true);
 			}
 
 			// Make the call
@@ -53,6 +59,7 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 			MDC.clear();
 		}
 	}
+
 
 	/**
 	 * Calls {@link HttpServlet#service} should a subclass need to implement that method
@@ -68,11 +75,13 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 		super.service(req, resp);
 	}
 
+
 	@Override
 	public final void configured()
 	{
 		ready.set(true);
 	}
+
 
 	@Override
 	public final void destroy()
@@ -82,8 +91,10 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 		super.destroy();
 
 		// Feed shutdown to the GuiceRegistry
-		GuiceRegistry.stop();
+		if (registry != null)
+			registry.stop();
 	}
+
 
 	@Override
 	public abstract void stopping();

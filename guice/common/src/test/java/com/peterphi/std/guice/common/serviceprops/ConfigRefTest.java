@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Test;
 
@@ -23,11 +23,13 @@ public class ConfigRefTest
 	@Test
 	public void testChangingPropertyAtRuntimeAndReinjectingMembersWorks()
 	{
-		final Configuration configuration = new PropertiesConfiguration();
+		final CompositeConfiguration configuration = new CompositeConfiguration();
+		final PropertiesConfiguration overrides = new PropertiesConfiguration();
+		configuration.addConfiguration(overrides, true);
 
 		configuration.setProperty("some-name", "initial value");
 
-		final Injector injector = Guice.createInjector(new ServicePropertiesModule(configuration));
+		final Injector injector = Guice.createInjector(new ServicePropertiesModule(configuration, overrides));
 
 		injector.injectMembers(this);
 

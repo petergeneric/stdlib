@@ -19,16 +19,8 @@ import java.net.URI;
 public class CoreRestServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(CoreRestServicesModule.class);
-
-	private static ServletContext servletContext;
-
 	public static final String RESTEASY_MAPPING_PREFIX = "resteasy.servlet.mapping.prefix";
 
-
-	public static void setServletContext(ServletContext context)
-	{
-		servletContext = context;
-	}
 
 	@Override
 	protected void configure()
@@ -44,6 +36,7 @@ public class CoreRestServicesModule extends AbstractModule
 		RestResourceRegistry.register(RestServiceList.class);
 		RestResourceRegistry.register(RestConfigList.class);
 	}
+
 
 	/**
 	 * Retrieves the RESTeasy mapping prefix - this is the path under the webapp root where RESTeasy services are mapped.
@@ -68,6 +61,7 @@ public class CoreRestServicesModule extends AbstractModule
 			return restPath;
 		}
 	}
+
 
 	/**
 	 * Return the base path for all REST services in this webapp
@@ -106,6 +100,7 @@ public class CoreRestServicesModule extends AbstractModule
 		}
 	}
 
+
 	/**
 	 * Return the base path for this webapp
 	 *
@@ -121,14 +116,5 @@ public class CoreRestServicesModule extends AbstractModule
 		final URI base = localEndpointDiscovery.getLocalEndpoint();
 
 		return base;
-	}
-
-	@Provides
-	public ServletContext getServletContext()
-	{
-		if (servletContext != null)
-			return servletContext;
-		else
-			throw new RuntimeException("getServletContext called before a ServletContext was statically assigned to this module!");
 	}
 }

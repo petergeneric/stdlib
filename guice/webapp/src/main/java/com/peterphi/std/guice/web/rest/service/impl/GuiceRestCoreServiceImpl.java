@@ -35,6 +35,9 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 	@Inject
 	Configuration configuration;
 
+	@Inject
+	GuiceRegistry registry;
+
 
 	@Override
 	public String ping()
@@ -69,7 +72,7 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 	{
 		if (allowRestart)
 		{
-			GuiceRegistry.restart();
+			registry.restart();
 
 			return "OK, Guice will now restart";
 		}

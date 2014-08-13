@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.jaxrs;
 
+import com.google.inject.Inject;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
@@ -15,12 +16,32 @@ import java.util.Set;
  */
 public class GuiceRestApplication extends Application implements GuiceApplication
 {
-	private GuiceRestApplicationRegistry registry = new GuiceRestApplicationRegistry();
+	private final GuiceRegistry guiceRegistry;
+
+	private final GuiceRestApplicationRegistry registry;
+
 
 	public GuiceRestApplication()
 	{
-		GuiceRegistry.register(this, true);
+		this(new GuiceRegistry());
 	}
+
+
+	/**
+	 * If constructing from within a guice environment we should use the existing GuiceRegistry
+	 *
+	 * @param guiceRegistry
+	 */
+	@Inject
+	public GuiceRestApplication(GuiceRegistry guiceRegistry)
+	{
+		this.guiceRegistry = guiceRegistry;
+
+		guiceRegistry.register(this, true);
+
+		this.registry = new GuiceRestApplicationRegistry(guiceRegistry);
+	}
+
 
 	@Override
 	public Set<Object> getSingletons()
@@ -39,10 +60,12 @@ public class GuiceRestApplication extends Application implements GuiceApplicatio
 		return singletons;
 	}
 
+
 	@Override
 	public void configured()
 	{
 	}
+
 
 	@Override
 	public void stopping()

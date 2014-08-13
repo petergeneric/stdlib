@@ -37,6 +37,7 @@ class GuicedResteasy implements GuiceApplication
 {
 	private static final Logger log = Logger.getLogger(GuicedResteasy.class);
 
+	private final GuiceRegistry registry;
 	private final AtomicBoolean registered = new AtomicBoolean(false);
 	private final FilterConfig filterConfig;
 	private final ServletConfig servletConfig;
@@ -56,8 +57,13 @@ class GuicedResteasy implements GuiceApplication
 	@Inject
 	private Injector injector;
 
-	public GuicedResteasy(final ServletConfig config, final ListenerBootstrap bootstrap, final boolean handleNotFoundException)
+
+	public GuicedResteasy(final GuiceRegistry registry,
+	                      final ServletConfig config,
+	                      final ListenerBootstrap bootstrap,
+	                      final boolean handleNotFoundException)
 	{
+		this.registry = registry;
 		this.filterConfig = null;
 		this.servletConfig = config;
 		this.context = config.getServletContext();
@@ -65,14 +71,20 @@ class GuicedResteasy implements GuiceApplication
 		this.handleNotFoundException = handleNotFoundException;
 	}
 
-	public GuicedResteasy(final FilterConfig config, final ListenerBootstrap bootstrap, final boolean handleNotFoundException)
+
+	public GuicedResteasy(final GuiceRegistry registry,
+	                      final FilterConfig config,
+	                      final ListenerBootstrap bootstrap,
+	                      final boolean handleNotFoundException)
 	{
+		this.registry = registry;
 		this.filterConfig = config;
 		this.servletConfig = null;
 		this.context = config.getServletContext();
 		this.bootstrap = bootstrap;
 		this.handleNotFoundException = handleNotFoundException;
 	}
+
 
 	/**
 	 * Return the path of the local webapp (if known)
@@ -84,11 +96,13 @@ class GuicedResteasy implements GuiceApplication
 		return context.getContextPath();
 	}
 
+
 	public void initialise() throws ServletException
 	{
 		// Try to start guice (unless already started)
 		getDispatcher();
 	}
+
 
 	private synchronized ServletContainerDispatcher getDispatcher() throws ServletException
 	{
@@ -103,6 +117,7 @@ class GuicedResteasy implements GuiceApplication
 
 		return dispatcher;
 	}
+
 
 	public void call(HttpServletRequest request,
 	                 HttpServletResponse response) throws ServletException, IOException, NotFoundException
@@ -153,6 +168,7 @@ class GuicedResteasy implements GuiceApplication
 		}
 	}
 
+
 	/**
 	 * @param ctx
 	 * @param response
@@ -194,6 +210,7 @@ class GuicedResteasy implements GuiceApplication
 		}
 	}
 
+
 	private void rethrow(Throwable t) throws ServletException, IOException, RuntimeException, Error
 	{
 		// Rethrow (ugly code, unfortunately)
@@ -209,6 +226,7 @@ class GuicedResteasy implements GuiceApplication
 			throw new RuntimeException(t);
 	}
 
+
 	/**
 	 * Try to initialise a ServletContainerDispatcher with the connection to the Guice REST services
 	 */
@@ -217,7 +235,7 @@ class GuicedResteasy implements GuiceApplication
 		ApplicationContextNameRegistry.setContextName(context.getContextPath());
 
 		// Make sure we are registered with the Guice registry
-		GuiceRegistry.register(this, true);
+		registry.register(this,true);
 
 		// Configure the dispatcher
 		final Registry resteasyRegistry;
@@ -271,12 +289,14 @@ class GuicedResteasy implements GuiceApplication
 		}
 	}
 
+
 	@Override
 	public void configured()
 	{
 		// Called when guice config is complete
 		log.trace("Guice injector online");
 	}
+
 
 	@Override
 	public void stopping()
@@ -291,9 +311,9 @@ class GuicedResteasy implements GuiceApplication
 		}
 	}
 
+
 	public void stop()
 	{
-		GuiceRegistry.stop();
+		registry.stop();
 	}
-
 }
