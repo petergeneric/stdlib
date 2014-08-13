@@ -22,7 +22,9 @@ import java.io.IOException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Enumeration;
+import java.util.Iterator;
 import java.util.List;
+import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class GuiceBuilder
@@ -151,7 +153,15 @@ public class GuiceBuilder
 	                              final boolean autoLoadProperties,
 	                              final ClassLoader classloader)
 	{
-		// TODO find additional guice roles from jar files?
+
+		ServiceLoader<GuiceRole> loader = ServiceLoader.load(GuiceRole.class);
+
+		// Find additional guice roles from jar files using the Service Provider Interface
+		{
+			Iterator<GuiceRole> it = loader.iterator();
+			while (it.hasNext())
+				roles.add(it.next());
+		}
 
 		// Allow all GuiceRole implementations to add/remove/reorder configuration sources
 		for (GuiceRole role : roles)
@@ -165,8 +175,6 @@ public class GuiceBuilder
 
 			configs.addAll(loadConfigs(classloader, tempConfig));
 		}
-
-		// TODO find additional guice roles from config?
 
 		// Combine all configurations together
 		CompositeConfiguration config = combine(configs);
