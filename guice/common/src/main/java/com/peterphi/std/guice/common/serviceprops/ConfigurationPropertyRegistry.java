@@ -16,7 +16,6 @@ import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
 
-@Singleton
 public class ConfigurationPropertyRegistry
 {
 	private static final Logger log = Logger.getLogger(ConfigurationPropertyRegistry.class);

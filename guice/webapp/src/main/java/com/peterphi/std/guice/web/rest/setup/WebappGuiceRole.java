@@ -3,15 +3,20 @@ package com.peterphi.std.guice.web.rest.setup;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
+import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
+import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
+import com.peterphi.std.indexservice.rest.client.guice.IndexServiceModule;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.configuration.web.ServletConfiguration;
 import org.apache.commons.configuration.web.ServletContextConfiguration;
 import org.apache.commons.configuration.web.ServletFilterConfiguration;
+import org.apache.log4j.Logger;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
@@ -21,6 +26,8 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class WebappGuiceRole implements GuiceRole
 {
+	private static final Logger log = Logger.getLogger(WebappGuiceRole.class);
+
 	private final Configuration servletOrFilterConfig;
 	private final ServletContextModule contextModule;
 	private final ServletContext context;
@@ -47,7 +54,7 @@ public class WebappGuiceRole implements GuiceRole
 	{
 		PropertiesConfiguration props = new PropertiesConfiguration();
 
-		props.setProperty(GuiceBuilder.CONTEXT_NAME_PROPERTY, context.getContextPath());
+		props.setProperty(GuiceProperties.CONTEXT_NAME_PROPERTY, context.getContextPath());
 		props.setProperty("servlet:server-info", context.getServerInfo());
 
 		configs.add(0, new ServletContextConfiguration(context));
@@ -66,6 +73,28 @@ public class WebappGuiceRole implements GuiceRole
 	{
 		// Expose ServletContext and Filter/Servlet Config instances
 		modules.add(contextModule);
+
+
+		modules.add(new ServletScopingModule());
+		modules.add(new JAXRSJodaConverterModule());
+
+		if (!config.getBoolean(GuiceProperties.DISABLE_CORE_SERVICES, false))
+			modules.add(new CoreRestServicesModule());
+		else
+			log.info("REST Core Services disabled by config parameter");
+
+		// Enable the index service if the webapp wants to use it
+		final boolean indexServiceDisabled = config.getBoolean(GuiceProperties.DISABLE_INDEX_SERVICE, false);
+
+		final boolean hasIndexEndpoint = config.containsKey(GuiceProperties.INDEX_SERVICE_ENDPOINT);
+
+		if (hasIndexEndpoint && !indexServiceDisabled)
+		{
+			log.info("Enabling index service capabilities...");
+			modules.add(new IndexServiceModule());
+		}
+		else
+			log.info("Index service capabilities were not enabled");
 	}
 
 

@@ -3,7 +3,6 @@ package com.peterphi.std.guice.web.servlet;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
 import org.apache.log4j.MDC;
@@ -42,8 +41,6 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 			// If necessary set up Guice
 			if (!ready.get())
 			{
-				ApplicationContextNameRegistry.setContextName(getServletContext().getContextPath());
-
 				if (registry == null)
 					registry = new GuiceRegistry(new GuiceBuilder().withRole(new WebappGuiceRole(getServletConfig())));
 

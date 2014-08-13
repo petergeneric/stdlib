@@ -4,7 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
-import com.peterphi.std.guice.apploader.CoreGuiceRole;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
@@ -27,11 +27,6 @@ import java.util.concurrent.atomic.AtomicReference;
 public class GuiceBuilder
 {
 	private static final Logger log = Logger.getLogger(GuiceBuilder.class);
-
-	public static final String SETUP_PROPERTY = "guice.bootstrap.class";
-	public static final String OVERRIDE_FILE_PROPERY = "override-properties.file";
-	public static final String CONTEXT_NAME_PROPERTY = "servlet:context-name";
-	public static final String STAGE_PROPERTY = "mode";
 
 	private boolean autoLoadProperties = true;
 	private List<Configuration> configs = new ArrayList<>();
@@ -177,7 +172,7 @@ public class GuiceBuilder
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		final PropertiesConfiguration overrideFile = getPropertyFile(config, OVERRIDE_FILE_PROPERY);
+		final PropertiesConfiguration overrideFile = getPropertyFile(config, GuiceProperties.OVERRIDE_FILE_PROPERY);
 
 		if (overrideFile != null)
 			config.addConfiguration(overrideFile, true);
@@ -186,7 +181,7 @@ public class GuiceBuilder
 		if (staticSetup == null)
 		{
 			// Load the Setup property and load the Setup class
-			final Class<? extends GuiceSetup> setupClass = getClass(config, GuiceSetup.class, SETUP_PROPERTY);
+			final Class<? extends GuiceSetup> setupClass = getClass(config, GuiceSetup.class, GuiceProperties.SETUP_PROPERTY);
 
 			try
 			{
@@ -218,7 +213,7 @@ public class GuiceBuilder
 		AtomicReference<Injector> injectorRef = new AtomicReference<>();
 		List<Module> modules = new ArrayList<Module>();
 
-		final Stage stage = Stage.valueOf(config.getString(STAGE_PROPERTY, Stage.DEVELOPMENT.name()));
+		final Stage stage = Stage.valueOf(config.getString(GuiceProperties.STAGE_PROPERTY, Stage.DEVELOPMENT.name()));
 
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
@@ -285,7 +280,7 @@ public class GuiceBuilder
 		configFiles.add("environment.properties");
 		configFiles.add("service.properties");
 
-		final String contextName = tempConfig.getString(CONTEXT_NAME_PROPERTY, "").replaceAll("/", "");
+		final String contextName = tempConfig.getString(GuiceProperties.CONTEXT_NAME_PROPERTY, "").replaceAll("/", "");
 		if (!StringUtils.isEmpty(contextName))
 			configFiles.add("services/" + contextName + ".properties");
 
@@ -345,7 +340,7 @@ public class GuiceBuilder
 
 	private static PropertiesConfiguration getPropertyFile(final Configuration configuration, final String property)
 	{
-		final String overrideFileStr = configuration.getString(OVERRIDE_FILE_PROPERY);
+		final String overrideFileStr = configuration.getString(GuiceProperties.OVERRIDE_FILE_PROPERY);
 
 		if (!StringUtils.isEmpty(overrideFileStr))
 			return load(overrideFileStr);

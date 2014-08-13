@@ -9,7 +9,7 @@ import org.apache.log4j.Logger;
 
 /**
  * Responsible for creating fresh Injector instances. This is handled by reading <code>service.properties</code> and parsing the
- * {@link GuiceBuilder#SETUP_PROPERTY} property which should point at a
+ * {@link com.peterphi.std.guice.apploader.GuiceProperties#SETUP_PROPERTY} property which should point at a
  * {@link GuiceSetup} implementation.
  *
  * @deprecated use GuiceBuilder directly instead. This class will be removed in a future release.

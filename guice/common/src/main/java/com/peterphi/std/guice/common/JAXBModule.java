@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common;
 
 import com.google.inject.AbstractModule;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.configuration.Configuration;
 
@@ -21,7 +22,7 @@ public class JAXBModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		final boolean useMoxy = config.getBoolean("guice.jaxb.moxy", true);
+		final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 
 		bind(JAXBSerialiserFactory.class).toInstance(new JAXBSerialiserFactory(useMoxy));
 	}

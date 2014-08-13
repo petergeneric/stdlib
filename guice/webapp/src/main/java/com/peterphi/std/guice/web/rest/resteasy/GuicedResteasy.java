@@ -6,7 +6,6 @@ import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
-import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
@@ -144,19 +143,7 @@ class GuicedResteasy implements GuiceApplication
 			{
 				throw e; // let the caller handle this
 			}
-			catch (ServletException e)
-			{
-				tryHandleException(ctx, response, e); // try to pretty print, otherwise rethrow
-			}
-			catch (IOException e)
-			{
-				tryHandleException(ctx, response, e); // try to pretty print, otherwise rethrow
-			}
-			catch (RuntimeException e)
-			{
-				tryHandleException(ctx, response, e); // try to pretty print, otherwise rethrow
-			}
-			catch (Error e)
+			catch (ServletException | IOException | RuntimeException | Error e)
 			{
 				tryHandleException(ctx, response, e); // try to pretty print, otherwise rethrow
 			}
@@ -232,10 +219,8 @@ class GuicedResteasy implements GuiceApplication
 	 */
 	protected void configure(ServletContainerDispatcher dispatcher) throws ServletException
 	{
-		ApplicationContextNameRegistry.setContextName(context.getContextPath());
-
 		// Make sure we are registered with the Guice registry
-		registry.register(this,true);
+		registry.register(this, true);
 
 		// Configure the dispatcher
 		final Registry resteasyRegistry;

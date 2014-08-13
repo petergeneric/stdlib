@@ -10,9 +10,11 @@ import com.google.inject.name.Named;
 import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import org.apache.commons.configuration.Configuration;
 
 import java.lang.reflect.Field;
+import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ConfigurationPropertyRegistryModule extends AbstractModule
@@ -33,7 +35,38 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 	{
 		bind(ConfigurationPropertyRegistry.class).toInstance(registry);
 
+		// Bind all fields from GuiceProperties
+		bindAllGuiceProperties(registry, injectorRef);
+
 		bindListener(Matchers.any(), new NamedMemberExtractTypeListener(binder()));
+	}
+
+
+	/**
+	 * Create fake bindings for all the properties in {@link com.peterphi.std.guice.apploader.GuiceProperties}
+	 *
+	 * @param registry
+	 * @param injector
+	 */
+	private static void bindAllGuiceProperties(ConfigurationPropertyRegistry registry, AtomicReference<Injector> injector)
+	{
+		for (Field field : GuiceProperties.class.getFields())
+		{
+			if (Modifier.isStatic(field.getModifiers()) && Modifier.isPublic(field.getModifiers()))
+			{
+				try
+				{
+					// We are just assuming these properties have a string type
+					final String propertyName = String.valueOf(field.get(null));
+
+					registry.register(GuiceProperties.class, injector, propertyName, String.class, field);
+				}
+				catch (Exception e)
+				{
+					throw new IllegalArgumentException("Error trying to process GuiceProperties." + field.getName(), e);
+				}
+			}
+		}
 	}
 
 
