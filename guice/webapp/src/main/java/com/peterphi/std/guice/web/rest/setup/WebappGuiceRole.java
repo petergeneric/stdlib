@@ -54,8 +54,8 @@ public class WebappGuiceRole implements GuiceRole
 	{
 		PropertiesConfiguration props = new PropertiesConfiguration();
 
-		props.setProperty(GuiceProperties.CONTEXT_NAME_PROPERTY, context.getContextPath());
-		props.setProperty("servlet:server-info", context.getServerInfo());
+		props.setProperty(GuiceProperties.SERVLET_CONTEXT_NAME, context.getContextPath());
+		props.setProperty(GuiceProperties.CONTEXT_NAME, context.getContextPath().replaceAll("/", ""));
 
 		configs.add(0, new ServletContextConfiguration(context));
 		configs.add(0, this.servletOrFilterConfig);

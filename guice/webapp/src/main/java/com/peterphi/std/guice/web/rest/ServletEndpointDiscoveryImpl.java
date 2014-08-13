@@ -46,7 +46,7 @@ public class ServletEndpointDiscoveryImpl implements LocalEndpointDiscovery
 			else
 			{
 				// need to figure out webapp name
-				contextPath = config.getString(GuiceProperties.CONTEXT_NAME_PROPERTY);
+				contextPath = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME);
 			}
 
 			// Try to avoid double-slashing if the baseUri ends with /

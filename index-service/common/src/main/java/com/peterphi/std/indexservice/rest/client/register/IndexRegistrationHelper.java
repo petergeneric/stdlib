@@ -185,7 +185,7 @@ public class IndexRegistrationHelper
 
 		// Pass along the application context name if present
 		// If missing this will default to null (which is ok, application name is optional)
-		request.applicationName = configuration.getString(GuiceProperties.CONTEXT_NAME_PROPERTY);
+		request.applicationName = configuration.getString(GuiceProperties.SERVLET_CONTEXT_NAME);
 
 		// Add Local Services
 		for (Class<?> resource : IndexableServiceRegistry.getLocalServices())

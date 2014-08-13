@@ -21,7 +21,7 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 	public IndexServiceHeartbeater(ShutdownManager manager, IndexRegistrationHelper helper, Configuration configuration)
 	{
 		this.helper = helper;
-		this.contextName = configuration.getString(GuiceProperties.CONTEXT_NAME_PROPERTY);
+		this.contextName = configuration.getString(GuiceProperties.SERVLET_CONTEXT_NAME);
 
 		manager.register(this);
 

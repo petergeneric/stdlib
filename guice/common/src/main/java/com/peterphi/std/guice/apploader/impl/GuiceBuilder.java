@@ -280,7 +280,7 @@ public class GuiceBuilder
 		configFiles.add("environment.properties");
 		configFiles.add("service.properties");
 
-		final String contextName = tempConfig.getString(GuiceProperties.CONTEXT_NAME_PROPERTY, "").replaceAll("/", "");
+		final String contextName = tempConfig.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "").replaceAll("/", "");
 		if (!StringUtils.isEmpty(contextName))
 			configFiles.add("services/" + contextName + ".properties");
 

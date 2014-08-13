@@ -28,7 +28,10 @@ public class GuiceProperties
 	//
 
 	@Doc("The name of the local context; this is only present within a webapp environment, as such if it is required directly it should be read from Configuration (so null is permitted)")
-	public static final String CONTEXT_NAME_PROPERTY = "servlet:context-name";
+	public static final String SERVLET_CONTEXT_NAME = "servlet:context-name";
+
+	@Doc("The servlet context name without slashes")
+	public static final String CONTEXT_NAME = "context-name";
 
 	@Doc("The endpoint of the remote index service to register with")
 	public static final String INDEX_SERVICE_ENDPOINT = "service.IndexRestService.endpoint";
