@@ -57,6 +57,19 @@
 			<artifactId>guice-multibindings</artifactId>
 			<version>${guice.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.xbean</groupId>
+			<artifactId>xbean-finder</artifactId>
+			<version>3.18</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>5.0.3</version>
+		</dependency>
+
 	</dependencies>
 
 	<modules>

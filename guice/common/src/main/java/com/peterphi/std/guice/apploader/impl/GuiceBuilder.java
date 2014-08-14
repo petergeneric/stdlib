@@ -186,10 +186,7 @@ public class GuiceBuilder
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
-			System.out.println("config[some-string] = " + config.getString("some-string"));
-			System.out.println("override[some-string] = " + overrideFile.getString("some-string"));
 			config = combine(overrideFile, configs);
-			System.out.println("combined[some-string] = " + config.getString("some-string"));
 		}
 
 		final GuiceSetup setup;
