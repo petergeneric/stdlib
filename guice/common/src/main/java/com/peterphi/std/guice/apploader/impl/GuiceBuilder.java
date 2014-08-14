@@ -171,21 +171,25 @@ public class GuiceBuilder
 		if (autoLoadProperties)
 		{
 			// Create a temporary config (without any overrides) to use for loading other config files
-			CompositeConfiguration tempConfig = combine(configs);
+			CompositeConfiguration tempConfig = combine(null, configs);
 
 			configs.addAll(loadConfigs(classloader, tempConfig));
 		}
 
-		// Combine all configurations together
-		CompositeConfiguration config = combine(configs);
+		// Combine all configurations together (assuming no overrides)
+		CompositeConfiguration config = combine(null, configs);
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
 		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERY));
 
+		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
-			config.addConfiguration(overrideFile, true);
+			System.out.println("config[some-string] = " + config.getString("some-string"));
+			System.out.println("override[some-string] = " + overrideFile.getString("some-string"));
+			config = combine(overrideFile, configs);
+			System.out.println("combined[some-string] = " + config.getString("some-string"));
 		}
 
 		final GuiceSetup setup;
@@ -377,9 +381,12 @@ public class GuiceBuilder
 	}
 
 
-	private static CompositeConfiguration combine(List<Configuration> configs)
+	private static CompositeConfiguration combine(Configuration overrides, List<Configuration> configs)
 	{
-		CompositeConfiguration config = new CompositeConfiguration();
+		final CompositeConfiguration config = new CompositeConfiguration();
+
+		if (overrides != null)
+			config.addConfiguration(overrides, true);
 
 		for (int i = configs.size() - 1; i >= 0; i--)
 			config.addConfiguration(configs.get(i));
