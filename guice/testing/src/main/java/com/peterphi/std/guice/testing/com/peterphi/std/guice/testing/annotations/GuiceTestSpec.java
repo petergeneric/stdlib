@@ -8,9 +8,13 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
+/**
+ * Annotation that describes how to customise the test environment for a test run with {@link
+ * com.peterphi.std.guice.testing.GuiceRunner}
+ */
 @Target(ElementType.TYPE)
 @Retention(RetentionPolicy.RUNTIME)
-public @interface GuiceConfig
+public @interface GuiceTestSpec
 {
 	/**
 	 * The configuration resources to search for in the classpath

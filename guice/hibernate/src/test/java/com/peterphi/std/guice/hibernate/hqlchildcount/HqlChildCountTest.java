@@ -3,7 +3,7 @@ package com.peterphi.std.guice.hibernate.hqlchildcount;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.testing.GuiceRunner;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestSpec;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -12,7 +12,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceRunner.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
+@GuiceTestSpec(config = "hibernate-tests-in-memory-hsqldb.properties",
              classPackages = QEntity.class)
 public class HqlChildCountTest
 {

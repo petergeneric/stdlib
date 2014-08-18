@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
 import com.peterphi.std.guice.testing.GuiceRunner;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestSpec;
 import org.joda.time.LocalDate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -13,11 +13,10 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
 
 @RunWith(GuiceRunner.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = LocalDateUserTypeTest.class)
+@GuiceTestSpec(config = "hibernate-tests-in-memory-hsqldb.properties",
+               classPackages = LocalDateUserTypeTest.class)
 public class LocalDateUserTypeTest
 {
-
 	@Inject
 	HibernateDao<LocalDateEntity, Long> dao;
 
