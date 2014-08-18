@@ -39,17 +39,18 @@ public class DbunitModuleTest
 	@Before
 	public void setUp()
 	{
-		final Injector injector = new GuiceBuilder().withConfig("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties")
-		                                            .withSetup(new BasicSetup(new DbunitModule(), new HibernateModule()
-		                                            {
-			                                            @Override
-			                                            protected void configure(final Configuration config)
-			                                            {
-				                                            config.addAnnotatedClass(SimpleEntity.class);
-				                                            config.addAnnotatedClass(GroupEntity.class);
-			                                            }
-		                                            }))
-		                                            .build();
+		final Injector injector = GuiceBuilder.forTesting()
+		                                      .withConfig("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties")
+		                                      .withSetup(new BasicSetup(new DbunitModule(), new HibernateModule()
+		                                      {
+			                                      @Override
+			                                      protected void configure(final Configuration config)
+			                                      {
+				                                      config.addAnnotatedClass(SimpleEntity.class);
+				                                      config.addAnnotatedClass(GroupEntity.class);
+			                                      }
+		                                      }))
+		                                      .build();
 
 		injector.injectMembers(this);
 	}
