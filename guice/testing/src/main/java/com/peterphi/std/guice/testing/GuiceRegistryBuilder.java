@@ -6,16 +6,13 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.ClassScanner;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestConfig;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestModule;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestSpec;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestConfig;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestModule;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
-import org.junit.runners.BlockJUnit4ClassRunner;
 import org.junit.runners.model.FrameworkMethod;
-import org.junit.runners.model.InitializationError;
-import org.junit.runners.model.Statement;
 import org.junit.runners.model.TestClass;
 
 import java.util.ArrayList;
@@ -25,70 +22,20 @@ import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
-/**
- * A JUnit runner for the guice framework; test classes are generally annotated with {@link
- * com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestSpec} to indicate the desired guice
- * environment customisation
- */
-public class GuiceRunner extends BlockJUnit4ClassRunner
+class GuiceRegistryBuilder
 {
-	private final GuiceRegistry registry;
-
-
-	/**
-	 * Creates a BlockJUnit4ClassRunner to run {@code klass}
-	 *
-	 * @param klass
-	 *
-	 * @throws org.junit.runners.model.InitializationError
-	 * 		if the test class is malformed.
-	 */
-	public GuiceRunner(final Class<?> klass) throws InitializationError
+	public static GuiceRegistry createRegistry(TestClass clazz)
 	{
-		super(klass);
+		final GuiceConfig config = getGuiceConfig(clazz);
 
-		registry = createRegistry(getTestClass());
-	}
-
-
-	@Override
-	protected Object createTest() throws Exception
-	{
-		return registry.getInjector().getInstance(getTestClass().getJavaClass());
-	}
-
-
-	@Override
-	protected Statement methodBlock(FrameworkMethod method)
-	{
-		final Statement testLogic = super.methodBlock(method);
-
-		return new Statement()
-		{
-			@Override
-			public void evaluate() throws Throwable
-			{
-				testLogic.evaluate();
-
-				// Now shut down the guice environment
-				registry.stop();
-			}
-		};
-	}
-
-
-	GuiceRegistry createRegistry(TestClass clazz)
-	{
-		final GuiceTestSpec config = getGuiceConfig();
-
-		if (config.setup().length > 1)
+		if (config != null && config.setup().length > 1)
 			throw new IllegalArgumentException("May only have a maximum of 1 setup class for @GuiceConfig annotation!");
 
 		return createRegistry(config, clazz);
 	}
 
 
-	static GuiceRegistry createRegistry(GuiceTestSpec config, TestClass clazz)
+	private static GuiceRegistry createRegistry(GuiceConfig config, TestClass clazz)
 	{
 		GuiceRegistry registry = new GuiceRegistry();
 
@@ -145,7 +92,7 @@ public class GuiceRunner extends BlockJUnit4ClassRunner
 		{
 			validateGuiceTestConfigMethods(clazz);
 
-			for (Object src : clazz.getAnnotatedMethodValues(null, GuiceTestConfig.class, Object.class))
+			for (Object src : clazz.getAnnotatedMethodValues(null, TestConfig.class, Object.class))
 			{
 				if (src instanceof Configuration)
 					builder.withConfig((Configuration) src);
@@ -165,7 +112,7 @@ public class GuiceRunner extends BlockJUnit4ClassRunner
 		{
 			validateGuiceTestModuleMethods(clazz);
 
-			builder.withSetup(new BasicSetup(clazz.getAnnotatedMethodValues(null, GuiceTestModule.class, Module.class)));
+			builder.withSetup(new BasicSetup(clazz.getAnnotatedMethodValues(null, TestModule.class, Module.class)));
 		}
 
 		return registry;
@@ -177,7 +124,7 @@ public class GuiceRunner extends BlockJUnit4ClassRunner
 		List<Class<?>> classes = Arrays.asList(Properties.class, Configuration.class, PropertyFile.class);
 
 		// Add local method config sources:
-		for (FrameworkMethod method : clazz.getAnnotatedMethods(GuiceTestConfig.class))
+		for (FrameworkMethod method : clazz.getAnnotatedMethods(TestConfig.class))
 		{
 			try
 			{
@@ -200,7 +147,7 @@ public class GuiceRunner extends BlockJUnit4ClassRunner
 
 	private static void validateGuiceTestModuleMethods(final TestClass clazz)
 	{
-		for (FrameworkMethod method : clazz.getAnnotatedMethods(GuiceTestModule.class))
+		for (FrameworkMethod method : clazz.getAnnotatedMethods(TestModule.class))
 		{
 			try
 			{
@@ -221,8 +168,8 @@ public class GuiceRunner extends BlockJUnit4ClassRunner
 	}
 
 
-	private GuiceTestSpec getGuiceConfig()
+	private static GuiceConfig getGuiceConfig(TestClass clazz)
 	{
-		return getTestClass().getJavaClass().getAnnotation(GuiceTestSpec.class);
+		return clazz.getJavaClass().getAnnotation(GuiceConfig.class);
 	}
 }

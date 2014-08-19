@@ -3,8 +3,8 @@ package com.peterphi.std.guice.hibernate.usertype.datetime;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
-import com.peterphi.std.guice.testing.GuiceRunner;
-import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceTestSpec;
+import com.peterphi.std.guice.testing.GuiceUnit;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.joda.time.DateTime;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -16,8 +16,8 @@ import static org.junit.Assert.assertTrue;
 /**
  * Test that a DateTime field marked with a Version annotation gets a new value when an update occurs
  */
-@RunWith(GuiceRunner.class)
-@GuiceTestSpec(config = "hibernate-tests-in-memory-hsqldb.properties",
+@RunWith(GuiceUnit.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
              classPackages = DateTimeUserTypeVersionFieldTest.class)
 public class DateTimeUserTypeVersionFieldTest
 {

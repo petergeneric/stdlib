@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.common.serviceprops.typed;
+package com.peterphi.std.guice.common.stringparsing;
 
 import com.peterphi.std.threading.Timeout;
 
