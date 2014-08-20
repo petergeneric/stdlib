@@ -26,6 +26,9 @@ public class GuiceProperties
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
 	public static final String MOXY_ENABLED = "guice.jaxb.moxy";
 
+	@Doc("Set to true when a guice environment is constructed as part of a GuiceUnit test; this allows roles and modules to respond appropriately to a test environment")
+	public static final String UNIT_TEST = "unit-test";
+
 	//
 	// Guice Webapp Properties
 	//
@@ -72,6 +75,4 @@ public class GuiceProperties
 	//
 	@Doc("If true then when the guice thymeleaf jar is loaded it'll auto-register thymeleaf as the default Templater (default true)")
 	public static final String ROLE_THYMELEAF_AUTO = "role.thymeleaf.auto";
-
-
 }

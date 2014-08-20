@@ -2,6 +2,7 @@ package com.peterphi.std.guice.testing;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Key;
+import com.google.inject.Scopes;
 import com.google.inject.name.Names;
 
 /**
@@ -17,7 +18,7 @@ public abstract class AbstractTestModule extends AbstractModule
 	 */
 	protected <T> void mock(Class<T> clazz)
 	{
-		bind(clazz).toProvider(new MockProvider<T>(clazz, null));
+		bind(clazz).toProvider(new MockProvider<T>(clazz, null)).in(Scopes.SINGLETON);
 	}
 
 
@@ -52,6 +53,6 @@ public abstract class AbstractTestModule extends AbstractModule
 		if (mockName == null)
 			mockName = "Guice binding " + key;
 
-		bind(key).toProvider(new MockProvider<T>(clazz, mockName));
+		bind(key).toProvider(new MockProvider<T>(clazz, mockName)).in(Scopes.SINGLETON);
 	}
 }

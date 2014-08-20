@@ -1,9 +1,8 @@
-package com.peterphi.std.guice.web.rest.setup;
+package com.peterphi.std.guice.testing;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
-import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
@@ -11,11 +10,30 @@ import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
-public class AutoJAXRSBindingGuiceRole implements GuiceRole
+/**
+ * A special GuiceRole that exists just to add a collection of modules into the constructed environment
+ */
+class ModuleAddingGuiceRole implements GuiceRole
 {
+	private final List<Module> modules;
+
+
+	public ModuleAddingGuiceRole(final List<Module> modules)
+	{
+		this.modules = modules;
+	}
+
+
+	public ModuleAddingGuiceRole(Module... modules)
+	{
+		this(Arrays.asList(modules));
+	}
+
+
 	@Override
 	public void adjustConfigurations(final List<Configuration> configs)
 	{
@@ -32,14 +50,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef)
 	{
-		// TODO remove HACK Don't run if we're within a unit test (this is an ugly hack...)
-		if (!config.getBoolean(GuiceProperties.UNIT_TEST, false))
-		{
-			if (scanner != null && config.getBoolean(GuiceProperties.ROLE_JAXRS_SERVER_AUTO, true))
-			{
-				modules.add(new JAXRSAutoRegisterServicesModule(scanner));
-			}
-		}
+		modules.addAll(this.modules);
 	}
 
 

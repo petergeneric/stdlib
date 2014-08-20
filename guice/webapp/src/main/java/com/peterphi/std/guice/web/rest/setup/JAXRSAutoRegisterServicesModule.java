@@ -53,17 +53,18 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 	{
 		if (iface.isAnnotationPresent(ImplementedBy.class))
 		{
+			// Guice knows how to bind this already so no need to search for an implementation
 			RestResourceRegistry.register(iface);
-			return; // Guice knows how to bind this already so no need to search
 		}
 		else
 		{
 			// Search for implementations
-			List<Class<? extends T>> implementations = scanner.getExtendingClasses(iface);
-
+			final List<Class<? extends T>> implementations = scanner.getExtendingClasses(iface);
 
 			if (implementations.size() == 1)
 			{
+				RestResourceRegistry.register(iface);
+
 				bind(iface).to(implementations.get(0));
 			}
 			else if (implementations.size() == 0)

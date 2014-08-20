@@ -2,16 +2,19 @@ package com.peterphi.std.guice.testing;
 
 import com.google.inject.Module;
 import com.peterphi.std.guice.apploader.BasicSetup;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.Automock;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestConfig;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestModule;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
+import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
 
@@ -103,6 +106,28 @@ class GuiceRegistryBuilder
 			}
 		}
 
+		// Add local method module sources
+		{
+			validateGuiceTestModuleMethods(clazz);
+
+			builder.withRole(new ModuleAddingGuiceRole(clazz.getAnnotatedMethodValues(null, TestModule.class, Module.class)));
+		}
+
+		// Auto-detect @Automock annotated fields in the test and create mocks for them
+		{
+			List<FrameworkField> fields = clazz.getAnnotatedFields(Automock.class);
+
+			if (fields.size() > 0)
+				builder.withRole(new ModuleAddingGuiceRole(new AutomockAnnotatedMockModule(clazz.getJavaClass(), fields)));
+		}
+
+		// Make sure we set the unit test property so roles are aware they're running in a unit test (e.g. so they don't auto-register REST services)
+		{
+			PropertyFile props = new PropertyFile();
+			props.set(GuiceProperties.UNIT_TEST, "true");
+			builder.withConfig(props);
+		}
+
 		// Add the Setup class, or if none is specified then add local modules:
 		if (config != null && config.setup().length > 0)
 		{
@@ -110,9 +135,7 @@ class GuiceRegistryBuilder
 		}
 		else
 		{
-			validateGuiceTestModuleMethods(clazz);
-
-			builder.withSetup(new BasicSetup(clazz.getAnnotatedMethodValues(null, TestModule.class, Module.class)));
+			builder.withSetup(new BasicSetup());
 		}
 
 		return registry;
