@@ -49,12 +49,21 @@ class GuiceFactory
 		{
 			Iterator<GuiceRole> it = loader.iterator();
 			while (it.hasNext())
-				roles.add(it.next());
+			{
+				final GuiceRole role = it.next();
+
+				log.debug("Discovered guice role: " + role);
+
+				roles.add(role);
+			}
 		}
 
 		// Allow all GuiceRole implementations to add/remove/reorder configuration sources
 		for (GuiceRole role : roles)
+		{
+			log.debug("Adding requested guice role: " + role);
 			role.adjustConfigurations(configs);
+		}
 
 		// Load all the core property files?
 		if (autoLoadProperties)
@@ -75,6 +84,7 @@ class GuiceFactory
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
+			log.debug("Applying overrides: " + overrideFile.getFile());
 			config = combine(overrideFile, configs);
 		}
 
@@ -90,6 +100,8 @@ class GuiceFactory
 					throw new IllegalArgumentException("Could not find a setup class!");
 
 				setup = setupClass.newInstance();
+
+				log.debug("Constructed GuiceSetup: " + setupClass);
 			}
 			catch (InstantiationException | IllegalAccessException e)
 			{
@@ -98,6 +110,7 @@ class GuiceFactory
 		}
 		else
 		{
+			log.debug("Using static GuiceSetup: " + staticSetup);
 			setup = staticSetup;
 		}
 
@@ -142,6 +155,9 @@ class GuiceFactory
 
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
+
+			if (log.isTraceEnabled())
+				log.trace("Creating Injector with modules: " + modules);
 
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
