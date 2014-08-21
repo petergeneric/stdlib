@@ -26,8 +26,7 @@ public class WebappStatsModule extends AbstractModule
 	@Singleton
 	public HealthCheckRegistry produceHealthCheckRegistry() {
 		log.info("Starting HealthCheckRegistry");
-		HealthCheckRegistry healthChecks = new HealthCheckRegistry();
-		return healthChecks;
+		return new HealthCheckRegistry();
 	}
 
 }

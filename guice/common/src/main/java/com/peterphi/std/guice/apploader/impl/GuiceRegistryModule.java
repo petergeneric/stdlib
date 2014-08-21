@@ -1,7 +1,6 @@
 package com.peterphi.std.guice.apploader.impl;
 
 import com.google.inject.AbstractModule;
-import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 
 class GuiceRegistryModule extends AbstractModule
 {

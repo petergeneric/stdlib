@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common;
 
 import com.google.common.base.Predicate;
+import org.apache.log4j.Logger;
 import org.apache.xbean.finder.AnnotationFinder;
 import org.apache.xbean.finder.archive.Archive;
 import org.apache.xbean.finder.archive.CompositeArchive;
@@ -22,6 +23,8 @@ import java.util.Set;
 
 public class ClassScanner
 {
+	private static final Logger log = Logger.getLogger(ClassScanner.class);
+
 	private final AnnotationFinder finder;
 
 
@@ -57,7 +60,7 @@ public class ClassScanner
 	 */
 	public List<Class<?>> getClasses(final String pkg, boolean recursive)
 	{
-		return getClasses(pkg, recursive);
+		return getClasses(pkg, recursive, null);
 	}
 
 
@@ -88,6 +91,30 @@ public class ClassScanner
 	public List<Class<?>> getAnnotatedClasses(Class<? extends Annotation> annotation)
 	{
 		return getAnnotatedClasses(annotation, null);
+	}
+
+
+	public List<Class<?>> getInheritedAnnotatedClasses(Class<? extends Annotation> annotation, Predicate<Class<?>> predicate)
+	{
+		return filter(finder.findInheritedAnnotatedClasses(annotation), predicate);
+	}
+
+
+	public List<Class<?>> getInheritedAnnotatedClasses(Class<? extends Annotation> annotation)
+	{
+		return getInheritedAnnotatedClasses(annotation, null);
+	}
+
+
+	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz)
+	{
+		return getExtendingClasses(clazz, null);
+	}
+
+
+	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
+	{
+		return filter(finder.findImplementations(clazz), predicate);
 	}
 
 
@@ -161,6 +188,8 @@ public class ClassScanner
 				{
 					final URL url = urls.nextElement();
 
+					log.info("Found source: " + url);
+
 					if (url.getProtocol() != null && (url.getProtocol().equals("zip") || url.getProtocol().equals("jar")))
 						archives.add(new FilteredArchive(new JarArchive(classloader, url), new PrefixFilter(pkg)));
 					else
@@ -198,6 +227,19 @@ public class ClassScanner
 			public boolean apply(final Class<?> input)
 			{
 				return packagePredicate.apply(input.getPackage().getName());
+			}
+		};
+	}
+
+
+	public static Predicate<Class<?>> interfaceClass()
+	{
+		return new Predicate<Class<?>>()
+		{
+			@Override
+			public boolean apply(final Class<?> input)
+			{
+				return input.isInterface();
 			}
 		};
 	}

@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
+import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.JAXBModule;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
@@ -14,12 +15,16 @@ import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 class CoreGuiceRole implements GuiceRole
 {
+	private static final Logger log = Logger.getLogger(CoreGuiceRole.class);
+
+
 	@Override
 	public void adjustConfigurations(final List<Configuration> configs)
 	{
@@ -29,6 +34,7 @@ class CoreGuiceRole implements GuiceRole
 
 	@Override
 	public void register(final Stage stage,
+	                     final ClassScanner scanner,
 	                     final CompositeConfiguration config,
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
@@ -46,6 +52,7 @@ class CoreGuiceRole implements GuiceRole
 
 	@Override
 	public void injectorCreated(final Stage stage,
+	                            final ClassScanner scanner,
 	                            final CompositeConfiguration config,
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,

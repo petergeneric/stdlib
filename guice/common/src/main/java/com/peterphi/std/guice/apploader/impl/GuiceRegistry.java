@@ -36,6 +36,7 @@ public class GuiceRegistry
 	public GuiceRegistry(final GuiceBuilder builder)
 	{
 		this.builder = builder;
+		builder.withRegistry(this);
 	}
 
 

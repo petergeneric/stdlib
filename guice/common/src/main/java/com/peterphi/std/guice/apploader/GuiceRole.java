@@ -3,6 +3,7 @@ package com.peterphi.std.guice.apploader;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.common.ClassScanner;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -29,11 +30,13 @@ public interface GuiceRole
 	 * Provides an opportunity to influence modules (adding, removing, reordering) being loaded. Called before the GuiceSetup
 	 * class has loaded its modules.
 	 * <p/>
-	 * Called before {@link #injectorCreated(com.google.inject.Stage, org.apache.commons.configuration.CompositeConfiguration,
-	 * org.apache.commons.configuration.PropertiesConfiguration, GuiceSetup, java.util.List,
-	 * java.util.concurrent.atomic.AtomicReference)}
+	 * Called before {@link #injectorCreated(com.google.inject.Stage, com.peterphi.std.guice.common.ClassScanner,
+	 * org.apache.commons.configuration.CompositeConfiguration, org.apache.commons.configuration.PropertiesConfiguration,
+	 * GuiceSetup, java.util.List, java.util.concurrent.atomic.AtomicReference)}
 	 *
 	 * @param stage
+	 * @param scanner
+	 * 		(optional) a classpath scanner for the user application classes
 	 * @param config
 	 * @param overrides
 	 * @param setup
@@ -41,6 +44,7 @@ public interface GuiceRole
 	 * @param injectorRef
 	 */
 	public void register(Stage stage,
+	                     ClassScanner scanner,
 	                     CompositeConfiguration config,
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,
@@ -51,6 +55,8 @@ public interface GuiceRole
 	 * Called once the Injector has been created
 	 *
 	 * @param stage
+	 * @param scanner
+	 * 		(optional) a classpath scanner for the user application classes
 	 * @param config
 	 * @param overrides
 	 * @param setup
@@ -60,6 +66,7 @@ public interface GuiceRole
 	 * 		the reference to the injector, must contain a non-null value
 	 */
 	void injectorCreated(Stage stage,
+	                     ClassScanner scanner,
 	                     CompositeConfiguration config,
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,

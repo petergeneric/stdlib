@@ -114,7 +114,7 @@ public class SampleCountUserType implements UserType
 		if (value == null)
 			return null;
 		else
-			return ((SampleCount) value).toVidispineString();
+			return ((SampleCount) value).toString();
 	}
 
 	@Override
@@ -123,7 +123,7 @@ public class SampleCountUserType implements UserType
 		if (cached == null)
 			return null;
 		else
-			return SampleCount.parseVidispine((String) cached);
+			return SampleCount.valueOf((String) cached);
 	}
 
 	@Override

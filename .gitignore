@@ -3,7 +3,6 @@
 .metadata
 .settings
 target/
-META-INF/
 .DS_Store
 *.ipr
 *.iws
