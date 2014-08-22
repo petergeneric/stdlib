@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.role;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -30,12 +31,12 @@ public class HibernateAutoGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,final MetricRegistry metrics)
 	{
 		// Unless the user has disabled automatic hibernate setup...
 		if (scanner != null && config.getBoolean(GuiceProperties.ROLE_HIBERNATE_AUTO, true))
 		{
-			modules.add(new AutoHibernateModule(scanner));
+			modules.add(new AutoHibernateModule(scanner, metrics));
 		}
 	}
 
@@ -47,7 +48,7 @@ public class HibernateAutoGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,final MetricRegistry metrics)
 	{
 
 	}

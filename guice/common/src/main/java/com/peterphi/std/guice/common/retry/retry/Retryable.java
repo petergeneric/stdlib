@@ -1,4 +1,4 @@
-package com.peterphi.std.threading.retry;
+package com.peterphi.std.guice.common.retry.retry;
 
 /**
  *

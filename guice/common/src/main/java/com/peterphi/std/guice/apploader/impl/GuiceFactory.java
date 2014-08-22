@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.apploader.impl;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
@@ -8,6 +9,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -144,6 +146,9 @@ class GuiceFactory
 
 		try
 		{
+			// TODO come up with a nicer way of handling this
+			final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
+
 			modules.add(shutdown);
 
 			if (registry != null)
@@ -151,7 +156,7 @@ class GuiceFactory
 
 			// Initialise all the roles
 			for (GuiceRole role : roles)
-				role.register(stage, scanner, config, override, setup, modules, injectorRef);
+				role.register(stage, scanner, config, override, setup, modules, injectorRef, metricRegistry);
 
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
@@ -162,7 +167,7 @@ class GuiceFactory
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
 			for (GuiceRole role : roles)
-				role.injectorCreated(stage, scanner, config, override, setup, modules, injectorRef);
+				role.injectorCreated(stage, scanner, config, override, setup, modules, injectorRef, metricRegistry);
 
 			setup.injectorCreated(injector);
 

@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.common.retry.module;
 
-import com.peterphi.std.threading.retry.Retryable;
+import com.peterphi.std.guice.common.retry.retry.Retryable;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 

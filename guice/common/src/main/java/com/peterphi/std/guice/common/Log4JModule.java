@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.common;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.log4j.InstrumentedAppender;
 import com.google.inject.AbstractModule;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
@@ -23,10 +25,12 @@ public class Log4JModule extends AbstractModule
 
 	private Configuration guiceConfig;
 	private String configFile;
+	private MetricRegistry registry;
 
 
-	public Log4JModule(Configuration configuration)
+	public Log4JModule(Configuration configuration, MetricRegistry registry)
 	{
+		this.registry = registry;
 		this.guiceConfig = configuration;
 		configFile = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
 	}
@@ -63,5 +67,10 @@ public class Log4JModule extends AbstractModule
 		{
 			log.debug("Leaving logging subsystem to initialise itself");
 		}
+
+		// Register a custom appender for metrics gathering
+		InstrumentedAppender log4jmetrics = new InstrumentedAppender(registry);
+		log4jmetrics.activateOptions();
+		LogManager.getRootLogger().addAppender(log4jmetrics);
 	}
 }

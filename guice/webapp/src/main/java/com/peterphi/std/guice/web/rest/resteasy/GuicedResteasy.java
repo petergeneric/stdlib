@@ -1,9 +1,13 @@
 package com.peterphi.std.guice.web.rest.resteasy;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
@@ -55,6 +59,10 @@ class GuicedResteasy implements GuiceApplication
 
 	@Inject
 	private Injector injector;
+
+	private Timer httpCalls;
+	private Meter httpExceptions;
+	private Meter httpNotFoundExceptions;
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -123,6 +131,11 @@ class GuicedResteasy implements GuiceApplication
 	{
 		final HttpCallContext ctx = HttpCallContext.set(request, response, context);
 
+		Timer.Context timer = null;
+
+		if (httpCalls != null)
+			timer = httpCalls.time();
+
 		try
 		{
 			// Share the call id to log4j
@@ -141,15 +154,24 @@ class GuicedResteasy implements GuiceApplication
 			}
 			catch (NotFoundException e)
 			{
+				if (httpNotFoundExceptions != null)
+					httpNotFoundExceptions.mark();
+
 				throw e; // let the caller handle this
 			}
 			catch (ServletException | IOException | RuntimeException | Error e)
 			{
+				if (httpExceptions != null)
+					httpExceptions.mark();
+
 				tryHandleException(ctx, response, e); // try to pretty print, otherwise rethrow
 			}
 		}
 		finally
 		{
+			if (timer != null)
+				timer.stop();
+
 			HttpCallContext.clear();
 			MDC.clear();
 		}
@@ -280,6 +302,11 @@ class GuicedResteasy implements GuiceApplication
 	{
 		// Called when guice config is complete
 		log.trace("Guice injector online");
+
+		final MetricRegistry registry = injector.getInstance(MetricRegistry.class);
+		this.httpNotFoundExceptions = registry.meter(GuiceMetricNames.HTTP_404_EXCEPTIONS_METER);
+		this.httpExceptions = registry.meter(GuiceMetricNames.HTTP_EXCEPTIONS_METER);
+		this.httpCalls = registry.timer(GuiceMetricNames.HTTP_CALLS_TIMER);
 	}
 
 

@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.module;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
@@ -29,6 +30,15 @@ public abstract class HibernateModule extends AbstractModule
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
 
 
+	public HibernateModule(final MetricRegistry registry)
+	{
+		this.registry = registry;
+	}
+
+
+	private final MetricRegistry registry;
+
+
 	@Override
 	protected void configure()
 	{
@@ -38,7 +48,7 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class));
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry);
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);

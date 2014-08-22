@@ -1,11 +1,11 @@
 package com.peterphi.std.guice.metrics.rest.impl;
 
+import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
 import org.apache.log4j.Logger;
 
@@ -18,20 +18,21 @@ public class MetricsRestServiceImpl implements MetricsRestService
 {
 	private static final Logger log = Logger.getLogger(MetricsRestServiceImpl.class);
 
-	private final StatsRegistry stats;
+	private final MetricRegistry registry;
 	private transient ObjectMapper mapper;
 
+
 	@Inject
-	public MetricsRestServiceImpl(StatsRegistry stats)
+	public MetricsRestServiceImpl(MetricRegistry registry)
 	{
-		this.stats = stats;
+		this.registry = registry;
+
 		final TimeUnit rateUnit = TimeUnit.SECONDS;
 		final TimeUnit durationUnit = TimeUnit.SECONDS;
 		final boolean showSamples = true;
-		this.mapper = new ObjectMapper().registerModule(new MetricsModule(rateUnit,
-		                                                                  durationUnit,
-		                                                                  showSamples));
+		this.mapper = new ObjectMapper().registerModule(new MetricsModule(rateUnit, durationUnit, showSamples));
 	}
+
 
 	@Override
 	public String get()
@@ -46,11 +47,12 @@ public class MetricsRestServiceImpl implements MetricsRestService
 			{
 				ow = mapper.writerWithDefaultPrettyPrinter();
 			}
-			else{
-				ow =  mapper.writer();
+			else
+			{
+				ow = mapper.writer();
 			}
 
-			ow.writeValue(sw, stats.getRegistry());
+			ow.writeValue(sw, registry);
 			return sw.toString();
 		}
 		catch (Exception e)
@@ -58,5 +60,4 @@ public class MetricsRestServiceImpl implements MetricsRestService
 			throw new RuntimeException(e);
 		}
 	}
-
 }

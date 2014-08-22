@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.apploader.impl;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -9,6 +10,7 @@ import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.JAXBModule;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
+import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistryModule;
 import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
@@ -39,14 +41,16 @@ class CoreGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		modules.add(new ServicePropertiesModule(config, overrides));
 		modules.add(new ConfigurationPropertyRegistryModule(config, overrides, injectorRef));
 		modules.add(new GuiceLifecycleModule());
-		modules.add(new RetryModule());
+		modules.add(new CoreMetricsModule(metrics));
+		modules.add(new RetryModule(metrics));
 		modules.add(new JAXBModule(config));
-		modules.add(new Log4JModule(config));
+		modules.add(new Log4JModule(config, metrics));
 	}
 
 
@@ -57,7 +61,8 @@ class CoreGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,
+	                            MetricRegistry metrics)
 	{
 
 	}

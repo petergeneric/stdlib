@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.setup;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -71,7 +72,8 @@ public class WebappGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		// Expose ServletContext and Filter/Servlet Config instances
 		modules.add(contextModule);
@@ -107,7 +109,8 @@ public class WebappGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,
+	                            final MetricRegistry metrics)
 	{
 
 	}

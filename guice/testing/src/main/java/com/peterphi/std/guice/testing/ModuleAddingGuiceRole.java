@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.testing;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -48,7 +49,8 @@ class ModuleAddingGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		modules.addAll(this.modules);
 	}
@@ -61,7 +63,8 @@ class ModuleAddingGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,
+	                            final MetricRegistry metrics)
 	{
 
 	}

@@ -1,6 +1,7 @@
-package com.peterphi.std.threading.retry;
+package com.peterphi.std.guice.common.retry.retry;
 
-import com.peterphi.std.threading.retry.backoff.NoBackoffStrategy;
+import com.codahale.metrics.MetricRegistry;
+import com.peterphi.std.guice.common.retry.retry.backoff.NoBackoffStrategy;
 import org.junit.Test;
 
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,10 +19,15 @@ public class RetryManagerTest
 	@Test
 	public void testMaxAttempts() throws Exception
 	{
+		final MetricRegistry registry = new MetricRegistry();
+
 		final AtomicInteger val = new AtomicInteger();
 
 		// Try at most 3 times
-		RetryManager mgr = new RetryManager(new NoBackoffStrategy(), 3);
+		RetryManager mgr = new RetryManager(new NoBackoffStrategy(),
+		                                    3,
+		                                    registry.timer("dummy-timer"),
+		                                    registry.meter("dummy-meter"));
 
 		final Exception ex = new Exception("boom");
 
@@ -35,6 +41,7 @@ public class RetryManagerTest
 
 					throw ex;
 				}
+
 
 				public boolean shouldRetry(int attempt, Throwable e)
 				{

@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernatetest;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.Provider;
@@ -39,9 +40,11 @@ public class DbunitModuleTest
 	@Before
 	public void setUp()
 	{
+		final MetricRegistry metrics = new MetricRegistry();
+
 		final Injector injector = GuiceBuilder.forTesting()
 		                                      .withConfig("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties")
-		                                      .withSetup(new BasicSetup(new DbunitModule(), new HibernateModule()
+		                                      .withSetup(new BasicSetup(new DbunitModule(), new HibernateModule(metrics)
 		                                      {
 			                                      @Override
 			                                      protected void configure(final Configuration config)

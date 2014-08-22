@@ -8,7 +8,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.std.guice.common.metrics.StatsRegistry;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
@@ -39,10 +38,8 @@ public class MyTestServiceImpl implements MyTestService
 
 
 	@Inject
-	public MyTestServiceImpl(StatsRegistry stats)
+	public MyTestServiceImpl(MetricRegistry registry)
 	{
-		final MetricRegistry registry = stats.getRegistry();
-
 		this.meter = registry.meter(MetricRegistry.name(getClass(), "index-page", "calls"));
 		this.counter = registry.counter(MetricRegistry.name(getClass(), "failures"));
 		this.thymeleafRenderTime = registry.histogram(MetricRegistry.name(getClass(), "thymeleaf.render-time"));

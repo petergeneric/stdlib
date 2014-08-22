@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.apploader;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -42,6 +43,8 @@ public interface GuiceRole
 	 * @param setup
 	 * @param modules
 	 * @param injectorRef
+	 * @param metrics
+	 * 		the MetricsRegistry for environment-wide metrics
 	 */
 	public void register(Stage stage,
 	                     ClassScanner scanner,
@@ -49,7 +52,8 @@ public interface GuiceRole
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,
 	                     List<Module> modules,
-	                     AtomicReference<Injector> injectorRef);
+	                     AtomicReference<Injector> injectorRef,
+	                     MetricRegistry metrics);
 
 	/**
 	 * Called once the Injector has been created
@@ -64,6 +68,8 @@ public interface GuiceRole
 	 * 		the final list of modules in use
 	 * @param injectorRef
 	 * 		the reference to the injector, must contain a non-null value
+	 * @param metrics
+	 * 		the MetricsRegistry for environment-wide metrics
 	 */
 	void injectorCreated(Stage stage,
 	                     ClassScanner scanner,
@@ -71,5 +77,6 @@ public interface GuiceRole
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,
 	                     List<Module> modules,
-	                     AtomicReference<Injector> injectorRef);
+	                     AtomicReference<Injector> injectorRef,
+	                     MetricRegistry metrics);
 }

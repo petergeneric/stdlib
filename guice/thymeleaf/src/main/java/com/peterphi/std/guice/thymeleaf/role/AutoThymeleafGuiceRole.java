@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.thymeleaf.role;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -31,7 +32,8 @@ public class AutoThymeleafGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		if (config.getBoolean(GuiceProperties.ROLE_THYMELEAF_AUTO, true))
 		{
@@ -47,7 +49,8 @@ public class AutoThymeleafGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,
+	                            final MetricRegistry metrics)
 	{
 
 	}

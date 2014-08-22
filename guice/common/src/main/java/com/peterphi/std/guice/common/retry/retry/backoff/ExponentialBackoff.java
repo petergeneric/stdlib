@@ -1,4 +1,4 @@
-package com.peterphi.std.threading.retry.backoff;
+package com.peterphi.std.guice.common.retry.retry.backoff;
 
 import com.peterphi.std.threading.Timeout;
 

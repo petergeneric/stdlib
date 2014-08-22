@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.setup;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
@@ -30,7 +31,8 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		// TODO remove HACK Don't run if we're within a unit test (this is an ugly hack...)
 		if (!config.getBoolean(GuiceProperties.UNIT_TEST, false))
@@ -50,7 +52,8 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef)
+	                            final AtomicReference<Injector> injectorRef,
+	                            final MetricRegistry metrics)
 	{
 
 	}

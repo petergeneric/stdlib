@@ -1,7 +1,11 @@
 package com.peterphi.std.guice.thymeleaf;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.apache.commons.configuration.Configuration;
@@ -20,9 +24,11 @@ public class ThymeleafTemplater implements Templater
 	private final TemplateEngine engine;
 	private final Configuration configuration;
 
+	private final Timer calls;
+	private final Meter failures;
 
 	@Inject
-	public ThymeleafTemplater(final TemplateEngine engine, final Configuration configuration)
+	public ThymeleafTemplater(final TemplateEngine engine, final Configuration configuration, MetricRegistry metrics)
 	{
 		if (engine.getTemplateResolvers().isEmpty())
 		{
@@ -31,6 +37,9 @@ public class ThymeleafTemplater implements Templater
 
 		this.engine = engine;
 		this.configuration = configuration;
+
+		this.calls = metrics.timer(GuiceMetricNames.THYMELEAF_CALL_TIMER);
+		this.failures = metrics.meter(GuiceMetricNames.THYMELEAF_RENDER_EXCEPTION_METER);
 	}
 
 
@@ -41,7 +50,7 @@ public class ThymeleafTemplater implements Templater
 		// Expose the service configuration
 		ctx.getVariables().put("config", configuration);
 
-		return new ThymeleafCall(engine, ctx, name);
+		return new ThymeleafCall(engine, ctx, name, calls, failures);
 	}
 
 

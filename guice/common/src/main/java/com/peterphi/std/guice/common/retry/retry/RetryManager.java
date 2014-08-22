@@ -1,6 +1,8 @@
-package com.peterphi.std.threading.retry;
+package com.peterphi.std.guice.common.retry.retry;
 
-import com.peterphi.std.threading.retry.backoff.BackoffStrategy;
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
+import com.peterphi.std.guice.common.retry.retry.backoff.BackoffStrategy;
 import org.apache.log4j.Logger;
 
 public class RetryManager
@@ -10,8 +12,15 @@ public class RetryManager
 	private final BackoffStrategy backoff;
 	private final int maxAttempts;
 
-	public RetryManager(BackoffStrategy strategy, int maxAttempts)
+	private final Timer attempts;
+	private final Meter attemptFailures;
+
+
+	public RetryManager(BackoffStrategy strategy, int maxAttempts, final Timer attempts, final Meter attemptFailures)
 	{
+		this.attempts = attempts;
+		this.attemptFailures = attemptFailures;
+
 		if (strategy == null)
 			throw new IllegalArgumentException("Must provide a backoff strategy!");
 		if (maxAttempts <= 0)
@@ -21,6 +30,7 @@ public class RetryManager
 		this.maxAttempts = maxAttempts;
 	}
 
+
 	public <T> T run(Retryable<T> operation) throws Exception
 	{
 		for (int attempt = 1; ; attempt++)
@@ -28,12 +38,16 @@ public class RetryManager
 			if (attempt != 1)
 				sleep(attempt);
 
+			final Timer.Context timer = attempts.time();
+
 			try
 			{
 				return operation.attempt(attempt);
 			}
 			catch (Throwable e)
 			{
+				attemptFailures.mark();
+
 				final boolean retry = (!maxAttemptsReached(attempt)) && operation.shouldRetry(attempt, e);
 
 				if (!retry)
@@ -44,6 +58,10 @@ public class RetryManager
 				{
 					log.warn("Attempt #" + attempt + " of " + operation + " failed, will retry.", e);
 				}
+			}
+			finally
+			{
+				timer.stop();
 			}
 		}
 	}
@@ -116,6 +134,7 @@ public class RetryManager
 			throw new RuntimeException("Retryable " + operation + " failed: " + e.getMessage(), e);
 		}
 	}
+
 
 	private void sleep(int attempt)
 	{
