@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common.metrics;
 
 import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.codahale.metrics.jvm.FileDescriptorRatioGauge;
 import com.codahale.metrics.jvm.GarbageCollectorMetricSet;
 import com.codahale.metrics.jvm.MemoryUsageGaugeSet;
@@ -31,6 +32,14 @@ public class CoreMetricsModule extends AbstractModule
 	public MetricRegistry getMetricRegistry()
 	{
 		return registry;
+	}
+
+
+	@Provides
+	@Singleton
+	public HealthCheckRegistry getHealthCheckRegistry()
+	{
+		return new HealthCheckRegistry();
 	}
 
 

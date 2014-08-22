@@ -15,7 +15,7 @@ public class GuiceProperties
 	public static final java.lang.String SCAN_PACKAGES = "scan.packages";
 
 	@Doc("The name of the override property file to use; if not specified then a dummy in-memory override will be set up and discarded on each restart")
-	public static final String OVERRIDE_FILE_PROPERY = "override-properties.file";
+	public static final String OVERRIDE_FILE_PROPERTY = "override-properties.file";
 
 	@Doc("The mode to use, can either be DEVELOPMENT or PRODUCTION (defaults to DEVELOPMENT). See Guice Stage documentation.")
 	public static final String STAGE_PROPERTY = "mode";
@@ -75,4 +75,11 @@ public class GuiceProperties
 	//
 	@Doc("If true then when the guice thymeleaf jar is loaded it'll auto-register thymeleaf as the default Templater (default true)")
 	public static final String ROLE_THYMELEAF_AUTO = "role.thymeleaf.auto";
+
+
+	//
+	// Guice Metrics properties
+	//
+	@Doc("If true then when the guice metrics jar is loaded it'll auto-register the metrics JAX-RS services (default true)")
+	public static final String ROLE_METRICS_JAXRS_AUTO = "role.metrics-jaxrs.auto";
 }

@@ -35,6 +35,16 @@ public final class GuiceMetricNames
 	public static final String THYMELEAF_CALL_TIMER = "feature.thymeleaf.calls";
 	public static final String THYMELEAF_RENDER_EXCEPTION_METER = "feature.thymeleaf.exception";
 
+	// @AuthConstraint interception
+	@Doc("Keeps track of the number of requests that have been made")
+	public static final String AUTH_CONSTRAINT_CALL_METER = "feature.AuthConstraint.calls";
+	@Doc("Keeps track of the number of requests that have been granted")
+	public static final String AUTH_CONSTRAINT_GRANTED_METER = "feature.AuthConstraint.allow";
+	@Doc("Keeps track of the number of requests that have been denied")
+	public static final String AUTH_CONSTRAINT_DENIED_METER = "feature.AuthConstraint.deny";
+	@Doc("Keeps track of the number of requests from logged in users (i.e. non-anonymous) which have been denied")
+	public static final String AUTH_CONSTRAINT_AUTHENTICATED_DENIED_METER = "feature.AuthConstraint.authenticated-deny";
+
 
 	private GuiceMetricNames()
 	{
@@ -42,7 +52,8 @@ public final class GuiceMetricNames
 
 
 	/**
-	 * Produces a sensible name for a path beneath a class, taking into account that the class provided might be enhanced by guice
+	 * Produces a sensible name for a path beneath a class, taking into account that the class provided might be enhanced by
+	 * guice
 	 * AOP (if it is then the class from the code will be used, rather than the generated AOP class name)
 	 *
 	 * @param clazz

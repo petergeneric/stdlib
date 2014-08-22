@@ -81,7 +81,7 @@ class GuiceFactory
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERY));
+		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
 
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
