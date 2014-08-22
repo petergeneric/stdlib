@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.common.metrics;
 
+import com.codahale.metrics.MetricRegistry;
 import com.peterphi.std.annotation.Doc;
 
 public final class GuiceMetricNames
@@ -37,5 +38,24 @@ public final class GuiceMetricNames
 
 	private GuiceMetricNames()
 	{
+	}
+
+
+	/**
+	 * Produces a sensible name for a path beneath a class, taking into account that the class provided might be enhanced by guice
+	 * AOP (if it is then the class from the code will be used, rather than the generated AOP class name)
+	 *
+	 * @param clazz
+	 * @param names
+	 *
+	 * @return
+	 */
+	public static String name(Class<?> clazz, String... names)
+	{
+		// If we get a guice-enhanced class then we should go up one level to get the class name from the user's code
+		if (clazz.getName().contains("$$EnhancerByGuice$$"))
+			clazz = clazz.getSuperclass();
+
+		return MetricRegistry.name(clazz, names);
 	}
 }

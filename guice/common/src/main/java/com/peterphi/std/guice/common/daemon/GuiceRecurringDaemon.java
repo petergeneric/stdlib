@@ -4,10 +4,9 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
-
-import static com.codahale.metrics.MetricRegistry.name;
 
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
 {
@@ -58,7 +57,12 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	{
 		while (isRunning())
 		{
-			final Timer.Context timer = calls.time();
+			final Timer.Context timer;
+
+			if (calls != null)
+				timer = calls.time();
+			else
+				timer = null;
 
 			try
 			{
@@ -73,7 +77,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			}
 			finally
 			{
-				timer.stop();
+				if (timer != null)
+					timer.stop();
 			}
 
 			// Sleep for the default sleep time
@@ -108,8 +113,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	@Override
 	public void postConstruct()
 	{
-		this.calls = metrics.timer(name(getClass(), "calls"));
-		this.exceptions = metrics.meter(name(getClass(), "exceptions"));
+		this.calls = metrics.timer(GuiceMetricNames.name(getClass(), "calls"));
+		this.exceptions = metrics.meter(GuiceMetricNames.name(getClass(), "exceptions"));
 
 		super.postConstruct();
 	}
