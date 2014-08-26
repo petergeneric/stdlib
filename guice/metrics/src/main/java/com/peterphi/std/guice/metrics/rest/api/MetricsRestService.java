@@ -12,8 +12,13 @@ import javax.ws.rs.core.MediaType;
 @ImplementedBy(MetricsRestServiceImpl.class)
 public interface MetricsRestService
 {
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/")
 	@GET
-	public String get();
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
+	public String getMetrics();
+
+	@GET
+	@Path("/")
+	@Produces(MediaType.TEXT_HTML)
+	public String getIndex();
 }

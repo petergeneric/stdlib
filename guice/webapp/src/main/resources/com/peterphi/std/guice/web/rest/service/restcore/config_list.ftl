@@ -21,7 +21,6 @@ ${bootstrap.CSS}
         }
 
         body {
-            padding-top: 60px;
             padding-bottom: 40px;
         }
 
@@ -34,6 +33,19 @@ ${bootstrap.CSS}
 </head>
 
 <body id="top">
+<body id="top">
+<div class="navbar">
+	<div class="navbar-inner">
+		<a class="brand" href="${urls.relativeRest("/guice")}">Guice Framework Services</a>
+		<ul class="nav">
+			<li><a href="${urls.relativeRest("/guice")}">List</a></li>
+			<li class="active"><a href="${urls.relativeRest("/guice/config")}">Configuration</a></li>
+			<li><a href="${urls.relativeRest("/guice/metrics")}">Metrics</a></li>
+		</ul>
+	</div>
+</div>
+
+
 <div class="container">
     <h1>Configuration</h1>
 
@@ -72,7 +84,7 @@ ${bootstrap.CSS}
 		<#if allowReconfigure>
 		<h5>Change</h5>
 		<p>
-		<form action="${urls.relativeRest("/list/config/reconfigure")}" method="POST">
+		<form action="${urls.relativeRest("/guice/config/reconfigure")}" method="POST">
 		<input type="hidden" name="key" value="${prop.name}" />
 		<input type="text" name="value"
 			<#if showProperties>
@@ -131,7 +143,7 @@ ${bootstrap.CSS}
     <h1>Overrides</h1>
     <h3>Save to disk</h3>
     <p>Do you wish to save the current in-memory changes to the configuration back to disk?</p>
-    <form method="POST" action="${urls.relativeRest("/list/config/save")}">
+    <form method="POST" action="${urls.relativeRest("/guice/config/save")}">
         <input type="submit" value="Save to disk" />
     </form>
 </div>

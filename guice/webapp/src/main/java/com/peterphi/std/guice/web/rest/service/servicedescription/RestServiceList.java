@@ -12,7 +12,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 @Doc("Lists the REST services and resources exposed by this webapp")
-@Path("/guice/list")
+@Path("/guice")
 @ImplementedBy(RestServiceListImpl.class)
 public interface RestServiceList
 {

@@ -19,7 +19,6 @@ ${bootstrap.CSS}
         }
 
         body {
-            padding-top: 60px;
             padding-bottom: 40px;
         }
 
@@ -32,6 +31,18 @@ ${bootstrap.CSS}
 </head>
 
 <body id="top">
+<body id="top">
+<div class="navbar">
+	<div class="navbar-inner">
+		<a class="brand" href="${urls.relativeRest("/guice")}">Guice Framework Services</a>
+		<ul class="nav">
+			<li class="active"><a href="${urls.relativeRest("/guice")}">List</a></li>
+			<li><a href="${urls.relativeRest("/guice/config")}">Configuration</a></li>
+			<li><a href="${urls.relativeRest("/guice/metrics")}">Metrics</a></li>
+		</ul>
+	</div>
+</div>
+
 <div class="container">
     <h1>${service.interfaceName}</h1>
 

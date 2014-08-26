@@ -1,5 +1,6 @@
-package com.peterphi.std.guice.web.rest.service.impl;
+package com.peterphi.std.guice.web.rest.service.restcore;
 
+import com.google.inject.ImplementedBy;
 import com.peterphi.std.annotation.Doc;
 
 import javax.ws.rs.GET;
@@ -8,9 +9,10 @@ import javax.ws.rs.Produces;
 
 @Doc("Core framework development services")
 @Path("/guice/rest-core")
+@ImplementedBy(GuiceRestCoreServiceImpl.class)
 public interface GuiceRestCoreService
 {
-	@Doc("Returns Http 200 when called")
+	@Doc("Returns HTTP 200 when called")
 	@GET
 	@Path("/ping")
 	public abstract String ping();
@@ -25,5 +27,4 @@ public interface GuiceRestCoreService
 	@GET
 	@Path("/restart")
 	public abstract String restart() throws Exception;
-
 }

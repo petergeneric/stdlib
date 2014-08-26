@@ -12,7 +12,7 @@ import javax.ws.rs.core.MediaType;
 import java.io.IOException;
 
 @Doc("Lists the configuration properties in use by this webapp")
-@Path("/guice/list/config")
+@Path("/guice/config")
 @ImplementedBy(RestConfigListImpl.class)
 public interface RestConfigList
 {

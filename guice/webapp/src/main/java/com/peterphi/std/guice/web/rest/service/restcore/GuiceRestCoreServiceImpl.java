@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.service.impl;
+package com.peterphi.std.guice.web.rest.service.restcore;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
