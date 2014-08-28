@@ -1,14 +1,11 @@
 package com.peterphi.std.guice.metrics.rest.types;
 
-import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
-
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
 @XmlRootElement(name = "Histogram")
 @XmlType(name = "HistogramType")
-@BadgerFish
 public class MetricsHistogram
 {
 	@XmlElement
