@@ -2,6 +2,7 @@ package com.peterphi.std.guice.metrics.rest.api;
 
 import com.google.inject.ImplementedBy;
 import com.peterphi.std.guice.metrics.rest.impl.HealthRestServiceImpl;
+import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -14,8 +15,8 @@ public interface HealthRestService
 {
 	@GET
 	@Path("/")
-	@Produces(MediaType.APPLICATION_JSON)
-	public String get();
+	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
+	public HealthDocument get();
 
 	@GET
 	@Path("/")

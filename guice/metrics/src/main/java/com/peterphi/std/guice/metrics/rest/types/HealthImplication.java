@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.metrics.health;
+package com.peterphi.std.guice.metrics.rest.types;
 
 /**
  * Indicates the severity of some state, metric or condition
@@ -19,5 +19,16 @@ public enum HealthImplication
 	 * An indicator that something may be wrong, but it has not yet reached an apparent stage
 	 * of compromising functionality
 	 */
-	WARNING,
+	WARNING,;
+
+
+	public static HealthImplication valueOfByPrefix(final String name)
+	{
+		for (HealthImplication implication : values())
+			if (name.startsWith(implication + ":"))
+				return implication;
+
+		// Unknown prefix
+		return null;
+	}
 }

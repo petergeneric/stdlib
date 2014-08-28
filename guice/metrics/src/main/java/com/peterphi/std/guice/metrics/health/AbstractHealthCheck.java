@@ -4,6 +4,7 @@ import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
+import com.peterphi.std.guice.metrics.rest.types.HealthImplication;
 
 /**
  * Abstract parent class for Health Checks. Should be bound as an eager singleton. When created the Health Check will be

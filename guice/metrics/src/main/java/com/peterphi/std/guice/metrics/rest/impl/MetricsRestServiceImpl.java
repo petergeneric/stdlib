@@ -4,31 +4,24 @@ import com.codahale.metrics.Counting;
 import com.codahale.metrics.Metered;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Sampling;
-import com.codahale.metrics.json.MetricsModule;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
+import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
 import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 
-import java.io.StringWriter;
 import java.util.SortedMap;
 import java.util.TreeMap;
-import java.util.concurrent.TimeUnit;
 
 @Singleton
-public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycleListener
+public class MetricsRestServiceImpl implements MetricsRestService
 {
 	@Inject
 	MetricRegistry registry;
-
-	private ObjectMapper mapper;
 
 	@Inject(optional = true)
 	@Named(GuiceProperties.METRICS_JAXRS_SHOW_SAMPLES)
@@ -39,31 +32,21 @@ public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycl
 	ThymeleafTemplater templater;
 
 
+	@Inject
+	MetricSerialiser serialiser;
+
+
 	@Override
-	public String getMetrics()
+	public MetricsDocument getMetrics()
 	{
-		try
-		{
-			final boolean pretty = true;
-			final ObjectWriter ow;
-			final StringWriter sw = new StringWriter();
+		MetricsDocument doc = new MetricsDocument();
 
-			if (pretty)
-			{
-				ow = mapper.writerWithDefaultPrettyPrinter();
-			}
-			else
-			{
-				ow = mapper.writer();
-			}
+		doc.counters = serialiser.serialiseCounters(registry.getCounters());
+		doc.gauges = serialiser.serialiseGauges(registry.getGauges());
+		doc.histograms = serialiser.serialiseHistograms(registry.getHistograms());
+		doc.meters = serialiser.serialiseMeters(registry.getMeters());
 
-			ow.writeValue(sw, registry);
-			return sw.toString();
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
+		return doc;
 	}
 
 
@@ -92,15 +75,5 @@ public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycl
 			map.putAll(collection);
 
 		return map;
-	}
-
-
-	@Override
-	public void postConstruct()
-	{
-		final TimeUnit rateUnit = TimeUnit.SECONDS;
-		final TimeUnit durationUnit = TimeUnit.SECONDS;
-
-		this.mapper = new ObjectMapper().registerModule(new MetricsModule(rateUnit, durationUnit, showSamples));
 	}
 }
