@@ -1,6 +1,5 @@
 package com.peterphi.std.guice.metrics.rest.impl;
 
-import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
@@ -9,8 +8,6 @@ import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
 import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-
-import java.util.SortedMap;
 
 public class HealthRestServiceImpl implements HealthRestService
 {
@@ -42,9 +39,7 @@ public class HealthRestServiceImpl implements HealthRestService
 	{
 		TemplateCall call = templater.template("health-index");
 
-		SortedMap<String, HealthCheck.Result> results = registry.runHealthChecks();
-
-		call.set("health", results);
+		call.set("health", get());
 
 		return call.process();
 	}

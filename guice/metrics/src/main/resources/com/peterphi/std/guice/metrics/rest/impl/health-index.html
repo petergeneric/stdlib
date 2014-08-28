@@ -46,15 +46,17 @@
 		<thead>
 		<tr>
 			<th>Name</th>
+			<th>Check Type</th>
 			<th>Healthy</th>
 			<th>Message</th>
 		</tr>
 		</thead>
 		<tbody>
-		<tr th:each="entry: ${health.entrySet()}" th:id="${entry.key}">
-			<td th:text="${entry.key}"></td>
-			<td th:text="${entry.value.healthy}"></td>
-			<td th:text="${entry.value.message}"></td>
+		<tr th:each="entry: ${health.results}" th:id="${entry.name}">
+			<td th:text="${entry.name}"></td>
+			<td th:text="${entry.implication}"></td>
+			<td th:text="${entry.healthy}"></td>
+			<td th:text="${entry.message}"></td>
 		</tr>
 		</tbody>
 	</table>

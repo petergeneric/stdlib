@@ -118,9 +118,17 @@ class MetricSerialiser
 	}
 
 
-	private HealthCheckResult serialise(final String name, final HealthCheck.Result value)
+	private HealthCheckResult serialise(String name, final HealthCheck.Result value)
 	{
-		HealthImplication implication = HealthImplication.valueOfByPrefix(name);
+		final HealthImplication implication = HealthImplication.valueOfByPrefix(name);
+
+		// Discard everything before the first : (unless there is none or the implication is unknown, in which case leave it alone)
+		if (implication != null)
+		{
+			final String[] namebits = name.split(":", 2);
+			if (namebits.length == 2)
+				name = namebits[1];
+		}
 
 		return new HealthCheckResult(name, implication, value.isHealthy(), value.getMessage());
 	}
