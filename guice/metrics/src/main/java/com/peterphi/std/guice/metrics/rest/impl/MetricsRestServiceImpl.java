@@ -102,26 +102,17 @@ public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycl
 	@Override
 	public String getIndex()
 	{
-		registry.meter("someMeter").mark();
-		Timer.Context timer = registry.timer("someTimer").time();
-		try
-		{
-			TemplateCall call = templater.template("index");
+		TemplateCall call = templater.template("index");
 
-			call.set("gauges", registry.getGauges().entrySet());
-			call.set("counters", this.<Counting>combine(registry.getCounters(),
-			                                            registry.getMeters(),
-			                                            registry.getTimers(),
-			                                            registry.getHistograms()).entrySet());
-			call.set("meters", this.<Metered>combine(registry.getMeters(), registry.getTimers()).entrySet());
-			call.set("histograms", this.<Sampling>combine(registry.getHistograms(), registry.getTimers()).entrySet());
+		call.set("gauges", registry.getGauges().entrySet());
+		call.set("counters", this.<Counting>combine(registry.getCounters(),
+													registry.getMeters(),
+													registry.getTimers(),
+													registry.getHistograms()).entrySet());
+		call.set("meters", this.<Metered>combine(registry.getMeters(), registry.getTimers()).entrySet());
+		call.set("histograms", this.<Sampling>combine(registry.getHistograms(), registry.getTimers()).entrySet());
 
-			return call.process();
-		}
-		finally
-		{
-			timer.stop();
-		}
+		return call.process();
 	}
 
 
