@@ -12,7 +12,7 @@ public class Setup implements GuiceSetup
 	@Override
 	public void registerModules(final List<Module> modules, final Configuration config)
 	{
-		modules.add(new MyAppModule());
+
 	}
 
 
