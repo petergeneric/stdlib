@@ -4,7 +4,6 @@ import com.codahale.metrics.Counting;
 import com.codahale.metrics.Metered;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Sampling;
-import com.codahale.metrics.Timer;
 import com.codahale.metrics.json.MetricsModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
@@ -14,11 +13,9 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
+import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.util.BootstrapStaticResources;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.io.StringWriter;
 import java.util.SortedMap;
@@ -28,47 +25,18 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycleListener
 {
-	private final MetricRegistry registry;
+	@Inject
+	MetricRegistry registry;
+
 	private ObjectMapper mapper;
 
 	@Inject(optional = true)
 	@Named(GuiceProperties.METRICS_JAXRS_SHOW_SAMPLES)
 	boolean showSamples = false;
 
-	private final ThymeleafTemplater templater;
-
-
 	@Inject
-	public MetricsRestServiceImpl(org.apache.commons.configuration.Configuration configuration, MetricRegistry metrics)
-	{
-		this.registry = metrics;
-
-		TemplateEngine engine = new TemplateEngine();
-		this.templater = new ThymeleafTemplater(createEngine(), configuration, metrics);
-
-		templater.set("bootstrap", BootstrapStaticResources.get());
-	}
-
-
-	private static TemplateEngine createEngine()
-	{
-		ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
-
-		resolver.setTemplateMode("HTML5");
-
-
-		// Load templates from /com/peterphi/std/guice/metrics/rest/impl/{name}.html
-		resolver.setPrefix("com/peterphi/std/guice/metrics/rest/impl/");
-		resolver.setSuffix(".html");
-
-		resolver.setCacheTTLMs(60000L);
-		resolver.setCacheable(true);
-
-		TemplateEngine engine = new TemplateEngine();
-		engine.setTemplateResolver(resolver);
-
-		return engine;
-	}
+	@Named(MetricsServicesModule.METRICS_UI_THYMELEAF)
+	ThymeleafTemplater templater;
 
 
 	@Override
@@ -106,9 +74,9 @@ public class MetricsRestServiceImpl implements MetricsRestService, GuiceLifecycl
 
 		call.set("gauges", registry.getGauges().entrySet());
 		call.set("counters", this.<Counting>combine(registry.getCounters(),
-													registry.getMeters(),
-													registry.getTimers(),
-													registry.getHistograms()).entrySet());
+		                                            registry.getMeters(),
+		                                            registry.getTimers(),
+		                                            registry.getHistograms()).entrySet());
 		call.set("meters", this.<Metered>combine(registry.getMeters(), registry.getTimers()).entrySet());
 		call.set("histograms", this.<Sampling>combine(registry.getHistograms(), registry.getTimers()).entrySet());
 

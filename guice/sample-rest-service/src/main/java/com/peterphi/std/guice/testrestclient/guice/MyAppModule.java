@@ -9,9 +9,6 @@ public class MyAppModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		//bind(MyTestService.class).to(MyTestServiceImpl.class);
-		//RestResourceRegistry.register(MyTestService.class);
-
 		bind(ExampleThread.class).asEagerSingleton();
 	}
 }

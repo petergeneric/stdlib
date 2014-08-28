@@ -12,8 +12,13 @@ import javax.ws.rs.core.MediaType;
 @ImplementedBy(HealthRestServiceImpl.class)
 public interface HealthRestService
 {
-	@Produces(MediaType.APPLICATION_JSON)
-	@Path("/")
 	@GET
+	@Path("/")
+	@Produces(MediaType.APPLICATION_JSON)
 	public String get();
+
+	@GET
+	@Path("/")
+	@Produces(MediaType.TEXT_HTML)
+	public String getHTML();
 }

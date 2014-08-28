@@ -38,6 +38,7 @@ ${bootstrap.CSS}
 			<li class="active"><a href="${urls.relativeRest("/guice")}">List</a></li>
 			<li><a href="${urls.relativeRest("/guice/config")}">Configuration</a></li>
 			<li><a href="${urls.relativeRest("/guice/metrics")}">Metrics</a></li>
+			<li><a href="${urls.relativeRest("/guice/health")}">Health</a></li>
 		</ul>
 	</div>
 </div>
