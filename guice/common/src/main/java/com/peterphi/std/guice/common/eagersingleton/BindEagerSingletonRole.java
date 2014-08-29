@@ -4,6 +4,7 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
@@ -13,6 +14,7 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.log4j.Logger;
 
+import java.util.Iterator;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -40,12 +42,29 @@ public class BindEagerSingletonRole implements GuiceRole
 		if (scanner != null)
 		{
 			final List<Class<?>> classes = scanner.getAnnotatedClasses(EagerSingleton.class);
+			final boolean isTestEnvironment = config.getBoolean(GuiceProperties.UNIT_TEST, false);
 
-			if (log.isTraceEnabled())
+			Iterator<Class<?>> it = classes.iterator();
+
+			while (it.hasNext())
 			{
-				log.trace("There are " + classes.size() + " classes annotated with @EagerSingleton");
-				for (Class<?> clazz : classes)
-					log.trace("Binding eager singleton: " + clazz);
+				final Class<?> clazz = it.next();
+
+				if (isTestEnvironment)
+				{
+					final EagerSingleton annotation = clazz.getAnnotation(EagerSingleton.class);
+
+					// We're in a test environment but inTests isn't true, so we should ignore this annotation
+					if (!annotation.inTests())
+					{
+						log.trace("Ignoring eager singleton with inTests=false: " + clazz);
+
+						it.remove();
+						continue;
+					}
+				}
+
+				log.trace("Binding eager singleton: " + clazz);
 			}
 
 			if (!classes.isEmpty())
