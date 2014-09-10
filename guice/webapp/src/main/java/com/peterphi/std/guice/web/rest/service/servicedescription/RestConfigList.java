@@ -2,6 +2,7 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 
 import com.google.inject.ImplementedBy;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -14,6 +15,7 @@ import java.io.IOException;
 @Doc("Lists the configuration properties in use by this webapp")
 @Path("/guice/config")
 @ImplementedBy(RestConfigListImpl.class)
+@FastFailServiceClient
 public interface RestConfigList
 {
 	@Doc("Lists all config")

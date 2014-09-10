@@ -7,6 +7,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
 import org.apache.http.auth.AuthScope;
@@ -42,6 +43,18 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	@Named("jaxrs.socket.timeout")
 	@Doc("The Socket Timeout for HTTP sockets (default 5m)")
 	Timeout socketTimeout = new Timeout(5, TimeUnit.MINUTES);
+
+
+	@Inject(optional = true)
+	@Named("jaxrs.fast-fail.connection.timeout")
+	@Doc("The connection timeout for HTTP sockets created for Fast Fail clients (default 15s)")
+	Timeout fastFailConnectionTimeout = new Timeout(15, TimeUnit.SECONDS);
+
+	@Inject(optional = true)
+	@Named("jaxrs.fast-fail.socket.timeout")
+	@Doc("The Socket Timeout for HTTP sockets created for Fast Fail clients (default 15s)")
+	Timeout fastFailSocketTimeout = new Timeout(15, TimeUnit.SECONDS);
+
 
 	@Inject(optional = true)
 	@Named("jaxrs.nokeepalive")
@@ -90,19 +103,30 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	@Override
 	public <T> T createClient(Class<T> iface, URI endpoint)
 	{
-		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(createClient());
+		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(createClient(fastFailTimeouts));
 
 		return ProxyFactory.create(iface, endpoint, executor, resteasyProviderFactory);
 	}
 
 
-	private DefaultHttpClient createClient()
+	private DefaultHttpClient createClient(boolean fastFailTimeouts)
 	{
 		DefaultHttpClient client = new DefaultHttpClient(connectionManager);
 
 		HttpParams params = client.getParams();
-		HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
-		HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
+
+		if (fastFailTimeouts)
+		{
+			HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
+			HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
+		}
+		else
+		{
+			HttpConnectionParams.setConnectionTimeout(params, (int) fastFailConnectionTimeout.getMilliseconds());
+			HttpConnectionParams.setSoTimeout(params, (int) fastFailSocketTimeout.getMilliseconds());
+		}
 
 		// Prohibit keepalive if desired
 		if (noKeepalive)
@@ -117,7 +141,9 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	@Override
 	public <T> T createClientWithPasswordAuth(Class<T> iface, URI endpoint, String username, String password)
 	{
-		final DefaultHttpClient client = createClient();
+		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		final DefaultHttpClient client = createClient(fastFailTimeouts);
 
 		final Credentials credentials = new UsernamePasswordCredentials(username, password);
 
