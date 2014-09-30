@@ -7,7 +7,6 @@ import org.apache.log4j.Logger;
 import org.hibernate.cfg.Configuration;
 
 import javax.persistence.Entity;
-import javax.persistence.MappedSuperclass;
 
 class AutoHibernateModule extends HibernateModule
 {
@@ -28,14 +27,9 @@ class AutoHibernateModule extends HibernateModule
 	protected void configure(final Configuration config)
 	{
 		for (Class<?> clazz : scanner.getAnnotatedClasses(Entity.class))
-			if (!clazz.isAnnotationPresent(MappedSuperclass.class))
-			{
-				log.trace("Registering @Entity class with hibernate: " + clazz.getName());
-				config.addAnnotatedClass(clazz);
-			}
-			else
-			{
-				log.debug("Ignoring @Entity class because it has @MappedSuperclass: " + clazz.getName());
-			}
+		{
+			log.trace("Registering @Entity class with hibernate: " + clazz.getName());
+			config.addAnnotatedClass(clazz);
+		}
 	}
 }
