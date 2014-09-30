@@ -1,9 +1,12 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import org.hibernate.Criteria;
+import org.hibernate.criterion.Disjunction;
+import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -18,6 +21,8 @@ public class QCriteriaBuilder
 	private final Map<String, QJoin> joins = new HashMap<>();
 	private final List<QConstraints> constraints = new ArrayList<>();
 	private final List<QOrder> order = new ArrayList<>();
+
+	private final List<String> discriminators = new ArrayList<>();
 
 	private int offset = 0;
 	private int limit = 200;
@@ -43,6 +48,8 @@ public class QCriteriaBuilder
 					limit = Integer.parseInt(entry.getValue().get(0));
 				else if (key.equals("_order"))
 					addOrder(entry.getValue());
+				else if (key.equals("_class"))
+					addClass(entry.getValue());
 				else
 					throw new IllegalArgumentException("Unknown built-in name: " + key);
 			}
@@ -51,6 +58,12 @@ public class QCriteriaBuilder
 				addConstraint(key, entry.getValue());
 			}
 		}
+	}
+
+
+	private void addClass(final List<String> values)
+	{
+		this.discriminators.addAll(values);
 	}
 
 
@@ -66,6 +79,28 @@ public class QCriteriaBuilder
 		for (QJoin join : joins.values())
 			criteria.createAlias(join.getPath(), join.getAlias(), JoinType.LEFT_OUTER_JOIN);
 
+		// Add the special discriminator value constraint
+		if (!discriminators.isEmpty())
+		{
+			// Translate the discriminators into classes
+			final List<Class<?>> classes = getClassesByDiscriminators(discriminators);
+
+			if (classes.size() == 1)
+			{
+				criteria.add(Restrictions.eq("class", classes.get(0)));
+			}
+			else
+			{
+				final Disjunction or = Restrictions.disjunction();
+
+				for (Class<?> clazz : classes)
+					or.add(Restrictions.eq("class", clazz));
+
+				criteria.add(or);
+			}
+		}
+
+
 		// Add the constraints
 		for (QConstraints constraint : constraints)
 			criteria.add(constraint.encode());
@@ -76,6 +111,44 @@ public class QCriteriaBuilder
 
 		criteria.setFirstResult(offset);
 		criteria.setMaxResults(limit);
+	}
+
+
+	/**
+	 * Translates the set of string discriminators into entity classes
+	 *
+	 * @return
+	 */
+	private List<Class<?>> getClassesByDiscriminators(Collection<String> discriminators)
+	{
+		Map<String, Class<?>> entitiesByName = new HashMap<>();
+
+		// Prepare a Map of discriminator name -> entity class
+		for (QEntity child : entity.getSubEntities())
+		{
+			entitiesByName.put(child.getDiscriminatorValue(), child.getEntityClass());
+		}
+
+		// If the root class isn't abstract then add it to the list of possible discriminators too
+		if (!entity.isEntityClassAbstract())
+			entitiesByName.put(entity.getDiscriminatorValue(), entity.getEntityClass());
+
+		// Translate the discriminator string values to classes
+		List<Class<?>> classes = new ArrayList<>(discriminators.size());
+		for (String discriminator : discriminators)
+		{
+			final Class<?> clazz = entitiesByName.get(discriminator);
+
+			if (clazz != null)
+				classes.add(clazz);
+			else
+				throw new IllegalArgumentException("Invalid class discriminator '" +
+				                                   discriminator +
+				                                   "', expected one of: " +
+				                                   entitiesByName.keySet());
+		}
+
+		return classes;
 	}
 
 
