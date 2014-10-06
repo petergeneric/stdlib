@@ -405,7 +405,6 @@ public class Timecode
 		return TimecodeBuilder.fromSamples(totalSamples, dropFrame).build();
 	}
 
-
 	/**
 	 * Add some samples to this timecode, throwing an exception if precision would be lost
 	 *
@@ -495,16 +494,13 @@ public class Timecode
 			// Resample the frames part
 			final long resampled = toRate.resample(this.getFramesPart(), fromRate);
 
-
+			// In the event of resample returning < 1 second we can just set the new Timecode's frames field.
+			// In the event of resample returning 1 second (possible if 999@1kHz is resampled down) we should fall back on slow addition
 			if (resampled < toRate.getSamplesPerSecond())
-			{
 				return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
-			}
 			else
-			{
 				return new Timecode(negative, days, hours, minutes, seconds, 0, toRate, dropFrame).add(new SampleCount(resampled,
 				                                                                                                       toRate));
-			}
 		}
 		else
 		{
@@ -524,11 +520,12 @@ public class Timecode
 	 */
 	public Timecode resamplePrecise(final Timebase toRate) throws ResamplingException
 	{
-		final Timecode newTimecode = resample(toRate); // Resample to the new timebase
-		final Timecode back = newTimecode.resample(this.timebase); // Resample back to the source timebase
+		final Timecode resampled = resample(toRate); // Resample to the new timebase
+		final Timecode back = resampled.resample(this.timebase); // Resample back to the source timebase
 
-		// If we don't have the same number of frames then we lost precision.
-		if (back.getSampleCount().getSamples() != this.getSampleCount().getSamples())
+
+		// If we don't have the same number of seconds and frames when resampling back then we lost precision.
+		if ((back.getSecondsPart() != this.getSecondsPart()) || (back.getFramesPart() != this.getFramesPart()))
 		{
 			throw new ResamplingException("Timecode resample would have lost precision: " +
 			                              this.toString() +
@@ -539,7 +536,7 @@ public class Timecode
 		}
 		else
 		{
-			return newTimecode;
+			return resampled;
 		}
 	}
 
