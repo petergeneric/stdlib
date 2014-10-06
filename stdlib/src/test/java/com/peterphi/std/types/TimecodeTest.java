@@ -43,6 +43,17 @@ public class TimecodeTest
 
 
 	@Test
+	public void testResampleRounding()
+	{
+		//tests resampling that results in rounding up to the next whole second
+		final Timecode src = Timecode.getInstance("09:08:07:999", Timebase.HZ_1000);
+		final Timecode dst = src.resample(Timebase.HZ_25);
+
+		assertEquals("09:08:08:00", dst.toString());
+	}
+
+
+	@Test
 	public void testBounds()
 	{
 		final Timecode small = Timecode.getInstance("00:00:00:00", Timebase.HZ_50);

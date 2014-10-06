@@ -495,7 +495,16 @@ public class Timecode
 			// Resample the frames part
 			final long resampled = toRate.resample(this.getFramesPart(), fromRate);
 
-			return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
+
+			if (resampled < toRate.getSamplesPerSecond())
+			{
+				return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
+			}
+			else
+			{
+				return new Timecode(negative, days, hours, minutes, seconds, 0, toRate, dropFrame).add(new SampleCount(resampled,
+				                                                                                                       toRate));
+			}
 		}
 		else
 		{
@@ -519,7 +528,7 @@ public class Timecode
 		final Timecode back = newTimecode.resample(this.timebase); // Resample back to the source timebase
 
 		// If we don't have the same number of frames then we lost precision.
-		if (back.getFramesPart() != this.getFramesPart())
+		if (back.getSampleCount().getSamples() != this.getSampleCount().getSamples())
 		{
 			throw new ResamplingException("Timecode resample would have lost precision: " +
 			                              this.toString() +
