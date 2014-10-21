@@ -300,7 +300,7 @@ public class Timecode
 
 	/**
 	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
-	 * timecode@rate</code>
+	 * timecode including days@rate</code>
 	 * where
 	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
 	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
@@ -309,7 +309,24 @@ public class Timecode
 	 */
 	public String toEncodedString()
 	{
-		return toSMPTEString() + "@" + getTimebase().toEncodedString();
+		return toEncodedString(true);
+	}
+
+
+	/**
+	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
+	 * timecode optionally including days@rate</code>
+	 * where
+	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
+	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
+	 *
+	 * @param includeDays true if the days component should be emitted too (if non-zero)
+	 *
+	 * @return
+	 */
+	public String toEncodedString(boolean includeDays)
+	{
+		return toSMPTEString(includeDays) + "@" + getTimebase().toEncodedString();
 	}
 
 
