@@ -1,5 +1,10 @@
 package com.peterphi.std.types;
 
+import org.joda.time.DateTime;
+import org.joda.time.LocalTime;
+
+import java.util.Date;
+
 /**
  * Constructs Timecode instances
  */
@@ -34,6 +39,38 @@ public class TimecodeBuilder
 		           .withFrames(timecode.getFramesPart())
 		           .withDropFrame(timecode.isDropFrame())
 		           .withRate(timecode.getTimebase());
+	}
+
+
+	public TimecodeBuilder withTime(Date dateTime)
+	{
+		return withTime(new DateTime(dateTime));
+	}
+
+
+	public TimecodeBuilder withTime(DateTime dateTime)
+	{
+		return withTime(dateTime.toLocalTime());
+	}
+
+
+	public TimecodeBuilder withTime(LocalTime time)
+	{
+		return withTime(time, Timebase.HZ_25);
+	}
+
+	public TimecodeBuilder withTime(LocalTime time, Timebase timebase)
+	{
+		final Timecode baseTimecode = new TimecodeBuilder().withHours(time.getHourOfDay())
+		                                                   .withMinutes(time.getMinuteOfHour())
+		                                                   .withSeconds(time.getSecondOfMinute())
+		                                                   .withRate(timebase)
+		                                                   .build();
+
+		// Add the samples component (we can't just setFrames lest it round toa whole second)
+		final Timecode timecode = baseTimecode.add(new SampleCount(time.getMillisOfSecond(), Timebase.HZ_1000));
+
+		return withTimecode(timecode);
 	}
 
 
