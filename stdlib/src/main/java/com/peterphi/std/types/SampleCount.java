@@ -222,13 +222,12 @@ public class SampleCount
 	}
 
 
-	public static SampleCount seconds(final Timebase rate, final int seconds)
+	public static SampleCount seconds(final Timebase rate, final long seconds)
 	{
 		final double samples = rate.getSamplesPerSecond() * seconds;
 
 		return new SampleCount((long) samples, rate);
 	}
-
 
 	@Deprecated
 	public String toVidispineString()
