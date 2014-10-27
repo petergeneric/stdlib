@@ -13,7 +13,11 @@ import com.google.inject.spi.TypeListener;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import org.apache.commons.configuration.Configuration;
 
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -90,9 +94,19 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 
 			int reconfigurables = 0;
 
+			// Process @Inject constructor
+			for (Constructor<?> constructor : discoveredType.getDeclaredConstructors())
+			{
+				if (constructor.isAnnotationPresent(Inject.class))
+				{
+					reconfigurables += processMethod(discoveredType, constructor);
+				}
+			}
+
 			// Walk up the hierarchy and look for the declared fields
 			for (Class<?> clazz = discoveredType; clazz != null; clazz = clazz.getSuperclass())
 			{
+				// Process @Inject @Named fields
 				for (Field field : clazz.getDeclaredFields())
 				{
 					if (field.isAnnotationPresent(Inject.class) && field.isAnnotationPresent(Named.class))
@@ -101,13 +115,22 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 
 						registry.register(discoveredType, injectorRef, named.value(), field.getType(), field);
 
-						// TODO only increment if annotation @Reconfigurable is present?
 						reconfigurables++;
+					}
+				}
+
+				// Process @Inject methods
+				for (Method method : clazz.getDeclaredMethods())
+				{
+					if (method.isAnnotationPresent(Inject.class))
+					{
+						reconfigurables += processMethod(discoveredType, method);
 					}
 				}
 			}
 
 			// If there were config properties in this type, register an InjectionListener to grab instances for runtime reconfiguration
+			// TODO should all the props be @Reconfigurable for this?
 			if (reconfigurables > 0)
 				encounter.register(new InjectionListener<I>()
 				{
@@ -118,5 +141,39 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 					}
 				});
 		}
+	}
+
+
+	protected int processMethod(final Class<?> clazz, Executable method)
+	{
+		final Annotation[][] annotations = method.getParameterAnnotations();
+		final Class<?>[] types = method.getParameterTypes();
+
+		int discovered = 0;
+
+		for (int i = 0; i < types.length; i++)
+		{
+			final Class<?> type = types[i];
+			final Named named = getNamedAnnotation(annotations[i]);
+
+			if (named != null)
+			{
+				registry.register(clazz, injectorRef, named.value(), type, method);
+
+				discovered++;
+			}
+		}
+
+		return discovered;
+	}
+
+
+	private Named getNamedAnnotation(final Annotation[] annotations)
+	{
+		for (Annotation annotation : annotations)
+			if (annotation instanceof Named)
+				return (Named) annotation;
+
+		return null;
 	}
 }
