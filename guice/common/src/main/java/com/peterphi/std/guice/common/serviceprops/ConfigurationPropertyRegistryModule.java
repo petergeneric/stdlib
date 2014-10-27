@@ -15,7 +15,6 @@ import org.apache.commons.configuration.Configuration;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
-import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -144,7 +143,37 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 	}
 
 
-	protected int processMethod(final Class<?> clazz, Executable method)
+	protected int processMethod(final Class<?> clazz, Method method)
+	{
+		final Annotation[][] annotations = method.getParameterAnnotations();
+		final Class<?>[] types = method.getParameterTypes();
+
+		int discovered = 0;
+
+		for (int i = 0; i < types.length; i++)
+		{
+			final Class<?> type = types[i];
+			final Named named = getNamedAnnotation(annotations[i]);
+
+			if (named != null)
+			{
+				registry.register(clazz, injectorRef, named.value(), type, method);
+
+				discovered++;
+			}
+		}
+
+		return discovered;
+	}
+
+
+	/**
+	 * TODO delete me when it's possible to use Java 1.8 java.reflect.Executable for Method+Constructor
+	 * @param clazz
+	 * @param method
+	 * @return
+	 */
+	protected int processMethod(final Class<?> clazz, Constructor<?> method)
 	{
 		final Annotation[][] annotations = method.getParameterAnnotations();
 		final Class<?>[] types = method.getParameterTypes();
