@@ -9,7 +9,11 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
+import com.peterphi.std.guice.metrics.rest.types.MetricsCounter;
 import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
+import com.peterphi.std.guice.metrics.rest.types.MetricsGauge;
+import com.peterphi.std.guice.metrics.rest.types.MetricsHistogram;
+import com.peterphi.std.guice.metrics.rest.types.MetricsMeter;
 import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
@@ -47,6 +51,52 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		doc.meters = serialiser.serialiseMeters(registry.getMeters());
 
 		return doc;
+	}
+
+
+	@Override
+	public String getTextMetrics()
+	{
+		final MetricsDocument doc = getMetrics();
+
+		StringBuilder sb = new StringBuilder(16 * 1024);
+
+		for (MetricsCounter m : doc.counters)
+		{
+			sb.append(m.name).append(".count=").append(m.count).append("\n");
+		}
+
+		for (MetricsGauge m : doc.gauges)
+		{
+			sb.append(m.name).append(".value=").append(m.value).append("\n");
+		}
+
+		for (MetricsHistogram m : doc.histograms)
+		{
+			sb.append(m.name).append(".count=").append(m.count).append("\n");
+			sb.append(m.name).append(".p50=").append(m.percentile50).append("\n");
+			sb.append(m.name).append(".p75=").append(m.percentile75).append("\n");
+			sb.append(m.name).append(".p95=").append(m.percentile95).append("\n");
+			sb.append(m.name).append(".p98=").append(m.percentile98).append("\n");
+			sb.append(m.name).append(".p99=").append(m.percentile99).append("\n");
+			sb.append(m.name).append(".p99_9=").append(m.percentile999).append("\n");
+			sb.append(m.name).append(".snapshot.max=").append(m.snapshotMax).append("\n");
+			sb.append(m.name).append(".snapshot.mean=").append(m.snapshotMean).append("\n");
+			sb.append(m.name).append(".snapshot.min=").append(m.snapshotMin).append("\n");
+			sb.append(m.name).append(".snapshot.size=").append(m.snapshotSize).append("\n");
+			sb.append(m.name).append(".snapshot.stddev=").append(m.snapshotStdDev).append("\n");
+		}
+
+		for (MetricsMeter m : doc.meters)
+		{
+			sb.append(m.name).append(".count=").append(m.count).append("\n");
+			sb.append(m.name).append(".rate.15m=").append(m.rate15m).append("\n");
+			sb.append(m.name).append(".rate.5m=").append(m.rate5m).append("\n");
+			sb.append(m.name).append(".rate.1m=").append(m.rate1m).append("\n");
+			sb.append(m.name).append(".rate.mean=").append(m.rateMean).append("\n");
+		}
+
+		return sb.toString();
 	}
 
 

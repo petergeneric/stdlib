@@ -20,6 +20,12 @@ public interface MetricsRestService
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public MetricsDocument getMetrics();
 
+
+	@GET
+	@Path("/")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getTextMetrics();
+
 	@GET
 	@Path("/")
 	@Produces(MediaType.TEXT_HTML)
