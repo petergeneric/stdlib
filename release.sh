@@ -102,6 +102,8 @@ die_without_command git perl wc
 if [ -z "$MVN" ] ; then
 	die_without_command mvn
 	MVN=mvn
+else
+	die_without_command $MVN
 fi
 
 echo "Using maven command: $MVN"
