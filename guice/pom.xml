@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-parent</artifactId>
-	<version>7.1.7-SNAPSHOT</version>
+	<version>7.1.7</version>
 	<packaging>pom</packaging>
 
 	<name>application framework guice modules parent</name>
@@ -26,7 +26,7 @@
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>7.1.7-SNAPSHOT</version>
+		<version>7.1.7</version>
 	</parent>
 
 	<dependencyManagement>
