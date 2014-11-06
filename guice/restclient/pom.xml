@@ -5,7 +5,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-restclient</artifactId>
-	<version>7.1.7</version>
+	<version>7.1.8-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice rest client</name>
@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>7.1.7</version>
+		<version>7.1.8-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
