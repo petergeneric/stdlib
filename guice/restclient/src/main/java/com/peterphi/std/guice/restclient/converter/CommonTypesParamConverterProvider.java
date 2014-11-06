@@ -4,6 +4,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Duration;
 import org.joda.time.LocalDate;
 import org.joda.time.LocalDateTime;
+import org.joda.time.LocalTime;
 import org.joda.time.Period;
 
 import javax.ws.rs.ext.ParamConverter;
@@ -12,7 +13,7 @@ import javax.ws.rs.ext.Provider;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Type;
 
-	@Provider
+@Provider
 public class CommonTypesParamConverterProvider implements ParamConverterProvider
 {
 	private final ParamConverter dateTime = new DateTimeStringConverter();
@@ -20,6 +21,7 @@ public class CommonTypesParamConverterProvider implements ParamConverterProvider
 	private final ParamConverter localDate = new LocalDateStringConverter();
 	private final ParamConverter period = new PeriodStringConverter();
 	private final ParamConverter duration = new DurationStringConverter();
+	private final ParamConverter localTime = new LocalTimeStringConverter();
 
 
 	@Override
@@ -38,6 +40,8 @@ public class CommonTypesParamConverterProvider implements ParamConverterProvider
 			return period;
 		else if (rawType.equals(Duration.class))
 			return duration;
+		else if (rawType.equals(LocalTime.class))
+			return localTime;
 		else
 			return null;
 	}
