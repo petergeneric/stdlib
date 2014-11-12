@@ -38,6 +38,7 @@
 		<javalang.version>1.7</javalang.version>
 		<slf4j.version>1.7.7</slf4j.version>
 		<junit.version>4.11</junit.version>
+		<httpclient.version>4.3.6</httpclient.version>
 	</properties>
 
 	<scm>
