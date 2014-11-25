@@ -51,7 +51,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Inject
 	QEntityFactory entityFactory;
 
-	@Inject(optional=true)
+	@Inject(optional = true)
 	@Named("hibernate.perform-separate-id-query-for-large-tables")
 	@Reconfigurable
 	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
@@ -133,12 +133,25 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			{
 				final Criteria dataCriteria = createCriteria();
 
-				dataCriteria.add(Restrictions.in(idProperty(), ids));
+				if (ids.size() > 0)
+				{
+					dataCriteria.add(Restrictions.in(idProperty(), ids));
 
-				// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
-				builder.append(dataCriteria, false, false);
+					// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
+					builder.append(dataCriteria, false, false);
 
-				return dataCriteria;
+					return dataCriteria;
+				}
+				else
+				{
+					// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
+					dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
+
+					// Hint that we don't want any results
+					dataCriteria.setMaxResults(0);
+
+					return dataCriteria;
+				}
 			}
 		}
 		else
