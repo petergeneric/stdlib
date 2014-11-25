@@ -67,6 +67,10 @@ class TimeoutConverter
 		{
 			return TimeUnit.HOURS;
 		}
+		else if ("d".equalsIgnoreCase(unit) || "day".equalsIgnoreCase(unit) || "days".equalsIgnoreCase(unit))
+		{
+			return TimeUnit.DAYS;
+		}
 		else
 			throw new IllegalArgumentException("Unknown unit: " + unit);
 	}
