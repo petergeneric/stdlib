@@ -29,6 +29,7 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import javax.ws.rs.NotFoundException;
 import java.io.IOException;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -140,6 +141,15 @@ class GuicedResteasy implements GuiceApplication
 		{
 			// Share the call id to log4j
 			MDC.put("call.id", ctx.getLogId());
+			MDC.put("remote_addr", ctx.getRequest().getRemoteAddr());
+			MDC.put("context_path", ctx.getServletContext().getContextPath());
+
+			// Add the session id (if present)
+			final HttpSession session = ctx.getRequest().getSession(false);
+			if (session != null)
+			{
+				MDC.put("session_id", session.getId());
+			}
 
 			try
 			{
