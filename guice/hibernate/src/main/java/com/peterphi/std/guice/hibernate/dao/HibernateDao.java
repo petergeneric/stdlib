@@ -54,7 +54,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Inject(optional=true)
 	@Named("hibernate.perform-separate-id-query-for-large-tables")
 	@Reconfigurable
-	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup (e.g. 43x with SQL Server) some databases on large tables when using joins (default true)")
+	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
 	boolean performSeparateIdQueryForLargeTables = true;
 
 	protected Class<T> clazz;
