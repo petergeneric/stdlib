@@ -72,13 +72,48 @@ public class QCriteriaBuilder
 	 * This method will also set the FirstResult and the MaxResults properties of the Criteria.
 	 *
 	 * @param criteria
+	 * 		the base criteria to use
 	 */
 	public void append(Criteria criteria)
 	{
-		// Set up the joins
-		for (QJoin join : joins.values())
-			criteria.createAlias(join.getPath(), join.getAlias(), JoinType.LEFT_OUTER_JOIN);
+		append(criteria, true, true);
+	}
 
+
+	/**
+	 *
+	 * @param criteria
+	 * 		the base criteria to use
+	 * @param includeConstraints
+	 * 		if true, the regular criteria will be added to the query (all non-discriminator constraints)
+	 * @param includePagination
+	 * 		if true, LIMIT and OFFSET will be set in the query
+	 */
+	public void append(Criteria criteria, boolean includeConstraints, boolean includePagination)
+	{
+		appendJoins(criteria);
+
+		appendDiscriminators(criteria);
+
+		if (includeConstraints)
+		{
+			// Add the constraints
+			for (QConstraints constraint : constraints)
+				criteria.add(constraint.encode());
+		}
+
+		appendOrder(criteria);
+
+		if (includePagination)
+		{
+			criteria.setFirstResult(offset);
+			criteria.setMaxResults(limit);
+		}
+	}
+
+
+	public void appendDiscriminators(Criteria criteria)
+	{
 		// Add the special discriminator value constraint
 		if (!discriminators.isEmpty())
 		{
@@ -99,18 +134,22 @@ public class QCriteriaBuilder
 				criteria.add(or);
 			}
 		}
+	}
 
 
-		// Add the constraints
-		for (QConstraints constraint : constraints)
-			criteria.add(constraint.encode());
+	public void appendJoins(Criteria criteria)
+	{
+		// Set up the joins
+		for (QJoin join : joins.values())
+			criteria.createAlias(join.getPath(), join.getAlias(), JoinType.LEFT_OUTER_JOIN);
+	}
 
+
+	public void appendOrder(Criteria criteria)
+	{
 		// Add the order
 		for (QOrder order : this.order)
 			criteria.addOrder(order.encode());
-
-		criteria.setFirstResult(offset);
-		criteria.setMaxResults(limit);
 	}
 
 
