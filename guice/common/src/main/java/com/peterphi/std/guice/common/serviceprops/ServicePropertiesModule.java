@@ -11,6 +11,7 @@ import com.peterphi.std.types.Timebase;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -35,6 +36,8 @@ import java.util.Iterator;
  */
 public class ServicePropertiesModule extends AbstractModule
 {
+	private static final Logger log = Logger.getLogger(ServicePropertiesModule.class);
+
 	protected final CompositeConfiguration configuration;
 	protected final PropertiesConfiguration overrides;
 
@@ -96,6 +99,13 @@ public class ServicePropertiesModule extends AbstractModule
 				{
 					bind(clazz).annotatedWith(name).toProvider(prop.as(clazz));
 				}
+			}
+			else
+			{
+				log.warn("Non-string property value for " +
+				         key +
+				         " will only be bound as named ConfigRef type with value: " +
+				         currentValue);
 			}
 		}
 	}
