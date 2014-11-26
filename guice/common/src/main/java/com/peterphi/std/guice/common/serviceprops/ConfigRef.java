@@ -4,6 +4,8 @@ import com.google.inject.Provider;
 import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
 import org.apache.commons.configuration.Configuration;
 
+import java.util.List;
+
 public class ConfigRef implements Provider<String>
 {
 	private final Configuration configuration;
@@ -21,6 +23,24 @@ public class ConfigRef implements Provider<String>
 	public String get()
 	{
 		return configuration.getString(name);
+	}
+
+
+	public String[] getStringArray()
+	{
+		return configuration.getStringArray(name);
+	}
+
+
+	public List<Object> getList()
+	{
+		return configuration.getList(name);
+	}
+
+
+	public Object getObject()
+	{
+		return configuration.getProperty(name);
 	}
 
 
