@@ -204,6 +204,10 @@ class GuicedResteasy implements GuiceApplication
 	{
 		log.warn("Failure during " + ctx.getRequestInfo(), t);
 
+		// If the response is already committed we can't render the exception elegantly
+		if (response.isCommitted())
+			rethrow(t);
+
 		try
 		{
 			RestFailureMarshaller marshaller = new RestFailureMarshaller();
@@ -214,11 +218,10 @@ class GuicedResteasy implements GuiceApplication
 			response.setStatus(500); // internal error
 
 			// Render the HTML
-			StringBuilder sb = new StringBuilder(4096);
+			final StringBuilder sb = new StringBuilder(4096);
 			renderer.writeHTML(sb);
 
-			// Write it out
-			response.getWriter().append(sb);
+			response.getWriter().print(sb);
 		}
 		catch (Throwable newException)
 		{
