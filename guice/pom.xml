@@ -11,7 +11,7 @@
 	<description>Application Framework Guice Modules (Parent Package)</description>
 
 	<properties>
-		<guice.version>3.2.2</guice.version>
+		<guice.version>3.2.4</guice.version>
 		<metrics.version>3.0.1</metrics.version>
 		<resteasy.version>3.0.7.Final</resteasy.version>
 		
