@@ -33,6 +33,12 @@ public class GuiceProperties
 	// Guice Webapp Properties
 	//
 
+	@Doc("The endpoint to the local RESTful services root (N.B. includes any JAX-RS prefix path. Auto-generated from local.webapp.endpoint and local.restservices.prefix)")
+	public static final String LOCAL_REST_SERVICES_ENDPOINT = "local.restservices.endpoint";
+
+	@Doc("The prefix within the webapp endpoint for RESTful services (bound automatically and read from the servlet context param 'resteasy.servlet.mapping.prefix')")
+	public static final String REST_SERVICES_PREFIX = "local.restservices.prefix";
+
 	@Doc("The name of the local context; this is only present within a webapp environment, as such if it is required directly it should be read from Configuration (so null is permitted)")
 	public static final String SERVLET_CONTEXT_NAME = "servlet:context-name";
 
