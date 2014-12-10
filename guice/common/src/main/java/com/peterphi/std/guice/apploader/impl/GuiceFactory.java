@@ -176,7 +176,9 @@ class GuiceFactory
 			if (scanner != null)
 			{
 				final long finished = System.currentTimeMillis();
-				log.debug("Injector created in " + (finished - started) + " ms. Class scanning time: construction=" +
+				final String contextName = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
+
+				log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms. Class scanning time: construction=" +
 				          scanner.getConstructionTime() +
 				          "ms, search=" +
 				          scanner.getSearchTime() +
