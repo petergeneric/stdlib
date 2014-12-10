@@ -20,6 +20,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicLong;
 
 public class ClassScanner
 {
@@ -27,10 +28,26 @@ public class ClassScanner
 
 	private final AnnotationFinder finder;
 
+	private final long constructionTime;
+	private final AtomicLong searchTime = new AtomicLong(0);
 
-	private ClassScanner(AnnotationFinder finder)
+
+	private ClassScanner(AnnotationFinder finder, long constructionTime)
 	{
 		this.finder = finder;
+		this.constructionTime = constructionTime;
+	}
+
+
+	public long getConstructionTime()
+	{
+		return constructionTime;
+	}
+
+
+	public long getSearchTime()
+	{
+		return searchTime.get();
 	}
 
 
@@ -46,7 +63,26 @@ public class ClassScanner
 	 */
 	public List<Class<?>> getClasses(final String pkg, boolean recursive, final Predicate<Class<?>> predicate)
 	{
-		return filter(finder.findClassesInPackage(pkg, recursive), predicate);
+		final long started = System.currentTimeMillis();
+
+		try
+		{
+			return filter(finder.findClassesInPackage(pkg, recursive), predicate);
+		}
+		finally
+		{
+			final long finished = System.currentTimeMillis();
+			searchTime.addAndGet(finished - started);
+
+			if (log.isTraceEnabled())
+				log.trace("getClasses " +
+				          pkg +
+				          " with predicate=" +
+				          predicate +
+				          " returned in " +
+				          (finished - started) +
+				          " ms");
+		}
 	}
 
 
@@ -84,7 +120,25 @@ public class ClassScanner
 
 	public List<Class<?>> getAnnotatedClasses(Class<? extends Annotation> annotation, Predicate<Class<?>> predicate)
 	{
-		return filter(finder.findAnnotatedClasses(annotation), predicate);
+		final long started = System.currentTimeMillis();
+		try
+		{
+			return filter(finder.findAnnotatedClasses(annotation), predicate);
+		}
+		finally
+		{
+			final long finished = System.currentTimeMillis();
+			searchTime.addAndGet(finished - started);
+
+			if (log.isTraceEnabled())
+				log.trace("getAnnotatedClasses " +
+				          annotation +
+				          " with predicate=" +
+				          predicate +
+				          " returned in " +
+				          (finished - started) +
+				          " ms");
+		}
 	}
 
 
@@ -96,7 +150,25 @@ public class ClassScanner
 
 	public List<Class<?>> getInheritedAnnotatedClasses(Class<? extends Annotation> annotation, Predicate<Class<?>> predicate)
 	{
-		return filter(finder.findInheritedAnnotatedClasses(annotation), predicate);
+		final long started = System.currentTimeMillis();
+		try
+		{
+			return filter(finder.findInheritedAnnotatedClasses(annotation), predicate);
+		}
+		finally
+		{
+			final long finished = System.currentTimeMillis();
+			searchTime.addAndGet(finished - started);
+
+			if (log.isTraceEnabled())
+				log.trace("getInheritedAnnotatedClasses " +
+				          annotation +
+				          " with predicate=" +
+				          predicate +
+				          " returned in " +
+				          (finished - started) +
+				          " ms");
+		}
 	}
 
 
@@ -114,7 +186,25 @@ public class ClassScanner
 
 	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
 	{
-		return filter(finder.findImplementations(clazz), predicate);
+		final long started = System.currentTimeMillis();
+		try
+		{
+			return filter(finder.findImplementations(clazz), predicate);
+		}
+		finally
+		{
+			final long finished = System.currentTimeMillis();
+			searchTime.addAndGet(finished - started);
+
+			if (log.isTraceEnabled())
+				log.trace("getExtendingClasses " +
+				          clazz +
+				          " with predicate=" +
+				          predicate +
+				          " returned in " +
+				          (finished - started) +
+				          " ms");
+		}
 	}
 
 
@@ -150,11 +240,16 @@ public class ClassScanner
 
 	public static ClassScanner forPackages(ClassLoader classloader, String... packages)
 	{
+		final long started = System.currentTimeMillis();
+
+
 		CompositeArchive archive = getArchivesForPackage(classloader, packages);
 
 		AnnotationFinder finder = new AnnotationFinder(archive, true);
 
-		return new ClassScanner(finder);
+		final long finished = System.currentTimeMillis();
+
+		return new ClassScanner(finder, finished - started);
 	}
 
 

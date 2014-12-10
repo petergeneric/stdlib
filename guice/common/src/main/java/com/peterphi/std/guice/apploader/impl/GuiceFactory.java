@@ -127,6 +127,8 @@ class GuiceFactory
 	                                       GuiceSetup setup,
 	                                       List<GuiceRole> roles)
 	{
+		final long started = System.currentTimeMillis();
+
 		AtomicReference<Injector> injectorRef = new AtomicReference<>();
 		List<Module> modules = new ArrayList<>();
 
@@ -134,6 +136,9 @@ class GuiceFactory
 
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
+
+		// TODO come up with a nicer way of handling this?
+		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
 
 		// Set up the class scanner (if the scanner property is set and one has not been provided)
 		if (scanner == null)
@@ -146,9 +151,6 @@ class GuiceFactory
 
 		try
 		{
-			// TODO come up with a nicer way of handling this
-			final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
-
 			modules.add(shutdown);
 
 			if (registry != null)
@@ -170,6 +172,16 @@ class GuiceFactory
 				role.injectorCreated(stage, scanner, config, override, setup, modules, injectorRef, metricRegistry);
 
 			setup.injectorCreated(injector);
+
+			if (scanner != null)
+			{
+				final long finished = System.currentTimeMillis();
+				log.debug("Injector created in " + (finished - started) + " ms. Class scanning time: construction=" +
+				          scanner.getConstructionTime() +
+				          "ms, search=" +
+				          scanner.getSearchTime() +
+				          "ms");
+			}
 
 			return injector;
 		}
