@@ -6,7 +6,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.Automock;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestConfig;
@@ -42,7 +42,7 @@ class GuiceRegistryBuilder
 	{
 		GuiceRegistry registry = new GuiceRegistry();
 
-		ClassScanner scanner = null;
+		ClassScannerFactory scanner = null;
 		GuiceRole[] roles = null;
 		if (config != null)
 		{
@@ -55,7 +55,7 @@ class GuiceRegistryBuilder
 				for (Class c : config.classPackages())
 					packages.add(c.getPackage().getName());
 
-				scanner = ClassScanner.forPackages(packages.toArray(new String[packages.size()]));
+				scanner = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
 			}
 
 			if (config.role().length > 0)
@@ -80,7 +80,10 @@ class GuiceRegistryBuilder
 
 		GuiceBuilder builder = registry.getBuilder();
 
-		builder.withScanner(scanner);
+		if (scanner != null)
+			builder.withScannerFactory(scanner);
+		else
+			builder.withNoScannerFactory();
 
 		if (config != null && config.config().length > 0)
 			builder.withConfig(config.config());

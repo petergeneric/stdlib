@@ -6,7 +6,7 @@ import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -44,7 +44,7 @@ class ModuleAddingGuiceRole implements GuiceRole
 
 	@Override
 	public void register(final Stage stage,
-	                     final ClassScanner scanner,
+	                     final ClassScannerFactory scanner,
 	                     final CompositeConfiguration config,
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
@@ -58,7 +58,7 @@ class ModuleAddingGuiceRole implements GuiceRole
 
 	@Override
 	public void injectorCreated(final Stage stage,
-	                            final ClassScanner scanner,
+	                            final ClassScannerFactory scanner,
 	                            final CompositeConfiguration config,
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,

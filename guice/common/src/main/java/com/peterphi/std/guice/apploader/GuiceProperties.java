@@ -91,4 +91,10 @@ public class GuiceProperties
 
 	@Doc("If true then the metric data returned by the metric rest service will include raw measurements as well as computed aggregates (default false)")
 	public static final String METRICS_JAXRS_SHOW_SAMPLES = "metrics-jaxrs.show-samples";
+
+	//
+	// Guice DbUnit module
+	//
+	@Doc("If true then when the guice-dbunit jar is loaded it'll auto-register DB Unit to work with hibernate(default true)")
+	public static final java.lang.String ROLE_DBUNIT_AUTO = "role.dbunit.auto";
 }

@@ -8,6 +8,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -26,7 +27,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 
 	@Override
 	public void register(final Stage stage,
-	                     final ClassScanner scanner,
+	                     final ClassScannerFactory scannerFactory,
 	                     final CompositeConfiguration config,
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
@@ -37,9 +38,14 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 		// TODO remove HACK Don't run if we're within a unit test (this is an ugly hack...)
 		if (!config.getBoolean(GuiceProperties.UNIT_TEST, false))
 		{
-			if (scanner != null && config.getBoolean(GuiceProperties.ROLE_JAXRS_SERVER_AUTO, true))
+			final ClassScanner scanner = scannerFactory.getInstance();
+
+			if (scanner == null)
+				throw new IllegalArgumentException("No classpath scanner available, missing scan.packages?");
+
+			if (config.getBoolean(GuiceProperties.ROLE_JAXRS_SERVER_AUTO, true))
 			{
-				modules.add(new JAXRSAutoRegisterServicesModule(scanner));
+				modules.add(new JAXRSAutoRegisterServicesModule(scannerFactory));
 			}
 		}
 	}
@@ -47,7 +53,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 
 	@Override
 	public void injectorCreated(final Stage stage,
-	                            final ClassScanner scanner,
+	                            final ClassScannerFactory scanner,
 	                            final CompositeConfiguration config,
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,

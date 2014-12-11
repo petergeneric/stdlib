@@ -9,6 +9,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import org.apache.commons.configuration.CompositeConfiguration;
@@ -35,7 +36,7 @@ class GuiceFactory
 
 
 	static Injector build(final GuiceRegistry registry,
-	                      final ClassScanner scanner,
+	                      ClassScannerFactory scannerFactory,
 	                      final List<Configuration> configs,
 	                      final List<GuiceRole> roles,
 	                      final GuiceSetup staticSetup,
@@ -44,7 +45,7 @@ class GuiceFactory
 	                      final ClassLoader classloader)
 	{
 
-		ServiceLoader<GuiceRole> loader = ServiceLoader.load(GuiceRole.class);
+		final ServiceLoader<GuiceRole> loader = ServiceLoader.load(GuiceRole.class);
 
 		// Find additional guice roles from jar files using the Service Provider Interface
 		if (autoLoadRoles)
@@ -81,7 +82,7 @@ class GuiceFactory
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		final PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
+		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
 
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
@@ -91,8 +92,19 @@ class GuiceFactory
 		}
 		else
 		{
-			throw new RuntimeException("No overrides configuration! Override File Property was: " +
-			                           config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
+			overrideFile = new PropertiesConfiguration();
+		}
+
+
+		// Set up the class scanner factory (if the scanner property is set and one has not been provided)
+		if (scannerFactory == null)
+		{
+			List<Object> packages = config.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList());
+
+			if (packages != null && !packages.isEmpty())
+				scannerFactory = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
+			else
+				throw new IllegalArgumentException("No ClassScanner specified!");
 		}
 
 		final GuiceSetup setup;
@@ -121,12 +133,12 @@ class GuiceFactory
 			setup = staticSetup;
 		}
 
-		return createInjector(registry, scanner, config, overrideFile, setup, roles);
+		return createInjector(registry, scannerFactory, config, overrideFile, setup, roles);
 	}
 
 
 	private static Injector createInjector(GuiceRegistry registry,
-	                                       ClassScanner scanner,
+	                                       ClassScannerFactory scannerFactory,
 	                                       CompositeConfiguration config,
 	                                       PropertiesConfiguration override,
 	                                       GuiceSetup setup,
@@ -142,20 +154,14 @@ class GuiceFactory
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
 
-		// TODO come up with a nicer way of handling this?
 		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
-
-		// Set up the class scanner (if the scanner property is set and one has not been provided)
-		if (scanner == null)
-		{
-			List<Object> packages = config.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList());
-
-			if (packages != null && !packages.isEmpty())
-				scanner = ClassScanner.forPackages(packages.toArray(new String[packages.size()]));
-		}
 
 		try
 		{
+			// Hold a strong reference to the ClassScanner instance to help the JVM not garbage collect it during startup
+			// N.B. we don't actually do anything with the scanner in this method (other than read metrics)
+			final ClassScanner scanner = scannerFactory.getInstance();
+
 			modules.add(shutdown);
 
 			if (registry != null)
@@ -163,7 +169,7 @@ class GuiceFactory
 
 			// Initialise all the roles
 			for (GuiceRole role : roles)
-				role.register(stage, scanner, config, override, setup, modules, injectorRef, metricRegistry);
+				role.register(stage, scannerFactory, config, override, setup, modules, injectorRef, metricRegistry);
 
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
@@ -174,11 +180,11 @@ class GuiceFactory
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
 			for (GuiceRole role : roles)
-				role.injectorCreated(stage, scanner, config, override, setup, modules, injectorRef, metricRegistry);
+				role.injectorCreated(stage, scannerFactory, config, override, setup, modules, injectorRef, metricRegistry);
 
 			setup.injectorCreated(injector);
 
-			if (scanner != null)
+			if (scannerFactory != null)
 			{
 				final long finished = System.currentTimeMillis();
 				final String contextName = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
@@ -186,12 +192,15 @@ class GuiceFactory
 				log.debug("Injector for " +
 				          contextName +
 				          " created in " +
-				          (finished - started) +
-				          " ms. Class scanning time: construction=" +
-				          scanner.getConstructionTime() +
-				          "ms, search=" +
-				          scanner.getSearchTime() +
-				          "ms");
+				          (finished - started) + " ms");
+
+				if (scanner != null)
+					log.debug("Class scanner stats: insts=" +
+					          scannerFactory.getMetricNewInstanceCount() +
+					          " cached createTime=" +
+					          scanner.getConstructionTime() +
+					          ", scanTime=" +
+					          scanner.getSearchTime());
 			}
 
 			return injector;

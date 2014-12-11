@@ -3,19 +3,8 @@ package com.peterphi.std.guice.common;
 import com.google.common.base.Predicate;
 import org.apache.log4j.Logger;
 import org.apache.xbean.finder.AnnotationFinder;
-import org.apache.xbean.finder.archive.Archive;
-import org.apache.xbean.finder.archive.CompositeArchive;
-import org.apache.xbean.finder.archive.FileArchive;
-import org.apache.xbean.finder.archive.FilteredArchive;
-import org.apache.xbean.finder.archive.JarArchive;
-import org.apache.xbean.finder.filter.PrefixFilter;
 
-import java.io.IOException;
 import java.lang.annotation.Annotation;
-import java.net.URL;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Enumeration;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
@@ -32,7 +21,16 @@ public class ClassScanner
 	private final AtomicLong searchTime = new AtomicLong(0);
 
 
-	private ClassScanner(AnnotationFinder finder, long constructionTime)
+	/**
+	 * Construct a new ClassScanner wrapper around an {@link org.apache.xbean.finder.AnnotationFinder}
+	 *
+	 * @param finder
+	 * 		the xbeans-finder instance to use for searches
+	 * @param constructionTime
+	 * 		the time (in ms) taken to construct the associated {@link org.apache.xbean.finder.AnnotationFinder} instance (to expose
+	 * 		for timing data)
+	 */
+	public ClassScanner(AnnotationFinder finder, long constructionTime)
 	{
 		this.finder = finder;
 		this.constructionTime = constructionTime;
@@ -226,33 +224,6 @@ public class ClassScanner
 	}
 
 
-	public static ClassScanner forPackages(String... packages)
-	{
-		return forPackages(Thread.currentThread().getContextClassLoader(), packages);
-	}
-
-
-	public static ClassScanner forPackages(Class<?>... classes)
-	{
-		return forPackages(getPackages(classes));
-	}
-
-
-	public static ClassScanner forPackages(ClassLoader classloader, String... packages)
-	{
-		final long started = System.currentTimeMillis();
-
-
-		CompositeArchive archive = getArchivesForPackage(classloader, packages);
-
-		AnnotationFinder finder = new AnnotationFinder(archive, true);
-
-		final long finished = System.currentTimeMillis();
-
-		return new ClassScanner(finder, finished - started);
-	}
-
-
 	private static String[] getPackages(Class<?>... classes)
 	{
 		Set<String> set = new HashSet<>(classes.length);
@@ -261,43 +232,6 @@ public class ClassScanner
 			set.add(clazz.getPackage().getName());
 
 		return set.toArray(new String[set.size()]);
-	}
-
-
-	private static CompositeArchive getArchivesForPackage(final ClassLoader classloader, final String... packages)
-	{
-		try
-		{
-			final List<Archive> archives = new ArrayList<>();
-
-			for (String pkg : packages)
-			{
-				if (!pkg.endsWith("."))
-					pkg += "."; // Add a trailing dot for easier package matching
-
-				final String baseFolder = pkg.replace('.', '/');
-
-				final Enumeration<URL> urls = classloader.getResources(baseFolder);
-
-				while (urls.hasMoreElements())
-				{
-					final URL url = urls.nextElement();
-
-					log.info("Found source: " + url);
-
-					if (url.getProtocol() != null && (url.getProtocol().equals("zip") || url.getProtocol().equals("jar")))
-						archives.add(new FilteredArchive(new JarArchive(classloader, url), new PrefixFilter(pkg)));
-					else
-						archives.add(new FileArchive(classloader, url, pkg));
-				}
-			}
-
-			return new CompositeArchive(archives);
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException("Error loading archives for packages: " + Arrays.asList(packages), e);
-		}
 	}
 
 

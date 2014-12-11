@@ -7,7 +7,7 @@ import com.google.inject.Stage;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -26,12 +26,13 @@ public class HibernateAutoGuiceRole implements GuiceRole
 
 	@Override
 	public void register(final Stage stage,
-	                     final ClassScanner scanner,
+	                     final ClassScannerFactory scanner,
 	                     final CompositeConfiguration config,
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
-	                     final AtomicReference<Injector> injectorRef,final MetricRegistry metrics)
+	                     final AtomicReference<Injector> injectorRef,
+	                     final MetricRegistry metrics)
 	{
 		// Unless the user has disabled automatic hibernate setup...
 		if (scanner != null && config.getBoolean(GuiceProperties.ROLE_HIBERNATE_AUTO, true))
@@ -43,12 +44,13 @@ public class HibernateAutoGuiceRole implements GuiceRole
 
 	@Override
 	public void injectorCreated(final Stage stage,
-	                            final ClassScanner scanner,
+	                            final ClassScannerFactory scanner,
 	                            final CompositeConfiguration config,
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
-	                            final AtomicReference<Injector> injectorRef,final MetricRegistry metrics)
+	                            final AtomicReference<Injector> injectorRef,
+	                            final MetricRegistry metrics)
 	{
 
 	}

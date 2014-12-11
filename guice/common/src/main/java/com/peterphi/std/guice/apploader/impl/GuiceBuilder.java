@@ -5,7 +5,7 @@ import com.google.inject.Module;
 import com.peterphi.std.guice.apploader.BasicSetup;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.MapConfiguration;
@@ -24,7 +24,7 @@ public class GuiceBuilder
 
 	private boolean autoLoadProperties = true;
 	private boolean autoLoadRoles = true;
-	private ClassScanner scanner = null;
+	private ClassScannerFactory scannerFactory = null;
 	private List<Configuration> configs = new ArrayList<>();
 	private List<GuiceRole> roles = new ArrayList<>();
 	private GuiceSetup setup;
@@ -48,11 +48,17 @@ public class GuiceBuilder
 	}
 
 
-	public GuiceBuilder withScanner(ClassScanner scanner)
+	public GuiceBuilder withScannerFactory(ClassScannerFactory scannerFactory)
 	{
-		this.scanner = scanner;
+		this.scannerFactory = scannerFactory;
 
 		return this;
+	}
+
+	
+	public GuiceBuilder withNoScannerFactory()
+	{
+		return withScannerFactory(new ClassScannerFactory());
 	}
 
 
@@ -167,7 +173,7 @@ public class GuiceBuilder
 		List<GuiceRole> roles = new ArrayList<>(this.roles);
 
 		return GuiceFactory.build(this.registry,
-		                          this.scanner,
+		                          this.scannerFactory,
 		                          configs,
 		                          roles,
 		                          this.setup,

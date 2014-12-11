@@ -5,6 +5,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
 import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -36,8 +37,8 @@ public interface GuiceRole
 	 * GuiceSetup, java.util.List, java.util.concurrent.atomic.AtomicReference)}
 	 *
 	 * @param stage
-	 * @param scanner
-	 * 		(optional) a classpath scanner for the user application classes
+	 * @param scannerFactory
+	 * 		a factory for a classpath scanner for the user application classes. Implementations should not hold on to this for long (to save memory usage)
 	 * @param config
 	 * @param overrides
 	 * @param setup
@@ -47,7 +48,7 @@ public interface GuiceRole
 	 * 		the MetricsRegistry for environment-wide metrics
 	 */
 	public void register(Stage stage,
-	                     ClassScanner scanner,
+	                     ClassScannerFactory scannerFactory,
 	                     CompositeConfiguration config,
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,
@@ -59,8 +60,8 @@ public interface GuiceRole
 	 * Called once the Injector has been created
 	 *
 	 * @param stage
-	 * @param scanner
-	 * 		(optional) a classpath scanner for the user application classes
+	 * @param scannerFactory
+	 * 		a factory for a classpath scanner for the user application classes. Implementations should not hold on to this for long (to save memory usage)
 	 * @param config
 	 * @param overrides
 	 * @param setup
@@ -72,7 +73,7 @@ public interface GuiceRole
 	 * 		the MetricsRegistry for environment-wide metrics
 	 */
 	void injectorCreated(Stage stage,
-	                     ClassScanner scanner,
+	                     ClassScannerFactory scannerFactory,
 	                     CompositeConfiguration config,
 	                     PropertiesConfiguration overrides,
 	                     GuiceSetup setup,

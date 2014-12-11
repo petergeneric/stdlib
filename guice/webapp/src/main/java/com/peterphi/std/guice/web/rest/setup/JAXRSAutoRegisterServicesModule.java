@@ -3,7 +3,7 @@ package com.peterphi.std.guice.web.rest.setup;
 import com.google.inject.AbstractModule;
 import com.google.inject.ImplementedBy;
 import com.google.inject.spi.Message;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import org.apache.log4j.Logger;
 
@@ -25,12 +25,12 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(JAXRSAutoRegisterServicesModule.class);
 
-	private final ClassScanner scanner;
+	private final ClassScannerFactory scannerFactory;
 
 
-	public JAXRSAutoRegisterServicesModule(final ClassScanner scanner)
+	public JAXRSAutoRegisterServicesModule(final ClassScannerFactory scannerFactory)
 	{
-		this.scanner = scanner;
+		this.scannerFactory = scannerFactory;
 	}
 
 
@@ -38,7 +38,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 	protected void configure()
 	{
 		// scan for @Path annotated classes
-		for (Class<?> iface : scanner.getAnnotatedClasses(Path.class))
+		for (Class<?> iface : scannerFactory.getInstance().getAnnotatedClasses(Path.class))
 		{
 			try
 			{
@@ -63,7 +63,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 		else
 		{
 			// Search for implementations
-			final List<Class<? extends T>> implementations = scanner.getExtendingClasses(clazz);
+			final List<Class<? extends T>> implementations = scannerFactory.getInstance().getExtendingClasses(clazz);
 
 			if (implementations.size() == 1)
 			{

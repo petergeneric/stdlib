@@ -18,7 +18,7 @@ public class RetryMethodInterceptorTest
 	{
 		AtomicInteger var = new AtomicInteger();
 
-		Injector injector = new GuiceBuilder().withSetup(new BasicSetup()).withAutoLoadRoles(false).build();
+		Injector injector = new GuiceBuilder().withSetup(new BasicSetup()).withNoScannerFactory().withAutoLoadRoles(false).build();
 
 		RetryTest test = injector.getInstance(RetryTest.class);
 

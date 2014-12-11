@@ -7,7 +7,7 @@ import com.google.inject.Stage;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import com.peterphi.std.guice.common.ClassScanner;
+import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.thymeleaf.ThymeleafModule;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
@@ -27,7 +27,7 @@ public class AutoThymeleafGuiceRole implements GuiceRole
 
 	@Override
 	public void register(final Stage stage,
-	                     final ClassScanner scanner,
+	                     final ClassScannerFactory scanner,
 	                     final CompositeConfiguration config,
 	                     final PropertiesConfiguration overrides,
 	                     final GuiceSetup setup,
@@ -44,7 +44,7 @@ public class AutoThymeleafGuiceRole implements GuiceRole
 
 	@Override
 	public void injectorCreated(final Stage stage,
-	                            final ClassScanner scanner,
+	                            final ClassScannerFactory scanner,
 	                            final CompositeConfiguration config,
 	                            final PropertiesConfiguration overrides,
 	                            final GuiceSetup setup,
