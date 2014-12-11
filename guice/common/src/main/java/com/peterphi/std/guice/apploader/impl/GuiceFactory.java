@@ -81,13 +81,18 @@ class GuiceFactory
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
+		final PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
 
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
 			log.debug("Applying overrides: " + overrideFile.getFile());
 			config = combine(overrideFile, configs);
+		}
+		else
+		{
+			throw new RuntimeException("No overrides configuration! Override File Property was: " +
+			                           config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
 		}
 
 		final GuiceSetup setup;
@@ -178,7 +183,11 @@ class GuiceFactory
 				final long finished = System.currentTimeMillis();
 				final String contextName = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
-				log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms. Class scanning time: construction=" +
+				log.debug("Injector for " +
+				          contextName +
+				          " created in " +
+				          (finished - started) +
+				          " ms. Class scanning time: construction=" +
 				          scanner.getConstructionTime() +
 				          "ms, search=" +
 				          scanner.getSearchTime() +
