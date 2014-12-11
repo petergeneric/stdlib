@@ -25,6 +25,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-testing</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+
+		<dependency>
 			<groupId>log4j</groupId>
 			<artifactId>log4j</artifactId>
 		</dependency>
