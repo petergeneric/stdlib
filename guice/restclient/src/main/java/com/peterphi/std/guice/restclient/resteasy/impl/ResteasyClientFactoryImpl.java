@@ -119,13 +119,13 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 
 		if (fastFailTimeouts)
 		{
-			HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
-			HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
+			HttpConnectionParams.setConnectionTimeout(params, (int) fastFailConnectionTimeout.getMilliseconds());
+			HttpConnectionParams.setSoTimeout(params, (int) fastFailSocketTimeout.getMilliseconds());
 		}
 		else
 		{
-			HttpConnectionParams.setConnectionTimeout(params, (int) fastFailConnectionTimeout.getMilliseconds());
-			HttpConnectionParams.setSoTimeout(params, (int) fastFailSocketTimeout.getMilliseconds());
+			HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
+			HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
 		}
 
 		// Prohibit keepalive if desired
