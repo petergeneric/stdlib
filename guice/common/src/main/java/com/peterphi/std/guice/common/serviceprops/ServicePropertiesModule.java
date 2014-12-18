@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.types.Timebase;
@@ -24,7 +25,10 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 /**
  * Module that binds properties from {@link PropertyFile}s in the classpath (called <code>service.properties</code> by
@@ -37,6 +41,11 @@ import java.util.Iterator;
 public class ServicePropertiesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(ServicePropertiesModule.class);
+
+	/**
+	 * A set of property names that are permitted to have a non-string value without a warning being triggered
+	 */
+	public static final Set<String> NO_WARN_NON_STRING_PROPERTIES = new HashSet<>(Arrays.asList(GuiceProperties.SCAN_PACKAGES));
 
 	protected final CompositeConfiguration configuration;
 	protected final PropertiesConfiguration overrides;
@@ -102,10 +111,12 @@ public class ServicePropertiesModule extends AbstractModule
 			}
 			else
 			{
-				log.warn("Non-string property value for " +
-				         key +
-				         " will only be bound as named ConfigRef type with value: " +
-				         currentValue);
+				// Log about non-string properties (unless they're no warn properties)
+				if (!NO_WARN_NON_STRING_PROPERTIES.contains(key))
+					log.warn("Non-string property value for " +
+					         key +
+					         " will only be bound as named ConfigRef type with value: " +
+					         currentValue);
 			}
 		}
 	}
