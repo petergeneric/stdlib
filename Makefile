@@ -52,4 +52,4 @@ clean:
 	$(MVN) clean
 
 release:
-	env MVN="mvn2" ./release.sh -s
+	env MVN="mvn3" ./release.sh -x -s

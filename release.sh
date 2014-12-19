@@ -54,6 +54,7 @@ function usage() {
 	echo "  -n    Sets the next development version number to use (or 'auto' to increment release version)"
 	echo "  -c    Assume this as pom.xml version without inspecting it with xmllint"
 	echo "  -s    If provided, digitally signs the release before deploying it"
+	echo "  -x    Issue a nexus repository close and release post deployment"
 	echo ""
 	echo "  -h    For this message"
 	echo ""
@@ -63,7 +64,7 @@ function usage() {
 # HANDLE COMMAND-LINE OPTIONS #
 ###############################
 
-while getopts "ahsr:n:c:" o; do
+while getopts "xahsr:n:c:" o; do
 	case "${o}" in
 		a)
 			RELEASE_VERSION="auto"
@@ -80,6 +81,9 @@ while getopts "ahsr:n:c:" o; do
 			;;
 		s)
 			MVN_TARGET_PRE_DEPLOY="gpg:sign"
+			;;
+		x)
+			MVN_TARGET_POST_DEPLOY="nexus-staging:close nexus-staging:release"
 			;;
 		h)
 			usage
@@ -216,7 +220,8 @@ echo ""
 
 
 # build and deploy the release
-$MVN clean package source:jar javadoc:jar package $MVN_TARGET_PRE_DEPLOY deploy || rollback_and_die_with "Build/Deploy failure. Release failed."
+#$MVN -X clean package source:jar javadoc:jar package $MVN_TARGET_PRE_DEPLOY deploy $MVN_TARGET_POST_DEPLOY || rollback_and_die_with "Build/Deploy failure. Release failed."
+$MVN -X -DperformRelease=true clean deploy || rollback_and_die_with "Build/Deploy failure. Release failed."
 
 # tag the release (N.B. should this be before perform the release?)
 git tag "v${RELEASE_VERSION}" || die_with "Failed to create tag ${RELEASE_VERSION}! Release has been deployed, however"
@@ -225,7 +230,7 @@ git tag "v${RELEASE_VERSION}" || die_with "Failed to create tag ${RELEASE_VERSIO
 # START THE NEXT DEVELOPMENT PROCESS #
 ######################################
 
-$MVN versions:set -DgenerateBackupPoms=false "-DnewVersion=${NEXT_VERSION}" || die_with "Failed to set next dev version on pom.xml files, please do this manually"
+$MVN -X versions:set -DgenerateBackupPoms=false "-DnewVersion=${NEXT_VERSION}" || die_with "Failed to set next dev version on pom.xml files, please do this manually"
 
 git commit -a -m "Start next development version ${NEXT_VERSION}" || die_with "Failed to commit updated pom.xml versions for next dev version! Please do this manually"
 
