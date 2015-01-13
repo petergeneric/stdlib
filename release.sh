@@ -208,4 +208,5 @@ $MVN versions:set -DgenerateBackupPoms=false "-DnewVersion=${NEXT_VERSION}" || d
 
 git commit -a -m "Start next development version ${NEXT_VERSION}" || die_with "Failed to commit updated pom.xml versions for next dev version! Please do this manually"
 
+git push || die_with "Failed to push commits. Please do this manually"
 git push --tags || die_with "Failed to push tags. Please do this manually"
