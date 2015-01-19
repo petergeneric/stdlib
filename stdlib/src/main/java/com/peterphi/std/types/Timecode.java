@@ -299,6 +299,21 @@ public class Timecode
 
 
 	/**
+	 * Returns the timecode in a format that is similar to the ISO 8601 Duration format, except with an <strong>F</strong> field
+	 * for frames.
+	 *
+	 * @return
+	 */
+	public String toISODurationWithFrames(final boolean includeDays)
+	{
+		if (includeDays && days != 0)
+			return String.format("P%02dDT%02dH%02dM%02dS%02dF", days, hours, minutes, seconds, frames);
+		else
+			return String.format("PT%02dH%02dM%02dS%02dF", hours, minutes, seconds, frames);
+	}
+
+
+	/**
 	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
 	 * timecode including days@rate</code>
 	 * where
@@ -320,7 +335,8 @@ public class Timecode
 	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
 	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
 	 *
-	 * @param includeDays true if the days component should be emitted too (if non-zero)
+	 * @param includeDays
+	 * 		true if the days component should be emitted too (if non-zero)
 	 *
 	 * @return
 	 */
@@ -421,6 +437,7 @@ public class Timecode
 
 		return TimecodeBuilder.fromSamples(totalSamples, dropFrame).build();
 	}
+
 
 	/**
 	 * Add some samples to this timecode, throwing an exception if precision would be lost

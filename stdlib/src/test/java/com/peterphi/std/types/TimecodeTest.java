@@ -287,4 +287,47 @@ public class TimecodeTest
 			assertFalse(smpte + " shouldn't be between " + start + " and " + end, between);
 		}
 	}
+
+
+	@Test
+	public void testToSMPTEString()
+	{
+		assertEquals("00:00:00:00", Timecode.valueOf("00:00:00:00@25").toSMPTEString());
+		assertEquals("00:00:00:24", Timecode.valueOf("00:00:00:24@25").toSMPTEString());
+		assertEquals("00:00:10:24", Timecode.valueOf("00:00:10:24@25").toSMPTEString());
+		assertEquals("00:15:10:24", Timecode.valueOf("00:15:10:24@25").toSMPTEString());
+		assertEquals("20:15:10:24", Timecode.valueOf("20:15:10:24@25").toSMPTEString());
+	}
+
+	@Test
+	public void testToEncodedString()
+	{
+		assertEquals("00:00:00:00@25", Timecode.valueOf("00:00:00:00@25").toEncodedString());
+		assertEquals("00:00:00:24@25", Timecode.valueOf("00:00:00:24@25").toEncodedString());
+		assertEquals("00:00:10:24@25", Timecode.valueOf("00:00:10:24@25").toEncodedString());
+		assertEquals("00:15:10:24@25", Timecode.valueOf("00:15:10:24@25").toEncodedString());
+		assertEquals("20:15:10:24@25", Timecode.valueOf("20:15:10:24@25").toEncodedString());
+	}
+
+	@Test
+	public void testToEncodedStringWithDays()
+	{
+		assertEquals("20:15:10:24@25", Timecode.valueOf("20:15:10:24@25").toEncodedString(true));
+		assertEquals("30:20:15:10:24@25", Timecode.valueOf("30:20:15:10:24@25").toEncodedString(true));
+	}
+
+
+	@Test
+	public void testToISODurationWithFrames()
+	{
+		assertEquals("PT00H00M00S00F", Timecode.valueOf("00:00:00:00@25").toISODurationWithFrames(false));
+		assertEquals("PT00H00M00S00F", Timecode.valueOf("00:00:00:00@25").toISODurationWithFrames(true));
+		assertEquals("PT00H00M00S24F", Timecode.valueOf("00:00:00:24@25").toISODurationWithFrames(true));
+		assertEquals("PT00H00M10S24F", Timecode.valueOf("00:00:10:24@25").toISODurationWithFrames(true));
+		assertEquals("PT00H15M10S24F", Timecode.valueOf("00:15:10:24@25").toISODurationWithFrames(true));
+		assertEquals("PT20H15M10S24F", Timecode.valueOf("20:15:10:24@25").toISODurationWithFrames(true));
+
+		assertEquals("P01DT20H15M10S24F", Timecode.valueOf("01:20:15:10:24@25").toISODurationWithFrames(true));
+		assertEquals("P30DT20H15M10S24F", Timecode.valueOf("30:20:15:10:24@25").toISODurationWithFrames(true));
+	}
 }
