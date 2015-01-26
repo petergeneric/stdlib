@@ -66,6 +66,8 @@ public class GuiceProperties
 	@Doc("If true, use the request URL when building URLs for freemarker templates (default false)")
 	public static final String USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER = "freemarker.urlhelper.use-request-host";
 
+	@Doc("If true then UnhandledExceptions thrown as a result of a ClientAbortException will only be logged at TRACE (default true)")
+	public static final String SUPPRESS_CLIENT_ABORT_EXCEPTIONS = "framework.suppress-ClientAbortException";
 
 	//
 	// Guice Hibernate properties

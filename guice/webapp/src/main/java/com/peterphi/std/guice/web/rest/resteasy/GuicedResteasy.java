@@ -5,7 +5,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
@@ -22,6 +24,7 @@ import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.spi.Registry;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.jboss.resteasy.spi.UnhandledException;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
@@ -64,6 +67,10 @@ class GuicedResteasy implements GuiceApplication
 	private Timer httpCalls;
 	private Meter httpExceptions;
 	private Meter httpNotFoundExceptions;
+
+	@Inject(optional = true)
+	@Named(GuiceProperties.SUPPRESS_CLIENT_ABORT_EXCEPTIONS)
+	boolean suppressClientAbortExceptions = true;
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -202,6 +209,16 @@ class GuicedResteasy implements GuiceApplication
 	                                HttpServletResponse response,
 	                                Throwable t) throws ServletException, IOException, RuntimeException, Error
 	{
+		if (suppressClientAbortExceptions &&
+		    t instanceof UnhandledException &&
+		    t.getCause() != null &&
+		    t.getCause().getClass().getName().equals("org.apache.catalina.connector.ClientAbortException"))
+		{
+			log.warn("Client aborted during request. Ignoring. Detail: " + ctx.getRequestInfo(), t);
+
+			return;
+		}
+
 		log.warn("Failure during " + ctx.getRequestInfo(), t);
 
 		// If the response is already committed we can't render the exception elegantly
