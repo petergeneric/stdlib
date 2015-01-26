@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<title>Service Metrics</title>
 	<meta charset="utf-8"/>
@@ -52,9 +52,12 @@
 		</tr>
 		</thead>
 		<tbody>
+		<!--@thymesVar id="gauges" type="java.util.Set<java.util.Map.Entry<java.lang.String, com.codahale.metrics.Gauge>>"-->
+		<!--@thymesVar id="entry" type="java.util.Map.Entry<java.lang.String, com.codahale.metrics.Gauge>"-->
 		<tr th:each="entry: ${gauges}" th:id="${entry.key}+'-gauge'">
 			<td th:text="${entry.key}"></td>
-			<td th:text="${entry.value.value}"></td>
+			<td th:if="${entry.getValue()}" th:text="${entry.getValue().getValue()}"></td>
+			<td th:unless="${entry.getValue()}">0</td>
 		</tr>
 		</tbody>
 	</table>
