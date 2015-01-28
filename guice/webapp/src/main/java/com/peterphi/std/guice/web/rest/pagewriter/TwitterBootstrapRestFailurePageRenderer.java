@@ -52,7 +52,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	@Override
 	protected String getTitle()
 	{
-		if (failure.exception.detail.length() < 1024)
+		if (failure.exception.detail == null || failure.exception.detail.length() < 1024)
 			return failure.exception.shortName + ": " + failure.exception.detail;
 		else
 			return failure.exception.shortName; // Detail is very long, omit it from the page title
