@@ -1,58 +1,26 @@
 package com.peterphi.std.guice.hibernate.hqlchildcount;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
-import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
-import com.peterphi.std.guice.hibernate.module.HibernateModule;
-import com.peterphi.std.io.PropertyFile;
-import org.hibernate.cfg.Configuration;
-import org.junit.After;
-import org.junit.Before;
+import com.peterphi.std.guice.testing.GuiceUnit;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
 
+@RunWith(GuiceUnit.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
+             classPackages = QEntity.class)
 public class HqlChildCountTest
 {
-	@Inject
-	ShutdownManager shutdownManager;
-
 	@Inject
 	QDao dao;
 
 	@Inject
 	HibernateDao<REntity, Long> rDao;
-
-
-	@Before
-	public void setUp()
-	{
-		PropertyFile props = PropertyFile.find("hibernate-tests-in-memory-hsqldb.properties");
-
-		final Injector injector = GuiceInjectorBootstrap.createInjector(props, new BasicSetup(new HibernateModule()
-		{
-			@Override
-			protected void configure(final Configuration config)
-			{
-				config.addAnnotatedClass(QEntity.class);
-				config.addAnnotatedClass(REntity.class);
-			}
-		}));
-
-		injector.injectMembers(this);
-	}
-
-
-	@After
-	public void tearDown()
-	{
-		shutdownManager.shutdown();
-	}
 
 
 	/**

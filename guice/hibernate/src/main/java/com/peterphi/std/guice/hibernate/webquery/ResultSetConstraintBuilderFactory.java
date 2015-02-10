@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 
 import java.util.List;
 import java.util.Map;
@@ -12,6 +13,7 @@ public class ResultSetConstraintBuilderFactory
 {
 	@Inject(optional = true)
 	@Named("resultset.default-limit")
+	@Doc("The default limit to use for web queries (default 200)")
 	int defaultLimit = 200;
 
 

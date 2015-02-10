@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.thymeleaf;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.Timer;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IContext;
@@ -18,27 +20,37 @@ public class ThymeleafCall implements TemplateCall
 	private final IContext context;
 	private final String name;
 
-	ThymeleafCall(TemplateEngine engine, IContext context, String name)
+	private final Timer calls;
+	private final Meter failures;
+
+
+	ThymeleafCall(TemplateEngine engine, IContext context, String name, final Timer calls, final Meter failures)
 	{
 		this.engine = engine;
 		this.context = context;
 		this.name = name;
+		this.calls = calls;
+		this.failures = failures;
 	}
+
 
 	public TemplateEngine getEngine()
 	{
 		return engine;
 	}
 
+
 	public IContext getContext()
 	{
 		return context;
 	}
 
+
 	public String getName()
 	{
 		return name;
 	}
+
 
 	/**
 	 * Sets a variable which is then exposed to the view layer
@@ -55,6 +67,7 @@ public class ThymeleafCall implements TemplateCall
 		return this;
 	}
 
+
 	@Override
 	public ThymeleafCall setAll(final Map<String, Object> values)
 	{
@@ -66,6 +79,7 @@ public class ThymeleafCall implements TemplateCall
 		return this;
 	}
 
+
 	/**
 	 * Render the template to a String
 	 *
@@ -73,16 +87,46 @@ public class ThymeleafCall implements TemplateCall
 	 */
 	public String process()
 	{
-		return engine.process(name, context);
+		Timer.Context timer = calls.time();
+		try
+		{
+			return engine.process(name, context);
+		}
+		catch (Throwable e)
+		{
+			failures.mark();
+
+			throw e;
+		}
+		finally
+		{
+			timer.stop();
+		}
 	}
+
 
 	/**
 	 * Render the template to a Writer
 	 */
 	public void process(Writer writer)
 	{
-		engine.process(name, context, writer);
+		Timer.Context timer = calls.time();
+		try
+		{
+			engine.process(name, context, writer);
+		}
+		catch (Throwable e)
+		{
+			failures.mark();
+
+			throw e;
+		}
+		finally
+		{
+			timer.stop();
+		}
 	}
+
 
 	/**
 	 * Render the template as the entity for a ResponseBuilder, returning the built Response
@@ -91,10 +135,24 @@ public class ThymeleafCall implements TemplateCall
 	 */
 	public Response process(ResponseBuilder responseBuilder)
 	{
-		final String entity = process();
+		Timer.Context timer = calls.time();
+		try
+		{
+			final String entity = process();
 
-		responseBuilder.entity(entity);
+			responseBuilder.entity(entity);
 
-		return responseBuilder.build();
+			return responseBuilder.build();
+		}
+		catch (Throwable e)
+		{
+			failures.mark();
+
+			throw e;
+		}
+		finally
+		{
+			timer.stop();
+		}
 	}
 }

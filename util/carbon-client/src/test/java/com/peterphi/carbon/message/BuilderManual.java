@@ -7,7 +7,7 @@ import com.peterphi.carbon.guice.CarbonClientModule;
 import com.peterphi.carbon.type.immutable.CarbonJobInfo;
 import com.peterphi.carbon.type.immutable.CarbonProfile;
 import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import org.junit.After;
 import org.junit.Before;
@@ -19,17 +19,21 @@ public class BuilderManual
 {
 	private Injector injector;
 
+
 	@Before
 	public void setUp()
 	{
-		this.injector = GuiceInjectorBootstrap.createInjector(new BasicSetup(Collections.singletonList((Module) new CarbonClientModule())));
+		this.injector = new GuiceBuilder().withSetup(new BasicSetup(Collections.singletonList((Module) new CarbonClientModule())))
+		                                  .build();
 	}
+
 
 	@After
 	public void tearDown()
 	{
 		injector.getInstance(ShutdownManager.class).shutdown();
 	}
+
 
 	@Test
 	public void queryJob() throws Exception
@@ -51,6 +55,7 @@ public class BuilderManual
 		}
 	}
 
+
 	@Test
 	public void listjobs()
 	{
@@ -58,6 +63,7 @@ public class BuilderManual
 
 		carbonclient.listJobs();
 	}
+
 
 	@Test
 	public void listprofiles() throws Exception
@@ -69,6 +75,7 @@ public class BuilderManual
 			System.out.println(profile.getGUID() + "\t" + profile.getName());
 		}
 	}
+
 
 	@Test
 	public void listFilters() throws Exception

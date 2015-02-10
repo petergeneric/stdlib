@@ -2,6 +2,7 @@ package com.peterphi.std.guice.hibernate.module;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.database.annotation.Transactional;
@@ -26,13 +27,9 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 	private SessionFactory sessionFactory;
 
 	@Inject(optional = true)
-	@Named(HIBERNATE_SHUTDOWN_SQL)
+	@Named("hibernate.shutdown.sql")
+	@Doc("The SQL to run on the database before a shutdown occurs")
 	private String shutdownSql;
-
-	/*
-		A service/environment property that contains some sql to be run on the database before a shutdown occurs.
-	 */
-	public static final String HIBERNATE_SHUTDOWN_SQL = "hibernate.shutdown.sql";
 
 
 	@Inject

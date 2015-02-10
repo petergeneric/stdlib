@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.common.auth;
 
+import com.codahale.metrics.Meter;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
@@ -15,10 +16,18 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private final Provider<CurrentUser> userProvider;
 	private final Provider<AccessRefuser> refuserProvider;
+	private final Meter calls;
+	private final Meter granted;
+	private final Meter denied;
+	private final Meter authenticatedDenied;
 
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
-	                                       final Provider<AccessRefuser> refuserProvider)
+	                                       final Provider<AccessRefuser> refuserProvider,
+	                                       final Meter calls,
+	                                       final Meter granted,
+	                                       final Meter denied,
+	                                       final Meter authenticatedDenied)
 	{
 		if (userProvider == null)
 			throw new IllegalArgumentException("Must have a Provider for CurrentUser!");
@@ -27,6 +36,10 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 		this.userProvider = userProvider;
 		this.refuserProvider = refuserProvider;
+		this.calls = calls;
+		this.granted = granted;
+		this.denied = denied;
+		this.authenticatedDenied = authenticatedDenied;
 	}
 
 
@@ -36,6 +49,8 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		// Never handle calls to base methods (like hashCode, toString, etc.)
 		if (invocation.getMethod().getDeclaringClass().equals(Object.class))
 			return invocation.proceed();
+
+		calls.mark();
 
 		final AuthConstraint constraint = readConstraint(invocation);
 		final CurrentUser user = userProvider.get();
@@ -49,10 +64,17 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		// Test the user
 		if (passes(constraint, user))
 		{
+			granted.mark();
+
 			return invocation.proceed();
 		}
 		else
 		{
+			if (!user.isAnonymous())
+				authenticatedDenied.mark();
+
+			denied.mark();
+
 			// Throw an exception to refuse access
 			throw refuserProvider.get().refuse(constraint, user);
 		}

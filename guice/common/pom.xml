@@ -5,7 +5,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-common</artifactId>
-	<version>6.1.1-SNAPSHOT</version>
+	<version>7.5.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice common</name>
@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>6.1.1-SNAPSHOT</version>
+		<version>7.5.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -29,16 +29,15 @@
 		</dependency>
 
 		<dependency>
-			<groupId>xml-apis</groupId>
-			<artifactId>xml-apis</artifactId>
-			<version>2.0.2</version>
+			<groupId>commons-configuration</groupId>
+			<artifactId>commons-configuration</artifactId>
+			<version>1.10</version>
 		</dependency>
 
 		<dependency>
-			<groupId>junit</groupId>
-			<artifactId>junit</artifactId>
-			<version>4.10</version>
-			<scope>test</scope>
+			<groupId>xml-apis</groupId>
+			<artifactId>xml-apis</artifactId>
+			<version>2.0.2</version>
 		</dependency>
 
 		<!-- metrics -->
@@ -66,6 +65,17 @@
 			<version>${metrics.version}</version>
 		</dependency>
 
-		<!-- metrics -->
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+			<version>1.9.5</version>
+			<scope>test</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<scope>test</scope>
+		</dependency>
 	</dependencies>
 </project>

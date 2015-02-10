@@ -1,5 +1,6 @@
 package com.peterphi.std.indexservice.rest.iface;
 
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import com.peterphi.std.indexservice.rest.type.ApplicationSearchResults;
 import com.peterphi.std.indexservice.rest.type.RegistrationHeartbeatResponse;
 import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
@@ -17,6 +18,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 @Path("/index-service")
+@FastFailServiceClient
 public interface IndexRestService
 {
 	/**

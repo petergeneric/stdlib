@@ -53,7 +53,6 @@ function usage() {
 	echo "  -r    Sets the release version number to use ('auto' to use the version in pom.xml)"
 	echo "  -n    Sets the next development version number to use (or 'auto' to increment release version)"
 	echo "  -c    Assume this as pom.xml version without inspecting it with xmllint"
-	echo "  -s    If provided, digitally signs the release before deploying it"
 	echo ""
 	echo "  -h    For this message"
 	echo ""
@@ -63,7 +62,7 @@ function usage() {
 # HANDLE COMMAND-LINE OPTIONS #
 ###############################
 
-while getopts "ahsr:n:c:" o; do
+while getopts "ahr:n:c:" o; do
 	case "${o}" in
 		a)
 			RELEASE_VERSION="auto"
@@ -77,9 +76,6 @@ while getopts "ahsr:n:c:" o; do
 			;;
 		c)
 			CURRENT_VERSION="${OPTARG}"
-			;;
-		s)
-			MVN_TARGET_PRE_DEPLOY="gpg:sign"
 			;;
 		h)
 			usage
@@ -102,6 +98,8 @@ die_without_command git perl wc
 if [ -z "$MVN" ] ; then
 	die_without_command mvn
 	MVN=mvn
+else
+	die_without_command $MVN
 fi
 
 echo "Using maven command: $MVN"
@@ -119,23 +117,6 @@ else
 	echo "Good, no uncommitted changes found"
 fi
 
-###############################################################
-# IF WE HAVE XMLLINT, SANITY CHECK THE RELEASE SIGNING POLICY #
-###############################################################
-
-if [ -z "$MVN_TARGET_PRE_DEPLOY" ] ; then
-	echo "No release artifact signing has been requested"
-	has_xmllint_with_xpath
-	if [ "$?" = "0" ] ; then
-		PARENT_GROUP_ID=$(xmllint --xpath "/*[local-name() = 'project']/*[local-name() = 'parent']/*[local-name() = 'groupId']/text()" pom.xml)
-		
-		if [ "$PARENT_GROUP_ID" = "org.sonatype.oss" ] ; then
-			die_with "You have not requested release signing, however the pom.xml parent is $PARENT_GROUP_ID which requires signed uploads. Please add the -s parameter"
-		fi
-	fi
-else
-	echo "Release artifact signing requested"
-fi
 
 #################################################################
 # FIGURE OUT RELEASE VERSION NUMBER AND NEXT DEV VERSION NUMBER #
@@ -214,7 +195,7 @@ echo ""
 
 
 # build and deploy the release
-$MVN clean package source:jar javadoc:jar package $MVN_TARGET_PRE_DEPLOY deploy || rollback_and_die_with "Build/Deploy failure. Release failed."
+$MVN -DperformRelease=true clean deploy || rollback_and_die_with "Build/Deploy failure. Release failed."
 
 # tag the release (N.B. should this be before perform the release?)
 git tag "v${RELEASE_VERSION}" || die_with "Failed to create tag ${RELEASE_VERSION}! Release has been deployed, however"
@@ -227,5 +208,5 @@ $MVN versions:set -DgenerateBackupPoms=false "-DnewVersion=${NEXT_VERSION}" || d
 
 git commit -a -m "Start next development version ${NEXT_VERSION}" || die_with "Failed to commit updated pom.xml versions for next dev version! Please do this manually"
 
-echo ""
-echo "Release complete. A tag has been created (ready to be pushed) and maven project is now at version ${NEXT_VERSION}. Happy developing"
+git push || die_with "Failed to push commits. Please do this manually"
+git push --tags || die_with "Failed to push tags. Please do this manually"

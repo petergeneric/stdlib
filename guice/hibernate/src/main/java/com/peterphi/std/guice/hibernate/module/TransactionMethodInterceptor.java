@@ -18,7 +18,11 @@ package com.peterphi.std.guice.hibernate.module;
  * limitations under the License.
  */
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
 import com.google.inject.Provider;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -39,98 +43,133 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 	private final Provider<Session> sessionProvider;
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider)
+	private final Timer calls;
+	private final Timer transactionStartedCalls;
+	private final Meter errorRollbacks;
+	private final Meter commitFailures;
+
+
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics)
 	{
 		this.sessionProvider = sessionProvider;
+
+		this.calls = metrics.timer(GuiceMetricNames.TRANSACTION_CALLS_TIMER);
+		this.transactionStartedCalls = metrics.timer(GuiceMetricNames.TRANSACTION_OWNER_CALLS_TIMER);
+		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
+		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
 	}
+
 
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
 		final Session session = sessionProvider.get();
 
-		if (session.getTransaction().isActive())
+		Timer.Context callTimer = calls.time();
+
+		try
 		{
-			// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
-			if (log.isTraceEnabled())
-				log.trace("Joining existing transaction to call " + invocation.getMethod().toGenericString());
-
-			return invocation.proceed();
-		}
-		else
-		{
-			if (log.isTraceEnabled())
-				log.trace("Creating new transaction to call " + invocation.getMethod().toGenericString());
-
-			final Transactional annotation = readAnnotation(invocation);
-			final boolean readOnly = annotation.readOnly();
-
-			// We are responsible for creating+closing the connection
-			try
+			if (session.getTransaction().isActive())
 			{
-				// no transaction already started, so start one and enforce its semantics
-				final Transaction tx = session.beginTransaction();
+				// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
+				if (log.isTraceEnabled())
+					log.trace("Joining existing transaction to call " + invocation.getMethod().toGenericString());
 
-				if (readOnly)
-					makeReadOnly(session);
-				else
-					makeReadWrite(session);
+				return invocation.proceed();
+			}
+			else
+			{
+				if (log.isTraceEnabled())
+					log.trace("Creating new transaction to call " + invocation.getMethod().toGenericString());
 
-				// Execute the method
-				final Object result;
+				final Transactional annotation = readAnnotation(invocation);
+				final boolean readOnly = annotation.readOnly();
+
+				// We are responsible for creating+closing the connection
+				Timer.Context ownerTimer = transactionStartedCalls.time();
 				try
 				{
-					result = invocation.proceed();
-				}
-				catch (Exception e)
-				{
-					if (shouldRollback(annotation, e))
-						rollback(tx, e);
+					// no transaction already started, so start one and enforce its semantics
+					final Transaction tx = session.beginTransaction();
+
+					if (readOnly)
+						makeReadOnly(session);
 					else
+						makeReadWrite(session);
+
+					// Execute the method
+					final Object result;
+					try
+					{
+						result = invocation.proceed();
+					}
+					catch (Exception e)
+					{
+						if (shouldRollback(annotation, e))
+						{
+							errorRollbacks.mark();
+
+							rollback(tx, e);
+						}
+						else
+						{
+							complete(tx, readOnly);
+						}
+
+						// propagate the exception
+						throw e;
+					}
+					catch (Error e)
+					{
+						errorRollbacks.mark();
+
+						rollback(tx);
+
+						// propagate the error
+						throw e;
+					}
+
+					// The method completed successfully, we can complete the the transaction
+					// we can't move into the above try block because it'll interfere with the do not move into try block as it interferes with the advised method's throwing semantics
+					RuntimeException commitException = null;
+					try
+					{
 						complete(tx, readOnly);
+					}
+					catch (RuntimeException e)
+					{
+						commitFailures.mark();
 
-					// propagate the exception
-					throw e;
+						rollback(tx);
+
+						commitException = e;
+					}
+
+					// propagate anyway
+					if (commitException != null)
+						throw commitException;
+
+					// or return result
+					return result;
 				}
-				catch (Error e)
+				finally
 				{
-					rollback(tx);
+					ownerTimer.stop();
 
-					// propagate the error
-					throw e;
-				}
-
-				// The method completed successfully, we can complete the the transaction
-				// we can't move into the above try block because it'll interfere with the do not move into try block as it interferes with the advised method's throwing semantics
-				RuntimeException commitException = null;
-				try
-				{
-					complete(tx, readOnly);
-				}
-				catch (RuntimeException e)
-				{
-					rollback(tx);
-
-					commitException = e;
-				}
-
-				// propagate anyway
-				if (commitException != null)
-					throw commitException;
-
-				// or return result
-				return result;
-			}
-			finally
-			{
-				if (session.isOpen())
-				{
-					// Close the session
-					session.close();
+					if (session.isOpen())
+					{
+						// Close the session
+						session.close();
+					}
 				}
 			}
+		}
+		finally
+		{
+			callTimer.stop();
 		}
 	}
+
 
 	/**
 	 * Make the {@link java.sql.Connection} underlying this {@link Session} read/write
@@ -141,6 +180,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	{
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_WRITE);
 	}
+
 
 	/**
 	 * Make the session (and the underlying {@link java.sql.Connection} read only
@@ -155,6 +195,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		// Make the Connection read only
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);
 	}
+
 
 	/**
 	 * Read the Transactional annotation for a given method invocation
@@ -177,9 +218,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		}
 	}
 
+
 	/**
 	 * @param annotation
-	 * 		The metadata annotaiton of the method
+	 * 		The metadata annotation of the method
 	 * @param e
 	 * 		The exception to test for rollback
 	 *
@@ -189,6 +231,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	{
 		return isInstanceOf(e, annotation.rollbackOn()) && !isInstanceOf(e, annotation.exceptOn());
 	}
+
 
 	private static boolean isInstanceOf(Exception e, Class<? extends Exception>[] classes)
 	{
@@ -200,6 +243,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		return false;
 	}
+
 
 	/**
 	 * Complete the transaction
@@ -220,6 +264,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			tx.rollback();
 	}
 
+
 	private final void rollback(Transaction tx)
 	{
 		if (log.isTraceEnabled())
@@ -227,6 +272,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		tx.rollback();
 	}
+
 
 	private final void rollback(Transaction tx, Exception e)
 	{

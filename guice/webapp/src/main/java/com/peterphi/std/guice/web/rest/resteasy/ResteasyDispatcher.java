@@ -1,6 +1,8 @@
 package com.peterphi.std.guice.web.rest.resteasy;
 
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
+import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
 import org.jboss.resteasy.plugins.server.servlet.FilterBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletBootstrap;
 
@@ -23,29 +25,36 @@ import java.io.IOException;
 public class ResteasyDispatcher extends HttpServlet implements Filter
 {
 	private static final long serialVersionUID = -3L;
+	private GuiceRegistry registry;
 	private GuicedResteasy dispatcher;
+
 
 	@Override
 	public void init(ServletConfig config) throws ServletException
 	{
-		CoreRestServicesModule.setServletContext(config.getServletContext());
-
 		super.init(config);
 
-		dispatcher = new GuicedResteasy(config, new ServletBootstrap(config), true);
+		GuiceBuilder builder = new GuiceBuilder().withRole(new WebappGuiceRole(config));
+		this.registry = new GuiceRegistry(builder);
+
+		dispatcher = new GuicedResteasy(registry, config, new ServletBootstrap(config), true);
 
 		startInitialise();
 	}
+
 
 	@Override
 	public void init(FilterConfig config) throws ServletException
 	{
-		CoreRestServicesModule.setServletContext(config.getServletContext());
+		GuiceBuilder builder = new GuiceBuilder().withRole(new WebappGuiceRole(config));
+		this.registry = new GuiceRegistry(builder);
 
-		dispatcher = new GuicedResteasy(config, new FilterBootstrap(config), false);
+
+		dispatcher = new GuicedResteasy(registry, config, new FilterBootstrap(config), false);
 
 		startInitialise();
 	}
+
 
 	/**
 	 * <p>
@@ -69,6 +78,7 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 		thread.start();
 	}
 
+
 	@Override
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
 	{
@@ -82,11 +92,13 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 		}
 	}
 
+
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
 	{
 		dispatcher.call(req, resp);
 	}
+
 
 	@Override
 	public void destroy()

@@ -6,7 +6,9 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.peterphi.std.guice.common.metrics.StatsRegistry;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
@@ -24,16 +26,20 @@ public class MyTestServiceImpl implements MyTestService
 	@Inject
 	public ThymeleafTemplater templater;
 
+	@Reconfigurable
+	@Inject(optional = true)
+	@Named("some-string")
+	@Doc("This is just an example property. It can be changed at runtime.")
+	public String someString = null;
+
 	private final Counter counter;
 	private final Histogram thymeleafRenderTime;
 	private final Meter meter;
 
 
 	@Inject
-	public MyTestServiceImpl(StatsRegistry stats)
+	public MyTestServiceImpl(MetricRegistry registry)
 	{
-		final MetricRegistry registry = stats.getRegistry();
-
 		this.meter = registry.meter(MetricRegistry.name(getClass(), "index-page", "calls"));
 		this.counter = registry.counter(MetricRegistry.name(getClass(), "failures"));
 		this.thymeleafRenderTime = registry.histogram(MetricRegistry.name(getClass(), "thymeleaf.render-time"));
@@ -44,7 +50,7 @@ public class MyTestServiceImpl implements MyTestService
 	public String index()
 	{
 		meter.mark();
-		return "This is an index page";
+		return "This is an index page. The sample property is: " + someString;
 	}
 
 
@@ -74,6 +80,7 @@ public class MyTestServiceImpl implements MyTestService
 		{
 			ThymeleafCall template = templater.template("index");
 			template.set("theTime", new Date());
+			template.set("someString", someString);
 
 			return template.process();
 		}
@@ -101,7 +108,9 @@ public class MyTestServiceImpl implements MyTestService
 
 	/**
 	 * Tests if the supplied date occurred on the day 1941-12-07 in the Hawaii timezone (UTC-10)
+	 *
 	 * @param date
+	 *
 	 * @return
 	 */
 	private boolean isPearlHarbourDay(DateTime date)

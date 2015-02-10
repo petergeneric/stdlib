@@ -77,7 +77,7 @@ class QTypeHelper
 		}
 		else if (clazz == SampleCount.class)
 		{
-			return SampleCount.parseVidispine(value);
+			return SampleCount.valueOf(value);
 		}
 		else if (clazz.isEnum())
 		{

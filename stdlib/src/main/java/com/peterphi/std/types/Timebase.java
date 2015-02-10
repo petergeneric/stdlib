@@ -174,9 +174,10 @@ public class Timebase
 	public long resample(final long samples, final Timebase oldRate, boolean failOnPrecisionLoss) throws ResamplingException
 	{
 		final double resampled = resample((double) samples, oldRate);
+		final double rounded = Math.round(resampled);
 
 		// Warn about any loss in precision
-		if (resampled != Math.floor(resampled))
+		if (resampled != rounded)
 		{
 			if (failOnPrecisionLoss)
 			{
@@ -198,11 +199,11 @@ public class Timebase
 				         " to " +
 				         this +
 				         " produced " +
-				         resampled);
+				         resampled + " which will be rounded to " + rounded);
 			}
 		}
 
-		return Math.round(resampled);
+		return (long) rounded;
 	}
 
 

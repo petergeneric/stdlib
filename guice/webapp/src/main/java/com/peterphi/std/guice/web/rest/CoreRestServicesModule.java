@@ -4,10 +4,13 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
-import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreService;
-import com.peterphi.std.guice.web.rest.service.impl.GuiceRestCoreServiceImpl;
+import com.peterphi.std.guice.web.rest.service.restcore.GuiceCommonRestResources;
+import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
+import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreServiceImpl;
+import com.peterphi.std.guice.web.rest.service.servicedescription.RestConfigList;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestServiceList;
 import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerModule;
 import org.apache.log4j.Logger;
@@ -19,15 +22,11 @@ public class CoreRestServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(CoreRestServicesModule.class);
 
-	private static ServletContext servletContext;
-
+	/**
+	 * Servlet context value to read for the resteasy prefix
+	 */
 	public static final String RESTEASY_MAPPING_PREFIX = "resteasy.servlet.mapping.prefix";
 
-
-	public static void setServletContext(ServletContext context)
-	{
-		servletContext = context;
-	}
 
 	@Override
 	protected void configure()
@@ -40,8 +39,11 @@ public class CoreRestServicesModule extends AbstractModule
 		bind(GuiceRestCoreService.class).to(GuiceRestCoreServiceImpl.class).asEagerSingleton();
 
 		RestResourceRegistry.register(GuiceRestCoreService.class);
+		RestResourceRegistry.register(GuiceCommonRestResources.class);
 		RestResourceRegistry.register(RestServiceList.class);
+		RestResourceRegistry.register(RestConfigList.class);
 	}
+
 
 	/**
 	 * Retrieves the RESTeasy mapping prefix - this is the path under the webapp root where RESTeasy services are mapped.
@@ -52,7 +54,7 @@ public class CoreRestServicesModule extends AbstractModule
 	 */
 	@Provides
 	@Singleton
-	@Named("local.restservices.prefix")
+	@Named(GuiceProperties.REST_SERVICES_PREFIX)
 	public String getRestServicesPrefix(ServletContext context)
 	{
 		String restPath = context.getInitParameter(RESTEASY_MAPPING_PREFIX);
@@ -67,6 +69,7 @@ public class CoreRestServicesModule extends AbstractModule
 		}
 	}
 
+
 	/**
 	 * Return the base path for all REST services in this webapp
 	 *
@@ -79,9 +82,9 @@ public class CoreRestServicesModule extends AbstractModule
 	 */
 	@Provides
 	@Singleton
-	@Named("local.restservices.endpoint")
-	public URI getRestServicesEndpoint(@Named("local.webapp.endpoint") URI webappUri,
-	                                   @Named("local.restservices.prefix") String restPrefix,
+	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
+	public URI getRestServicesEndpoint(@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME) URI webappUri,
+	                                   @Named(GuiceProperties.REST_SERVICES_PREFIX) String restPrefix,
 	                                   ServletContext context)
 	{
 		if (restPrefix.equals(""))
@@ -104,6 +107,7 @@ public class CoreRestServicesModule extends AbstractModule
 		}
 	}
 
+
 	/**
 	 * Return the base path for this webapp
 	 *
@@ -113,20 +117,11 @@ public class CoreRestServicesModule extends AbstractModule
 	 */
 	@Provides
 	@Singleton
-	@Named("local.webapp.endpoint")
+	@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME)
 	public URI getRestServicesEndpoint(LocalEndpointDiscovery localEndpointDiscovery)
 	{
 		final URI base = localEndpointDiscovery.getLocalEndpoint();
 
 		return base;
-	}
-
-	@Provides
-	public ServletContext getServletContext()
-	{
-		if (servletContext != null)
-			return servletContext;
-		else
-			throw new RuntimeException("getServletContext called before a ServletContext was statically assigned to this module!");
 	}
 }

@@ -1,11 +1,22 @@
 package com.peterphi.std.guice.common.daemon;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.google.inject.Inject;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
 
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
 {
 	private static final Logger log = Logger.getLogger(GuiceRecurringDaemon.class);
+
+	@Inject
+	MetricRegistry metrics;
+
+	private Timer calls;
+	private Meter exceptions;
 
 	protected Timeout sleepTime;
 
@@ -46,13 +57,28 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	{
 		while (isRunning())
 		{
+			final Timer.Context timer;
+
+			if (calls != null)
+				timer = calls.time();
+			else
+				timer = null;
+
 			try
 			{
 				execute();
 			}
 			catch (Throwable t)
 			{
+				if (exceptions != null)
+					exceptions.mark();
+
 				log.error("Ignoring exception in GuiceRecurringDaemon call", t);
+			}
+			finally
+			{
+				if (timer != null)
+					timer.stop();
 			}
 
 			// Sleep for the default sleep time
@@ -82,4 +108,14 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	 * 		if an exception occurs (the exception will be passed to {@link #executeException(Throwable)} but otherwise ignored)
 	 */
 	protected abstract void execute() throws Exception;
+
+
+	@Override
+	public void postConstruct()
+	{
+		this.calls = metrics.timer(GuiceMetricNames.name(getClass(), "calls"));
+		this.exceptions = metrics.meter(GuiceMetricNames.name(getClass(), "exceptions"));
+
+		super.postConstruct();
+	}
 }

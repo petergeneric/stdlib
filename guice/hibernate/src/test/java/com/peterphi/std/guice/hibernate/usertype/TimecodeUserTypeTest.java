@@ -11,6 +11,7 @@ import static org.junit.Assert.assertEquals;
 public class TimecodeUserTypeTest
 {
 	private final Timecode TC = Timecode.getInstance("01:02:03:04", Timebase.HZ_25);
+	private final Timecode TC_DAYS = Timecode.getInstance("01:02:03:04:05", Timebase.HZ_25);
 
 	private final TimecodeUserType svc = TimecodeUserType.INSTANCE;
 
@@ -47,5 +48,19 @@ public class TimecodeUserTypeTest
 	public void testAssemble() throws Exception
 	{
 		assertEquals(TC, svc.assemble("01:02:03:04@25", null));
+	}
+
+
+	@Test
+	public void testDisassembleWithDaysPart() throws Exception
+	{
+		assertEquals("01:02:03:04:05@25", svc.disassemble(TC_DAYS));
+	}
+
+
+	@Test
+	public void testAssembleWithDaysPart() throws Exception
+	{
+		assertEquals(TC_DAYS, svc.assemble("01:02:03:04:05@25", null));
 	}
 }

@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -25,9 +26,11 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public <T> T createClient(Class<T> iface, URI endpoint)
 	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
 		// TODO query the service.properties too?
 
-		if (!StringUtils.isNotEmpty(endpoint.getAuthority()))
+		if (!StringUtils.isNotEmpty(endpoint.getAuthority()) && !fastFail)
 		{
 			// Create a specific AuthScope and credential based on the authority of the URI
 			final AuthScope scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
@@ -37,7 +40,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		}
 		else
 		{
-			// Unauthenticated service; use shared unauthenticated client
+			// Regular timeout, unauthenticated service; use shared unauthenticated client
 			return clientFactory.getClient().target(endpoint).proxy(iface);
 		}
 	}
@@ -52,6 +55,8 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	protected <T> T createClient(Class<T> iface, URI endpoint, AuthScope authScope, Credentials credentials)
 	{
-		return clientFactory.newClient(authScope, credentials).target(endpoint).proxy(iface);
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		return clientFactory.newClient(fastFail, authScope, credentials).target(endpoint).proxy(iface);
 	}
 }

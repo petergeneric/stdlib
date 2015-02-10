@@ -1,10 +1,14 @@
 package com.peterphi.std.guice.hibernate.module;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaDateTimeUserType;
@@ -23,12 +27,16 @@ import java.util.Properties;
 
 public abstract class HibernateModule extends AbstractModule
 {
-	/**
-	 * The property name in the service.properties file to read the location of hibernate.properties from
-	 */
-	private static final String PROPFILE_KEY = "hibernate.properties";
-
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
+
+
+	public HibernateModule(final MetricRegistry registry)
+	{
+		this.registry = registry;
+	}
+
+
+	private final MetricRegistry registry;
 
 
 	@Override
@@ -40,7 +48,7 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class));
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry);
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
@@ -49,14 +57,15 @@ public abstract class HibernateModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public Configuration getHibernateConfiguration(@Named("service.properties") PropertyFile serviceprops,
-	                                               @Named(PROPFILE_KEY) String propertyFileName)
+	public Configuration getHibernateConfiguration(org.apache.commons.configuration.Configuration configuration,
+	                                               @Doc("the source for hibernate.properties (either embedded or a filepath to search for using the classpath)")
+	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
 	{
 		final Properties properties;
 
 		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
 		{
-			properties = serviceprops.toProperties();
+			properties = ConfigurationConverter.toProperties(configuration);
 		}
 		else
 		{
@@ -68,14 +77,12 @@ public abstract class HibernateModule extends AbstractModule
 			}
 			else
 			{
-				// Merge all the values
-				PropertyFile prop = PropertyFile.readOnlyUnion(files);
-
-				properties = prop.toProperties();
+				// Merge all the values and interpret them via commons-configuration to allow for interpolation
+				properties = ConfigurationConverter.toProperties(ConfigurationConverter.union(files));
 			}
 		}
 
-		Configuration config = new Configuration();
+		org.hibernate.cfg.Configuration config = new org.hibernate.cfg.Configuration();
 		config.addProperties(properties);
 
 		configure(config);

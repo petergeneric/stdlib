@@ -42,7 +42,7 @@ public class RestServiceListImpl implements RestServiceList
 
 		// Set up a Freemarker instance that loads from this .jar
 		Configuration config = new Configuration();
-		config.setClassForTemplateLoading(RestServiceListImpl.class, "/com/peterphi/std/guice/web/rest/service/impl/");
+		config.setClassForTemplateLoading(RestServiceListImpl.class, "/com/peterphi/std/guice/web/rest/service/restcore/");
 		config.setObjectWrapper(new DefaultObjectWrapper());
 
 		this.templater = new FreemarkerTemplater(config);

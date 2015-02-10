@@ -299,8 +299,23 @@ public class Timecode
 
 
 	/**
+	 * Returns the timecode in a format that is similar to the ISO 8601 Duration format, except with an <strong>F</strong> field
+	 * for frames.
+	 *
+	 * @return
+	 */
+	public String toISODurationWithFrames(final boolean includeDays)
+	{
+		if (includeDays && days != 0)
+			return String.format("P%02dDT%02dH%02dM%02dS%02dF", days, hours, minutes, seconds, frames);
+		else
+			return String.format("PT%02dH%02dM%02dS%02dF", hours, minutes, seconds, frames);
+	}
+
+
+	/**
 	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
-	 * timecode@rate</code>
+	 * timecode including days@rate</code>
 	 * where
 	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
 	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
@@ -309,7 +324,25 @@ public class Timecode
 	 */
 	public String toEncodedString()
 	{
-		return toSMPTEString() + "@" + getTimebase().toEncodedString();
+		return toEncodedString(true);
+	}
+
+
+	/**
+	 * Returns the timecode in the Encoded Timecode format for this library. The format of this timecode is <code>smpte
+	 * timecode optionally including days@rate</code>
+	 * where
+	 * rate is <code>denominator:[numerator]</code> (where numerator, if omitted,
+	 * is 1). See {@link Timebase} for further information on the encoding of the timebase
+	 *
+	 * @param includeDays
+	 * 		true if the days component should be emitted too (if non-zero)
+	 *
+	 * @return
+	 */
+	public String toEncodedString(boolean includeDays)
+	{
+		return toSMPTEString(includeDays) + "@" + getTimebase().toEncodedString();
 	}
 
 
@@ -495,7 +528,13 @@ public class Timecode
 			// Resample the frames part
 			final long resampled = toRate.resample(this.getFramesPart(), fromRate);
 
-			return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
+			// In the event of resample returning < 1 second we can just set the new Timecode's frames field.
+			// In the event of resample returning 1 second (possible if 999@1kHz is resampled down) we should fall back on slow addition
+			if (resampled < toRate.getSamplesPerSecond())
+				return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
+			else
+				return new Timecode(negative, days, hours, minutes, seconds, 0, toRate, dropFrame).add(new SampleCount(resampled,
+				                                                                                                       toRate));
 		}
 		else
 		{
@@ -515,11 +554,12 @@ public class Timecode
 	 */
 	public Timecode resamplePrecise(final Timebase toRate) throws ResamplingException
 	{
-		final Timecode newTimecode = resample(toRate); // Resample to the new timebase
-		final Timecode back = newTimecode.resample(this.timebase); // Resample back to the source timebase
+		final Timecode resampled = resample(toRate); // Resample to the new timebase
+		final Timecode back = resampled.resample(this.timebase); // Resample back to the source timebase
 
-		// If we don't have the same number of frames then we lost precision.
-		if (back.getFramesPart() != this.getFramesPart())
+
+		// If we don't have the same number of seconds and frames when resampling back then we lost precision.
+		if ((back.getSecondsPart() != this.getSecondsPart()) || (back.getFramesPart() != this.getFramesPart()))
 		{
 			throw new ResamplingException("Timecode resample would have lost precision: " +
 			                              this.toString() +
@@ -530,7 +570,7 @@ public class Timecode
 		}
 		else
 		{
-			return newTimecode;
+			return resampled;
 		}
 	}
 

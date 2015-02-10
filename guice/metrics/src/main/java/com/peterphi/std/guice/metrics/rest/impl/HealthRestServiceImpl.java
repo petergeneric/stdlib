@@ -1,57 +1,46 @@
 package com.peterphi.std.guice.metrics.rest.impl;
 
-import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
-import com.codahale.metrics.json.HealthCheckModule;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.peterphi.std.guice.metrics.rest.api.HealthRestService;
-
-import java.io.StringWriter;
-import java.util.Map;
+import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
+import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
+import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 
 public class HealthRestServiceImpl implements HealthRestService
 {
 	@Inject
 	private HealthCheckRegistry registry;
 
-	private transient ObjectMapper mapper;
+
+	@Inject
+	@Named(MetricsServicesModule.METRICS_UI_THYMELEAF)
+	ThymeleafTemplater templater;
+
+	@Inject
+	MetricSerialiser serialiser;
+
 
 	@Override
-	public String get()
+	public HealthDocument get()
 	{
-		if (this.mapper == null)
-		{
-			this.mapper = new ObjectMapper().registerModule(new HealthCheckModule());
-		}
+		HealthDocument doc = new HealthDocument();
 
-		try
-		{
-			final boolean pretty = true;
-			final ObjectWriter ow;
-			final StringWriter sw = new StringWriter();
+		doc.results = serialiser.serialiseHealthChecks(registry.runHealthChecks());
 
-			if (pretty)
-			{
-				ow = mapper.writerWithDefaultPrettyPrinter();
-			}
-			else
-			{
-				ow = mapper.writer();
-			}
+		return doc;
+	}
 
-			for (Map.Entry<String, HealthCheck.Result> entry : registry.runHealthChecks().entrySet())
-			{
-				ow.writeValue(sw,entry);
-			}
 
-			ow.writeValue(sw, registry);
-			return sw.toString();
-		}
-		catch (Exception e)
-		{
-			throw new RuntimeException(e);
-		}
+	@Override
+	public String getHTML()
+	{
+		TemplateCall call = templater.template("health-index");
+
+		call.set("health", get());
+
+		return call.process();
 	}
 }

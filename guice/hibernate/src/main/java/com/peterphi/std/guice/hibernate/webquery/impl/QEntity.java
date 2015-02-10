@@ -3,7 +3,11 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.Type;
 
+import javax.persistence.DiscriminatorValue;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 public class QEntity
@@ -13,10 +17,18 @@ public class QEntity
 	private Map<String, QProperty> properties = new HashMap<>();
 	private Map<String, QRelation> relations = new HashMap<>();
 
+	private List<QEntity> descendants = Collections.emptyList();
+
 
 	public QEntity(Class<?> clazz)
 	{
 		this.clazz = clazz;
+	}
+
+
+	public Class<?> getEntityClass()
+	{
+		return clazz;
 	}
 
 
@@ -52,6 +64,25 @@ public class QEntity
 
 			properties.put(name, new QProperty(this, name, clazz));
 		}
+
+		// Add links to descendants
+		{
+			final List<QEntity> descendants = entityFactory.getSubclasses(clazz);
+
+			if (!descendants.isEmpty())
+				this.descendants = descendants;
+		}
+	}
+
+
+	public String getDiscriminatorValue()
+	{
+		final DiscriminatorValue annotation = clazz.getAnnotation(DiscriminatorValue.class);
+
+		if (annotation != null)
+			return annotation.value();
+		else
+			return clazz.getName();
 	}
 
 
@@ -84,5 +115,22 @@ public class QEntity
 			                                   this.clazz.getSimpleName() +
 			                                   ", expected one of " +
 			                                   relations.keySet());
+	}
+
+
+	public List<QEntity> getSubEntities()
+	{
+		return descendants;
+	}
+
+
+	/**
+	 * Return true if the underlying entity class is abstract
+	 *
+	 * @return
+	 */
+	public boolean isEntityClassAbstract()
+	{
+		return Modifier.isAbstract(clazz.getModifiers());
 	}
 }

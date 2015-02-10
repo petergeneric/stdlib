@@ -2,6 +2,7 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 
 import com.google.inject.ImplementedBy;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -12,8 +13,9 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
 
 @Doc("Lists the REST services and resources exposed by this webapp")
-@Path("/list")
+@Path("/guice")
 @ImplementedBy(RestServiceListImpl.class)
+@FastFailServiceClient
 public interface RestServiceList
 {
 	@Doc("Lists all services")

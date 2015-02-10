@@ -5,7 +5,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-metrics</artifactId>
-	<version>6.1.1-SNAPSHOT</version>
+	<version>7.5.4-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice metrics</name>
@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>6.1.1-SNAPSHOT</version>
+		<version>7.5.4-SNAPSHOT</version>
 	</parent>
 
 	<properties>
@@ -23,14 +23,14 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.fasterxml.jackson.core</groupId>
-			<artifactId>jackson-databind</artifactId>
-			<version>${jackson.version}</version>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-webapp</artifactId>
+			<version>${project.version}</version>
 		</dependency>
 
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
-			<artifactId>stdlib-guice-webapp</artifactId>
+			<artifactId>stdlib-guice-thymeleaf</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

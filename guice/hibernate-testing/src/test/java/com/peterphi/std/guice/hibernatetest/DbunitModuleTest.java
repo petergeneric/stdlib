@@ -1,27 +1,24 @@
 package com.peterphi.std.guice.hibernatetest;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
 import com.google.inject.Provider;
-import com.peterphi.std.guice.apploader.BasicSetup;
-import com.peterphi.std.guice.apploader.impl.GuiceInjectorBootstrap;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
-import com.peterphi.std.guice.hibernate.module.HibernateModule;
 import com.peterphi.std.guice.hibernate.module.HibernateTransaction;
 import com.peterphi.std.guice.hibernate.module.TransactionHelper;
-import com.peterphi.std.io.PropertyFile;
+import com.peterphi.std.guice.testing.GuiceUnit;
+import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.dbunit.assertion.DbUnitAssert;
 import org.dbunit.database.QueryDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
-import org.hibernate.cfg.Configuration;
-import org.junit.After;
-import org.junit.Before;
 import org.junit.Test;
+import org.junit.runner.RunWith;
 
 import java.io.StringReader;
 
+@RunWith(GuiceUnit.class)
+@GuiceConfig(config = "com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties", classPackages = GroupEntity.class)
 public class DbunitModuleTest
 {
 	@Inject
@@ -35,34 +32,6 @@ public class DbunitModuleTest
 
 	@Inject
 	Provider<QueryDataSet> dataset;
-
-
-	@Before
-	public void setUp()
-	{
-		PropertyFile props = PropertyFile.find("com/peterphi/std/guice/hibernatetest/hsqldb-in-memory.properties");
-
-		final Injector injector = GuiceInjectorBootstrap.createInjector(props, new BasicSetup(new DbunitModule(),
-		                                                                                      new HibernateModule()
-		                                                                                      {
-			                                                                                      @Override
-			                                                                                      protected void configure(final Configuration config)
-			                                                                                      {
-				                                                                                      config.addAnnotatedClass(SimpleEntity.class);
-				                                                                                      config.addAnnotatedClass(GroupEntity.class);
-			                                                                                      }
-		                                                                                      }
-		));
-
-		injector.injectMembers(this);
-	}
-
-
-	@After
-	public void tearDown()
-	{
-		shutdownManager.shutdown();
-	}
 
 
 	@Test

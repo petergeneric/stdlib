@@ -6,7 +6,10 @@ import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.metadata.ClassMetadata;
 
+import java.lang.reflect.Modifier;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 @Singleton
@@ -24,6 +27,24 @@ public class QEntityFactory
 		this.sessionFactory = sessionFactory;
 
 		log.debug("Known entities: " + sessionFactory.getAllClassMetadata().keySet());
+	}
+
+
+	public List<QEntity> getSubclasses(Class<?> superclass)
+	{
+		List<QEntity> subclasses = new ArrayList<>();
+
+		for (Map.Entry<String, ClassMetadata> entry : sessionFactory.getAllClassMetadata().entrySet())
+		{
+			final ClassMetadata meta = entry.getValue();
+
+			final Class<?> clazz = meta.getMappedClass();
+
+			if (clazz != null && !Modifier.isAbstract(clazz.getModifiers()) && superclass.isAssignableFrom(clazz))
+				subclasses.add(get(clazz));
+		}
+
+		return subclasses;
 	}
 
 

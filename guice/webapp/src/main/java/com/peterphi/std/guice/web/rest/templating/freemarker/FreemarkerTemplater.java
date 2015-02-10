@@ -10,8 +10,8 @@ import java.util.Map;
 
 public class FreemarkerTemplater
 {
-	private final Configuration config;
 	private Map<String, Object> data = new HashMap<String, Object>();
+	private final Configuration config;
 
 	private final String templatePrefix;
 	private final String templateSuffix;

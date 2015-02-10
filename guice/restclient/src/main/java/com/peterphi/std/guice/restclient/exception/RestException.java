@@ -59,13 +59,13 @@ public class RestException extends ResponseProcessingException
 	}
 
 
-	void setErrorCode(long code)
+	protected void setErrorCode(long code)
 	{
 		this.errorCode = code;
 	}
 
 
-	void setHttpCode(int httpCode)
+	protected void setHttpCode(int httpCode)
 	{
 		this.httpCode = httpCode;
 	}

@@ -1,10 +1,17 @@
 package com.peterphi.std.guice.common;
 
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.log4j.InstrumentedAppender;
 import com.google.inject.AbstractModule;
+import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+
+import java.util.Properties;
 
 /**
  * Reads the <code>log4j.properties</code> value from the service config; if a value is supplied it searches the classpath for
@@ -16,14 +23,16 @@ public class Log4JModule extends AbstractModule
 {
 	private static Logger log = Logger.getLogger(Log4JModule.class);
 
-	private PropertyFile guiceConfig;
+	private Configuration guiceConfig;
 	private String configFile;
+	private MetricRegistry registry;
 
 
-	public Log4JModule(PropertyFile properties)
+	public Log4JModule(Configuration configuration, MetricRegistry registry)
 	{
-		this.guiceConfig = properties;
-		configFile = properties.get("log4j.properties", null);
+		this.registry = registry;
+		this.guiceConfig = configuration;
+		configFile = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
 	}
 
 
@@ -34,28 +43,34 @@ public class Log4JModule extends AbstractModule
 		{
 			log.debug("Loading log4j configuration from " + configFile);
 
-			final PropertyFile config;
+			final Properties config;
 
 			if (configFile.equals("embedded"))
 			{
 				// Load the log4j config from the guice configuration
-				config = guiceConfig;
+				config = ConfigurationConverter.toProperties(guiceConfig);
 			}
 			else
 			{
-				// Load the log4j config file
-				config = PropertyFile.find(configFile);
+				// Load the log4j config file directly
+				// TODO it'd be nice if we could use variables for interpolation here.
+				config = PropertyFile.find(configFile).toProperties();
 			}
 
 			//reset any existing log config
 			LogManager.resetConfiguration();
 
 			//apply the specified properties
-			PropertyConfigurator.configure(config.toProperties());
+			PropertyConfigurator.configure(config);
 		}
 		else
 		{
 			log.debug("Leaving logging subsystem to initialise itself");
 		}
+
+		// Register a custom appender for metrics gathering
+		InstrumentedAppender log4jmetrics = new InstrumentedAppender(registry);
+		log4jmetrics.activateOptions();
+		LogManager.getRootLogger().addAppender(log4jmetrics);
 	}
 }

@@ -27,10 +27,12 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private boolean renderRequestInfo = false;
 	private boolean renderRequestAttributes = false;
 
+
 	public TwitterBootstrapRestFailurePageRenderer(RestFailure failure)
 	{
 		this.failure = failure;
 	}
+
 
 	public void enableJIRA(String endpoint, int pid, int issueType)
 	{
@@ -40,16 +42,22 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		this.jiraIssueType = issueType;
 	}
 
+
 	public void setHighlightTerms(String[] terms)
 	{
 		this.highlightTerms = terms;
 	}
 
+
 	@Override
 	protected String getTitle()
 	{
-		return failure.exception.shortName + ": " + failure.exception.detail;
+		if (failure.exception.detail == null || failure.exception.detail.length() < 1024)
+			return failure.exception.shortName + ": " + failure.exception.detail;
+		else
+			return failure.exception.shortName; // Detail is very long, omit it from the page title
 	}
+
 
 	@Override
 	protected void writeCustomHeadContent(StringBuilder sb)
@@ -62,6 +70,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		sb.append(".dl-horizontal > dd:after { display: table; content: \"\"; clear: both; }\n");
 		sb.append("</style>\n");
 	}
+
 
 	private void writeJIRA(StringBuilder sb)
 	{
@@ -121,6 +130,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 
 		sb.append("	<a class=\"btn btn-small btn-primary pull-right\" href=\"" + reportHref + "\">Create Issue</a>\n");
 	}
+
 
 	@Override
 	protected void writeBodyContent(StringBuilder sb)
@@ -197,10 +207,12 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		sb.append("</div>"); // div class=container
 	}
 
+
 	protected void appendHeader(StringBuilder sb)
 	{
 		sb.append("<h1>A problem occurred</h1>");
 	}
+
 
 	@SuppressWarnings("unchecked")
 	private void appendRequestDetails(StringBuilder sb)
@@ -273,6 +285,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		}
 	}
 
+
 	private void appendJVMDetails(StringBuilder sb)
 	{
 		// HTTP cookies
@@ -285,6 +298,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		}
 		sb.append("</dl>\n");
 	}
+
 
 	private void appendAllSimpleGetters(StringBuilder sb, Object o)
 	{
@@ -312,10 +326,12 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		}
 	}
 
+
 	private void appendKeyValueListElement(StringBuilder sb, String key, Object value)
 	{
 		sb.append("<dt>").append(escape(key)).append("</dt><dd>").append(escape(String.valueOf(value))).append("</dd>\n");
 	}
+
 
 	private void appendException(StringBuilder sb, ExceptionInfo info)
 	{
@@ -324,7 +340,8 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 			sb.append("<hr />");
 			sb.append("<h3 id='exception'>").append(escape(info.shortName)).append("</h3>");
 
-			sb.append("<p>").append(escape(info.detail)).append("</p>");
+			// Maintain any whitespace in the exception detail (e.g. for guice CreationExceptions)
+			sb.append("<p style='white-space: pre-wrap;'>").append(escape(info.detail)).append("</p>");
 
 			if (renderStackTrace)
 			{
@@ -332,6 +349,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 			}
 		}
 	}
+
 
 	private void appendStacktrace(StringBuilder sb, ExceptionInfo info)
 	{
@@ -356,6 +374,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 			sb.append("</pre>");
 		}
 	}
+
 
 	private void appendStacktraceLine(StringBuilder sb, String line)
 	{
@@ -388,15 +407,18 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		}
 	}
 
+
 	public void enableJVMInfo()
 	{
 		this.renderJvmInfo = true;
 	}
 
+
 	public void enableStackTrace()
 	{
 		this.renderStackTrace = true;
 	}
+
 
 	public void enableRequestInfo()
 	{

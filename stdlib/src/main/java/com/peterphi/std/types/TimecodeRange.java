@@ -125,6 +125,16 @@ public class TimecodeRange
 
 
 	/**
+	 * Test whether a given timecode range lies wholly within (or on the boundaries of) this range
+	 *
+	 * @param test
+	 * @return
+	 */
+	public boolean within(TimecodeRange test) {
+		return within(test.getStart()) && within(test.getEnd());
+	}
+
+	/**
 	 * Determines whether two timecode ranges overlap (or are equivalent)
 	 *
 	 * @param that

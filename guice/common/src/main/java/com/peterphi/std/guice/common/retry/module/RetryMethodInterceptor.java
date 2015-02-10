@@ -1,9 +1,13 @@
 package com.peterphi.std.guice.common.retry.module;
 
+import com.codahale.metrics.Meter;
+import com.codahale.metrics.MetricRegistry;
+import com.codahale.metrics.Timer;
+import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.threading.Timeout;
-import com.peterphi.std.threading.retry.RetryManager;
-import com.peterphi.std.threading.retry.backoff.ExponentialBackoff;
+import com.peterphi.std.guice.common.retry.retry.RetryManager;
+import com.peterphi.std.guice.common.retry.retry.backoff.ExponentialBackoff;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
@@ -14,15 +18,32 @@ final class RetryMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(RetryMethodInterceptor.class);
 
+	private final Timer calls;
+	private final Timer attempts;
+	private final Meter attemptFailures;
+	private final Meter totalFailures;
+
+
+	public RetryMethodInterceptor(MetricRegistry registry)
+	{
+		this.calls = registry.timer(GuiceMetricNames.RETRY_CALLS);
+		this.attempts = registry.timer(GuiceMetricNames.RETRY_ATTEMPTS);
+
+		this.attemptFailures = registry.meter(GuiceMetricNames.RETRY_ATTEMPT_FAILURES);
+		this.totalFailures = registry.meter(GuiceMetricNames.RETRY_TOTAL_FAILURES);
+	}
+
+
 	@Override
 	public Object invoke(final MethodInvocation invocation) throws Throwable
 	{
-		Retry options = invocation.getMethod().getAnnotation(Retry.class);
-
-		RetryManager mgr = buildRetryManager(options);
+		Timer.Context timer = this.calls.time();
 
 		try
 		{
+			final Retry options = invocation.getMethod().getAnnotation(Retry.class);
+			final RetryManager mgr = buildRetryManager(options);
+
 			if (log.isTraceEnabled())
 				log.trace("Attempting retryable invoke of " +
 				          invocation.getMethod().toGenericString() +
@@ -33,6 +54,8 @@ final class RetryMethodInterceptor implements MethodInterceptor
 		}
 		catch (Throwable t)
 		{
+			totalFailures.mark();
+
 			if (log.isTraceEnabled())
 				log.trace("Retrying invoke of " +
 				          invocation.getMethod().toGenericString() +
@@ -41,7 +64,12 @@ final class RetryMethodInterceptor implements MethodInterceptor
 
 			throw t;
 		}
+		finally
+		{
+			timer.stop();
+		}
 	}
+
 
 	private RetryManager buildRetryManager(Retry options)
 	{
@@ -49,6 +77,6 @@ final class RetryMethodInterceptor implements MethodInterceptor
 
 		ExponentialBackoff backoff = new ExponentialBackoff(initial, options.backoffExponent());
 
-		return new RetryManager(backoff, options.maxAttempts());
+		return new RetryManager(backoff, options.maxAttempts(), attempts, attemptFailures);
 	}
 }

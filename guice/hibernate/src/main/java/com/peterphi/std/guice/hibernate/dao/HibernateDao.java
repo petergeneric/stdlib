@@ -2,6 +2,10 @@ package com.peterphi.std.guice.hibernate.dao;
 
 import com.google.inject.Inject;
 import com.google.inject.TypeLiteral;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
+import com.peterphi.std.guice.database.annotation.LargeTable;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.database.dao.Dao;
 import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
@@ -17,6 +21,7 @@ import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
@@ -46,7 +51,15 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Inject
 	QEntityFactory entityFactory;
 
+	@Inject(optional = true)
+	@Named("hibernate.perform-separate-id-query-for-large-tables")
+	@Reconfigurable
+	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
+	boolean performSeparateIdQueryForLargeTables = true;
+
 	protected Class<T> clazz;
+
+	protected boolean isLargeTable = false;
 
 
 	public HibernateDao()
@@ -66,7 +79,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		if (clazz == null)
 			throw new IllegalArgumentException("Cannot set null TypeLiteral on " + this);
-		if (this.clazz != null)
+		if (this.clazz != null && !this.clazz.equals(clazz.getRawType()))
 			throw new IllegalStateException("Cannot call setTypeLiteral twice! Already has value " +
 			                                this.clazz +
 			                                ", will not overwrite with " +
@@ -74,6 +87,8 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 		// Guice sets a Class<? super T> but we know we can cast to Class<T> by convention
 		this.clazz = (Class<T>) clazz.getRawType();
+
+		isLargeTable = this.clazz.isAnnotationPresent(LargeTable.class);
 	}
 
 
@@ -81,6 +96,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		return clazz;
 	}
+
 
 	/**
 	 * Create a Dynamic query with the specified constraints
@@ -107,7 +123,41 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 		builder.append(criteria);
 
-		return criteria;
+		if (isLargeTable && performSeparateIdQueryForLargeTables)
+		{
+			criteria.setProjection(Projections.id());
+
+			// Retrieve the primary keys separately from the data
+			final List<ID> ids = getIdList(criteria);
+
+			{
+				final Criteria dataCriteria = createCriteria();
+
+				if (ids.size() > 0)
+				{
+					dataCriteria.add(Restrictions.in(idProperty(), ids));
+
+					// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
+					builder.append(dataCriteria, false, false);
+
+					return dataCriteria;
+				}
+				else
+				{
+					// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
+					dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
+
+					// Hint that we don't want any results
+					dataCriteria.setMaxResults(0);
+
+					return dataCriteria;
+				}
+			}
+		}
+		else
+		{
+			return criteria; // not a large table, execute query as normal
+		}
 	}
 
 

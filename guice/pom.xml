@@ -4,21 +4,18 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-parent</artifactId>
-	<version>6.1.1-SNAPSHOT</version>
+	<version>7.5.4-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>application framework guice modules parent</name>
 	<description>Application Framework Guice Modules (Parent Package)</description>
 
 	<properties>
-		<guice.version>3.2.0</guice.version>
+		<guice.version>3.2.4</guice.version>
 		<metrics.version>3.0.1</metrics.version>
 		<resteasy.version>3.0.7.Final</resteasy.version>
-		
-		<!-- Pinned to 4.1.7.Final currently because we aren't able to use a JDBC4 driver for SQL Server (have to use jTDS) -->
-		<!-- It would be nice to fix this but for now the easier option is to keep Hibernate at this version -->
-		<!-- If there's a compelling reason to upgrade Hibernate we should likely go ahead though... -->
-		<hibernate.version>4.1.7.Final</hibernate.version>
+		<javassist.version>3.18.2-GA</javassist.version>
+		<hibernate.version>4.3.7.Final</hibernate.version>
 		<dbunit.version>2.5.0</dbunit.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
 	</properties>
@@ -26,7 +23,7 @@
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>6.1.1-SNAPSHOT</version>
+		<version>7.5.4-SNAPSHOT</version>
 	</parent>
 
 	<dependencyManagement>
@@ -57,6 +54,19 @@
 			<artifactId>guice-multibindings</artifactId>
 			<version>${guice.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.apache.xbean</groupId>
+			<artifactId>xbean-finder</artifactId>
+			<version>4.1</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.ow2.asm</groupId>
+			<artifactId>asm-all</artifactId>
+			<version>5.0.3</version>
+		</dependency>
+
 	</dependencies>
 
 	<modules>
@@ -66,6 +76,7 @@
 		<module>thymeleaf</module>
 		<module>hibernate</module>
 		<module>hibernate-testing</module>
+		<module>testing</module>
 		<module>restclient</module>
 		<module>sample-rest-service</module>
 	</modules>

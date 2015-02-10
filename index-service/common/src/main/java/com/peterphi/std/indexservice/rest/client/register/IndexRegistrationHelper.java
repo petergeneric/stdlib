@@ -3,7 +3,8 @@ package com.peterphi.std.indexservice.rest.client.register;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.peterphi.std.guice.serviceregistry.ApplicationContextNameRegistry;
+import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.index.IndexableServiceRegistry;
 import com.peterphi.std.guice.serviceregistry.index.ManualIndexableService;
 import com.peterphi.std.indexservice.rest.client.IndexServiceClient;
@@ -12,6 +13,7 @@ import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
 import com.peterphi.std.indexservice.rest.type.RegistrationResponse;
 import com.peterphi.std.indexservice.rest.type.ServiceDetails;
 import com.peterphi.std.threading.Timeout;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import java.net.URI;
@@ -34,7 +36,11 @@ public class IndexRegistrationHelper
 
 	@Inject
 	@Named("local.restservices.endpoint")
+	@Doc("The local endpoint for REST service communication to this servlet (computed and bound automatically)")
 	protected URI baseEndpoint;
+
+	@Inject
+	Configuration configuration;
 
 	/**
 	 * Time to wait after registration/reregistration before sending heartbeat
@@ -179,7 +185,7 @@ public class IndexRegistrationHelper
 
 		// Pass along the application context name if present
 		// If missing this will default to null (which is ok, application name is optional)
-		request.applicationName = ApplicationContextNameRegistry.getContextName();
+		request.applicationName = configuration.getString(GuiceProperties.SERVLET_CONTEXT_NAME);
 
 		// Add Local Services
 		for (Class<?> resource : IndexableServiceRegistry.getLocalServices())
