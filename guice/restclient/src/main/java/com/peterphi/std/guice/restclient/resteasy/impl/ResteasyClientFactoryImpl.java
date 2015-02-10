@@ -13,11 +13,13 @@ import com.peterphi.std.threading.Timeout;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
+import org.apache.http.client.CredentialsProvider;
+import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.NoConnectionReuseStrategy;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.PoolingClientConnectionManager;
-import org.apache.http.params.HttpConnectionParams;
-import org.apache.http.params.HttpParams;
+import org.apache.http.impl.client.BasicCredentialsProvider;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.jboss.resteasy.client.ProxyFactory;
 import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -31,7 +33,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, StoppableService
 {
-	private final PoolingClientConnectionManager connectionManager;
+	private final PoolingHttpClientConnectionManager connectionManager;
 	private final ResteasyProviderFactory resteasyProviderFactory;
 
 	@Inject(optional = true)
@@ -84,7 +86,7 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
 
-		this.connectionManager = new PoolingClientConnectionManager();
+		this.connectionManager = new PoolingHttpClientConnectionManager();
 
 		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
 		connectionManager.setMaxTotal(maxConnectionsTotal);
@@ -105,36 +107,41 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	{
 		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(createClient(fastFailTimeouts));
+		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(createClient(fastFailTimeouts, null));
 
 		return ProxyFactory.create(iface, endpoint, executor, resteasyProviderFactory);
 	}
 
 
-	private DefaultHttpClient createClient(boolean fastFailTimeouts)
+	private CloseableHttpClient createClient(boolean fastFailTimeouts, final CredentialsProvider provider)
 	{
-		DefaultHttpClient client = new DefaultHttpClient(connectionManager);
-
-		HttpParams params = client.getParams();
+		RequestConfig.Builder requestBuilder = RequestConfig.custom();
 
 		if (fastFailTimeouts)
 		{
-			HttpConnectionParams.setConnectionTimeout(params, (int) fastFailConnectionTimeout.getMilliseconds());
-			HttpConnectionParams.setSoTimeout(params, (int) fastFailSocketTimeout.getMilliseconds());
+			requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
+			              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
 		}
 		else
 		{
-			HttpConnectionParams.setConnectionTimeout(params, (int) connectionTimeout.getMilliseconds());
-			HttpConnectionParams.setSoTimeout(params, (int) socketTimeout.getMilliseconds());
+			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
+			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
 		}
+
+		HttpClientBuilder builder = HttpClientBuilder.create();
+
+		builder.setConnectionManager(connectionManager);
+
+		if (provider != null)
+			builder.setDefaultCredentialsProvider(provider);
+
+		builder.setDefaultRequestConfig(requestBuilder.build());
 
 		// Prohibit keepalive if desired
 		if (noKeepalive)
-		{
-			client.setReuseStrategy(new NoConnectionReuseStrategy());
-		}
+			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
 
-		return client;
+		return builder.build();
 	}
 
 
@@ -143,13 +150,17 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	{
 		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		final DefaultHttpClient client = createClient(fastFailTimeouts);
-
+		// Set up the credentials provider
+		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 		final Credentials credentials = new UsernamePasswordCredentials(username, password);
+		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 
-		client.getCredentialsProvider().setCredentials(AuthScope.ANY, credentials);
+		// Build the HTTP Client
+		final CloseableHttpClient client = createClient(fastFailTimeouts, credentialsProvider);
 
 		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(client);
+
+		// TODO refactor to use ResteasyWebTarget and ResteasyClientBuilder.httpEngine(new ApacheHttpClient4Engine ?
 		return ProxyFactory.create(iface, endpoint, executor, resteasyProviderFactory);
 	}
 
