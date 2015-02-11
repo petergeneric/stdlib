@@ -23,6 +23,7 @@ import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Builds ResteasyClient objects
@@ -97,20 +98,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 
 	/**
-	 * Retrieve a single shared ResteasyClient for non-fast fail connections
-	 *
-	 * @return
-	 */
-	public ResteasyClient getClient()
-	{
-		if (client == null || client.isClosed())
-			client = newClient(false, null, null);
-
-		return client;
-	}
-
-
-	/**
 	 * Build a new Resteasy Client, optionally with authentication credentials
 	 *
 	 * @param fastFail
@@ -119,66 +106,130 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	 * 		the auth scope to use - if null then defaults to <code>AuthScope.ANY</code>
 	 * @param credentials
 	 * 		the credentials to use (optional, e.g. {@link org.apache.http.auth.UsernamePasswordCredentials})
+	 * @param customiser
+	 * 		optional HttpClientBuilder customiser
 	 *
 	 * @return
 	 */
-	public ResteasyClient newClient(final boolean fastFail, AuthScope authScope, Credentials credentials)
+	public ResteasyClient getOrCreateClient(final boolean fastFail,
+	                                        final AuthScope authScope,
+	                                        final Credentials credentials,
+	                                        Consumer<HttpClientBuilder> customiser)
 	{
+		// Customise timeouts if fast fail mode is enabled
+		if (fastFail)
+		{
+			customiser = concat(customiser, b -> {
+				RequestConfig.Builder requestBuilder = RequestConfig.custom();
+
+				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
+				              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
+
+				b.setDefaultRequestConfig(requestBuilder.build());
+			});
+		}
+
 		// If credentials were supplied then we should set them up
-		CredentialsProvider credentialsProvider;
 		if (credentials != null)
 		{
-			credentialsProvider = new BasicCredentialsProvider();
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
 
 			if (authScope != null)
 				credentialsProvider.setCredentials(authScope, credentials);
 			else
 				credentialsProvider.setCredentials(AuthScope.ANY, credentials);
-		}
-		else
-		{
-			credentialsProvider = null;
+
+			// Set up the credentials customisation
+			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
 		}
 
-		// Build an HttpClient instance
-		final CloseableHttpClient http = createHttpClient(fastFail, credentialsProvider);
-
-		// Build a RestEasy client
-		return new ResteasyClientBuilder().httpEngine(new ApacheHttpClient4Engine(http))
-		                                  .providerFactory(resteasyProviderFactory)
-		                                  .build();
+		return getOrCreateClient(customiser, null);
 	}
 
 
-	private CloseableHttpClient createHttpClient(boolean fastFailTimeouts, final CredentialsProvider provider)
+	private ResteasyClient getOrCreateClient(Consumer<HttpClientBuilder> httpCustomiser,
+	                                         Consumer<ResteasyClientBuilder> resteasyCustomiser)
 	{
-		RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-		if (fastFailTimeouts)
+		if (httpCustomiser == null && resteasyCustomiser == null)
 		{
-			requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
+			// Recursively call self to create a shared client for other non-customised consumers
+			if (client == null)
+				client = getOrCreateClient(b -> {
+					// nothing to customise, supplied so we don't take this code path again
+				}, b -> {
+					// nothing to customise, supplied so we don't take this code path again
+				});
+
+			return client; // use shared client
 		}
 		else
 		{
-			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+			// Build an HttpClient
+			final CloseableHttpClient http;
+			{
+				final HttpClientBuilder builder = HttpClientBuilder.create();
+
+				// By default set long call timeouts
+				{
+					RequestConfig.Builder requestBuilder = RequestConfig.custom();
+
+					requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
+					              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+
+					builder.setDefaultRequestConfig(requestBuilder.build());
+				}
+
+				// Set the default keepalive setting
+				if (noKeepalive)
+					builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
+
+				// By default share the common connection provider
+				builder.setConnectionManager(connectionManager);
+
+				// Allow customisation
+				if (httpCustomiser != null)
+					httpCustomiser.accept(builder);
+
+				http = builder.build();
+			}
+
+			// Now build a resteasy client
+			{
+				ResteasyClientBuilder builder = new ResteasyClientBuilder();
+
+				builder.httpEngine(new ApacheHttpClient4Engine(http)).providerFactory(resteasyProviderFactory);
+
+				if (resteasyCustomiser != null)
+					resteasyCustomiser.accept(builder);
+
+				return builder.build();
+			}
 		}
+	}
 
-		HttpClientBuilder builder = HttpClientBuilder.create();
 
-		builder.setConnectionManager(connectionManager);
+	/**
+	 * Combine a number of consumers together, ignoring nulls
+	 *
+	 * @param consumers
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	private static <T> Consumer<T> concat(Consumer<T>... consumers)
+	{
+		Consumer<T> rootConsumer = null;
 
-		if (provider != null)
-			builder.setDefaultCredentialsProvider(provider);
+		for (Consumer<T> consumer : consumers)
+			if (consumer != null)
+			{
+				if (rootConsumer == null)
+					rootConsumer = consumer;
+				else
+					rootConsumer = rootConsumer.andThen(consumer);
+			}
 
-		builder.setDefaultRequestConfig(requestBuilder.build());
-
-		// Prohibit keepalive if desired
-		if (noKeepalive)
-			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
-
-		return builder.build();
+		return rootConsumer;
 	}
 
 
