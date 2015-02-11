@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.configuration.Configuration;
@@ -24,35 +25,63 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	Configuration config;
 
 
+	public String getConfiguredBoundServiceName(Class<?> iface, String... names)
+	{
+		if (names == null || names.length == 0)
+		{
+			if (iface == null)
+				throw new IllegalArgumentException("If not specifying service names you must provide a service interface");
+			else
+				names = getServiceNames(iface);
+		}
+
+		for (String name : names)
+		{
+			if (name == null)
+				continue;
+
+			if (config.containsKey("service." + name + ".endpoint"))
+				return name;
+		}
+
+		return null;
+	}
+
+
 	@Override
 	public ResteasyWebTarget getWebTarget(final String... names)
 	{
-		for (String name : names)
-		{
-			final String endpoint = config.getString("service." + name + ".endpoint", null);
+		return getWebTarget(false, names);
+	}
 
-			if (endpoint == null)
-				continue;
 
-			final URI uri = URI.create(endpoint);
+	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
+	{
+		final String name = getConfiguredBoundServiceName(null, names);
 
-			final String username = config.getString("service." + name + ".username", getUsername(uri));
-			final String password = config.getString("service." + name + ".password", getPassword(uri));
-			final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", false);
+		if (name == null)
+			throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " +
+			                                   Arrays.asList(names));
 
-			// TODO allow other per-service configuration?
+		final String endpoint = config.getString("service." + name + ".endpoint", null);
+		final URI uri = URI.create(endpoint);
 
-			return createWebTarget(uri, fastFail, username, password);
-		}
+		final String username = config.getString("service." + name + ".username", getUsername(uri));
+		final String password = config.getString("service." + name + ".password", getPassword(uri));
+		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
 
-		throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " + Arrays.asList(names));
+		// TODO allow other per-service configuration?
+
+		return createWebTarget(uri, fastFail, username, password);
 	}
 
 
 	@Override
 	public <T> T getClient(final Class<T> iface, final String... names)
 	{
-		return getWebTarget(names).proxy(iface);
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		return getWebTarget(fastFail, names).proxy(iface);
 	}
 
 
@@ -60,18 +89,43 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	public <T> T getClient(final Class<T> iface)
 	{
 		// TODO allow a service to annotate itself with configurable names?
-		return getClient(iface, iface.getName(), iface.getSimpleName());
+		return getClient(iface, getServiceNames(iface));
+	}
+
+
+	private static String[] getServiceNames(Class<?> iface)
+	{
+		return new String[]{iface.getName(), getServiceName(iface), iface.getSimpleName()};
+	}
+
+
+	private static String getServiceName(Class<?> iface)
+	{
+		if (iface.isAnnotationPresent(ServiceName.class))
+		{
+			return iface.getAnnotation(ServiceName.class).value();
+		}
+		else if (iface.getPackage().isAnnotationPresent(ServiceName.class))
+		{
+			return iface.getPackage().getAnnotation(ServiceName.class).value();
+		}
+		else
+		{
+			return null; // No special name
+		}
 	}
 
 
 	@Override
+
+
 	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
 	{
 		return createWebTarget(endpoint, false, username, password);
 	}
 
 
-	public ResteasyWebTarget createWebTarget(final URI endpoint, boolean fastFail, String username, String password)
+	ResteasyWebTarget createWebTarget(final URI endpoint, boolean fastFail, String username, String password)
 	{
 		if (username != null || password != null)
 		{
