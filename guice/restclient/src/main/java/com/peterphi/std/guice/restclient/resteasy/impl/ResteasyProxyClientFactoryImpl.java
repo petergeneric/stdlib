@@ -14,6 +14,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Objects;
 
 @Singleton
 public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
@@ -88,19 +89,36 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public <T> T getClient(final Class<T> iface)
 	{
-		// TODO allow a service to annotate itself with configurable names?
 		return getClient(iface, getServiceNames(iface));
 	}
 
 
+	/**
+	 * Computes the default set of names for a service based on an interface class. The names produced are an ordered list:
+	 * <ul>
+	 * <li>The fully qualified class name</li>
+	 * <li>If present, the {@link com.peterphi.std.annotation.ServiceName} annotation on the class (OR if not specified on the
+	 * class, the {@link com.peterphi.std.annotation.ServiceName} specified on the package)</li>
+	 * <li>The simple name of the class (the class name without the package prefix)</li>
+	 * </ul>
+	 *
+	 * @param iface
+	 * 		a JAX-RS service interface
+	 *
+	 * @return An array containing one or more names that could be used for the class; may contain nulls (which should be ignored)
+	 */
 	private static String[] getServiceNames(Class<?> iface)
 	{
+		Objects.requireNonNull(iface, "Missing param: iface!");
+
 		return new String[]{iface.getName(), getServiceName(iface), iface.getSimpleName()};
 	}
 
 
 	private static String getServiceName(Class<?> iface)
 	{
+		Objects.requireNonNull(iface, "Missing param: iface!");
+
 		if (iface.isAnnotationPresent(ServiceName.class))
 		{
 			return iface.getAnnotation(ServiceName.class).value();
