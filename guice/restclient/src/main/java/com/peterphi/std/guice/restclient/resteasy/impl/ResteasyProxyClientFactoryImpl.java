@@ -25,7 +25,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	Configuration config;
 
 
-	public String getConfiguredBoundServiceName(Class<?> iface, String... names)
+	public static String getConfiguredBoundServiceName(final Configuration config, Class<?> iface, String... names)
 	{
 		if (names == null || names.length == 0)
 		{
@@ -57,7 +57,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
 	{
-		final String name = getConfiguredBoundServiceName(null, names);
+		final String name = getConfiguredBoundServiceName(config, null, names);
 
 		if (name == null)
 			throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " +

@@ -45,7 +45,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 
 			if (config.getBoolean(GuiceProperties.ROLE_JAXRS_SERVER_AUTO, true))
 			{
-				modules.add(new JAXRSAutoRegisterServicesModule(scannerFactory));
+				modules.add(new JAXRSAutoRegisterServicesModule(config, scannerFactory));
 			}
 		}
 	}

@@ -2,9 +2,13 @@ package com.peterphi.std.guice.web.rest.setup;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.ImplementedBy;
+import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Message;
+import com.google.inject.util.Types;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
+import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.Path;
@@ -13,11 +17,11 @@ import java.util.List;
 /**
  * Discovers all classes/interfaces annotated with {@link javax.ws.rs.Path} and registers them with the {@link
  * com.peterphi.std.guice.serviceregistry.rest.RestResource}.<br />
- * <p/>
+ * <p>
  * In addition, searches for implementations (unless the interface is annotated with {@link com.google.inject.ImplementedBy}) and
  * auto-binds a REST interface to an implementation. If there is more than one implementation then auto-binding will fail and
  * startup will not be able to proceed.
- * <p/>
+ * <p>
  * If there are no implementations found then it is assumed the interface is a client interface in this context and it is
  * ignored.
  */
@@ -25,11 +29,13 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(JAXRSAutoRegisterServicesModule.class);
 
+	private final Configuration config;
 	private final ClassScannerFactory scannerFactory;
 
 
-	public JAXRSAutoRegisterServicesModule(final ClassScannerFactory scannerFactory)
+	public JAXRSAutoRegisterServicesModule(final Configuration config, final ClassScannerFactory scannerFactory)
 	{
+		this.config = config;
 		this.scannerFactory = scannerFactory;
 	}
 
@@ -73,9 +79,20 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 			}
 			else if (implementations.size() == 0)
 			{
-				// TODO bind a client provider if an endpoint is available in the config?
-				log.debug("Found JAX-RS interface with no implementation. Assuming it is a client interface: " + clazz);
-				return;
+				if (ResteasyProxyClientFactoryImpl.getConfiguredBoundServiceName(config, clazz) != null)
+				{
+					log.debug("Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: " +
+					          clazz);
+
+					TypeLiteral typeLiteral = TypeLiteral.<JAXRSClientProvider<T>>get(Types.newParameterizedType(JAXRSClientProvider.class,
+					                                                                                             clazz));
+					bind(clazz).toProvider(typeLiteral);
+				}
+				else
+				{
+					log.debug("Found JAX-RS interface with no implementation and no service.{name}.endpoint config. Ignoring: " +
+					          clazz);
+				}
 			}
 			else
 			{
