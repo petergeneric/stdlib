@@ -2,7 +2,9 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
+import com.peterphi.std.guice.web.HttpCallContext;
 import org.apache.log4j.Logger;
+import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.spi.ApplicationException;
 
 import javax.ws.rs.WebApplicationException;
@@ -48,15 +50,28 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 	public Response getResponse(Throwable exception)
 	{
 		// WebApplicationException already includes the desired Response to send to the client, so return them directly
+		// N.B. we must take care to avoid returning WebApplicationExceptions thrown by JAX-RS Clients, since using their
+		// Response will result in the code to render the Response hanging.
 		if (exception instanceof WebApplicationException)
-			return ((WebApplicationException) exception).getResponse();
+		{
+			final WebApplicationException webappException = (WebApplicationException) exception;
 
-		// Represent the exception as a string
+			// Ignore null responses or exceptions whose Response object is actually a client response (a failure in a remote service call)
+			if (webappException.getResponse() != null && !(webappException.getResponse() instanceof ClientResponse))
+			{
+				return webappException.getResponse();
+			}
+		}
+
+		// Represent the exception as a RestFailure object
 		final RestFailure failure = marshaller.renderFailure(exception);
 
-		log.error(failure.id + ": " + exception.getMessage(), exception);
+		// Log the failure
+		log.error(failure.id + " " + HttpCallContext.get().getRequestInfo() + " threw exception:", exception);
 
 		Response response = null;
+
+		// Try to use the custom renderer (if present)
 		if (renderer != null)
 		{
 			try
@@ -69,14 +84,14 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 			}
 		}
 
-		if (response != null)
-			return response;
-		else
-			response = htmlRenderer.render(failure); // Give the HTML renderer a chance
+		// Give the HTML render an opportunity to run
+		if (response == null)
+			response = htmlRenderer.render(failure);
 
-		if (response != null)
-			return response;
-		else
+		// Use the XML renderer if no other renderer has wanted to build the response
+		if (response == null)
 			return xmlRenderer.render(failure); // Fall back on the XML renderer
+		else
+			return response;
 	}
 }

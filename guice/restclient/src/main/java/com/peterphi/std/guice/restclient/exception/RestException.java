@@ -2,9 +2,10 @@ package com.peterphi.std.guice.restclient.exception;
 
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 
-import javax.ws.rs.core.Response;
+import javax.ws.rs.client.ClientResponseContext;
+import javax.ws.rs.client.ResponseProcessingException;
 
-public class RestException extends RuntimeException
+public class RestException extends ResponseProcessingException
 {
 	private static final long serialVersionUID = 1L;
 
@@ -13,7 +14,6 @@ public class RestException extends RuntimeException
 	private int httpCode;
 	private long errorCode = 0;
 	private RestFailure failure;
-	private Response response;
 
 	/**
 	 * Whether this exception was caused by a remote service throwing an exception. If false then this must have been thrown
@@ -21,70 +21,88 @@ public class RestException extends RuntimeException
 	 */
 	private boolean causedByRemote = false;
 
+	/**
+	 * Only set if this RestException is caused by a remote service throwing an exception.
+	 */
+	private ClientResponseContext responseContext;
+
+
 	public RestException(String msg, Throwable cause)
 	{
 		this(INTERNAL_SERVER_ERROR, msg, cause);
 	}
+
 
 	public RestException(int httpCode, String msg)
 	{
 		this(httpCode, msg, null);
 	}
 
+
 	public RestException(int httpCode, String msg, Throwable cause)
 	{
-		super(msg, cause);
+		super(null, msg, cause);
 
 		setHttpCode(httpCode);
 	}
+
 
 	void setCausedByRemote(boolean value)
 	{
 		this.causedByRemote = value;
 	}
 
-	void setResponse(Response response)
-	{
-		this.response = response;
-	}
 
 	void setFailure(RestFailure failure)
 	{
 		this.failure = failure;
 	}
 
+
 	protected void setErrorCode(long code)
 	{
 		this.errorCode = code;
 	}
+
 
 	protected void setHttpCode(int httpCode)
 	{
 		this.httpCode = httpCode;
 	}
 
+
 	public long getErrorCode()
 	{
 		return errorCode;
 	}
+
 
 	public int getHttpCode()
 	{
 		return httpCode;
 	}
 
+
 	public RestFailure getFailure()
 	{
 		return this.failure;
 	}
 
-	public Response getResponse()
-	{
-		return response;
-	}
 
 	public boolean isCausedByRemote()
 	{
 		return causedByRemote;
+	}
+
+
+	public void setResponseContext(final ClientResponseContext responseContext)
+	{
+		this.responseContext = responseContext;
+	}
+
+
+	public ClientResponseContext getResponseContext()
+	{
+		return responseContext;
 	}
 }

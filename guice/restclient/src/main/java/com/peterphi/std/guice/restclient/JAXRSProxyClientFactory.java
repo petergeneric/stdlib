@@ -1,16 +1,58 @@
 package com.peterphi.std.guice.restclient;
 
 import com.google.inject.ImplementedBy;
-import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 
+import javax.ws.rs.client.WebTarget;
 import java.net.URI;
 
 /**
  * A factory that builds dynamic proxy clients (using JAX-RS RESTful client interfaces) for services at a known location
  */
-@ImplementedBy(ResteasyClientFactoryImpl.class)
+@ImplementedBy(ResteasyProxyClientFactoryImpl.class)
 public interface JAXRSProxyClientFactory
 {
+	/**
+	 * Retrieve a WebTarget for the service, searching for the service in configuration using the ordered list of names
+	 *
+	 * @param names
+	 *
+	 * @return
+	 */
+	public WebTarget getWebTarget(final String... names);
+
+	/**
+	 * Retrieve a Proxy client for the service, searching for the service in configuration using the ordered list of names
+	 *
+	 * @param iface
+	 * @param names
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	public <T> T getClient(final Class<T> iface, final String... names);
+
+	/**
+	 * Get a client for the provided interface, searching for the service in configuration using the default name(s)
+	 *
+	 * @param iface
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	public <T> T getClient(final Class<T> iface);
+
+	/**
+	 * Create a WebTarget for a fixed endpoint optionally with a given username and password
+	 *
+	 * @param endpoint
+	 * @param username
+	 * @param password
+	 *
+	 * @return
+	 */
+	public WebTarget createWebTarget(final URI endpoint, String username, String password);
+
 	/**
 	 * Create a dynamic proxy client for the desired service, setting the base endpoint
 	 *

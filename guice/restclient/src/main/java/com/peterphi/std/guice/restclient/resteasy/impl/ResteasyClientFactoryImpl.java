@@ -6,13 +6,10 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
-import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.NoConnectionReuseStrategy;
@@ -20,21 +17,23 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.jboss.resteasy.client.ProxyFactory;
-import org.jboss.resteasy.client.core.executors.ApacheHttpClient4Executor;
+import org.jboss.resteasy.client.jaxrs.ResteasyClient;
+import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
+import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import java.net.URI;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
- * Default implementation of a JAX-RS Dynamic Proxy HTTP Client Factory that uses RestEasy
+ * Builds ResteasyClient objects
  */
 @Singleton
-public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, StoppableService
+public class ResteasyClientFactoryImpl implements StoppableService
 {
 	private final PoolingHttpClientConnectionManager connectionManager;
 	private final ResteasyProviderFactory resteasyProviderFactory;
+
 
 	@Inject(optional = true)
 	@Named("jaxrs.connection.timeout")
@@ -73,21 +72,24 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	@Doc("The maximum number of HTTP connections in total across all routes (default MAXINT)")
 	int maxConnectionsTotal = Integer.MAX_VALUE;
 
+	private ResteasyClient client;
+
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
-	                                 final ResteasyClientErrorInterceptor errorInterceptor,
+	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBContextResolver jaxbContextResolver)
 	{
 		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
-		resteasyProviderFactory.addClientErrorInterceptor(errorInterceptor);
 		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
+		// Register the exception processor
+		resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
 
+		// Set up the Connection Manager
 		this.connectionManager = new PoolingHttpClientConnectionManager();
-
 		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
 		connectionManager.setMaxTotal(maxConnectionsTotal);
 
@@ -95,73 +97,139 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	}
 
 
-	@Override
-	public <T> T createClient(final Class<T> iface, final String endpoint)
+	/**
+	 * Build a new Resteasy Client, optionally with authentication credentials
+	 *
+	 * @param fastFail
+	 * 		if true, use fast fail timeouts, otherwise false to use default timeouts
+	 * @param authScope
+	 * 		the auth scope to use - if null then defaults to <code>AuthScope.ANY</code>
+	 * @param credentials
+	 * 		the credentials to use (optional, e.g. {@link org.apache.http.auth.UsernamePasswordCredentials})
+	 * @param customiser
+	 * 		optional HttpClientBuilder customiser
+	 *
+	 * @return
+	 */
+	public ResteasyClient getOrCreateClient(final boolean fastFail,
+	                                        final AuthScope authScope,
+	                                        final Credentials credentials,
+	                                        Consumer<HttpClientBuilder> customiser)
 	{
-		return createClient(iface, URI.create(endpoint));
-	}
-
-
-	@Override
-	public <T> T createClient(Class<T> iface, URI endpoint)
-	{
-		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
-
-		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(createClient(fastFailTimeouts, null));
-
-		return ProxyFactory.create(iface, endpoint, executor, resteasyProviderFactory);
-	}
-
-
-	private CloseableHttpClient createClient(boolean fastFailTimeouts, final CredentialsProvider provider)
-	{
-		RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-		if (fastFailTimeouts)
+		// Customise timeouts if fast fail mode is enabled
+		if (fastFail)
 		{
-			requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
+			customiser = concat(customiser, b -> {
+				RequestConfig.Builder requestBuilder = RequestConfig.custom();
+
+				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
+				              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
+
+				b.setDefaultRequestConfig(requestBuilder.build());
+			});
+		}
+
+		// If credentials were supplied then we should set them up
+		if (credentials != null)
+		{
+			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+
+			if (authScope != null)
+				credentialsProvider.setCredentials(authScope, credentials);
+			else
+				credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+
+			// Set up the credentials customisation
+			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
+		}
+
+		return getOrCreateClient(customiser, null);
+	}
+
+
+	private ResteasyClient getOrCreateClient(Consumer<HttpClientBuilder> httpCustomiser,
+	                                         Consumer<ResteasyClientBuilder> resteasyCustomiser)
+	{
+		if (httpCustomiser == null && resteasyCustomiser == null)
+		{
+			// Recursively call self to create a shared client for other non-customised consumers
+			if (client == null)
+				client = getOrCreateClient(b -> {
+					// nothing to customise, supplied so we don't take this code path again
+				}, b -> {
+					// nothing to customise, supplied so we don't take this code path again
+				});
+
+			return client; // use shared client
 		}
 		else
 		{
-			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+			// Build an HttpClient
+			final CloseableHttpClient http;
+			{
+				final HttpClientBuilder builder = HttpClientBuilder.create();
+
+				// By default set long call timeouts
+				{
+					RequestConfig.Builder requestBuilder = RequestConfig.custom();
+
+					requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
+					              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+
+					builder.setDefaultRequestConfig(requestBuilder.build());
+				}
+
+				// Set the default keepalive setting
+				if (noKeepalive)
+					builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
+
+				// By default share the common connection provider
+				builder.setConnectionManager(connectionManager);
+
+				// Allow customisation
+				if (httpCustomiser != null)
+					httpCustomiser.accept(builder);
+
+				http = builder.build();
+			}
+
+			// Now build a resteasy client
+			{
+				ResteasyClientBuilder builder = new ResteasyClientBuilder();
+
+				builder.httpEngine(new ApacheHttpClient4Engine(http)).providerFactory(resteasyProviderFactory);
+
+				if (resteasyCustomiser != null)
+					resteasyCustomiser.accept(builder);
+
+				return builder.build();
+			}
 		}
-
-		HttpClientBuilder builder = HttpClientBuilder.create();
-
-		builder.setConnectionManager(connectionManager);
-
-		if (provider != null)
-			builder.setDefaultCredentialsProvider(provider);
-
-		builder.setDefaultRequestConfig(requestBuilder.build());
-
-		// Prohibit keepalive if desired
-		if (noKeepalive)
-			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
-
-		return builder.build();
 	}
 
 
-	@Override
-	public <T> T createClientWithPasswordAuth(Class<T> iface, URI endpoint, String username, String password)
+	/**
+	 * Combine a number of consumers together, ignoring nulls
+	 *
+	 * @param consumers
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	private static <T> Consumer<T> concat(Consumer<T>... consumers)
 	{
-		final boolean fastFailTimeouts = iface.isAnnotationPresent(FastFailServiceClient.class);
+		Consumer<T> rootConsumer = null;
 
-		// Set up the credentials provider
-		CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-		final Credentials credentials = new UsernamePasswordCredentials(username, password);
-		credentialsProvider.setCredentials(AuthScope.ANY, credentials);
+		for (Consumer<T> consumer : consumers)
+			if (consumer != null)
+			{
+				if (rootConsumer == null)
+					rootConsumer = consumer;
+				else
+					rootConsumer = rootConsumer.andThen(consumer);
+			}
 
-		// Build the HTTP Client
-		final CloseableHttpClient client = createClient(fastFailTimeouts, credentialsProvider);
-
-		final ApacheHttpClient4Executor executor = new ApacheHttpClient4Executor(client);
-
-		// TODO refactor to use ResteasyWebTarget and ResteasyClientBuilder.httpEngine(new ApacheHttpClient4Engine ?
-		return ProxyFactory.create(iface, endpoint, executor, resteasyProviderFactory);
+		return rootConsumer;
 	}
 
 
@@ -169,5 +237,8 @@ public class ResteasyClientFactoryImpl implements JAXRSProxyClientFactory, Stopp
 	public void shutdown()
 	{
 		connectionManager.shutdown();
+
+		if (client != null)
+			client.close();
 	}
 }

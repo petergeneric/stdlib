@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.web;
 
 import com.peterphi.std.types.SimpleId;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.ServletContext;
 import javax.servlet.http.HttpServletRequest;
@@ -129,7 +130,7 @@ public class HttpCallContext
 		final String uri = request.getRequestURI();
 		final String qs = request.getQueryString();
 
-		if (qs == null)
+		if (StringUtils.isEmpty(qs))
 			return method + " " + uri;
 		else
 			return method + " " + uri + "?" + qs;
