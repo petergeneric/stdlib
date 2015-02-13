@@ -67,6 +67,7 @@ class GuicedResteasy implements GuiceApplication
 	private Timer httpCalls;
 	private Meter httpExceptions;
 	private Meter httpNotFoundExceptions;
+	private Meter ignoredAborts;
 
 	@Inject(optional = true)
 	@Named(GuiceProperties.SUPPRESS_CLIENT_ABORT_EXCEPTIONS)
@@ -211,12 +212,28 @@ class GuicedResteasy implements GuiceApplication
 	{
 		if (suppressClientAbortExceptions &&
 		    t instanceof UnhandledException &&
-		    t.getCause() != null &&
-		    t.getCause().getClass().getName().equals("org.apache.catalina.connector.ClientAbortException"))
+		    t.getCause() != null)
 		{
-			log.warn("Client aborted during request. Ignoring. Detail: " + ctx.getRequestInfo(), t);
+			// Only look 20 exceptions deep
+			int maxDepth = 20;
+			Throwable cause = t.getCause();
 
-			return;
+			while (cause != null && --maxDepth > 0)
+			{
+				if (cause.getClass().getName().equals("org.apache.catalina.connector.ClientAbortException"))
+				{
+					ignoredAborts.mark();
+
+					if (log.isTraceEnabled())
+						log.trace("Client aborted during request. Ignoring. Detail: " + ctx.getRequestInfo(), t);
+
+					return;
+				}
+				else
+				{
+					cause = cause.getCause();
+				}
+			}
 		}
 
 		log.warn("Failure during " + ctx.getRequestInfo(), t);
@@ -337,6 +354,7 @@ class GuicedResteasy implements GuiceApplication
 		this.httpNotFoundExceptions = registry.meter(GuiceMetricNames.HTTP_404_EXCEPTIONS_METER);
 		this.httpExceptions = registry.meter(GuiceMetricNames.HTTP_EXCEPTIONS_METER);
 		this.httpCalls = registry.timer(GuiceMetricNames.HTTP_CALLS_TIMER);
+		this.ignoredAborts = registry.meter(GuiceMetricNames.HTTP_IGNORED_CLIENT_ABORTS);
 	}
 
 

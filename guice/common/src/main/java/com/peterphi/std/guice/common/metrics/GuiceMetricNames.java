@@ -19,7 +19,7 @@ public final class GuiceMetricNames
 	public static final String HTTP_CALLS_TIMER = "feature.jax-rs-http-server.calls";
 	public static final String HTTP_EXCEPTIONS_METER = "feature.jax-rs-http-server.calls.non-404-exception";
 	public static final String HTTP_404_EXCEPTIONS_METER = "feature.jax-rs-http-server.calls.404-exception";
-
+	public static final String HTTP_IGNORED_CLIENT_ABORTS = "feature.jax-rs-http-server.calls.ignored-client-abort";
 
 	// @Transaction annotations
 	@Doc("The number of calls to a @Transactional method (including calls that do not start a transaction)")
