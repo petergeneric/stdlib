@@ -48,6 +48,7 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 		stopThread();
 	}
 
+
 	/**
 	 * Sleep for the specified amount of time (unless the daemon is stopping, in which case do not sleep at all). Returns
 	 * immediately if the thread is interrupted.
@@ -62,7 +63,11 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 
 		try
 		{
-			Thread.sleep(millis);
+			// Sleep until the timeout (or until someone wakes us)
+			synchronized (this)
+			{
+				this.wait(millis);
+			}
 		}
 		catch (InterruptedException e)
 		{
@@ -80,9 +85,6 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	 */
 	protected void sleep(Timeout timeout)
 	{
-		if (!isRunning() || timeout.getMilliseconds() <= 0)
-			return;
-
 		sleep(timeout.getMilliseconds());
 	}
 }

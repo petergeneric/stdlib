@@ -82,7 +82,10 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			}
 
 			// Sleep for the default sleep time
-			sleep(sleepTime);
+			if (isRunning())
+			{
+				sleep(sleepTime);
+			}
 		}
 	}
 

@@ -2,7 +2,7 @@ package com.peterphi.std.threading;
 
 import org.apache.log4j.Logger;
 
-import java.lang.Thread.State;
+import java.util.Collections;
 import java.util.List;
 import java.util.Vector;
 
@@ -90,57 +90,14 @@ public abstract class Daemon implements Runnable
 
 			this.running = false;
 
-			final boolean isWaiting = threadWaitHeuristic(thisThread);
-
-			this.interrupt(isWaiting);
+			synchronized (this)
+			{
+				this.notifyAll();
+			}
 		}
 		else
 		{
 			throw new IllegalThreadStateException("Daemon must be started before it may be stopped.");
-		}
-	}
-
-
-	private static boolean threadWaitHeuristic(Thread t)
-	{
-		Thread.State state = t.getState();
-
-		log.debug("[Daemon] {threadWaitHeuristic} Thread in state: " + state);
-
-		// The conditions in which it's valid to Interrupt a thread:
-		boolean waitingHeuristic = false;
-		switch (state)
-		{
-			case RUNNABLE: // Waiting on OS resources (eg. .accept() on a socket)
-			case BLOCKED: // Blocked (eg. waiting fnr an item in a LinkedBlockingQueue)
-			case TIMED_WAITING: // Blocked (but with a timeout)
-			case WAITING:
-				waitingHeuristic = true;
-				break;
-			default:
-				break;
-		}
-
-		return waitingHeuristic;
-	}
-
-
-	/**
-	 * Politely asks the daemon to reconsider its termination condition. The default implementation interrupts the thread.
-	 *
-	 * @param waitingHeuristic
-	 * 		boolean True if the Daemon thinks this thread's blocked
-	 *
-	 * @since standard library 2007-11-26
-	 */
-	protected synchronized void interrupt(boolean waitingHeuristic)
-	{
-		if (waitingHeuristic)
-		{
-			final State state = thisThread.getState();
-			final String tname = thisThread.getName();
-			log.debug("[Daemon] {stopThread} Politely interrupting " + state + " thread " + tname);
-			thisThread.interrupt();
 		}
 	}
 
@@ -174,6 +131,7 @@ public abstract class Daemon implements Runnable
 	// ////// STATIC HELPER METHODS
 	// //////////////////////////////////
 
+
 	/**
 	 * Stop all the daemons in a given list:
 	 *
@@ -192,8 +150,7 @@ public abstract class Daemon implements Runnable
 
 	public static boolean waitForTermination(Daemon daemon, long timeoutMillis)
 	{
-		Vector<Daemon> v = new Vector<Daemon>(1);
-		v.add(daemon);
+		List<Daemon> v = Collections.singletonList(daemon);
 
 		return waitForTermination(v, timeoutMillis);
 	}
