@@ -145,10 +145,15 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	ResteasyWebTarget createWebTarget(final URI endpoint, boolean fastFail, String username, String password)
 	{
-		if (username != null || password != null)
+		if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
 		{
 			final AuthScope scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
-			final Credentials credentials = new UsernamePasswordCredentials(endpoint.getAuthority());
+
+			final Credentials credentials;
+			if (username != null || password != null)
+				credentials = new UsernamePasswordCredentials(username, password);
+			else
+				credentials = new UsernamePasswordCredentials(endpoint.getAuthority());
 
 			return clientFactory.getOrCreateClient(fastFail, scope, credentials, null).target(endpoint);
 		}
