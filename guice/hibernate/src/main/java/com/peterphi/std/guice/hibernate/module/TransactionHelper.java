@@ -48,15 +48,21 @@ public class TransactionHelper
 	public HibernateTransaction start()
 	{
 		final Session session = sessionProvider.get();
-		final Transaction tx = session.getTransaction();
+		final Transaction tx = session.beginTransaction();
 
-		return new HibernateTransaction(session.beginTransaction());
+		return new HibernateTransaction(tx);
 	}
 
 
 	public void addAction(Synchronization synchronisation) throws HibernateException
 	{
+		if (synchronisation == null)
+			return; // ignore null actions
+
 		final Transaction tx = get();
+
+		if (!tx.isActive())
+			throw new IllegalStateException("Cannot add transaction action with no active transaction!");
 
 		tx.registerSynchronization(synchronisation);
 	}
@@ -71,6 +77,9 @@ public class TransactionHelper
 	 */
 	public void addCommitAction(final Runnable action) throws HibernateException
 	{
+		if (action == null)
+			return; // ignore null actions
+
 		addAction(new Synchronization()
 		{
 			@Override
@@ -99,6 +108,9 @@ public class TransactionHelper
 	 */
 	public void addRollbackAction(final Runnable action) throws HibernateException
 	{
+		if (action == null)
+			return; // ignore null actions
+
 		addAction(new Synchronization()
 		{
 			@Override
