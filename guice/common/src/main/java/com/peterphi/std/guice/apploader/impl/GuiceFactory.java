@@ -104,7 +104,7 @@ class GuiceFactory
 			if (packages != null && !packages.isEmpty())
 				scannerFactory = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
 			else
-				throw new IllegalArgumentException("No ClassScanner specified!");
+				throw new IllegalArgumentException("Property " + GuiceProperties.SCAN_PACKAGES + " has not been set!");
 		}
 
 		final GuiceSetup setup;
