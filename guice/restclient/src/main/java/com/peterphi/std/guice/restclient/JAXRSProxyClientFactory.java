@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient;
 
 import com.google.inject.ImplementedBy;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 import javax.ws.rs.client.WebTarget;
 import java.net.URI;
@@ -51,7 +52,8 @@ public interface JAXRSProxyClientFactory
 	 *
 	 * @return
 	 */
-	public WebTarget createWebTarget(final URI endpoint, String username, String password);
+
+	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password);
 
 	/**
 	 * Create a dynamic proxy client for the desired service, setting the base endpoint
@@ -66,6 +68,22 @@ public interface JAXRSProxyClientFactory
 	 * @return a dynamic proxy for the service
 	 */
 	public <T> T createClient(final Class<T> iface, final URI endpoint);
+
+	/**
+	 * Create a dynamic proxy client for the desired service, setting the base endpoint
+	 *
+	 * @param iface
+	 * 		the service interface
+	 * @param endpoint
+	 * 		a valid URI to use as a base point for the provided service interface
+	 * @param preemptiveAuth
+	 * 		if true, enable pre-emptive basic authentication
+	 * @param <T>
+	 * 		the type of the service
+	 *
+	 * @return a dynamic proxy for the service
+	 */
+	public <T> T createClient(final Class<T> iface, final URI endpoint, boolean preemptiveAuth);
 
 	/**
 	 * Create a dynamic proxy client for the desired service, setting the base endpoint
@@ -103,8 +121,37 @@ public interface JAXRSProxyClientFactory
 	 * @throws IllegalArgumentException
 	 * 		if <code>endpoint</code> cannot be parsed as a valid URI
 	 */
+	@Deprecated
 	public <T> T createClientWithPasswordAuth(final Class<T> iface,
 	                                          final URI endpoint,
 	                                          final String username,
 	                                          final String password);
+
+
+	/**
+	 * Create a dynamic proxy client for the desired service, setting the base endpoint & setting up HTTP Basic auth
+	 *
+	 * @param iface
+	 * 		the service interface
+	 * @param endpoint
+	 * 		a valid URI to use as a base point for the provided service interface
+	 * @param username
+	 * 		the username to use
+	 * @param password
+	 * 		the password to use
+	 * @param preemptiveAuth
+	 * 		if true then pre-emptive basic authentication will be used if credentials are also supplied
+	 * @param <T>
+	 * 		the type of the service
+	 *
+	 * @return a dynamic proxy for the service
+	 *
+	 * @throws IllegalArgumentException
+	 * 		if <code>endpoint</code> cannot be parsed as a valid URI
+	 */
+	public <T> T createClientWithPasswordAuth(final Class<T> iface,
+	                                          final URI endpoint,
+	                                          final String username,
+	                                          final String password,
+	                                          boolean preemptiveAuth);
 }

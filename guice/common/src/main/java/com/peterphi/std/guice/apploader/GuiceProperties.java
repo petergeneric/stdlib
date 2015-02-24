@@ -69,6 +69,9 @@ public class GuiceProperties
 	@Doc("If true then UnhandledExceptions thrown as a result of a ClientAbortException will only be logged at TRACE (default true)")
 	public static final String SUPPRESS_CLIENT_ABORT_EXCEPTIONS = "framework.suppress-ClientAbortException";
 
+	@Doc("The names of providers for CurrentUser records, able to extract the user associated with an HTTP call (default none)")
+	public static final String AUTH_PROVIDER_NAMES = "framework.webauth.provider";
+
 	//
 	// Guice Hibernate properties
 	//
