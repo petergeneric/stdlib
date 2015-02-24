@@ -3,6 +3,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.annotation.ServiceName;
+import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.configuration.Configuration;
@@ -71,12 +72,12 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final String username = config.getString("service." + name + ".username", getUsername(uri));
 		final String password = config.getString("service." + name + ".password", getPassword(uri));
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
-		final String authType = config.getString("service." + name + ".auth-type", "default");
+		final String authType = config.getString("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 
 		final boolean preemptiveAuth;
-		if (authType.equalsIgnoreCase("default"))
+		if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
 			preemptiveAuth = false;
-		else if (authType.equalsIgnoreCase("preemptive-basic"))
+		else if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_PREEMPT))
 			preemptiveAuth = true;
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
