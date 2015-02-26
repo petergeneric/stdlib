@@ -114,6 +114,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	public ResteasyClient getOrCreateClient(final boolean fastFail,
 	                                        final AuthScope authScope,
 	                                        final Credentials credentials,
+	                                        final boolean preemptiveAuth,
 	                                        Consumer<HttpClientBuilder> customiser)
 	{
 		// Customise timeouts if fast fail mode is enabled
@@ -141,6 +142,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 			// Set up the credentials customisation
 			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
+
+			if (preemptiveAuth)
+				customiser = concat(customiser, b -> b.addInterceptorLast(new PreemptiveBasicAuthInterceptor()));
 		}
 
 		return getOrCreateClient(customiser, null);

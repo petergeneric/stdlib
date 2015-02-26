@@ -69,6 +69,15 @@ public class GuiceProperties
 	@Doc("If true then UnhandledExceptions thrown as a result of a ClientAbortException will only be logged at TRACE (default true)")
 	public static final String SUPPRESS_CLIENT_ABORT_EXCEPTIONS = "framework.suppress-ClientAbortException";
 
+	@Doc("The names of providers for CurrentUser records, able to extract the user associated with an HTTP call (default: servlet)")
+	public static final String AUTH_PROVIDER_NAMES = "framework.webauth.provider";
+
+	@Doc("If true then server auth will be enabled, and providers specified in framework.webauth.provider called to retrieve details of the current user based on the HTTP request (default true)")
+	public static final String AUTH_ENABLED = "framework.webauth.enabled";
+
+	@Doc("If true then AuthConstraints will be ignored. Can only be enabled if framework.webauth.enabled=false (default false)")
+	public static final String AUTH_BYPASS = "framework.webauth.bypass";
+
 	//
 	// Guice Hibernate properties
 	//

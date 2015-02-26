@@ -3,6 +3,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.annotation.ServiceName;
+import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.configuration.Configuration;
@@ -67,13 +68,21 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final String endpoint = config.getString("service." + name + ".endpoint", null);
 		final URI uri = URI.create(endpoint);
 
+		// TODO allow other per-service configuration?
 		final String username = config.getString("service." + name + ".username", getUsername(uri));
 		final String password = config.getString("service." + name + ".password", getPassword(uri));
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
+		final String authType = config.getString("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 
-		// TODO allow other per-service configuration?
+		final boolean preemptiveAuth;
+		if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
+			preemptiveAuth = false;
+		else if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_PREEMPT))
+			preemptiveAuth = true;
+		else
+			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return createWebTarget(uri, fastFail, username, password);
+		return createWebTarget(uri, fastFail, username, password, preemptiveAuth);
 	}
 
 
@@ -135,15 +144,23 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 
 	@Override
-
-
 	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
 	{
-		return createWebTarget(endpoint, false, username, password);
+		return createWebTarget(endpoint, username, password, true);
 	}
 
 
-	ResteasyWebTarget createWebTarget(final URI endpoint, boolean fastFail, String username, String password)
+	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password, boolean preemptiveAuth)
+	{
+		return createWebTarget(endpoint, false, username, password, preemptiveAuth);
+	}
+
+
+	ResteasyWebTarget createWebTarget(final URI endpoint,
+	                                  boolean fastFail,
+	                                  String username,
+	                                  String password,
+	                                  boolean preemptiveAuth)
 	{
 		if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
 		{
@@ -155,10 +172,10 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			else
 				credentials = new UsernamePasswordCredentials(endpoint.getAuthority());
 
-			return clientFactory.getOrCreateClient(fastFail, scope, credentials, null).target(endpoint);
+			return clientFactory.getOrCreateClient(fastFail, scope, credentials, preemptiveAuth, null).target(endpoint);
 		}
 		else
-			return clientFactory.getOrCreateClient(fastFail, null, null, null).target(endpoint);
+			return clientFactory.getOrCreateClient(fastFail, null, null, false, null).target(endpoint);
 	}
 
 
@@ -172,16 +189,35 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public <T> T createClient(Class<T> iface, URI endpoint)
 	{
-		return createClientWithPasswordAuth(iface, endpoint, getUsername(endpoint), getPassword(endpoint));
+		return createClient(iface, endpoint, false);
 	}
 
 
 	@Override
+	public <T> T createClient(final Class<T> iface, final URI endpoint, final boolean preemptiveAuth)
+	{
+		return createClientWithPasswordAuth(iface, endpoint, getUsername(endpoint), getPassword(endpoint), preemptiveAuth);
+	}
+
+
+	@Override
+	@Deprecated
 	public <T> T createClientWithPasswordAuth(Class<T> iface, URI endpoint, String username, String password)
+	{
+		return createClientWithPasswordAuth(iface, endpoint, username, password, false);
+	}
+
+
+	@Override
+	public <T> T createClientWithPasswordAuth(final Class<T> iface,
+	                                          final URI endpoint,
+	                                          final String username,
+	                                          final String password,
+	                                          final boolean preemptiveAuth)
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return createWebTarget(endpoint, fastFail, username, password).proxy(iface);
+		return createWebTarget(endpoint, fastFail, username, password, preemptiveAuth).proxy(iface);
 	}
 
 
