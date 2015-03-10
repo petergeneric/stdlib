@@ -99,4 +99,10 @@ public class GuiceProperties
 	//
 	@Doc("If true then when the guice-dbunit jar is loaded it'll auto-register DB Unit to work with hibernate(default true)")
 	public static final java.lang.String ROLE_DBUNIT_AUTO = "role.dbunit.auto";
+
+    //
+    // Index Service properties suffix
+    //
+    @Doc("The property suffix to the rest interface for the Index Services to use")
+    public static final String INDEX_SERVICE_PROPERTIES_SUFFIX = ".index.service.property";
 }
