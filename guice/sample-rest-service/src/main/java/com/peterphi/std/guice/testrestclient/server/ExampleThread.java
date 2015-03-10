@@ -23,7 +23,5 @@ public class ExampleThread extends GuiceRecurringDaemon
 	protected void execute() throws Exception
 	{
 		log.info("ExampleThread would do some work now");
-
-		sleepTime.sleep();
 	}
 }

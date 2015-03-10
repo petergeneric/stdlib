@@ -3,7 +3,6 @@ package com.peterphi.std.guice.common.auth;
 import com.codahale.metrics.Meter;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
@@ -15,7 +14,6 @@ import org.aopalliance.intercept.MethodInvocation;
 class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private final Provider<CurrentUser> userProvider;
-	private final Provider<AccessRefuser> refuserProvider;
 	private final Meter calls;
 	private final Meter granted;
 	private final Meter denied;
@@ -23,7 +21,6 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
-	                                       final Provider<AccessRefuser> refuserProvider,
 	                                       final Meter calls,
 	                                       final Meter granted,
 	                                       final Meter denied,
@@ -31,11 +28,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	{
 		if (userProvider == null)
 			throw new IllegalArgumentException("Must have a Provider for CurrentUser!");
-		if (refuserProvider == null)
-			throw new IllegalArgumentException("Must have a Provider for AccessRefuser!");
-
 		this.userProvider = userProvider;
-		this.refuserProvider = refuserProvider;
 		this.calls = calls;
 		this.granted = granted;
 		this.denied = denied;
@@ -76,7 +69,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			denied.mark();
 
 			// Throw an exception to refuse access
-			throw refuserProvider.get().refuse(constraint, user);
+			throw user.getAccessRefuser().refuse(constraint, user);
 		}
 	}
 

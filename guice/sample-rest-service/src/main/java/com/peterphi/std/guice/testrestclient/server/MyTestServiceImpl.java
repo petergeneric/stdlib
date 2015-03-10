@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
@@ -67,6 +68,22 @@ public class MyTestServiceImpl implements MyTestService
 	{
 		counter.inc();
 		throw new LiteralRestResponseException(Response.ok("This is a literal response").build());
+	}
+
+
+	@Override
+	@AuthConstraint(role = "some-made-up-role")
+	public String authReject()
+	{
+		return "this should never appear, access should always be rejected!";
+	}
+
+
+	@Override
+	@AuthConstraint(skip = true)
+	public String authSkip()
+	{
+		return "auth skip page";
 	}
 
 

@@ -32,4 +32,6 @@ public interface CurrentUser
 	 * @return true if the user has that role, otherwise false
 	 */
 	public boolean hasRole(String role);
+
+	public AccessRefuser getAccessRefuser();
 }

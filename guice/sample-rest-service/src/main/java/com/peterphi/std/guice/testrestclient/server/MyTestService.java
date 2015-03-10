@@ -32,9 +32,17 @@ public interface MyTestService
 	@Produces("text/plain")
 	public String fail();
 
-
 	@GET
 	@Path("/fail2")
 	@Produces("text/plain")
 	public String fail2();
+
+	@GET
+	@Path("/auth-test/reject")
+	@Produces("text/plain")
+	public String authReject();
+	@GET
+	@Path("/auth-test/skip")
+	@Produces("text/plain")
+	public String authSkip();
 }
