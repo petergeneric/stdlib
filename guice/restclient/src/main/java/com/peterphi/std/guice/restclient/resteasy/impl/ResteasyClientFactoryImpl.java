@@ -46,6 +46,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	@Doc("The Socket Timeout for HTTP sockets (default 5m)")
 	Timeout socketTimeout = new Timeout(5, TimeUnit.MINUTES);
 
+	@Inject(optional = true)
+	@Named("jaxrs.connection.request.timeout")
+	@Doc("The Connection request Timeout for HTTP sockets (default 5m)")
+	Timeout connectionRequestTimeout = new Timeout(5, TimeUnit.MINUTES);
 
 	@Inject(optional = true)
 	@Named("jaxrs.fast-fail.connection.request.timeout")
@@ -188,7 +192,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 					requestBuilder = RequestConfig.custom();
 
 					requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-					              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+					              .setSocketTimeout((int) socketTimeout.getMilliseconds())
+							      .setConnectionRequestTimeout((int)connectionRequestTimeout.getMilliseconds());
 
 					builder.setDefaultRequestConfig(requestBuilder.build());
 				}
