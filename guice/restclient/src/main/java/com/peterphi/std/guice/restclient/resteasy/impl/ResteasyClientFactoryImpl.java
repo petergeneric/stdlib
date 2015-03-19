@@ -17,9 +17,9 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.util.concurrent.TimeUnit;
@@ -31,6 +31,7 @@ import java.util.function.Consumer;
 @Singleton
 public class ResteasyClientFactoryImpl implements StoppableService
 {
+	private Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
 	private final PoolingHttpClientConnectionManager connectionManager;
 	private final ResteasyProviderFactory resteasyProviderFactory;
 
@@ -47,20 +48,29 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 
 	@Inject(optional = true)
-	@Named("jaxrs.fast-fail.connection.timeout")
-	@Doc("The connection timeout for HTTP sockets created for Fast Fail clients (default 15s)")
-	Timeout fastFailConnectionTimeout = new Timeout(15, TimeUnit.SECONDS);
+	@Named("jaxrs.fast-fail.connection.request.timeout")
+	@Doc("The connection request timeout for HTTP sockets created for Fast Fail clients (default 15s)")
+	Timeout fastFailConnectionRequestTimeout = new Timeout(15, TimeUnit.SECONDS);
 
 	@Inject(optional = true)
 	@Named("jaxrs.fast-fail.socket.timeout")
 	@Doc("The Socket Timeout for HTTP sockets created for Fast Fail clients (default 15s)")
 	Timeout fastFailSocketTimeout = new Timeout(15, TimeUnit.SECONDS);
 
+	@Inject(optional = true)
+	@Named("jaxrs.fast-fail.connection.timeout")
+	@Doc("The connection timeout for HTTP sockets created for Fast Fail clients (default 15s)")
+	Timeout fastFailConnectionTimeout = new Timeout(15, TimeUnit.SECONDS);
 
 	@Inject(optional = true)
 	@Named("jaxrs.nokeepalive")
 	@Doc("If true, keepalive will be disabled for HTTP connections (default true)")
 	boolean noKeepalive = true;
+
+	@Inject(optional = true)
+	@Named("jaxrs.fail-fast.revalidate")
+	@Doc("The revalidation interval for a stale connection (default 5 seconds) ")
+	Timeout revalidateTime = new Timeout(5, TimeUnit.SECONDS);
 
 	@Inject(optional = true)
 	@Named("jaxrs.max-connections-per-route")
@@ -92,7 +102,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		this.connectionManager = new PoolingHttpClientConnectionManager();
 		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
 		connectionManager.setMaxTotal(maxConnectionsTotal);
-
 		manager.register(this);
 	}
 
@@ -122,7 +131,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		{
 			customiser = concat(customiser, b -> {
 				RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
+				requestBuilder.setConnectionRequestTimeout((int)fastFailConnectionRequestTimeout.getMilliseconds());
 				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
 				              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
 
@@ -154,6 +163,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	private ResteasyClient getOrCreateClient(Consumer<HttpClientBuilder> httpCustomiser,
 	                                         Consumer<ResteasyClientBuilder> resteasyCustomiser)
 	{
+		RequestConfig.Builder requestBuilder;
 		if (httpCustomiser == null && resteasyCustomiser == null)
 		{
 			// Recursively call self to create a shared client for other non-customised consumers
@@ -175,7 +185,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 				// By default set long call timeouts
 				{
-					RequestConfig.Builder requestBuilder = RequestConfig.custom();
+					requestBuilder = RequestConfig.custom();
 
 					requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
 					              .setSocketTimeout((int) socketTimeout.getMilliseconds());
@@ -201,7 +211,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			{
 				ResteasyClientBuilder builder = new ResteasyClientBuilder();
 
-				builder.httpEngine(new ApacheHttpClient4Engine(http)).providerFactory(resteasyProviderFactory);
+				builder.httpEngine(new ResteasyClientExecutor(http)).providerFactory(resteasyProviderFactory);
 
 				if (resteasyCustomiser != null)
 					resteasyCustomiser.accept(builder);
