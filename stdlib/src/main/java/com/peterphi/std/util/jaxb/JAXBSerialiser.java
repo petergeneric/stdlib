@@ -8,18 +8,12 @@ import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
-import javax.xml.bind.JAXBContext;
-import javax.xml.bind.JAXBException;
-import javax.xml.bind.Marshaller;
-import javax.xml.bind.Unmarshaller;
+import javax.xml.bind.*;
+import javax.xml.namespace.QName;
+import javax.xml.stream.XMLStreamException;
+import javax.xml.stream.XMLStreamReader;
 import javax.xml.validation.Schema;
-import java.io.File;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.io.Reader;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.io.Writer;
+import java.io.*;
 import java.util.Arrays;
 
 /**
@@ -180,9 +174,8 @@ public class JAXBSerialiser
 	 */
 	public Object deserialise(String xml)
 	{
-		return deserialise(new InputSource(new StringReader(xml)));
+		return deserialise(new StringReader(xml));
 	}
-
 
 	/**
 	 * Deserialise a stream of XML to an Object (or JAXBElement)
@@ -284,6 +277,41 @@ public class JAXBSerialiser
 		}
 	}
 
+	public Object deserialiseXmlStream(final XMLStreamReader reader)
+	{
+		if (reader == null)
+			throw new IllegalArgumentException("Null argument passed to deserialise!");
+
+		final Unmarshaller unmarshaller = getUnmarshaller();
+
+		try
+		{
+			final Object obj = unmarshaller.unmarshal(reader);
+
+			if (obj == null)
+				throw new RuntimeException("Malformed XML!");
+			else {
+				return obj;
+			}
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("Deserialisation failed: " + e.getMessage(), e);
+		}
+		finally{
+			if(reader != null) {
+				try {
+					reader.close();
+				}
+				catch(XMLStreamException e) {
+					throw new JAXBRuntimeException("Failed to close XML stream",e);
+				}
+			}
+
+
+		}
+	}
+
 
 	public Object deserialise(final InputSource source)
 	{
@@ -361,6 +389,48 @@ public class JAXBSerialiser
 		return document;
 	}
 
+	/**
+	 *
+	 * @param clazz
+	 * @param qName
+	 * @param obj
+	 * @param <T>
+	 * @return
+	 */
+	public <T> Document serialiseFragmentToDocument(Class<T> clazz,
+													String qName, T obj)
+	{
+		if (qName == null || qName.isEmpty())
+			throw new IllegalArgumentException(
+					"QName for localName cannot be null or empty");
+
+		final Marshaller marshaller = getMarshaller();
+		final Document document = DOMUtils.createDocumentBuilder()
+				.newDocument();
+
+		QName qNamed = getqName(qName, obj);
+		JAXBElement<T> jaxbElement = new JAXBElement<T>(qNamed, clazz, obj);
+		try {
+			marshaller.marshal(jaxbElement, document);
+		} catch (JAXBException e) {
+			throw new JAXBRuntimeException("Serialisation failed ", e);
+		}
+
+		return document;
+	}
+
+	private <T> QName getqName(String qName, T obj)
+	{
+		JAXBIntrospector introspector = context.createJAXBIntrospector();
+		QName qNamed = introspector.getElementName(obj);
+		if (qNamed == null) {
+			if (qName == null || qName.isEmpty())
+				throw new IllegalArgumentException(
+						"QName for localName cannot be null or empty");
+		}
+		qNamed = new QName(qName);
+		return qNamed;
+	}
 
 	public String serialise(final Object obj)
 	{
@@ -377,7 +447,6 @@ public class JAXBSerialiser
 			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
 		}
 	}
-
 
 	public void serialise(final Object obj, final Writer writer)
 	{
