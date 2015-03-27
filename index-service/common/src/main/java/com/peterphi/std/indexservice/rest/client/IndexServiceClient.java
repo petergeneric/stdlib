@@ -2,17 +2,15 @@ package com.peterphi.std.indexservice.rest.client;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import com.peterphi.std.indexservice.rest.iface.IndexRestService;
-import com.peterphi.std.indexservice.rest.type.RegistrationHeartbeatResponse;
-import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
-import com.peterphi.std.indexservice.rest.type.RegistrationResponse;
-import com.peterphi.std.indexservice.rest.type.ServiceDescription;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchRequest;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchResults;
+import com.peterphi.std.indexservice.rest.type.*;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
 
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -21,6 +19,7 @@ import java.util.concurrent.TimeUnit;
  * A convenient abstraction over an index REST service.
  */
 @Singleton
+@FastFailServiceClient
 public class IndexServiceClient
 {
 	private static final Logger log = Logger.getLogger(IndexServiceClient.class);
@@ -35,15 +34,39 @@ public class IndexServiceClient
 	 */
 	private int apiCallRetryLimit = 3;
 
-
-	protected final IndexRestService service;
+	@Inject
+	private IndexRestService service;
 
 	@Inject
-	public IndexServiceClient(IndexRestService service)
-	{
-		this.service = service;
-	}
+	private JAXRSProxyClientFactory clientFactory;
 
+	/**
+	 * Convenience wrapper for gather-scatter calls
+	 * @param iface
+	 * @param properties
+	 * @param <T>
+	 * @return
+	 */
+	public <T> List<T> findServices(Class<T> iface,PropertyList properties) {
+		List<T> results = new ArrayList<>();
+		List<ServiceDescription> searchMatches = findServiceDescriptions(iface,properties);
+		for(ServiceDescription serviceDescription : searchMatches) {
+			results.add(clientFactory.createClient(iface,serviceDescription.details.endpoint));
+		}
+		return results;
+	}
+	/**
+	 *
+	 * @param iface
+	 * @param <T>
+	 * @return
+	 * @throws NoServiceFoundException
+	 */
+	public <T> T findService(Class<T> iface) throws NoServiceFoundException
+	{
+		URI endpoint = findServiceEndpoint(iface);
+		return clientFactory.createClient(iface,endpoint);
+	}
 	/**
 	 * Look up a service
 	 *
@@ -55,7 +78,7 @@ public class IndexServiceClient
 	 */
 	public URI findServiceEndpoint(Class<?> iface) throws NoServiceFoundException
 	{
-		List<ServiceDescription> results = findServices(iface);
+		List<ServiceDescription> results = findServiceDescriptions(iface);
 
 		// Pick the "best" service (currently, picks a random service)
 		// Randomly order the results
@@ -79,6 +102,11 @@ public class IndexServiceClient
 		throw new NoServiceFoundException("Index service knows no instance of " + iface.getName());
 	}
 
+    public List<ServiceDescription> findServiceDescriptions(Class<?> iface)
+    {
+        return findServiceDescriptions(iface, new PropertyList());
+    }
+
 	/**
 	 * Try to find services, automatically retrying in the case of a communication failure
 	 *
@@ -86,10 +114,11 @@ public class IndexServiceClient
 	 *
 	 * @return
 	 */
-	public List<ServiceDescription> findServices(Class<?> iface)
+	public List<ServiceDescription> findServiceDescriptions(Class<?> iface,PropertyList properties)
 	{
 		final ServiceSearchRequest request = new ServiceSearchRequest();
 		request.iface = iface.getName();
+        request.properties = properties;
 
 		for (int i = 0; i < apiCallRetryLimit; i++)
 		{
@@ -181,8 +210,8 @@ public class IndexServiceClient
 	 *
 	 * @param applicationId
 	 */
-	public void unregister(final String applicationId)
+	public UnregisterResponse unregister(final String applicationId)
 	{
-		service.deleteApplication(applicationId);
+		return service.deleteApplication(applicationId);
 	}
 }

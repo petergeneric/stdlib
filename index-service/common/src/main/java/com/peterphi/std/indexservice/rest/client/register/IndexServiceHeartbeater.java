@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
+import com.peterphi.std.indexservice.rest.type.UnregisterResponse;
 import com.peterphi.std.threading.Daemon;
 import com.peterphi.std.threading.Timeout;
 import org.apache.commons.configuration.Configuration;
@@ -42,8 +43,7 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 			}
 			catch (IllegalStateException e)
 			{
-				log.fatal("Error in IndexHeartbeat " + contextName + " : ", e);
-				throw e;
+				log.fatal("Illegal state exception in IndexHeartbeat " + contextName + " : ", e);
 			}
 			catch (Exception e)
 			{
@@ -52,7 +52,6 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 			catch (Error e)
 			{
 				log.fatal("Error in IndexHeartbeat " + contextName + ": ", e);
-				throw e;
 			}
 		}
 	}
@@ -71,9 +70,11 @@ public class IndexServiceHeartbeater extends Daemon implements StoppableService
 		this.stopThread();
 
 		// Eagerly unregister (lest the HTTP client be shut down and we be unable to register)
-		helper.unregister();
-
-		// Wait until the Thread terminates (or at most 60 seconds)
-		Daemon.waitForTermination(this, 60 * 1000);
+		try {
+			UnregisterResponse response = helper.unregister();
+		}
+		catch(Exception e) {
+			log.warn("Failed to eagerly unregister from Index Server",e);
+		}
 	}
 }

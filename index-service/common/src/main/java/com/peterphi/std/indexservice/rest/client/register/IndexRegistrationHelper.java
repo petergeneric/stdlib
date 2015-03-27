@@ -4,19 +4,19 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.annotation.IndexServerProperty;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.index.IndexableServiceRegistry;
 import com.peterphi.std.guice.serviceregistry.index.ManualIndexableService;
 import com.peterphi.std.indexservice.rest.client.IndexServiceClient;
-import com.peterphi.std.indexservice.rest.type.RegistrationHeartbeatResponse;
-import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
-import com.peterphi.std.indexservice.rest.type.RegistrationResponse;
-import com.peterphi.std.indexservice.rest.type.ServiceDetails;
+import com.peterphi.std.indexservice.rest.type.*;
 import com.peterphi.std.threading.Timeout;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.net.URI;
+import java.util.Iterator;
 import java.util.concurrent.TimeUnit;
 
 @Singleton
@@ -156,22 +156,24 @@ public class IndexRegistrationHelper
 	/**
 	 * Called to request that we attempt to unregister the application
 	 */
-	public synchronized void unregister()
+	public synchronized UnregisterResponse unregister()
 	{
+		UnregisterResponse response = new UnregisterResponse();
 		switch (state)
 		{
 			case UNREGISTERED:
-				return; // no action required
+				return response; // no action required
 			default:
 				if (this.applicationId != null)
 				{
 					// Try to unregister (without retry)
-					indexService.unregister(this.applicationId);
+					response = indexService.unregister(this.applicationId);
 					this.applicationId = null;
 				}
 
 				state = IndexServiceRegistrationState.UNREGISTERED;
 		}
+		return response;
 	}
 
 	/**
@@ -193,9 +195,7 @@ public class IndexRegistrationHelper
 			ServiceDetails service = new ServiceDetails();
 			service.iface = resource.getName();
 			service.endpoint = baseEndpoint.toString();
-
-			// TODO populate properties for this service
-
+            service.properties = buildPropertyList(resource);
 			request.services.add(service);
 		}
 
@@ -203,15 +203,48 @@ public class IndexRegistrationHelper
 		for (ManualIndexableService resource : IndexableServiceRegistry.getRemoteServices())
 		{
 			ServiceDetails service = new ServiceDetails();
-
 			service.iface = resource.serviceInterface;
 			service.endpoint = resource.endpoint;
-
-			// TODO populate properties for this service?
-
+            try
+            {
+                Class<?> resourceClazz = Class.forName(resource.serviceInterface);
+                service.properties = buildPropertyList(resourceClazz);
+            }
+            catch(ClassNotFoundException e) {
+                //Defer to prefix method
+                service.properties = buildPropertyList(resource.endpoint + GuiceProperties.INDEX_SERVICE_PROPERTIES_SUFFIX);
+            }
 			request.services.add(service);
 		}
 
 		return request;
 	}
+
+	protected PropertyList buildPropertyList(Class<?> resource)
+	{
+		PropertyList propertyList = new PropertyList();
+		IndexServerProperty[] properties = resource.getAnnotationsByType(IndexServerProperty.class);
+		for(IndexServerProperty property : properties) {
+			String propertyValue = configuration.getString(property.propertyKey());
+			if(StringUtils.isNotEmpty(propertyValue)) {
+                propertyList.properties.add(new PropertyValue(property.name(),propertyValue));
+            }
+		}
+        return propertyList;
+	}
+
+    protected PropertyList buildPropertyList(String prefix)
+    {
+        PropertyList propertyList = new PropertyList();
+        Iterator<String> iterator = configuration.getKeys(prefix);
+        log.info("Found matches with prefix " + prefix);
+        while(iterator.hasNext()) {
+            String key = iterator.next();
+            String value = configuration.getString(key);
+            String propertyKey = key.substring(prefix.length() +1);
+            log.info("Adding index service key " + propertyKey + " with value " + value);
+            propertyList.properties.add(new PropertyValue(propertyKey,value));
+        }
+        return propertyList;
+    }
 }

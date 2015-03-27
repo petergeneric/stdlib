@@ -1,21 +1,9 @@
 package com.peterphi.std.indexservice.rest.iface;
 
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
-import com.peterphi.std.indexservice.rest.type.ApplicationSearchResults;
-import com.peterphi.std.indexservice.rest.type.RegistrationHeartbeatResponse;
-import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
-import com.peterphi.std.indexservice.rest.type.RegistrationResponse;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchRequest;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchResults;
+import com.peterphi.std.indexservice.rest.type.*;
 
-import javax.ws.rs.Consumes;
-import javax.ws.rs.DELETE;
-import javax.ws.rs.GET;
-import javax.ws.rs.POST;
-import javax.ws.rs.PUT;
-import javax.ws.rs.Path;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.Produces;
+import javax.ws.rs.*;
 
 @Path("/index-service")
 @FastFailServiceClient
@@ -49,10 +37,10 @@ public interface IndexRestService
 	 *
 	 * @param applicationId
 	 */
-	@DELETE
-	@Path("/application/{application_id}")
+	@POST
+	@Path("/application/unregister/{application_id}")
 	@Produces("application/xml")
-	public void deleteApplication(@PathParam("application_id") String applicationId);
+	public UnregisterResponse deleteApplication(@PathParam("application_id") String applicationId);
 
 	/**
 	 * Retrieve all services for an application

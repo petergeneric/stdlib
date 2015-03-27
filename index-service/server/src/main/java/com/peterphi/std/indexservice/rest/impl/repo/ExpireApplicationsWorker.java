@@ -1,7 +1,7 @@
 package com.peterphi.std.indexservice.rest.impl.repo;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.threading.Daemon;
@@ -13,7 +13,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * An eager singleton worker that removes expired applications periodically
  */
-@Singleton
+@EagerSingleton
 public class ExpireApplicationsWorker extends Daemon implements StoppableService
 {
 	private static final Logger log = Logger.getLogger(ExpireApplicationsWorker.class);

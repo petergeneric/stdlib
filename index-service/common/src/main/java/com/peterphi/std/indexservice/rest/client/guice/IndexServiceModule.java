@@ -10,20 +10,17 @@ import com.peterphi.std.indexservice.rest.iface.IndexRestService;
 
 import java.net.URI;
 
-public class IndexServiceModule extends AbstractModule
-{
+public class IndexServiceModule extends AbstractModule {
 
-	@Override
-	protected void configure()
-	{
-		bind(IndexServiceHeartbeater.class).asEagerSingleton();
-	}
+    @Override
+    protected void configure() {
+        bind(IndexServiceHeartbeater.class).asEagerSingleton();
+    }
 
-	@Provides
-	@Singleton
-	public IndexRestService getIndexService(@Named("service.IndexRestService.endpoint") URI endpoint,
-	                                        JAXRSProxyClientFactory clientFactory)
-	{
-		return clientFactory.createClient(IndexRestService.class, endpoint);
-	}
+    @Provides
+    @Singleton
+    public IndexRestService getIndexService(@Named("service.IndexRestService.endpoint") URI endpoint,
+                                            JAXRSProxyClientFactory clientFactory) {
+        return clientFactory.createClient(IndexRestService.class, endpoint);
+    }
 }

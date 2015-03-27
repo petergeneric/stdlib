@@ -5,13 +5,7 @@ import com.google.inject.Singleton;
 import com.peterphi.std.indexservice.rest.iface.IndexRestService;
 import com.peterphi.std.indexservice.rest.impl.repo.AppRepo;
 import com.peterphi.std.indexservice.rest.impl.repo.ServiceRepo;
-import com.peterphi.std.indexservice.rest.type.ApplicationSearchResults;
-import com.peterphi.std.indexservice.rest.type.RegistrationHeartbeatResponse;
-import com.peterphi.std.indexservice.rest.type.RegistrationRequest;
-import com.peterphi.std.indexservice.rest.type.RegistrationResponse;
-import com.peterphi.std.indexservice.rest.type.ServiceDescription;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchRequest;
-import com.peterphi.std.indexservice.rest.type.ServiceSearchResults;
+import com.peterphi.std.indexservice.rest.type.*;
 
 import javax.ws.rs.PathParam;
 import java.util.Date;
@@ -50,9 +44,10 @@ public class IndexRestServiceImpl implements IndexRestService
 	}
 
 	@Override
-	public void deleteApplication(@PathParam("application_id") final String applicationId)
+	public UnregisterResponse deleteApplication(@PathParam("application_id") final String applicationId)
 	{
 		apps.unregister(applicationId);
+		return new UnregisterResponse();
 	}
 
 	@Override
@@ -95,11 +90,14 @@ public class IndexRestServiceImpl implements IndexRestService
 	}
 
 	@Override
+    /**
+     * get by interface iface + opt properties or get all
+     */
 	public ServiceSearchResults searchForServices(final ServiceSearchRequest request)
 	{
 		if (request.iface != null)
 		{
-			return renderSearchResults(services.findByInterface(request.iface), true);
+            return renderSearchResults(services.findByInterfaceRestrictByProperties(request.iface,request.properties), true);
 		}
 		else
 		{

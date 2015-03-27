@@ -1,13 +1,11 @@
 package com.peterphi.std.indexservice.rest.impl.repo;
 
 import com.google.inject.Singleton;
+import com.peterphi.std.indexservice.rest.type.PropertyList;
+import com.peterphi.std.indexservice.rest.type.PropertyValue;
 import com.peterphi.std.indexservice.rest.type.ServiceDescription;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 @Singleton
 public class ServiceRepo
@@ -26,6 +24,32 @@ public class ServiceRepo
 				return new ArrayList<ServiceDescription>(results);
 		}
 	}
+
+    public List<ServiceDescription> findByInterfaceRestrictByProperties(String iface,PropertyList properties) {
+        synchronized (services) {
+            List<ServiceDescription> interfaceMatches = getByInterface(iface);
+            List<ServiceDescription> results = new LinkedList<>(interfaceMatches);
+            for(int i = 0; i < interfaceMatches.size();i++) {
+                ServiceDescription serviceDescription = interfaceMatches.get(i);
+                for (PropertyValue property : properties.properties) {
+                    if (!hasPropertyMatch(property.name, property.value, serviceDescription.details.properties)) {
+                        results.remove(i);
+                        break;
+                    }
+                }
+            }
+            return results;
+        }
+    }
+
+    private boolean hasPropertyMatch(String name, String value, PropertyList properties) {
+        for(PropertyValue property : properties.properties) {
+            if(property.name.equals(name) && property.value.equals(value)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
 	private List<ServiceDescription> getByInterface(String iface)
 	{

@@ -12,11 +12,7 @@ public class IndexServiceModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		bind(IndexRestService.class).to(IndexRestServiceImpl.class);
 
-		RestResourceRegistry.register(IndexRestService.class);
-
-		bind(ExpireApplicationsWorker.class).asEagerSingleton();
 	}
 
 }
