@@ -71,7 +71,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 		else
 		{
 			// Search for implementations
-			final List<Class<? extends T>> implementations = scannerFactory.getInstance().getImplementation(clazz);
+			final List<Class<? extends T>> implementations = scannerFactory.getInstance().getImplementations(clazz);
 
 			if (implementations.size() == 1)
 			{

@@ -182,9 +182,9 @@ public class ClassScanner
 	 * @param <T>
 	 * @return
 	 */
-	public <T> List<Class<? extends T>> getImplementation(final Class<T> clazz)
+	public <T> List<Class<? extends T>> getImplementations(final Class<T> clazz)
 	{
-		return getImplementation(clazz, null);
+		return getImplementations(clazz, null);
 	}
 
 
@@ -195,7 +195,7 @@ public class ClassScanner
 	 * @param <T>
 	 * @return
 	 */
-	public <T> List<Class<? extends T>> getImplementation(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
+	public <T> List<Class<? extends T>> getImplementations(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
 	{
 		final long started = System.currentTimeMillis();
 		try

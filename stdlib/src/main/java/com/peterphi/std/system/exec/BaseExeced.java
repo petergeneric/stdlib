@@ -8,11 +8,11 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.io.Writer;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
 public class BaseExeced
 {
-	public final Object monitor = new Object();
 	protected final List<String> cmd;
 	protected final Process process;
 	protected final boolean combinedOutput;
@@ -61,7 +61,8 @@ public class BaseExeced
 
 
 	/**
-	 * Returns the exit code of the application, assuming it has already terminated. If the process has not yet terminated then an
+	 * Returns the exit code of the application, assuming it has already terminated. If the process has not yet terminated then
+	 * an
 	 * IllegalStateException will be thrown
 	 *
 	 * @return the exit code of the process
@@ -131,7 +132,6 @@ public class BaseExeced
 	public int waitForExit()
 	{
 		return waitForExit(Deadline.MAX_VALUE);
-
 	}
 
 
@@ -143,28 +143,31 @@ public class BaseExeced
 	 *
 	 * @return the exit code of the process
 	 */
-	public int waitForExit(Deadline deadline)
+	public int waitForExit(final Deadline deadline)
 	{
-		final int intervalMax = 4500; // the maximum time between polls
-		int interval = 5; // initial sleep will be 3* this, so 15
+		final int intervalMax = 4500; // the maximum time between polls is 4.5 seconds
+		int interval = 5; // initial sleep will be 3* this, so 15ms
 
 		while (!isFinished() && deadline.isValid())
-			synchronized (this.monitor)
+		{
+			try
 			{
-				try
+				// Check very frequently initially, tripling the wait each time
+				// this allows us to return very quickly for short-running processes, but not hammer the CPU for long-running processes
+				if (interval != intervalMax)
 				{
-					// Check very frequently initially, tripling the wait each time
-					// this allows us to return very quickly for short-running processes, but not hammer the CPU for long-running processes
-					if (interval != intervalMax)
-					{
-						interval = Math.min(interval * 3, intervalMax);
-					}
-					this.monitor.wait(Math.min(deadline.getTimeLeft(), interval));
+					interval = Math.min(interval * 3, intervalMax);
 				}
-				catch (InterruptedException e)
-				{
-				}
+
+				final boolean hasExited = this.process.waitFor(Math.min(deadline.getTimeLeft(), interval), TimeUnit.MILLISECONDS);
+
+				if (hasExited)
+					return exitCode();
 			}
+			catch (InterruptedException e)
+			{
+			}
+		}
 
 		if (deadline.isExpired())
 			return Integer.MIN_VALUE;
@@ -203,13 +206,9 @@ public class BaseExeced
 
 	protected void finished(int exitCode)
 	{
-		synchronized (this.monitor)
-		{
-			this.finished = true;
-			this.exitCode = exitCode;
+		this.exitCode = exitCode;
 
-			this.monitor.notifyAll();
-		}
+		this.finished = true;
 	}
 
 
@@ -226,32 +225,27 @@ public class BaseExeced
 	// Commence a background copy
 	protected Thread copy(final InputStream in, final Writer out)
 	{
-		Runnable r = new Runnable()
-		{
-
-			@Override
-			public void run()
+		Runnable r = () -> {
+			try
+			{
+				StreamUtil.streamCopy(in, out);
+			}
+			catch (IOException e)
 			{
 				try
 				{
-					StreamUtil.streamCopy(in, out);
+					out.flush();
 				}
-				catch (IOException e)
+				catch (Throwable t)
 				{
-					try
-					{
-						out.flush();
-					}
-					catch (Throwable t)
-					{
-					}
-
-					unexpectedFailure(e);
 				}
+
+				unexpectedFailure(e);
 			}
 		};
 
 		Thread t = new Thread(r);
+		t.setName(this + " - IOCopy " + in + " to " + out);
 		t.setDaemon(true);
 		t.start();
 
@@ -264,21 +258,16 @@ public class BaseExeced
 		if (in == null)
 			return null;
 
-		Runnable r = new Runnable()
-		{
-			@Override
-			public void run()
-			{
-				StreamUtil.eatInputStream(in);
-			}
-		};
+		Runnable r = () -> StreamUtil.eatInputStream(in);
 
 		Thread t = new Thread(r);
 		t.setDaemon(true);
+		t.setName(this + " - IODiscard " + in);
 		t.start();
 
 		return t;
 	}
+
 
 	public static BaseExeced spawn(Exec e) throws IOException
 	{
@@ -288,5 +277,4 @@ public class BaseExeced
 
 		return new BaseExeced(e.cmd, pb.start(), pb.redirectErrorStream());
 	}
-
 }
