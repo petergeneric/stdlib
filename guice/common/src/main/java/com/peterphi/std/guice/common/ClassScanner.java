@@ -175,7 +175,6 @@ public class ClassScanner
 		return getInheritedAnnotatedClasses(annotation, null);
 	}
 
-
 	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz)
 	{
 		return getExtendingClasses(clazz, null);
@@ -187,7 +186,10 @@ public class ClassScanner
 		final long started = System.currentTimeMillis();
 		try
 		{
-			return filter(finder.findImplementations(clazz), predicate);
+			if (clazz.isInterface())
+				return filter(finder.findImplementations(clazz), predicate);
+			else
+				return filter(finder.findSubclasses(clazz), predicate);
 		}
 		finally
 		{
