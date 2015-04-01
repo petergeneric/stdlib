@@ -176,18 +176,34 @@ public class ClassScanner
 	}
 
 
-	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz)
+	/**
+	 * Find all implementations of an interface (if an interface is provided) or extensions (if a class is provided)
+	 * @param clazz
+	 * @param <T>
+	 * @return
+	 */
+	public <T> List<Class<? extends T>> getImplementations(final Class<T> clazz)
 	{
-		return getExtendingClasses(clazz, null);
+		return getImplementations(clazz, null);
 	}
 
 
-	public <T> List<Class<? extends T>> getExtendingClasses(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
+	/**
+	 * Find filtered implementations of an interface (if an interface is provided) or extensions (if a class is provided)
+	 * @param clazz
+	 * @param predicate the predicate to use to filter the implementations
+	 * @param <T>
+	 * @return
+	 */
+	public <T> List<Class<? extends T>> getImplementations(final Class<T> clazz, Predicate<Class<? extends T>> predicate)
 	{
 		final long started = System.currentTimeMillis();
 		try
 		{
-			return filter(finder.findImplementations(clazz), predicate);
+			if (clazz.isInterface())
+				return filter(finder.findImplementations(clazz), predicate);
+			else
+				return filter(finder.findSubclasses(clazz), predicate);
 		}
 		finally
 		{
