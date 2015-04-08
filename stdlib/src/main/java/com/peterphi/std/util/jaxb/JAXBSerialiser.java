@@ -104,6 +104,10 @@ public class JAXBSerialiser
 
 	/**
 	 * Optionally specify the schema to use for all future serialisation/deserialisation methods
+	 * <p/>
+	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
+	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
+	 * JAXBSerialiserFactory
 	 *
 	 * @param schema
 	 *
@@ -134,47 +138,79 @@ public class JAXBSerialiser
 
 	/**
 	 * Specify an output encoding to use when marshalling the XML data. The default is UTF-8
+	 * <p/>
+	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
+	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
+	 * JAXBSerialiserFactory
 	 *
 	 * @param encoding
+	 *
+	 * @return this for method chaining
 	 */
-	public void setEncoding(final String encoding)
+	public JAXBSerialiser setEncoding(final String encoding)
 	{
 		this.encoding = encoding;
+
+		return this;
 	}
 
 
 	/**
 	 * Specify an xsi:schemaLocation attribute in the generated XML
+	 * <p/>
+	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
+	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
+	 * JAXBSerialiserFactory
 	 *
 	 * @param schemaLocation
+	 *
+	 * @return this for method chaining
 	 */
-	public void setSchemaLocation(final String schemaLocation)
+	public JAXBSerialiser setSchemaLocation(final String schemaLocation)
 	{
 		this.schemaLocation = schemaLocation;
+
+		return this;
 	}
 
 
 	/**
 	 * Specify an xsi:noNamespaceSchemaLocation in the generated XML
+	 * <p/>
+	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
+	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
+	 * JAXBSerialiserFactory
 	 *
 	 * @param noNamespaceSchemaLocation
+	 *
+	 * @return this for method chaining
 	 */
-	public void setNoNamespaceSchemaLocation(final String noNamespaceSchemaLocation)
+	public JAXBSerialiser setNoNamespaceSchemaLocation(final String noNamespaceSchemaLocation)
 	{
 		this.noNamespaceSchemaLocation = noNamespaceSchemaLocation;
+
+		return this;
 	}
 
 
 	/**
 	 * Specify the value of jaxb.fragment used by the underlying marshaller
-	 *
-	 * @see javax.xml.bind.Marshaller
+	 * <p/>
+	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
+	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
+	 * JAXBSerialiserFactory
 	 *
 	 * @param fragment
+	 *
+	 * @return this for method chaining
+	 *
+	 * @see javax.xml.bind.Marshaller
 	 */
-	public void setFragment(final boolean fragment)
+	public JAXBSerialiser setFragment(final boolean fragment)
 	{
 		this.fragment = fragment;
+
+		return this;
 	}
 
 
