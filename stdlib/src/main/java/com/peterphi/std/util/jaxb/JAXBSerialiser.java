@@ -11,6 +11,7 @@ import org.xml.sax.InputSource;
 import javax.xml.bind.JAXBContext;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
+import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.validation.Schema;
 import java.io.File;
@@ -35,6 +36,11 @@ public class JAXBSerialiser
 	private final JAXBContext context;
 	private Schema schema;
 	private boolean prettyOutput = false;
+
+	private String encoding = "UTF-8";
+	private String schemaLocation;
+	private String noNamespaceSchemaLocation;
+	private boolean fragment = false;
 
 
 	/**
@@ -126,6 +132,52 @@ public class JAXBSerialiser
 	}
 
 
+	/**
+	 * Specify an output encoding to use when marshalling the XML data. The default is UTF-8
+	 *
+	 * @param encoding
+	 */
+	public void setEncoding(final String encoding)
+	{
+		this.encoding = encoding;
+	}
+
+
+	/**
+	 * Specify an xsi:schemaLocation attribute in the generated XML
+	 *
+	 * @param schemaLocation
+	 */
+	public void setSchemaLocation(final String schemaLocation)
+	{
+		this.schemaLocation = schemaLocation;
+	}
+
+
+	/**
+	 * Specify an xsi:noNamespaceSchemaLocation in the generated XML
+	 *
+	 * @param noNamespaceSchemaLocation
+	 */
+	public void setNoNamespaceSchemaLocation(final String noNamespaceSchemaLocation)
+	{
+		this.noNamespaceSchemaLocation = noNamespaceSchemaLocation;
+	}
+
+
+	/**
+	 * Specify the value of jaxb.fragment used by the underlying marshaller
+	 *
+	 * @see javax.xml.bind.Marshaller
+	 *
+	 * @param fragment
+	 */
+	public void setFragment(final boolean fragment)
+	{
+		this.fragment = fragment;
+	}
+
+
 	private Marshaller getMarshaller()
 	{
 		try
@@ -134,16 +186,42 @@ public class JAXBSerialiser
 
 			jaxb.setSchema(schema);
 
-			if (prettyOutput)
-			{
-				jaxb.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
-			}
+			setJaxbProperties(jaxb);
 
 			return jaxb;
 		}
 		catch (JAXBException e)
 		{
 			throw new JAXBRuntimeException("Error creating marshaller", e);
+		}
+	}
+
+
+	private void setJaxbProperties(final Marshaller jaxb) throws PropertyException
+	{
+		if (prettyOutput)
+		{
+			jaxb.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, Boolean.TRUE);
+		}
+
+		if (encoding != null)
+		{
+			jaxb.setProperty(Marshaller.JAXB_ENCODING, encoding);
+		}
+
+		if (schemaLocation != null)
+		{
+			jaxb.setProperty(Marshaller.JAXB_SCHEMA_LOCATION, schemaLocation);
+		}
+
+		if (noNamespaceSchemaLocation != null)
+		{
+			jaxb.setProperty(Marshaller.JAXB_NO_NAMESPACE_SCHEMA_LOCATION, noNamespaceSchemaLocation);
+		}
+
+		if (fragment)
+		{
+			jaxb.setProperty(Marshaller.JAXB_FRAGMENT, Boolean.TRUE);
 		}
 	}
 
