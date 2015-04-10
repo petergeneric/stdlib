@@ -2,6 +2,7 @@ package com.peterphi.std.system.exec;
 
 import com.peterphi.std.io.StreamUtil;
 import com.peterphi.std.threading.Deadline;
+import com.peterphi.std.threading.Timeout;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 
-public class BaseExeced
+abstract class AbstractProcessTracker
 {
 	protected final List<String> cmd;
 	protected final Process process;
@@ -21,7 +22,7 @@ public class BaseExeced
 	protected int exitCode = Integer.MIN_VALUE;
 
 
-	protected BaseExeced(final List<String> cmd, final Process p, final boolean combinedOutput)
+	protected AbstractProcessTracker(final List<String> cmd, final Process p, final boolean combinedOutput)
 	{
 		this.cmd = cmd;
 		this.process = p;
@@ -162,7 +163,13 @@ public class BaseExeced
 				final boolean hasExited = this.process.waitFor(Math.min(deadline.getTimeLeft(), interval), TimeUnit.MILLISECONDS);
 
 				if (hasExited)
+				{
+					// Wait for the deadline to expire or for any output reading to complete
+					while (deadline.isValid() && isStillReadingOutput())
+						new Timeout(10, TimeUnit.MILLISECONDS).sleep();
+
 					return exitCode();
+				}
 			}
 			catch (InterruptedException e)
 			{
@@ -174,6 +181,15 @@ public class BaseExeced
 		else
 			return exitCode();
 	}
+
+
+	/**
+	 * Returns true if the output of this process is still being read
+	 *
+	 * @return false if this instance is copying the stdout/stderr and they have been closed, otherwise true if we are still
+	 * copying stdout/stderr. Always returns false if some external agent is handling the stdout/stderr streams.
+	 */
+	protected abstract boolean isStillReadingOutput();
 
 
 	public InputStream getStandardOutputStream()
@@ -197,11 +213,7 @@ public class BaseExeced
 	/**
 	 * Indicates that the output of this process should be discarded
 	 */
-	public void discardOutput()
-	{
-		discard(getStandardOutputStream());
-		discard(getStandardErrorStream());
-	}
+	public abstract void discardOutput();
 
 
 	protected void finished(int exitCode)
@@ -266,15 +278,5 @@ public class BaseExeced
 		t.start();
 
 		return t;
-	}
-
-
-	public static BaseExeced spawn(Exec e) throws IOException
-	{
-		ProcessBuilder pb = e.getProcessBuilder();
-
-		pb.start();
-
-		return new BaseExeced(e.cmd, pb.start(), pb.redirectErrorStream());
 	}
 }

@@ -4,7 +4,10 @@ import java.io.IOException;
 import java.io.StringWriter;
 import java.util.List;
 
-public class Execed extends BaseExeced
+/**
+ * A process tracker that reads stdout and stderr into Strings
+ */
+public class Execed extends AbstractProcessTracker
 {
 	// Outputs
 	final StringWriter stdout_content = new StringWriter();
@@ -40,7 +43,6 @@ public class Execed extends BaseExeced
 			stdoutRead = copy(p.getInputStream(), stdout_content);
 			stderrRead = copy(p.getErrorStream(), stderr_content);
 		}
-
 	}
 
 
@@ -48,7 +50,7 @@ public class Execed extends BaseExeced
 	{
 		this.stdout_content.flush();
 
-		return this.stdout_content.getBuffer().toString();
+		return this.stdout_content.toString();
 	}
 
 
@@ -57,7 +59,7 @@ public class Execed extends BaseExeced
 		if (stderr_content == null)
 			return null;
 		else
-			return this.stderr_content.getBuffer().toString();
+			return this.stderr_content.toString();
 	}
 
 
@@ -67,16 +69,29 @@ public class Execed extends BaseExeced
 		return super.isFinished() && !stdoutRead.isAlive();
 	}
 
+
+	@Override
+	protected boolean isStillReadingOutput()
+	{
+		if (stdoutRead != null && stdoutRead.isAlive())
+			return true;
+		if (stderrRead != null && stderrRead.isAlive())
+			return true;
+
+		return false; // no read threads active
+	}
+
+
 	@Override
 	public void discardOutput()
 	{
 		throw new RuntimeException("SimpleOutputGrabber cannot discard output!");
 	}
 
+
 	@Override
 	public void kill()
 	{
 		process.destroy();
 	}
-
 }

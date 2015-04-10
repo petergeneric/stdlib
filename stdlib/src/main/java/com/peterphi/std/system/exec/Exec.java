@@ -17,7 +17,11 @@ import java.util.UUID;
 public class Exec
 {
 	private static transient final Logger log = Logger.getLogger(Exec.class);
-	private static String SUPERUSER_IDENTIFIER = UUID.randomUUID().toString();
+
+	/**
+	 * Fake value we use to represent the superuser (instead of hard-coding "root" as the superuser)
+	 */
+	private final String SUPERUSER_IDENTIFIER = UUID.randomUUID().toString();
 
 	private boolean spawned = false;
 
@@ -115,20 +119,19 @@ public class Exec
 
 	/**
 	 * Launches the process, returning a handle to it for IO ops, etc<br />
-	 * <strong>the caller must read the output streams: otherwise the buffers may fill up and the remote program will be suspended
+	 * <strong>the caller must read the output streams: otherwise the buffers may fill up and the remote program will be
+	 * suspended
 	 * indefinitely</strong>
 	 *
 	 * @return
 	 *
 	 * @throws IOException
 	 */
-	public BaseExeced startBasic() throws IOException
+	public BasicProcessTracker startBasic() throws IOException
 	{
-		startManually();
+		final Process p = getProcessBuilder().start();
 
-		Process p = builder.start();
-
-		return new BaseExeced(cmd, p, builder.redirectErrorStream());
+		return new BasicProcessTracker(cmd, p, builder.redirectErrorStream());
 	}
 
 
@@ -146,18 +149,6 @@ public class Exec
 		Process p = getProcessBuilder().start();
 
 		return new Execed(cmd, p, builder.redirectErrorStream());
-	}
-
-
-	/**
-	 * Returns a ProcessBuilder for use in a manual launching
-	 *
-	 * @return
-	 */
-	@Deprecated
-	public ProcessBuilder startManually()
-	{
-		return getProcessBuilder();
 	}
 
 
@@ -282,7 +273,6 @@ public class Exec
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
 	 *
-	 * @param as
 	 * @param command
 	 *
 	 * @return
@@ -299,7 +289,6 @@ public class Exec
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
 	 *
-	 * @param as
 	 * @param command
 	 *
 	 * @return
@@ -320,7 +309,6 @@ public class Exec
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
 	 *
-	 * @param as
 	 * @param command
 	 *
 	 * @return
@@ -337,7 +325,6 @@ public class Exec
 	/**
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
 	 *
-	 * @param as
 	 * @param command
 	 *
 	 * @return
