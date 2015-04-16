@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import org.apache.commons.lang.StringUtils;
+
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
@@ -34,6 +36,22 @@ public class ResultSetConstraint
 	}
 
 
+	public boolean isComputeSize()
+	{
+		List<String> values = parameters.get(WebQuerySpecialField.COMPUTE_SIZE.getName());
+
+		if (values == null || values.isEmpty())
+			return false;
+		else if (values.size() == 1)
+			return parseBoolean(values.get(0));
+		else
+			throw new IllegalArgumentException("Expected exactly 1 value for " +
+			                                   WebQuerySpecialField.COMPUTE_SIZE.getName() +
+			                                   ", got: " +
+			                                   values);
+	}
+
+
 	public Map<String, List<String>> getParameters()
 	{
 		return parameters;
@@ -41,8 +59,8 @@ public class ResultSetConstraint
 
 
 	/**
-	 * Get all parameters except {@link com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#OFFSET} and {@link
-	 * com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#LIMIT}<br />
+	 * Get all parameters except {@link com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#OFFSET}, {@link
+	 * com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#LIMIT} and {@link WebQuerySpecialField#COMPUTE_SIZE}<br />
 	 * The returned map should not be modified.
 	 *
 	 * @return
@@ -53,7 +71,21 @@ public class ResultSetConstraint
 
 		map.remove(WebQuerySpecialField.OFFSET.getName());
 		map.remove(WebQuerySpecialField.LIMIT.getName());
+		map.remove(WebQuerySpecialField.COMPUTE_SIZE.getName());
 
 		return map;
+	}
+
+
+	private static boolean parseBoolean(String value)
+	{
+		if (StringUtils.equalsIgnoreCase(value, "true") || StringUtils.equalsIgnoreCase(value, "yes") ||
+		    StringUtils.equalsIgnoreCase(value, "on"))
+			return true;
+		else if (StringUtils.equalsIgnoreCase(value, "false") || StringUtils.equalsIgnoreCase(value, "no") ||
+		         StringUtils.equalsIgnoreCase(value, "off"))
+			return false;
+		else
+			throw new IllegalArgumentException("Cannot parse boolean: " + value);
 	}
 }

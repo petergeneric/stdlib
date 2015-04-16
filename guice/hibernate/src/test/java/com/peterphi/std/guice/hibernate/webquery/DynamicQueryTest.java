@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = MyObject.class)
+		            classPackages = MyObject.class)
 public class DynamicQueryTest
 {
 	@Inject
@@ -126,6 +126,31 @@ public class DynamicQueryTest
 		builder.add("_order", Arrays.asList("id desc"));
 
 		assertEquals(getIds(Arrays.asList(obj2, obj1)), getIds(dao.findByUriQuery(builder.build()).getList()));
+	}
+
+
+	@Test
+	public void testComputeSize() throws Exception
+	{
+		{
+			MyObject obj1 = new MyObject();
+			obj1.setName("Name1");
+			dao.save(obj1);
+
+			MyObject obj2 = new MyObject();
+			obj1.setName("Name2");
+			dao.save(obj2);
+		}
+
+		ResultSetConstraintBuilder builder = builderFactory.builder();
+
+		builder.add("_limit", "1");
+		builder.add("_compute_size", "true");
+
+		ConstrainedResultSet<MyObject> results = dao.findByUriQuery(builder.build());
+
+		assertEquals(1, results.getList().size());
+		assertEquals(Long.valueOf(2), results.getTotal());
 	}
 
 

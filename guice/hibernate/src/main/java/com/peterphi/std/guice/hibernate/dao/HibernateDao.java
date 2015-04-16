@@ -14,6 +14,7 @@ import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraint;
 import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.NonUniqueResultException;
@@ -28,6 +29,7 @@ import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * The default implementation of a Dao for Hibernate; often it is necessary to extend this to produce richer queries<br />
@@ -45,6 +47,8 @@ import java.util.List;
  */
 public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 {
+	private static final Logger log = Logger.getLogger(HibernateDao.class);
+
 	@Inject
 	private SessionFactory sessionFactory;
 
@@ -108,7 +112,25 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	public Criteria createCriteria(ResultSetConstraint constraints, Criteria baseCriteria)
+	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria)
+	{
+		return createCriteria(constraints, baseCriteria, false);
+	}
+
+
+	/**
+	 * Create a Dynamic query with the specified constraints
+	 *
+	 * @param constraints
+	 * @param baseCriteria
+	 * 		the base Criteria to add constraints to
+	 * @param projectSize
+	 * 		if true, will request a rowCount projection and ignore offset/limit
+	 *
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
 	{
 		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
 
@@ -117,42 +139,52 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		final Criteria criteria;
 
 		if (baseCriteria != null)
-			criteria = baseCriteria;
+			criteria = baseCriteria.get();
 		else
 			criteria = createCriteria();
 
 		builder.append(criteria);
 
-		if (isLargeTable && performSeparateIdQueryForLargeTables)
+		// Optionally treat large tables differently (works around a SQL Server performance issue)
+		if (!projectSize && isLargeTable && performSeparateIdQueryForLargeTables)
 		{
 			criteria.setProjection(Projections.id());
 
 			// Retrieve the primary keys separately from the data
 			final List<ID> ids = getIdList(criteria);
 
+			final Criteria dataCriteria = createCriteria();
+
+			if (ids.size() > 0)
 			{
-				final Criteria dataCriteria = createCriteria();
+				dataCriteria.add(Restrictions.in(idProperty(), ids));
 
-				if (ids.size() > 0)
-				{
-					dataCriteria.add(Restrictions.in(idProperty(), ids));
+				// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
+				builder.append(dataCriteria, false, false);
 
-					// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
-					builder.append(dataCriteria, false, false);
-
-					return dataCriteria;
-				}
-				else
-				{
-					// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
-					dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
-
-					// Hint that we don't want any results
-					dataCriteria.setMaxResults(0);
-
-					return dataCriteria;
-				}
+				return dataCriteria;
 			}
+			else
+			{
+				// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
+				dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
+
+				// Hint that we don't want any results
+				dataCriteria.setMaxResults(0);
+
+				return dataCriteria;
+			}
+		}
+		else if (projectSize)
+		{
+			// Discount offset/limit
+			criteria.setFirstResult(0);
+			criteria.setMaxResults(Integer.MAX_VALUE);
+
+			// Request the row count
+			criteria.setProjection(Projections.rowCount());
+
+			return criteria;
 		}
 		else
 		{
@@ -171,18 +203,50 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints)
 	{
-		return findByUriQuery(constraints, null);
+		return findByUriQuery(constraints, this :: createCriteria);
 	}
 
 
+	/**
+	 * @param constraints
+	 * 		the criteria
+	 * @param base
+	 * 		a supplier for base criteria objects to extend. May be called twice if computations are requested (e.g. max resultset
+	 * 		size)
+	 *
+	 * @return
+	 */
 	@Transactional(readOnly = true)
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base)
+	@Override
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Supplier<Criteria> base)
 	{
 		final Criteria criteria = createCriteria(constraints, base);
 
 		final List<T> results = getList(criteria);
 
-		return new ConstrainedResultSet<>(constraints, results);
+		ConstrainedResultSet<T> resultset = new ConstrainedResultSet<>(constraints, results);
+
+		// If we have a partial page then we know we're at the end
+		// If we have no results then we must have an offset of 0 to be sure of the size (we could be beyond the end)
+		if (resultset.getList().size() < constraints.getLimit() && (resultset.getOffset() > 0 || resultset.getList().size() > 0))
+		{
+			// If we only got a partial page then are at the end and know the size
+			final int offset = constraints.getOffset();
+			final int resultSize = resultset.getList().size();
+
+			resultset.setTotal(Long.valueOf(offset + resultSize));
+		}
+		else if (constraints.isComputeSize())
+		{
+			// Re-run the query to obtain the size
+			final Criteria countCriteria = createCriteria(constraints, base, true);
+
+			final Number size = (Number) countCriteria.uniqueResult();
+
+			resultset.setTotal(size.longValue());
+		}
+
+		return resultset;
 	}
 
 

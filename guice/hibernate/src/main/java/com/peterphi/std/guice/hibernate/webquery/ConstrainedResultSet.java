@@ -7,6 +7,8 @@ public class ConstrainedResultSet<T>
 	protected final ResultSetConstraint constraint;
 	protected final List<T> list;
 
+	protected Long total;
+
 
 	public ConstrainedResultSet(ResultSetConstraint constraint, List<T> list)
 	{
@@ -36,5 +38,17 @@ public class ConstrainedResultSet<T>
 	public ResultSetConstraint getConstraint()
 	{
 		return constraint;
+	}
+
+
+	public Long getTotal()
+	{
+		return total;
+	}
+
+
+	public void setTotal(final Long total)
+	{
+		this.total = total;
 	}
 }

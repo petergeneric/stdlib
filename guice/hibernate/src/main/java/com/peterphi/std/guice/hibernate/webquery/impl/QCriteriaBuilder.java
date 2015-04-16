@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
@@ -42,14 +43,18 @@ public class QCriteriaBuilder
 
 			if (key.charAt(0) == '_')
 			{
-				if (key.equals("_offset"))
+				if (key.equals(WebQuerySpecialField.OFFSET.getName()))
 					offset = Integer.parseInt(entry.getValue().get(0));
-				else if (key.equals("_limit"))
+				else if (key.equals(WebQuerySpecialField.LIMIT.getName()))
 					limit = Integer.parseInt(entry.getValue().get(0));
-				else if (key.equals("_order"))
+				else if (key.equals(WebQuerySpecialField.ORDER.getName()))
 					addOrder(entry.getValue());
-				else if (key.equals("_class"))
+				else if (key.equals(WebQuerySpecialField.CLASS.getName()))
 					addClass(entry.getValue());
+				else if (key.equals(WebQuerySpecialField.COMPUTE_SIZE.getName()))
+				{
+					// ignore, should be handled at query execution time
+				}
 				else
 					throw new IllegalArgumentException("Unknown built-in name: " + key);
 			}
@@ -81,7 +86,6 @@ public class QCriteriaBuilder
 
 
 	/**
-	 *
 	 * @param criteria
 	 * 		the base criteria to use
 	 * @param includeConstraints

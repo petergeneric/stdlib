@@ -7,6 +7,7 @@ import org.hibernate.Criteria;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Supplier;
 
 /**
  * An abstraction over the store/retrieve semantics of hibernate to allow a higher-level pattern of access
@@ -41,11 +42,11 @@ public interface Dao<T, ID extends Serializable>
 	 * @param constraints
 	 * 		the constraints to apply
 	 * @param base
-	 * 		the base criteria to use (the constraints will be ANDed with this Criteria
+	 * 		the base criteria to use (the constraints will be ANDed with this Criteria)
 	 *
 	 * @return a resultset containing the requested number of results
 	 */
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Criteria base);
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Supplier<Criteria> base);
 
 	/**
 	 * Retrieve every object accessible through this DAO
