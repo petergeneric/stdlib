@@ -31,6 +31,13 @@ public class QTypeHelperTest
 		assertEquals(LocalDate.now().minusDays(1).toDateTimeAtStartOfDay(), QTypeHelper.parse(DateTime.class, "yesterday"));
 	}
 
+	@Test
+	public void testDateMaths() {
+		assertEquals(LocalDate.now().toDateTimeAtStartOfDay().plusMinutes(5), QTypeHelper.parse(DateTime.class, "today+PT5M"));
+		assertEquals(LocalDate.now().toDateTimeAtStartOfDay().plusMinutes(5), QTypeHelper.parse(DateTime.class, "today PT5M"));
+		assertEquals(LocalDate.now().toDateTimeAtStartOfDay().minusMinutes(5), QTypeHelper.parse(DateTime.class, "today-PT5M"));
+	}
+
 
 	@Test
 	public void testParseSimpleDate()

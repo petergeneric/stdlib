@@ -5,19 +5,32 @@ import com.peterphi.std.types.Timecode;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.LocalDate;
+import org.joda.time.Period;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 class QTypeHelper
 {
 	private static final DateTimeFormatter ISO_FORMAT = ISODateTimeFormat.dateOptionalTimeParser();
 
+	private static Map<String, Supplier<DateTime>> SPECIAL_DATE_STRINGS = new HashMap<>();
+
+	static
+	{
+		SPECIAL_DATE_STRINGS.put("now", DateTime:: now);
+		SPECIAL_DATE_STRINGS.put("today", () -> LocalDate.now().toDateTimeAtStartOfDay());
+		SPECIAL_DATE_STRINGS.put("tomorrow", () -> LocalDate.now().plusDays(1).toDateTimeAtStartOfDay());
+		SPECIAL_DATE_STRINGS.put("yesterday", () -> LocalDate.now().minusDays(1).toDateTimeAtStartOfDay());
+	}
 
 	public static Object parse(Class<?> clazz, String value)
 	{
@@ -113,27 +126,50 @@ class QTypeHelper
 
 	private static DateTime parseDate(String value)
 	{
-		// TODO implement -INF and INF ?
-		if (value.equalsIgnoreCase("now"))
+		for (String specialString : SPECIAL_DATE_STRINGS.keySet())
 		{
-			return new DateTime();
+			if (StringUtils.startsWithIgnoreCase(value, specialString))
+			{
+				final DateTime baseDate = SPECIAL_DATE_STRINGS.get(specialString).get();
+
+				if (value.equalsIgnoreCase(specialString))
+				{
+					return baseDate;
+				}
+				else
+				{
+					// Consider + and -
+					final String maths = value.substring(specialString.length());
+
+					final boolean plus;
+					if (maths.charAt(0) == '+' || maths.charAt(0) == ' ')
+					{
+						plus = true;
+					}
+					else if (maths.charAt(0) == '-')
+						plus = false;
+					else
+					{
+						throw new IllegalArgumentException("Expected [+- ] but got char " +
+						                                   maths.charAt(0) +
+						                                   " while processing " +
+						                                   value);
+					}
+
+					final String period = maths.substring(1);
+
+					final Period timePeriod = Period.parse(period);
+
+					if (plus)
+						return baseDate.plus(timePeriod);
+					else
+						return baseDate.minus(timePeriod);
+				}
+			}
 		}
-		else if (value.equalsIgnoreCase("today"))
-		{
-			return LocalDate.now().toDateTimeAtStartOfDay();
-		}
-		else if (value.equalsIgnoreCase("tomorrow"))
-		{
-			return LocalDate.now().plusDays(1).toDateTimeAtStartOfDay();
-		}
-		else if (value.equalsIgnoreCase("yesterday"))
-		{
-			return LocalDate.now().minusDays(1).toDateTimeAtStartOfDay();
-		}
-		else
-		{
-			return ISO_FORMAT.parseDateTime(value);
-		}
+
+		// Not a special string
+		return ISO_FORMAT.parseDateTime(value);
 	}
 
 
