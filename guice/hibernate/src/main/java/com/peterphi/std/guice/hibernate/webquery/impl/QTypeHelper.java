@@ -26,23 +26,39 @@ class QTypeHelper
 		}
 		else if (clazz == Integer.class || clazz == int.class)
 		{
-			// TODO implement -INF and INF ?
-			return Integer.parseInt(value);
+			if (value.equalsIgnoreCase("min"))
+				return Integer.MIN_VALUE;
+			else if (value.equalsIgnoreCase("max"))
+				return Integer.MAX_VALUE;
+			else
+				return Integer.parseInt(value);
 		}
 		else if (clazz == Long.class || clazz == long.class)
 		{
-			// TODO implement -INF and INF ?
-			return Long.parseLong(value);
+			if (value.equalsIgnoreCase("min"))
+				return Long.MIN_VALUE;
+			else if (value.equalsIgnoreCase("max"))
+				return Long.MAX_VALUE;
+			else
+				return Long.parseLong(value);
 		}
 		else if (clazz == Double.class || clazz == double.class)
 		{
-			// TODO implement -INF and INF ?
-			return Double.parseDouble(value);
+			if (value.equalsIgnoreCase("min"))
+				return Double.MIN_VALUE;
+			else if (value.equalsIgnoreCase("max"))
+				return Double.MAX_VALUE;
+			else
+				return Double.parseDouble(value);
 		}
 		else if (clazz == Short.class || clazz == short.class)
 		{
-			// TODO implement -INF and INF ?
-			return Short.parseShort(value);
+			if (value.equalsIgnoreCase("min"))
+				return Short.MIN_VALUE;
+			else if (value.equalsIgnoreCase("max"))
+				return Short.MAX_VALUE;
+			else
+				return Short.parseShort(value);
 		}
 		else if (clazz == Boolean.class || clazz == boolean.class)
 		{
