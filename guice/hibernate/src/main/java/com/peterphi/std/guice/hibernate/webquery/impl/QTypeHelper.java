@@ -8,6 +8,7 @@ import org.joda.time.LocalDate;
 import org.joda.time.format.DateTimeFormatter;
 import org.joda.time.format.ISODateTimeFormat;
 
+import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -98,6 +99,10 @@ class QTypeHelper
 		else if (clazz.isEnum())
 		{
 			return parseEnum(clazz, value);
+		}
+		else if (clazz.equals(byte[].class))
+		{
+			return value.getBytes(Charset.forName("UTF-8"));
 		}
 		else
 		{

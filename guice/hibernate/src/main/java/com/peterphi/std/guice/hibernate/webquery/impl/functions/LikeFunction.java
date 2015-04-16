@@ -21,6 +21,6 @@ public class LikeFunction implements QFunction
 	@Override
 	public Criterion encode()
 	{
-		return Restrictions.like(property.getName(), param + "%");
+		return Restrictions.like(property.getName(), param);
 	}
 }

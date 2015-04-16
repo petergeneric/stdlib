@@ -7,6 +7,7 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 
 @Entity
@@ -21,6 +22,10 @@ class MyObject
 
 	@Column(name = "deprecated")
 	private boolean deprecated = false;
+
+	@Column(name = "someBytes")
+	@Lob
+	private byte[] someBytes = "some bytes".getBytes();
 
 	@ManyToOne(optional = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "other_object_id", nullable = true)
@@ -60,6 +65,18 @@ class MyObject
 	void setDeprecated(final boolean deprecated)
 	{
 		this.deprecated = deprecated;
+	}
+
+
+	public byte[] getSomeBytes()
+	{
+		return someBytes;
+	}
+
+
+	public void setSomeBytes(final byte[] someBytes)
+	{
+		this.someBytes = someBytes;
 	}
 
 

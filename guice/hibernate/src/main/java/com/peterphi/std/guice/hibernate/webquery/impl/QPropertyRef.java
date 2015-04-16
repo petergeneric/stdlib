@@ -38,4 +38,17 @@ public class QPropertyRef
 		else
 			return property.getName();
 	}
+
+
+	/**
+	 * Get a name that can be used in a SQLRestriction
+	 * @return
+	 */
+	public String getSQLRestrictionName()
+	{
+		if (join != null)
+			return "{" + join.getAlias() + "}." + property.getName();
+		else
+			return "{alias}."+ property.getName();
+	}
 }

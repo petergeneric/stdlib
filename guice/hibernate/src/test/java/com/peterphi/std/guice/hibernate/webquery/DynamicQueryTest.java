@@ -1,9 +1,11 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
 import com.google.inject.Inject;
+import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -23,6 +25,17 @@ public class DynamicQueryTest
 
 	@Inject
 	ResultSetConstraintBuilderFactory builderFactory;
+
+
+	@Transactional
+	@Before
+	public void clearDatabaseBeforeTest()
+	{
+		for (MyObject obj : dao.getAll())
+			dao.delete(obj);
+
+		assertEquals(0, dao.getAll().size());
+	}
 
 
 	@Test
@@ -68,17 +81,24 @@ public class DynamicQueryTest
 	@Test
 	public void testByBooleanField() throws Exception
 	{
-		MyObject obj = new MyObject();
-		obj.setName("Name");
-		obj.setDeprecated(true);
-		dao.save(obj);
+		{
+			MyObject obj1 = new MyObject();
+			obj1.setName("Name1");
+			obj1.setDeprecated(true);
+			dao.save(obj1);
+
+			MyObject obj2 = new MyObject();
+			obj2.setName("Name2");
+			obj2.setDeprecated(true);
+			dao.save(obj2);
+		}
 
 		{
 			ResultSetConstraintBuilder builder = builderFactory.builder();
 
 			builder.add("deprecated", "true");
 
-			assertEquals("deprecated=true matches 1", 1, dao.findByUriQuery(builder.build()).getList().size());
+			assertEquals("deprecated=true matches 2", 2, dao.findByUriQuery(builder.build()).getList().size());
 		}
 
 		{
@@ -99,7 +119,7 @@ public class DynamicQueryTest
 		dao.save(obj1);
 
 		MyObject obj2 = new MyObject();
-		obj1.setName("Name2");
+		obj2.setName("Name2");
 		dao.save(obj2);
 
 		ResultSetConstraintBuilder builder = builderFactory.builder();
@@ -118,16 +138,15 @@ public class DynamicQueryTest
 		dao.save(obj1);
 
 		MyObject obj2 = new MyObject();
-		obj1.setName("Name2");
+		obj2.setName("Name2");
 		dao.save(obj2);
 
 		ResultSetConstraintBuilder builder = builderFactory.builder();
 
-		builder.add("_order", Arrays.asList("id desc"));
+		builder.add("_order", "id desc");
 
-		assertEquals(getIds(Arrays.asList(obj2, obj1)), getIds(dao.findByUriQuery(builder.build()).getList()));
+		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(builder.build()).getList()));
 	}
-
 
 	@Test
 	public void testComputeSize() throws Exception
@@ -138,7 +157,7 @@ public class DynamicQueryTest
 			dao.save(obj1);
 
 			MyObject obj2 = new MyObject();
-			obj1.setName("Name2");
+			obj2.setName("Name2");
 			dao.save(obj2);
 		}
 
@@ -151,6 +170,12 @@ public class DynamicQueryTest
 
 		assertEquals(1, results.getList().size());
 		assertEquals(Long.valueOf(2), results.getTotal());
+	}
+
+
+	private List<Long> getIds(MyObject... objs)
+	{
+		return getIds(Arrays.asList(objs));
 	}
 
 
