@@ -1,9 +1,11 @@
 package com.peterphi.std.guice.web.rest;
 
+import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
@@ -12,8 +14,11 @@ import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreServiceImpl;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestConfigList;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestServiceList;
-import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerModule;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafModule;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 import org.apache.log4j.Logger;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import javax.servlet.ServletContext;
 import java.net.URI;
@@ -21,6 +26,8 @@ import java.net.URI;
 public class CoreRestServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(CoreRestServicesModule.class);
+
+	public static final String CORE_SERVICES_THYMELEAF = "thymeleaf.core-services";
 
 	/**
 	 * Servlet context value to read for the resteasy prefix
@@ -31,8 +38,7 @@ public class CoreRestServicesModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		// Make freemarker available for REST List service
-		install(new FreemarkerModule());
+		install(new ThymeleafModule());
 
 		bind(LocalEndpointDiscovery.class).to(ServletEndpointDiscoveryImpl.class);
 
@@ -67,6 +73,33 @@ public class CoreRestServicesModule extends AbstractModule
 		{
 			return restPath;
 		}
+	}
+
+
+	@Provides
+	@Named(CORE_SERVICES_THYMELEAF)
+	@Doc("The thymeleaf template engine for services web UI (separate from the thymeleaf in use for the application UI)")
+	public ThymeleafTemplater getThymeleaf(org.apache.commons.configuration.Configuration configuration, MetricRegistry metrics)
+	{
+		TemplateEngine engine = new TemplateEngine();
+
+		return new ThymeleafTemplater(createEngine(), configuration, metrics);
+	}
+
+
+	private static TemplateEngine createEngine()
+	{
+		ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
+
+		resolver.setTemplateMode("HTML5");
+
+		resolver.setCacheTTLMs(60000L);
+		resolver.setCacheable(true);
+
+		TemplateEngine engine = new TemplateEngine();
+		engine.setTemplateResolver(resolver);
+
+		return engine;
 	}
 
 

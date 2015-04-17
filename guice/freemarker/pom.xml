@@ -4,12 +4,12 @@
 	<modelVersion>4.0.0</modelVersion>
 
 	<groupId>com.peterphi.std.guice</groupId>
-	<artifactId>stdlib-guice-thymeleaf</artifactId>
+	<artifactId>stdlib-guice-freemarker</artifactId>
 	<version>7.7.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
-	<name>stdlib guice thymeleaf webapp</name>
-	<description>stdlib guice thymeleaf webapp</description>
+	<name>stdlib guice freemarker webapp</name>
+	<description>stdlib guice freemarker webapp</description>
 
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
@@ -25,9 +25,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.thymeleaf</groupId>
-			<artifactId>thymeleaf</artifactId>
-			<version>2.1.4.RELEASE</version>
+			<groupId>org.freemarker</groupId>
+			<artifactId>freemarker</artifactId>
+			<version>2.3.22</version>
 		</dependency>
 
 		<dependency>

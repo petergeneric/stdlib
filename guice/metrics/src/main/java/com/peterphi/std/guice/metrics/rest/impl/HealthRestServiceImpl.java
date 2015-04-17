@@ -5,18 +5,19 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.metrics.rest.api.HealthRestService;
 import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
-import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
-import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
 public class HealthRestServiceImpl implements HealthRestService
 {
+	private static final String PREFIX = "/com/peterphi/std/guice/metrics/rest/impl/";
+
 	@Inject
 	private HealthCheckRegistry registry;
 
-
 	@Inject
-	@Named(MetricsServicesModule.METRICS_UI_THYMELEAF)
+	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
 	ThymeleafTemplater templater;
 
 	@Inject
@@ -37,7 +38,7 @@ public class HealthRestServiceImpl implements HealthRestService
 	@Override
 	public String getHTML()
 	{
-		TemplateCall call = templater.template("health-index");
+		TemplateCall call = templater.template(PREFIX + "health-index.html");
 
 		call.set("health", get());
 

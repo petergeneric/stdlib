@@ -6,7 +6,9 @@ import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.CopyOnWriteArrayList;
 
@@ -94,7 +96,7 @@ public class ConfigurationProperty
 		}
 
 		// No description
-		return null;
+		return "";
 	}
 
 
@@ -143,6 +145,17 @@ public class ConfigurationProperty
 			         name +
 			         " are reconfigurable. Restart will be required to apply this change.");
 		}
+	}
+
+
+	public Set<Object> getBoundValues()
+	{
+		Set<Object> value = new HashSet<>();
+
+		for (ConfigurationPropertyBindingSite binding : bindings)
+			value.addAll(binding.get(registry.getInstances(binding.getOwner())));
+
+		return value;
 	}
 
 

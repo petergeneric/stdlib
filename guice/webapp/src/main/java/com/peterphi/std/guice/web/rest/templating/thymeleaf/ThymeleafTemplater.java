@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.thymeleaf;
+package com.peterphi.std.guice.web.rest.templating.thymeleaf;
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;

@@ -26,7 +26,7 @@
 
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
-			<artifactId>stdlib-guice-thymeleaf</artifactId>
+			<artifactId>stdlib-guice-webapp</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

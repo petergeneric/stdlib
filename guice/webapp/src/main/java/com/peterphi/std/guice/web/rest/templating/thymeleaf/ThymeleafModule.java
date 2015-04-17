@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.thymeleaf;
+package com.peterphi.std.guice.web.rest.templating.thymeleaf;
 
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
@@ -13,29 +13,10 @@ import org.thymeleaf.templateresolver.ITemplateResolver;
  */
 public class ThymeleafModule extends AbstractModule
 {
-	private final boolean asDefaultTemplater;
-
-
-	public ThymeleafModule()
-	{
-		this(true);
-	}
-
-
-	public ThymeleafModule(boolean asDefaultTemplater)
-	{
-		this.asDefaultTemplater = asDefaultTemplater;
-	}
-
-
 	@Override
 	protected void configure()
 	{
-		if (asDefaultTemplater)
-		{
-			bind(Templater.class).to(ThymeleafTemplater.class).in(Scopes.SINGLETON);
-		}
-
+		bind(Templater.class).to(ThymeleafTemplater.class).in(Scopes.SINGLETON);
 		bind(ITemplateResolver.class).toProvider(TemplateResolverProvider.class).in(Singleton.class);
 	}
 

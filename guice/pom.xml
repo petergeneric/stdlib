@@ -11,7 +11,7 @@
 	<description>Application Framework Guice Modules (Parent Package)</description>
 
 	<properties>
-		<guice.version>3.2.4</guice.version>
+		<guice.version>3.2.5</guice.version>
 		<metrics.version>3.0.1</metrics.version>
 		<resteasy.version>3.0.7.Final</resteasy.version>
 		<javassist.version>3.18.2-GA</javassist.version>
@@ -73,7 +73,7 @@
 		<module>metrics</module>
 		<module>common</module>
 		<module>webapp</module>
-		<module>thymeleaf</module>
+		<module>freemarker</module>
 		<module>hibernate</module>
 		<module>hibernate-testing</module>
 		<module>testing</module>

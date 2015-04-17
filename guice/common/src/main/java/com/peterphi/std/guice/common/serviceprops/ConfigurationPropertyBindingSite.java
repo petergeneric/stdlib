@@ -8,6 +8,10 @@ import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.AnnotatedElement;
+import java.lang.reflect.Field;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class ConfigurationPropertyBindingSite<T, O>
@@ -136,5 +140,36 @@ public class ConfigurationPropertyBindingSite<T, O>
 		for (Object obj : objects)
 			if (obj != null)
 				injector.injectMembers(owner.cast(obj));
+	}
+
+
+	public Set<Object> get(Iterable<Object> objects)
+	{
+		if (element instanceof Field)
+		{
+			final Field field = (Field) element;
+
+			// Make the field accessible if necessary
+			if (!field.isAccessible())
+				field.setAccessible(true);
+
+			try
+			{
+				Set<Object> values = new HashSet<>();
+
+				for (Object object : objects)
+					values.add(field.get(object));
+
+				return values;
+			}
+			catch (IllegalAccessException e)
+			{
+				return Collections.emptySet();
+			}
+		}
+		else
+		{
+			return Collections.emptySet();
+		}
 	}
 }

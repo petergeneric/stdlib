@@ -1,0 +1,176 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="service" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo"-->
+<!--@thymesVar id="schemaGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil"-->
+<head>
+	<title th:text="${service.interfaceName}"></title>
+	<meta charset="utf-8"/>
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+
+	<link rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
+
+	<style>
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body id="top">
+<div class="navbar">
+	<div class="navbar-inner">
+		<a class="brand" th:href="@{/guice}">Guice Framework Services</a>
+		<ul class="nav">
+			<li class="active"><a th:href="@{/guice}">List</a></li>
+			<li><a th:href="@{/guice/config}">Configuration</a></li>
+			<li><a th:href="@{/guice/metrics}">Metrics</a></li>
+			<li><a th:href="@{/guice/health}">Health</a></li>
+		</ul>
+	</div>
+</div>
+
+<div class="container">
+	<h1 th:text="${service.interfaceName}"></h1>
+
+	<div class="alert" th:if="${service.deprecated}">
+		<strong>Deprecated</strong><br/>
+		This service is included for legacy use and will be removed in a future release
+	</div>
+
+	<p style="white-space: pre-line" th:text="${service.description}"></p>
+
+	<th:block th:if="${#lists.isEmpty(service.seeAlsoURLs)}">
+		See also:
+		<ul>
+			<li th:each="seeAlsoURL: ${service.seeAlsoURLs}"><a th:href="${seeAlsoURL}" th:text="${seeAlsoURL}">link</a></li>
+		</ul>
+	</th:block>
+
+
+	<h2>Resources</h2>
+	<ol>
+		<li th:each="resource,itStat: ${service.resources}"><a th:href="'#resource_' + ${itStat.index+1}"><span
+				th:text="${resource.localPath}">localPath</span>
+			(<span th:text="${resource.httpMethod}">method</span>)</a></li>
+	</ol>
+
+
+	<th:block th:each="resource,resourceItStat: ${service.resources}">
+		<h3>
+			<a th:href="'#resource_' + ${resourceItStat.index+1}" th:id="'resource_' + ${resourceItStat.index+1}">
+				<span th:text="${resourceItStat.index+1}"/>. <span th:text="${resource.httpMethod}"/> <span
+					th:text="${resource.localPath}"/></a>
+		</h3>
+
+		<div class="alert" th:if="${resource.deprecated}">
+			<strong>Deprecated</strong><br/>
+			This resource is included for legacy use and will be removed in a future release
+		</div>
+
+		<p style="white-space: pre-line" th:text="${resource.description}">description</p>
+
+		<h5>Details</h5>
+		<table class="table">
+			<tbody>
+			<tr>
+				<th>HTTP Verb</th>
+				<td th:text="${resource.httpMethod}"></td>
+			</tr>
+			<tr>
+				<th>Full Path</th>
+				<td th:unless="${resource.plainGet}" th:text="@{${restUrl} + ${resource.path}}">url</td>
+				<td th:if="${resource.plainGet}">
+					<a th:href="@{${restUrl} + ${resource.path}}" th:text="@{${restUrl} + ${resource.path}}"></a>
+				</td>
+			</tr>
+			<tr>
+				<th>Local Path</th>
+				<td th:text="${resource.path}">path</td>
+			</tr>
+			<tr>
+				<th>Accept</th>
+				<td th:text="${resource.consumes}">consumes</td>
+			</tr>
+			<tr>
+				<th>Content-Type</th>
+				<td th:text="${resource.produces}">produces</td>
+			</tr>
+			<tr>
+				<th>Java Method</th>
+				<td th:text="${resource.methodString}">java method signature</td>
+			</tr>
+
+			<tr th:unless="${#lists.isEmpty(resource.seeAlsoURLs)}">
+				<th>See Also</th>
+				<td>
+					<ul>
+						<li th:each="seeAlsoURL: ${resource.seeAlsoURLs}"><a th:href="${seeAlsoURL}" th:text="${seeAlsoURL}">see
+							also</a></li>
+					</ul>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+		<h5>Parameter Guide</h5>
+
+		<p th:if="${#lists.isEmpty(resource.parameters)}"><em>No parameters</em></p>
+		<table class="table" th:unless="${#lists.isEmpty(resource.parameters)}">
+			<thead>
+			<tr>
+				<th>Name</th>
+				<th>Type</th>
+				<th>Description</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr th:each="param: ${resource.parameters}">
+				<td th:text="${param.name}"></td>
+				<td th:text="${param.type}"></td>
+				<td><span style="white-space: pre-line;" th:text="${param.description}"></span>
+					<th:block th:unless="${#lists.isEmpty(param.seeAlsoURLs)}">
+						(See
+						<sup th:each="seeAlsoURL,seeAlsoStat: ${param.seeAlsoURLs}"><a th:href="${seeAlsoURL}"
+						                                                               th:text="${seeAlsoStat.index}"></a> </sup>
+						)
+					</th:block>
+
+					<p th:if="${param.defaultValue}">Default Value: <span th:text="${param.defaultValue}"></span></p>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+		<th:block th:if="${resource.requestEntity}">
+			<h5>Request Schema</h5>
+			<pre>${schemaGenerator.getSchema(resource.requestEntity.dataType)?html}</pre>
+		</th:block>
+
+		<h5>Response Schema</h5>
+		<pre th:text="${schemaGenerator.getSchema(resource.returnType)}"></pre>
+
+		<h5>curl template</h5>
+		<code>curl -X <span th:text="${resource.httpMethod}">GET</span> "<span th:text="@{${restUrl} + ${resource.path}}">path</span>"
+			<span th:if="${resource.requestEntity}">
+				<span th:if="${resource.httpMethod != 'GET'}">
+					--data-binary @file.xml
+				</span>
+			</span>
+		</code>
+		<br/>
+		<hr/>
+		<br/>
+	</th:block>
+</div>
+</body>
+</html>

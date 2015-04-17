@@ -64,6 +64,9 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		return "UNKNOWN";
 	}
 
+	public boolean isPlainGet() {
+		return getHttpMethod().equalsIgnoreCase("GET") && !getPath().contains("{");
+	}
 
 	public String getMethodString()
 	{

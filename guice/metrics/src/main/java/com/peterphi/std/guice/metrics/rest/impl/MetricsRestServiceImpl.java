@@ -14,9 +14,9 @@ import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
 import com.peterphi.std.guice.metrics.rest.types.MetricsGauge;
 import com.peterphi.std.guice.metrics.rest.types.MetricsHistogram;
 import com.peterphi.std.guice.metrics.rest.types.MetricsMeter;
-import com.peterphi.std.guice.metrics.role.MetricsServicesModule;
-import com.peterphi.std.guice.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
@@ -24,6 +24,8 @@ import java.util.TreeMap;
 @Singleton
 public class MetricsRestServiceImpl implements MetricsRestService
 {
+	private static final String PREFIX = "/com/peterphi/std/guice/metrics/rest/impl/";
+
 	@Inject
 	MetricRegistry registry;
 
@@ -32,7 +34,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 	boolean showSamples = false;
 
 	@Inject
-	@Named(MetricsServicesModule.METRICS_UI_THYMELEAF)
+	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
 	ThymeleafTemplater templater;
 
 
@@ -103,7 +105,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 	@Override
 	public String getIndex()
 	{
-		TemplateCall call = templater.template("index");
+		TemplateCall call = templater.template(PREFIX + "index.html");
 
 		call.set("gauges", registry.getGauges().entrySet());
 		call.set("counters", this.<Counting>combine(registry.getCounters(),

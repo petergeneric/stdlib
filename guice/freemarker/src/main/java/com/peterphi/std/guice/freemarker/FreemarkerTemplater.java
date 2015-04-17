@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.templating.freemarker;
+package com.peterphi.std.guice.freemarker;
 
 import com.google.inject.Inject;
 import freemarker.template.Configuration;

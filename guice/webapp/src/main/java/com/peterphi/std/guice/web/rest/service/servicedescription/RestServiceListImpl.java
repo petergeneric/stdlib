@@ -2,21 +2,18 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.peterphi.std.guice.serviceregistry.rest.RestResource;
+import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
+import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo;
 import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerTemplater;
-import com.peterphi.std.guice.web.rest.templating.freemarker.FreemarkerURLHelper;
-import com.peterphi.std.guice.web.rest.util.BootstrapStaticResources;
-import freemarker.template.Configuration;
-import freemarker.template.DefaultObjectWrapper;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
-import javax.ws.rs.core.Context;
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
-import java.util.Collection;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -25,59 +22,55 @@ import java.util.List;
 @Singleton
 public class RestServiceListImpl implements RestServiceList
 {
-	private final FreemarkerTemplater templater;
+	private static final String PREFIX = "/com/peterphi/std/guice/web/rest/service/restcore/";
+
+	@Inject
+	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
+	ThymeleafTemplater templater;
+
+	@Inject
+	@Named(GuiceProperties.STATIC_CONTAINER_PREFIX_CONFIG_NAME)
+	URI containerEndpoint;
+
+	@Inject
+	@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME)
+	URI restEndpoint;
+
+	@Inject
+	SchemaGenerateUtil schemaGenerator;
+
 	private final List<RestServiceInfo> services;
 
 
 	@Inject
-	public RestServiceListImpl(FreemarkerURLHelper urlHelper)
+	public RestServiceListImpl()
 	{
-		this(RestResourceRegistry.getResources(), urlHelper);
-	}
-
-
-	public RestServiceListImpl(Collection<RestResource> resources, FreemarkerURLHelper urlHelper)
-	{
-		this.services = RestServiceInfo.getAll(resources);
-
-		// Set up a Freemarker instance that loads from this .jar
-		Configuration config = new Configuration();
-		config.setClassForTemplateLoading(RestServiceListImpl.class, "/com/peterphi/std/guice/web/rest/service/restcore/");
-		config.setObjectWrapper(new DefaultObjectWrapper());
-
-		this.templater = new FreemarkerTemplater(config);
-
-		templater.set("services", services);
-		templater.set("bootstrap", BootstrapStaticResources.get());
-		templater.set("urls", urlHelper);
-	}
-
-
-	@Inject
-	public void setSchemaGenerator(SchemaGenerateUtil schemaGenerator)
-	{
-		templater.set("schemaGenerator", schemaGenerator);
+		this.services = RestServiceInfo.getAll(RestResourceRegistry.getResources());
 	}
 
 
 	@Override
-	public synchronized String index(@Context HttpHeaders headers, @Context UriInfo uriInfo) throws Exception
+	public String index(final HttpHeaders headers, final UriInfo uriInfo) throws Exception
 	{
-		final TemplateCall template = templater.template("service_list");
+		final TemplateCall template = templater.template(PREFIX + "service_list.html");
+
+		template.set("services", services);
+		template.set("schemaGenerator", schemaGenerator);
 
 		return template.process();
 	}
 
 
 	@Override
-	public synchronized String getServiceDescription(final int serviceId,
-	                                                 @Context HttpHeaders headers,
-	                                                 @Context UriInfo uriInfo) throws Exception
+	public String getServiceDescription(final int serviceId, final HttpHeaders headers, final UriInfo uriInfo) throws Exception
 	{
-		final RestServiceInfo service = services.get(serviceId);
+		final TemplateCall template = templater.template(PREFIX + "service_describe.html");
 
-		final TemplateCall template = templater.template("service_describe");
-		template.set("service", service);
+		template.set("services", services);
+		template.set("containerUrl", containerEndpoint.toString());
+		template.set("restUrl", restEndpoint.toString());
+		template.set("schemaGenerator", schemaGenerator);
+		template.set("service", services.get(serviceId));
 
 		return template.process();
 	}
