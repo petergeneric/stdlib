@@ -1,15 +1,16 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <!--@thymesVar id="services" type="java.util.List<com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo>"-->
-
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--@thymesVar id="coreServices" type="com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry"-->
 <head>
 	<title>REST resources</title>
-	<meta charset="utf-8"/>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	<meta th:fragment="htmlhead" charset="utf-8"/>
+	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 
-	<link rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
+	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{|${coreRestPrefix}/guice/bootstrap.css|}"/>
 
-	<style>
+	<style th:fragment="htmlhead">
 		pre {
 			font-size: 11px;
 		}
@@ -27,14 +28,12 @@
 </head>
 
 <body id="top">
-<div class="navbar">
+<div class="navbar" th:fragment="navbar">
 	<div class="navbar-inner">
-		<a class="brand" href="@{/guice}">Guice Framework Services</a>
+		<a class="brand" th:href="@{|${coreRestPrefix}/guice|}">Framework Services</a>
 		<ul class="nav">
-			<li class="active"><a th:href="@{/guice}">List</a></li>
-			<li><a th:href="@{/guice/config}">Configuration</a></li>
-			<li><a th:href="@{/guice/metrics}">Metrics</a></li>
-			<li><a th:href="@{/guice/health}">Health</a></li>
+			<li th:each="service: ${coreServices.services}"><a th:href="@{|${coreRestPrefix}${service.path}|}"
+			                                                   th:text="${service.name}">Service Name</a></li>
 		</ul>
 	</div>
 </div>
@@ -55,7 +54,8 @@
 		<tr th:each="service,itStat: ${services}">
 			<td th:text="${service.path}">path</td>
 			<td>
-				<strong><a th:href="@{'/guice/service/' + ${itStat.index}}" th:text="${service.interfaceName}">iface</a></strong>
+				<strong><a th:href="@{|${coreRestPrefix}/guice/service/${itStat.index}|}"
+				           th:text="${service.interfaceName}">iface</a></strong>
 			</td>
 			<td th:text="${service.description}">description</td>
 		</tr>

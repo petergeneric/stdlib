@@ -13,7 +13,7 @@ import org.apache.commons.configuration.Configuration;
 import java.io.StringWriter;
 
 /**
- * A helper REST service that
+ * A helper REST service that allows basic services; superseded by other core services
  */
 @Singleton
 public class GuiceRestCoreServiceImpl implements GuiceRestCoreService

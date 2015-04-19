@@ -4,40 +4,12 @@
 <!--@thymesVar id="schemaGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil"-->
 <head>
 	<title th:text="${service.interfaceName}"></title>
-	<meta charset="utf-8"/>
-	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
 
-	<link rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
-
-	<style>
-		pre {
-			font-size: 11px;
-		}
-
-		body {
-			padding-bottom: 40px;
-		}
-
-		.dl-horizontal > dd:after {
-			display: table;
-			content: "";
-			clear: both;
-		}
-	</style>
+	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead" />
 </head>
 
 <body id="top">
-<div class="navbar">
-	<div class="navbar-inner">
-		<a class="brand" th:href="@{/guice}">Guice Framework Services</a>
-		<ul class="nav">
-			<li class="active"><a th:href="@{/guice}">List</a></li>
-			<li><a th:href="@{/guice/config}">Configuration</a></li>
-			<li><a th:href="@{/guice/metrics}">Metrics</a></li>
-			<li><a th:href="@{/guice/health}">Health</a></li>
-		</ul>
-	</div>
-</div>
+<div class="navbar" th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
 
 <div class="container">
 	<h1 th:text="${service.interfaceName}"></h1>
@@ -65,7 +37,7 @@
 	</ol>
 
 
-	<th:block th:each="resource,resourceItStat: ${service.resources}">
+	<th:block th:each="resource,resourceItStat: ${service.resources}" th:with="url = @{|${coreRestEndpoint}${resource.path}|}">
 		<h3>
 			<a th:href="'#resource_' + ${resourceItStat.index+1}" th:id="'resource_' + ${resourceItStat.index+1}">
 				<span th:text="${resourceItStat.index+1}"/>. <span th:text="${resource.httpMethod}"/> <span
@@ -88,9 +60,9 @@
 			</tr>
 			<tr>
 				<th>Full Path</th>
-				<td th:unless="${resource.plainGet}" th:text="@{${restUrl} + ${resource.path}}">url</td>
+				<td th:unless="${resource.plainGet}" th:text="${url}">url</td>
 				<td th:if="${resource.plainGet}">
-					<a th:href="@{${restUrl} + ${resource.path}}" th:text="@{${restUrl} + ${resource.path}}"></a>
+					<a th:href="${url}" th:text="${url}"></a>
 				</td>
 			</tr>
 			<tr>
@@ -160,7 +132,7 @@
 		<pre th:text="${schemaGenerator.getSchema(resource.returnType)}"></pre>
 
 		<h5>curl template</h5>
-		<code>curl -X <span th:text="${resource.httpMethod}">GET</span> "<span th:text="@{${restUrl} + ${resource.path}}">path</span>"
+		<code>curl -X <span th:text="${resource.httpMethod}">GET</span> "<span th:text="${url}">path</span>"
 			<span th:if="${resource.requestEntity}">
 				<span th:if="${resource.httpMethod != 'GET'}">
 					--data-binary @file.xml

@@ -9,6 +9,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceCommonRestResources;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreServiceImpl;
@@ -40,6 +41,7 @@ public class CoreRestServicesModule extends AbstractModule
 	{
 		install(new ThymeleafModule());
 
+		bind(GuiceCoreServicesRegistry.class).asEagerSingleton();
 		bind(LocalEndpointDiscovery.class).to(ServletEndpointDiscoveryImpl.class);
 
 		bind(GuiceRestCoreService.class).to(GuiceRestCoreServiceImpl.class).asEagerSingleton();
@@ -79,11 +81,22 @@ public class CoreRestServicesModule extends AbstractModule
 	@Provides
 	@Named(CORE_SERVICES_THYMELEAF)
 	@Doc("The thymeleaf template engine for services web UI (separate from the thymeleaf in use for the application UI)")
-	public ThymeleafTemplater getThymeleaf(org.apache.commons.configuration.Configuration configuration, MetricRegistry metrics)
+	@Singleton
+	public ThymeleafTemplater getThymeleaf(org.apache.commons.configuration.Configuration configuration,
+	                                       MetricRegistry metrics,
+	                                       @Named(GuiceProperties.REST_SERVICES_PREFIX) String coreRestPrefix,
+	                                       @Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT) URI coreRestEndpoint,
+	                                       GuiceCoreServicesRegistry services)
 	{
 		TemplateEngine engine = new TemplateEngine();
 
-		return new ThymeleafTemplater(createEngine(), configuration, metrics);
+		ThymeleafTemplater templater = new ThymeleafTemplater(createEngine(), configuration, metrics);
+
+		templater.set("coreRestPrefix", coreRestPrefix);
+		templater.set("coreRestEndpoint", coreRestEndpoint.toString());
+		templater.set("coreServices", services);
+
+		return templater;
 	}
 
 
