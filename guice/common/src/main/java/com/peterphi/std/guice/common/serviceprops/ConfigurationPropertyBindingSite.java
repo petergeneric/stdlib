@@ -4,7 +4,7 @@ import com.google.inject.Injector;
 import com.google.inject.MembersInjector;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
-import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
+import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
 import org.apache.commons.lang.StringUtils;
 
 import java.lang.reflect.AnnotatedElement;
@@ -117,7 +117,7 @@ public class ConfigurationPropertyBindingSite<T, O>
 		// TODO apply JSR 303 validations
 		try
 		{
-			TypedConfigRef.convert(getType(), value);
+			StringToTypeConverter.convert(getType(),value);
 		}
 		catch (Exception e)
 		{
