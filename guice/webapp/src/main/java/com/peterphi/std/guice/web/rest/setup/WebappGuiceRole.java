@@ -82,10 +82,13 @@ public class WebappGuiceRole implements GuiceRole
 		modules.add(new ServletScopingModule());
 		modules.add(new JAXRSJodaConverterModule());
 
-		if (!config.getBoolean(GuiceProperties.DISABLE_CORE_SERVICES, false))
-			modules.add(new CoreRestServicesModule());
-		else
-			log.info("REST Core Services disabled by config parameter");
+		if (config.getBoolean(GuiceProperties.UNIT_TEST, false) == false)
+		{
+			if (!config.getBoolean(GuiceProperties.DISABLE_CORE_SERVICES, false))
+				modules.add(new CoreRestServicesModule());
+			else
+				log.info("REST Core Services disabled by config parameter");
+		}
 
 		// Enable the index service if the webapp wants to use it
 		final boolean indexServiceDisabled = config.getBoolean(GuiceProperties.DISABLE_INDEX_SERVICE, false);

@@ -36,7 +36,10 @@ public class MetricsServiceAutoRegisterRole implements GuiceRole
 	{
 		if (config.getBoolean(GuiceProperties.ROLE_METRICS_JAXRS_AUTO, true))
 		{
-			modules.add(new MetricsServicesModule());
+			if (config.getBoolean(GuiceProperties.UNIT_TEST, false) == false)
+			{
+				modules.add(new MetricsServicesModule());
+			}
 		}
 	}
 
