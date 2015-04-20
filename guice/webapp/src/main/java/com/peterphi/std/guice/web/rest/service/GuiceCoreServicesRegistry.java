@@ -11,6 +11,7 @@ import org.thymeleaf.util.StringUtils;
 
 import javax.ws.rs.Path;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 public class GuiceCoreServicesRegistry
@@ -49,6 +50,9 @@ public class GuiceCoreServicesRegistry
 				}
 			}
 		}
+
+		// Sort the service list so it's stable across runs
+		services.sort(Comparator.comparing(s -> s.name));
 
 		return services;
 	}

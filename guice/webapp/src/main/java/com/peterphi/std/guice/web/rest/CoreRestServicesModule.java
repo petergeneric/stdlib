@@ -10,6 +10,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
+import com.peterphi.std.guice.web.rest.service.daemons.GuiceRestDaemonsService;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceCommonRestResources;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreServiceImpl;
@@ -50,6 +51,7 @@ public class CoreRestServicesModule extends AbstractModule
 		RestResourceRegistry.register(GuiceCommonRestResources.class);
 		RestResourceRegistry.register(RestServiceList.class);
 		RestResourceRegistry.register(RestConfigList.class);
+		RestResourceRegistry.register(GuiceRestDaemonsService.class);
 	}
 
 

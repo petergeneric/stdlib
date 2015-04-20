@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common.daemon;
 
 import com.google.inject.Inject;
+import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
@@ -13,6 +14,9 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 
 	@Inject
 	ShutdownManager shutdownManager;
+
+	@Inject
+	GuiceDaemonRegistry registry;
 
 
 	public GuiceDaemon()
@@ -39,6 +43,7 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	{
 		startThread();
 		shutdownManager.register(this);
+		registry.register(this);
 	}
 
 
@@ -46,6 +51,7 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	public void shutdown()
 	{
 		stopThread();
+		registry.unregister(this);
 	}
 
 
@@ -86,5 +92,22 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	protected void sleep(Timeout timeout)
 	{
 		sleep(timeout.getMilliseconds());
+	}
+
+
+	public String getName()
+	{
+		Class<?> clazz = getClass();
+
+		// If we get a guice-enhanced class then we should go up one level to get the class name from the user's code
+		if (clazz.getName().contains("$$EnhancerByGuice$$"))
+			clazz = clazz.getSuperclass();
+
+		if (clazz.isAnnotationPresent(ServiceName.class))
+		{
+			return clazz.getAnnotation(ServiceName.class).value();
+		}
+		else
+			return clazz.getSimpleName();
 	}
 }

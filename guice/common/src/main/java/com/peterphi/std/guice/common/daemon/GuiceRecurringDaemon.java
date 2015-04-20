@@ -5,7 +5,10 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
+import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
 import com.peterphi.std.threading.Timeout;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
@@ -49,6 +52,47 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			throw new IllegalArgumentException("Cannot provide a negative sleep time!");
 		else
 			this.sleepTime = sleepTime;
+	}
+
+
+	@Inject
+	public void setSleepTimeFromConfigIfSet(Configuration config)
+	{
+		final String str = config.getString("daemon." + getName() + ".interval", null);
+
+		if (StringUtils.isNotEmpty(str))
+		{
+			final Timeout timeout = (Timeout) StringToTypeConverter.convert(Timeout.class, str);
+
+			if (timeout == null)
+				throw new IllegalArgumentException("Invalid interval config: " + str);
+			else
+				setSleepTime(timeout);
+		}
+	}
+
+
+	public Timeout getSleepTime()
+	{
+		return sleepTime;
+	}
+
+
+	public Timer getCalls()
+	{
+		return calls;
+	}
+
+
+	public Meter getExceptions()
+	{
+		return exceptions;
+	}
+
+
+	public void setSleepTime(final Timeout sleepTime)
+	{
+		this.sleepTime = sleepTime;
 	}
 
 

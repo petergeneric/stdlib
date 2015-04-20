@@ -1,0 +1,77 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<head>
+	<title>Daemons</title>
+
+	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+</head>
+
+<body id="top">
+<div class="navbar" th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+
+
+<div class="container">
+	<h1>Threads</h1>
+
+	<p>This page lists daemons and centrally-managed threads started by this application</p>
+
+	<th:block th:with="daemons = ${registry.daemons}">
+		<th:block th:unless="${#lists.isEmpty(daemons)}">
+			<h2>Daemons</h2>
+			<table class="table">
+				<thead>
+				<tr>
+					<th>Name</th>
+					<th>Running?</th>
+					<th>Description</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr th:each="daemon: ${daemons}">
+					<td th:text="${daemon.name}">name</td>
+
+					<td th:if="${daemon.threadRunning}">Yes</td>
+					<td th:unless="${daemon.threadRunning}">No</td>
+
+					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
+				</tr>
+				</tbody>
+			</table>
+		</th:block>
+	</th:block>
+
+	<th:bock th:with="daemons = ${registry.recurring}">
+		<th:block th:unless="${#lists.isEmpty(daemons)}">
+			<h2>Recurring Daemons</h2>
+			<table class="table">
+				<thead>
+				<tr>
+					<th>Name</th>
+					<th>Running?</th>
+					<th>Interval</th>
+					<th>Executions</th>
+					<th>Exceptions</th>
+					<th>Description</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr th:each="daemon: ${daemons}">
+					<td th:text="${daemon.name}">name</td>
+					<td th:if="${daemon.threadRunning}">Yes</td>
+					<td th:unless="${daemon.threadRunning}">No</td>
+
+					<td th:text="${daemon.sleepTime}"></td>
+					<td th:text="${daemon.calls.count}"></td>
+					<td th:text="${daemon.exceptions.count}"></td>
+
+					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
+				</tr>
+				</tbody>
+			</table>
+		</th:block>
+	</th:bock>
+</div>
+</body>
+</html>
