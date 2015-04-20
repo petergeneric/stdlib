@@ -12,7 +12,7 @@
 
 	<properties>
 		<guice.version>3.2.5</guice.version>
-		<metrics.version>3.0.1</metrics.version>
+		<metrics.version>3.0.2</metrics.version>
 		<resteasy.version>3.0.9.Final</resteasy.version>
 		<javassist.version>3.18.2-GA</javassist.version>
 		<hibernate.version>4.3.8.Final</hibernate.version>
