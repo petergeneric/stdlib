@@ -5,7 +5,7 @@
 <head>
 	<title th:text="${service.interfaceName}"></title>
 
-	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead" />
+	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
 
 <body id="top">
@@ -125,7 +125,7 @@
 
 		<th:block th:if="${resource.requestEntity}">
 			<h5>Request Schema</h5>
-			<pre>${schemaGenerator.getSchema(resource.requestEntity.dataType)?html}</pre>
+			<pre th:text="${schemaGenerator.getSchema(resource.requestEntity.dataType)}">schema</pre>
 		</th:block>
 
 		<h5>Response Schema</h5>
