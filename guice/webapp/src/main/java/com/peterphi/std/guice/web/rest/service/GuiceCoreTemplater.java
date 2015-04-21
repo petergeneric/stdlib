@@ -68,7 +68,7 @@ public class GuiceCoreTemplater
 			templater.set("coreRestEndpoint", coreRestEndpoint.toString());
 			templater.set("coreServices", services);
 
-			this.templater = new WeakReference<ThymeleafTemplater>(templater);
+			this.templater = new WeakReference<>(templater);
 		}
 
 		return templater;
@@ -77,8 +77,9 @@ public class GuiceCoreTemplater
 
 	private TemplateEngine getOrCreateEngine()
 	{
-		final TemplateEngine engine = this.engine.get();
+		TemplateEngine engine = this.engine.get();
 
+		// Lazy-create the engine
 		if (engine == null)
 		{
 			// Build and cache a new templater (previous instance must have been garbage collected)
@@ -86,6 +87,7 @@ public class GuiceCoreTemplater
 
 			this.engine = new WeakReference<>(engine);
 		}
+
 		return engine;
 	}
 
