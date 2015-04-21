@@ -1,0 +1,23 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<head>
+	<title>Logging</title>
+
+	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+</head>
+
+<body id="top">
+<div class="navbar" th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+
+
+<div class="container">
+	<h1>Logging</h1>
+
+	<p>This page allows log4j to be reconfigured at runtime</p>
+
+	<em>Not yet implemented</em>
+</div>
+</body>
+</html>
