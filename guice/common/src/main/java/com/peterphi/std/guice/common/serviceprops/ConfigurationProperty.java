@@ -165,4 +165,10 @@ public class ConfigurationProperty
 		for (ConfigurationPropertyBindingSite binding : bindings)
 			binding.validate(value);
 	}
+
+
+	public String getValue()
+	{
+		return configuration.getString(name);
+	}
 }

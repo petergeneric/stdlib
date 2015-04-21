@@ -4,10 +4,12 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.configuration.Configuration;
+import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.PropertyConfigurator;
@@ -35,7 +37,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 	URI restEndpoint;
 
 	@Inject
-	Configuration config;
+	ConfigurationPropertyRegistry config;
 
 	private String staticConfig;
 
@@ -58,7 +60,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 		if (staticConfig != null)
 			return staticConfig;
 
-		final String src = config.getString(GuiceProperties.LOG4J_PROPERTIES_FILE);
+		final String src = config.get(GuiceProperties.LOG4J_PROPERTIES_FILE).getValue();
 
 		if (StringUtils.equalsIgnoreCase("embedded", src))
 		{
@@ -95,7 +97,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 		staticConfig = null;
 
 		// Modify the in-memory config to point at the user-specified properties file
-		config.setProperty(GuiceProperties.LOG4J_PROPERTIES_FILE, resource);
+		config.get(GuiceProperties.LOG4J_PROPERTIES_FILE).set(resource);
 
 		// Now redirect back to the main logging page
 		return Response.seeOther(URI.create(restEndpoint.toString() + "/guice/logging")).build();

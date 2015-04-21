@@ -15,6 +15,7 @@ import org.apache.commons.configuration.Configuration;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
+import java.lang.reflect.Executable;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -143,10 +144,10 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 	}
 
 
-	protected int processMethod(final Class<?> clazz, Method method)
+	protected int processMethod(final Class<?> clazz, Executable executable)
 	{
-		final Annotation[][] annotations = method.getParameterAnnotations();
-		final Class<?>[] types = method.getParameterTypes();
+		final Annotation[][] annotations = executable.getParameterAnnotations();
+		final Class<?>[] types = executable.getParameterTypes();
 
 		int discovered = 0;
 
@@ -157,7 +158,7 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 
 			if (named != null)
 			{
-				registry.register(clazz, injectorRef, named.value(), type, method);
+				registry.register(clazz, injectorRef, named.value(), type, executable);
 
 				discovered++;
 			}
@@ -165,37 +166,6 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 
 		return discovered;
 	}
-
-
-	/**
-	 * TODO delete me when it's possible to use Java 1.8 java.reflect.Executable for Method+Constructor
-	 * @param clazz
-	 * @param method
-	 * @return
-	 */
-	protected int processMethod(final Class<?> clazz, Constructor<?> method)
-	{
-		final Annotation[][] annotations = method.getParameterAnnotations();
-		final Class<?>[] types = method.getParameterTypes();
-
-		int discovered = 0;
-
-		for (int i = 0; i < types.length; i++)
-		{
-			final Class<?> type = types[i];
-			final Named named = getNamedAnnotation(annotations[i]);
-
-			if (named != null)
-			{
-				registry.register(clazz, injectorRef, named.value(), type, method);
-
-				discovered++;
-			}
-		}
-
-		return discovered;
-	}
-
 
 	private Named getNamedAnnotation(final Annotation[] annotations)
 	{
