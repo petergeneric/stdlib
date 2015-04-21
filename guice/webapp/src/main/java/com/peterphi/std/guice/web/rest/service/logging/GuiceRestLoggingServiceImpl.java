@@ -1,9 +1,7 @@
 package com.peterphi.std.guice.web.rest.service.logging;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 
 public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 {
@@ -13,8 +11,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 	private static final String PREFIX = "/com/peterphi/std/guice/web/rest/service/restcore/";
 
 	@Inject
-	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
-	ThymeleafTemplater templater;
+	GuiceCoreTemplater templater;
 
 
 	@Override

@@ -2,12 +2,10 @@ package com.peterphi.std.guice.metrics.rest.impl;
 
 import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.peterphi.std.guice.metrics.rest.api.HealthRestService;
 import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
 public class HealthRestServiceImpl implements HealthRestService
 {
@@ -17,8 +15,7 @@ public class HealthRestServiceImpl implements HealthRestService
 	private HealthCheckRegistry registry;
 
 	@Inject
-	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
-	ThymeleafTemplater templater;
+	GuiceCoreTemplater templater;
 
 	@Inject
 	MetricSerialiser serialiser;

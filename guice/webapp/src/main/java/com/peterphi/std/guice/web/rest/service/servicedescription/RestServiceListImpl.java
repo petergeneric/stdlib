@@ -5,11 +5,10 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo;
 import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
@@ -25,8 +24,7 @@ public class RestServiceListImpl implements RestServiceList
 	private static final String PREFIX = "/com/peterphi/std/guice/web/rest/service/restcore/";
 
 	@Inject
-	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
-	ThymeleafTemplater templater;
+	GuiceCoreTemplater templater;
 
 	@Inject
 	@Named(GuiceProperties.STATIC_CONTAINER_PREFIX_CONFIG_NAME)

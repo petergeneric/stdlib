@@ -1,13 +1,11 @@
 package com.peterphi.std.guice.web.rest.service.daemons;
 
 import com.google.inject.Inject;
-import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.function.Function;
@@ -20,8 +18,7 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 	private static final String PREFIX = "/com/peterphi/std/guice/web/rest/service/restcore/";
 
 	@Inject
-	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
-	ThymeleafTemplater templater;
+	GuiceCoreTemplater templater;
 
 	@Inject
 	GuiceDaemonRegistry registry;

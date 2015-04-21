@@ -1,22 +1,19 @@
 package com.peterphi.std.guice.web.rest.service.servicedescription;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationProperty;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
-import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
 import org.apache.commons.configuration.PropertiesConfiguration;
 
 import java.io.IOException;
 
-@Singleton
 public class RestConfigListImpl implements RestConfigList
 {
 	/**
@@ -25,8 +22,7 @@ public class RestConfigListImpl implements RestConfigList
 	private static final String PREFIX = "/com/peterphi/std/guice/web/rest/service/restcore/";
 
 	@Inject
-	@Named(CoreRestServicesModule.CORE_SERVICES_THYMELEAF)
-	ThymeleafTemplater templater;
+	GuiceCoreTemplater templater;
 
 	@Inject
 	Configuration serviceConfig;
