@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.metrics.rest.api;
 
 import com.google.inject.ImplementedBy;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.metrics.rest.impl.HealthRestServiceImpl;
 import com.peterphi.std.guice.metrics.rest.types.HealthDocument;
@@ -15,6 +16,7 @@ import javax.ws.rs.core.MediaType;
 @ImplementedBy(HealthRestServiceImpl.class)
 @FastFailServiceClient
 @ServiceName("Health")
+@Doc("UI and API for health metrics for this service")
 public interface HealthRestService
 {
 	@GET
