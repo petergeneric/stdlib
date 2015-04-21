@@ -11,6 +11,8 @@ import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.time.Instant;
+
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
 {
 	private static final Logger log = Logger.getLogger(GuiceRecurringDaemon.class);
@@ -22,6 +24,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	private Meter exceptions;
 
 	protected Timeout sleepTime;
+
+	private Instant lastRan = null;
 
 
 	/**
@@ -101,6 +105,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	{
 		while (isRunning())
 		{
+			lastRan = Instant.now();
+
 			final Timer.Context timer;
 
 			if (calls != null)
@@ -131,6 +137,12 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 				sleep(sleepTime);
 			}
 		}
+	}
+
+
+	public Instant getLastRan()
+	{
+		return this.lastRan;
 	}
 
 

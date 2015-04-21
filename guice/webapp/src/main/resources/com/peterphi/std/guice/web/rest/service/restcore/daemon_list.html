@@ -24,7 +24,7 @@
 				<thead>
 				<tr>
 					<th>Name</th>
-					<th>Running?</th>
+					<th>Alive?</th>
 					<th>Description</th>
 				</tr>
 				</thead>
@@ -49,8 +49,9 @@
 				<thead>
 				<tr>
 					<th>Name</th>
-					<th>Running?</th>
+					<th>Alive?</th>
 					<th>Interval</th>
+					<th>Last Ran</th>
 					<th>Executions</th>
 					<th>Exceptions</th>
 					<th>Description</th>
@@ -63,6 +64,7 @@
 					<td th:unless="${daemon.threadRunning}">No</td>
 
 					<td th:text="${daemon.sleepTime}"></td>
+					<td th:text="${daemon.lastRan}"></td>
 					<td th:text="${daemon.calls.count}"></td>
 					<td th:text="${daemon.exceptions.count}"></td>
 
