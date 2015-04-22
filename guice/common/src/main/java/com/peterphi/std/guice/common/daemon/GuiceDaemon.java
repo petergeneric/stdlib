@@ -42,6 +42,7 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	public void postConstruct()
 	{
 		startThread();
+
 		shutdownManager.register(this);
 		registry.register(this);
 	}
@@ -51,7 +52,9 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	public void shutdown()
 	{
 		stopThread();
-		registry.unregister(this);
+
+		if (registry != null)
+			registry.unregister(this);
 	}
 
 
