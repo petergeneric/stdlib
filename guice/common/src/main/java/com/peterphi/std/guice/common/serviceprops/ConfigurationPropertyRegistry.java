@@ -6,14 +6,16 @@ import org.apache.log4j.Logger;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 public class ConfigurationPropertyRegistry
 {
@@ -75,12 +77,36 @@ public class ConfigurationPropertyRegistry
 	}
 
 
-	public Collection<ConfigurationProperty> getAll()
+	public List<ConfigurationProperty> getAll()
 	{
+		final List<ConfigurationProperty> props;
 		synchronized (properties)
 		{
-			return new ArrayList<>(properties.values());
+			props = new ArrayList<>(properties.values());
 		}
+
+		// Sort application properties, then framework properties
+		// Within these groups, sort alphabetically
+		props.sort(Comparator.comparing(p -> {
+			if (p.isFrameworkProperty())
+				return "B" + p.getName();
+			else
+				return "A" + p.getName();
+		}));
+
+		return props;
+	}
+
+
+	public List<ConfigurationProperty> getFrameworkProperties()
+	{
+		return getAll().stream().filter(ConfigurationProperty:: isFrameworkProperty).collect(Collectors.toList());
+	}
+
+
+	public List<ConfigurationProperty> getApplicationProperties()
+	{
+		return getAll().stream().filter(p -> !p.isFrameworkProperty()).collect(Collectors.toList());
 	}
 
 

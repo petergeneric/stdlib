@@ -49,6 +49,20 @@ public class ConfigurationProperty
 	}
 
 
+	public boolean isFrameworkProperty()
+	{
+		for (ConfigurationPropertyBindingSite site : bindings)
+		{
+			if (StringUtils.startsWith(site.getOwner().getPackage().getName(), "com.peterphi.std"))
+			{
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+
 	public boolean isReconfigurable()
 	{
 		for (ConfigurationPropertyBindingSite binding : bindings)

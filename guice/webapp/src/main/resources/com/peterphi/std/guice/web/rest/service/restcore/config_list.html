@@ -24,8 +24,15 @@
 
 	<p>To make a configuration change permanent you must <a href="#save_to_disk">save the configuration to disk</a>.</p>
 
+	<h3>Application Properties</h3>
 	<ul>
-		<li th:each="prop: ${configRegistry.all}">
+		<li th:each="prop: ${configRegistry.applicationProperties}">
+			<a th:href="'#' + ${prop.name}" th:text="${prop.name}"></a></li>
+	</ul>
+
+	<h3>Framework Properties</h3>
+	<ul>
+		<li th:each="prop: ${configRegistry.frameworkProperties}">
 			<a th:href="'#' + ${prop.name}" th:text="${prop.name}"></a></li>
 	</ul>
 
