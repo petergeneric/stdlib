@@ -41,7 +41,7 @@
 			This property is included for legacy use and will be removed in a future release.
 		</div>
 
-		<div class="alert" th:if="${prop.reconfigurable}">
+		<div class="alert" th:unless="${prop.reconfigurable}">
 			<strong>No dynamic reconfiguration</strong><br/>
 			This property cannot be dynamically reconfigured; a servlet/guice environment restart will be required to apply the
 			change.
