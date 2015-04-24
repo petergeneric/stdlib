@@ -5,7 +5,7 @@
 	<groupId>com.peterphi.std.index</groupId>
 	<artifactId>index-parent</artifactId>
 	<packaging>pom</packaging>
-	<version>8.0.2</version>
+	<version>8.0.3-SNAPSHOT</version>
 	<name>index service parent</name>
 	<description>Index Service (Parent Module)</description>
 
@@ -17,7 +17,7 @@
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>8.0.2</version>
+		<version>8.0.3-SNAPSHOT</version>
 	</parent>
 
 
