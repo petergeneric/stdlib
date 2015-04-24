@@ -78,6 +78,9 @@ public class GuiceProperties
 	@Doc("If true then AuthConstraints will be ignored. Can only be enabled if framework.webauth.enabled=false (default false)")
 	public static final String AUTH_BYPASS = "framework.webauth.bypass";
 
+	@Doc("If true then the CharacterEncoding for HttpServletRequest (and InputParts for multipart/form-data resources) with no charset provided by the client will default to UTF-8 (default true)")
+	public static final java.lang.String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";
+
 	//
 	// Guice Hibernate properties
 	//
