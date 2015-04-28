@@ -21,24 +21,7 @@ public class HibernateAutoGuiceRole implements GuiceRole
 	public void adjustConfigurations(final List<Configuration> configs)
 	{
 
-		//sets a default value for GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE if it is not present in the configs already
-
-		boolean hbm2ddlfound = false;
-		for (Configuration config : configs)
-		{
-			if (config.containsKey(GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE))
-			{
-				hbm2ddlfound = true;
-			}
-		}
-
-		if (!hbm2ddlfound)
-		{
-			//set default value
-			configs.get(0).addProperty(GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE, "false");
-		}
 	}
-
 
 	@Override
 	public void register(final Stage stage,
