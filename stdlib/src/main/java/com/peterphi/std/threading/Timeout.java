@@ -1,8 +1,6 @@
 package com.peterphi.std.threading;
 
 import org.joda.time.Duration;
-import org.joda.time.Period;
-import org.joda.time.PeriodType;
 
 import java.io.Serializable;
 import java.util.concurrent.TimeUnit;
@@ -57,10 +55,12 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	private final long period;
 	private final TimeUnit unit;
 
+
 	public Timeout(Duration duration)
 	{
 		this(duration.getMillis());
 	}
+
 
 	/**
 	 * Constructs a deadline using a given period of time
@@ -237,9 +237,33 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 		}
 	}
 
-	public Duration toDuration() {
+
+	/**
+	 * Sleep for the duration of this timeout (or until the thread is interrupted, or until the provided deadline expires)
+	 */
+	public void sleep(Deadline deadline)
+	{
+		final long millis = Math.min(deadline.getTimeLeft(), getMilliseconds());
+
+		if (millis > 0)
+		{
+			try
+			{
+				Thread.sleep(millis);
+			}
+			catch (InterruptedException e)
+			{
+				// ignore but return
+			}
+		}
+	}
+
+
+	public Duration toDuration()
+	{
 		return new Duration(getMilliseconds());
 	}
+
 
 	/**
 	 * Filter through a number of timeouts to find the one with the longest period
