@@ -104,7 +104,9 @@ public abstract class HibernateModule extends AbstractModule
 		{
 			throw new IllegalArgumentException("Value '" +
 			                                   hbm2ddl +
-			                                   "' is not permitted for hibernate.hbm2ddl.auto under the current configuration, consider using 'update' instead");
+			                                   "' is not permitted for hibernate property 'hibernate.hbm2ddl.auto' under the current configuration, consider using 'update' instead. If you must use the value 'create' then set configuration parameter '" +
+			                                   GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE +
+			                                   "' to 'true'");
 		}
 	}
 
