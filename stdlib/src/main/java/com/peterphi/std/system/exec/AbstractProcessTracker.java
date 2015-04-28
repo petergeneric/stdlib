@@ -30,9 +30,24 @@ abstract class AbstractProcessTracker
 	}
 
 
-	public void kill()
+	public Process getProcess()
 	{
-		process.destroy();
+		return process;
+	}
+
+
+	public final void kill()
+	{
+		kill(false);
+	}
+
+
+	public void kill(boolean force)
+	{
+		if (force)
+			process.destroyForcibly();
+		else
+			process.destroy();
 	}
 
 
