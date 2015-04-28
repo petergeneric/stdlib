@@ -87,11 +87,4 @@ public class Execed extends AbstractProcessTracker
 	{
 		throw new RuntimeException("SimpleOutputGrabber cannot discard output!");
 	}
-
-
-	@Override
-	public void kill()
-	{
-		process.destroy();
-	}
 }
