@@ -59,7 +59,8 @@ public abstract class HibernateModule extends AbstractModule
 	@Singleton
 	public Configuration getHibernateConfiguration(org.apache.commons.configuration.Configuration configuration,
 	                                               @Doc("the source for hibernate.properties (either embedded or a filepath to search for using the classpath)")
-	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
+	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName,
+	                                               @Named(GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE) boolean allowHmb2ddl)
 	{
 		final Properties properties;
 
@@ -82,6 +83,8 @@ public abstract class HibernateModule extends AbstractModule
 			}
 		}
 
+		validateHibernateProperties(allowHmb2ddl, properties);
+
 		org.hibernate.cfg.Configuration config = new org.hibernate.cfg.Configuration();
 		config.addProperties(properties);
 
@@ -90,6 +93,19 @@ public abstract class HibernateModule extends AbstractModule
 		registerTypes(config);
 
 		return config;
+	}
+
+
+	private void validateHibernateProperties(final boolean allowHmb2ddl, final Properties properties)
+	{
+		//check for potentially dangerous properties before going any further
+		final String hbm2ddl = properties.getProperty("hibernate.hbm2ddl.auto");
+		if (hbm2ddl.equalsIgnoreCase("create") && !allowHmb2ddl)
+		{
+			throw new IllegalArgumentException("Value '" +
+			                                   hbm2ddl +
+			                                   "' is not permitted for hibernate.hbm2ddl.auto under the current configuration, consider using 'update' instead");
+		}
 	}
 
 
