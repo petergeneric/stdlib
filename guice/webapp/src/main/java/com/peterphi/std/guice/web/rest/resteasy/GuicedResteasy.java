@@ -77,8 +77,11 @@ class GuicedResteasy implements GuiceApplication
 	@Named(GuiceProperties.HTTP_REQUESTS_DEFAULT_TO_UTF_8)
 	boolean forceUTF8DefaultCharset = true;
 
-	@Inject
-	DefaultHttpRequestCharsetHelper requestCharsetHelper;
+	/**
+	 * Allow to be overridden but have a default implementation
+	 */
+	@Inject(optional = true)
+	DefaultHttpRequestCharsetHelper requestCharsetHelper = new DefaultHttpRequestCharsetHelper();
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -147,7 +150,7 @@ class GuicedResteasy implements GuiceApplication
 	{
 		final HttpCallContext ctx = HttpCallContext.set(request, response, context);
 
-		if (forceUTF8DefaultCharset)
+		if (forceUTF8DefaultCharset && requestCharsetHelper != null)
 			requestCharsetHelper.applyDefaultCharset(request);
 
 		Timer.Context timer = null;
