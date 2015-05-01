@@ -13,12 +13,15 @@ import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.io.PropertyFile;
+import com.peterphi.std.util.ClassManifestLocator;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Interval;
 import org.joda.time.LocalDate;
 
 import javax.ws.rs.core.Response;
+import java.io.StringWriter;
 import java.util.Date;
 
 @Singleton
@@ -104,6 +107,26 @@ public class MyTestServiceImpl implements MyTestService
 		finally
 		{
 			thymeleafRenderTime.update(System.nanoTime() - startTime);
+		}
+	}
+
+
+	@Override
+	public String manifest() throws Exception
+	{
+		final PropertyFile manifest = ClassManifestLocator.get(getClass());
+
+		if (manifest != null)
+		{
+			final StringWriter sw = new StringWriter();
+
+			manifest.save(null, sw);
+
+			return sw.toString();
+		}
+		else
+		{
+			return "Cannot find MANIFEST.MF for this webapp";
 		}
 	}
 

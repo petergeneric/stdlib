@@ -17,6 +17,12 @@ public interface MyTestService
 	public String indexPage();
 
 	@GET
+	@Path("/manifest")
+	@Produces("text/plain")
+	@Doc("Attempt to parse and return the MANIFEST.MF file")
+	public String manifest() throws Exception;
+
+	@GET
 	@Doc("Recognises whether the supplied date is that of  the WW2 pearl harbour attack")
 	@Path("/date")
 	@Produces("text/html")
@@ -41,6 +47,7 @@ public interface MyTestService
 	@Path("/auth-test/reject")
 	@Produces("text/plain")
 	public String authReject();
+
 	@GET
 	@Path("/auth-test/skip")
 	@Produces("text/plain")
