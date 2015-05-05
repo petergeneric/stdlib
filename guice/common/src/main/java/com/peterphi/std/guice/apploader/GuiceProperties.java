@@ -88,7 +88,7 @@ public class GuiceProperties
 	public static final String HIBERNATE_PROPERTIES = "hibernate.properties";
 
 	@Doc("If true then hibernate configurations permitting the dropping and recreating of database tables will be allowed (default false)")
-	public static final String HIBERNATE_ALLOW_HBM2DDL_CREATE = "hibernate.allow.hbm2ddl.create";
+	public static final String HIBERNATE_ALLOW_HBM2DDL_CREATE = "hibernate.allow-hbm2ddl-create";
 
 	@Doc("If true then when the guice hibernate jar is loaded it'll search for all @Entity annotated classes in the scan.packages packages and register them (default true)")
 	public static final String ROLE_HIBERNATE_AUTO = "role.hibernate.auto";
