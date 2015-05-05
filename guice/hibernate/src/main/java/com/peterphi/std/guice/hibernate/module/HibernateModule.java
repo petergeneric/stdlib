@@ -107,7 +107,7 @@ public abstract class HibernateModule extends AbstractModule
 
 		//check for potentially dangerous properties before going any further
 		final String hbm2ddl = hibernateProperties.getProperty("hibernate.hbm2ddl.auto");
-		if (hbm2ddl != null && !allowHmb2ddl && hbm2ddl.equalsIgnoreCase("create"))
+		if (hbm2ddl != null && !allowHmb2ddl && (hbm2ddl.equalsIgnoreCase("create") || hbm2ddl.equalsIgnoreCase("create-drop")))
 		{
 			throw new IllegalArgumentException("Value '" +
 			                                   hbm2ddl +
