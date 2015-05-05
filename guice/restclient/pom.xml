@@ -60,13 +60,13 @@
 		<dependency>
 			<groupId>commons-discovery</groupId>
 			<artifactId>commons-discovery</artifactId>
-			<version>0.2</version>
+			<version>0.5</version>
 		</dependency>
 
 		<dependency>
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
-			<version>1.0.4</version>
+			<version>1.2</version>
 		</dependency>
 		<dependency>
 			<groupId>xml-apis</groupId>
