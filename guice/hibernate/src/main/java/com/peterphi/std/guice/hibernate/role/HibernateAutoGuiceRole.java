@@ -23,7 +23,6 @@ public class HibernateAutoGuiceRole implements GuiceRole
 
 	}
 
-
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scanner,
