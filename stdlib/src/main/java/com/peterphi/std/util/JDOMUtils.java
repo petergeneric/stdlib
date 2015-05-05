@@ -44,7 +44,7 @@ public class JDOMUtils
 
 		try
 		{
-			DOMOutputter outputter = new DOMOutputter(FixedDOMOutputProcessor.INSTANCE);
+			DOMOutputter outputter = new DOMOutputter();
 
 			return outputter.output(node);
 		}
@@ -85,7 +85,7 @@ public class JDOMUtils
 
 		try
 		{
-			DOMOutputter outputter = new DOMOutputter(FixedDOMOutputProcessor.INSTANCE);
+			DOMOutputter outputter = new DOMOutputter();
 
 			return outputter.output(node);
 		}

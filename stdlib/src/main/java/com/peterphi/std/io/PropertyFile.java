@@ -1,7 +1,6 @@
 package com.peterphi.std.io;
 
 import com.peterphi.std.io.properties.IMergeConflictResolver;
-import com.peterphi.std.util.Base64;
 import com.peterphi.std.util.HexHelper;
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.io.IOUtils;
@@ -29,6 +28,7 @@ import java.net.URLDecoder;
 import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Base64;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -63,10 +63,12 @@ public class PropertyFile
 	{
 		public String data;
 
+
 		public Comment(String data)
 		{
 			this.data = data;
 		}
+
 
 		@Override
 		public void append(Writer w, PropertyFile p) throws IOException
@@ -83,6 +85,7 @@ public class PropertyFile
 		public String name;
 		public String value;
 
+
 		private void checkName()
 		{
 			if (name.contains("="))
@@ -95,6 +98,7 @@ public class PropertyFile
 			}
 		}
 
+
 		public NameValuePair(String name, String value)
 		{
 			this.name = name;
@@ -102,6 +106,7 @@ public class PropertyFile
 
 			checkName();
 		}
+
 
 		@Override
 		public void append(Writer w, PropertyFile p) throws IOException
@@ -137,10 +142,12 @@ public class PropertyFile
 	protected List<Entry> entries = new ArrayList<Entry>();
 	protected Map<String, NameValuePair> vars = new HashMap<String, NameValuePair>();
 
+
 	public static PropertyFile find()
 	{
 		return find("service.properties");
 	}
+
 
 	public static PropertyFile find(final String fileName)
 	{
@@ -159,6 +166,7 @@ public class PropertyFile
 
 		return find(PropertyFile.class.getClassLoader(), fileName);
 	}
+
 
 	/**
 	 * Find a property file
@@ -221,6 +229,7 @@ public class PropertyFile
 		return openResource(classloader, resolvedResource, resolvedFile);
 	}
 
+
 	public static PropertyFile openResource(final ClassLoader classloader, final URL resource, final String fileName)
 	{
 		try
@@ -255,6 +264,7 @@ public class PropertyFile
 		}
 	}
 
+
 	/**
 	 * Find all property files by the name <code>name</code> by searching the classloader that owns PropertyFile
 	 *
@@ -266,6 +276,7 @@ public class PropertyFile
 	{
 		return findAll(PropertyFile.class.getClassLoader(), name);
 	}
+
 
 	/**
 	 * Find all property files by the name <code>name</code> by searching the specified classloader
@@ -320,10 +331,12 @@ public class PropertyFile
 	// CONSTRUCTORS
 	// ///////////////
 
+
 	public PropertyFile(File fileName) throws IOException
 	{
 		this(fileName, true);
 	}
+
 
 	public PropertyFile(File fileName, boolean caseSensitive) throws IOException
 	{
@@ -333,9 +346,11 @@ public class PropertyFile
 		load();
 	}
 
+
 	public PropertyFile()
 	{
 	}
+
 
 	public PropertyFile(InputStream is, boolean caseSensitive) throws IOException
 	{
@@ -344,10 +359,12 @@ public class PropertyFile
 		load(is);
 	}
 
+
 	public PropertyFile(Reader r) throws IOException
 	{
 		this(r, true);
 	}
+
 
 	public PropertyFile(Reader r, boolean caseSensitive) throws IOException
 	{
@@ -356,15 +373,18 @@ public class PropertyFile
 		load(r);
 	}
 
+
 	public PropertyFile(InputStream is) throws IOException
 	{
 		this(is, true);
 	}
 
+
 	public PropertyFile(Properties p)
 	{
 		this(p, false);
 	}
+
 
 	public PropertyFile(Properties p, boolean caseSensitive)
 	{
@@ -372,6 +392,7 @@ public class PropertyFile
 
 		load(p);
 	}
+
 
 	/**
 	 * Converts the name/value pairs stored in this PropertyFile to the Java Properties propertyfile type
@@ -390,25 +411,30 @@ public class PropertyFile
 		return p;
 	}
 
+
 	public boolean getCaseSensitive()
 	{
 		return caseSensitive;
 	}
+
 
 	public File getFile()
 	{
 		return f;
 	}
 
+
 	public void setFile(File file)
 	{
 		this.f = file;
 	}
 
+
 	public void setForceNameValueDelimiterWhitespace(boolean value)
 	{
 		this.forceNameValueDelimiterWhitespace = value;
 	}
+
 
 	public boolean getForceNameValueDelimiterWhitespace()
 	{
@@ -419,12 +445,14 @@ public class PropertyFile
 	// READING AND WRITING
 	// //////////////////////
 
+
 	public void load() throws IOException
 	{
 		assert (f != null);
 
 		load(f);
 	}
+
 
 	public void load(Properties p)
 	{
@@ -445,6 +473,7 @@ public class PropertyFile
 		}
 	}
 
+
 	public void load(File file) throws IOException
 	{
 		assert (file != null);
@@ -452,15 +481,18 @@ public class PropertyFile
 		load(new FileReader(file));
 	}
 
+
 	public void load(InputStream is) throws IOException
 	{
 		load(new InputStreamReader(is));
 	}
 
+
 	public void save() throws IOException
 	{
 		save(f, null);
 	}
+
 
 	public void save(File f, String comment) throws IOException
 	{
@@ -477,15 +509,18 @@ public class PropertyFile
 		}
 	}
 
+
 	public void save(OutputStream os) throws IOException
 	{
 		save(null, new OutputStreamWriter(os));
 	}
 
+
 	public void save(String comment) throws IOException
 	{
 		save(f, comment);
 	}
+
 
 	public void save(String comment, OutputStream os) throws IOException
 	{
@@ -495,6 +530,7 @@ public class PropertyFile
 	// ///////////////////////////////
 	// MANIPULATION
 	// ////////////////////////////
+
 
 	/**
 	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
@@ -507,6 +543,7 @@ public class PropertyFile
 	{
 		merge(other, null);
 	}
+
 
 	/**
 	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
@@ -544,6 +581,7 @@ public class PropertyFile
 		}
 	}
 
+
 	/**
 	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
 	 * <code>other</code>
@@ -554,6 +592,7 @@ public class PropertyFile
 	{
 		merge(other, null);
 	}
+
 
 	/**
 	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
@@ -571,6 +610,7 @@ public class PropertyFile
 		merge(otherAsPropFile, conflictResolver);
 	}
 
+
 	/**
 	 * Make this PropertyFile object read-only
 	 */
@@ -578,6 +618,7 @@ public class PropertyFile
 	{
 		this.readOnly = true;
 	}
+
 
 	public boolean containsKey(final String name)
 	{
@@ -587,10 +628,12 @@ public class PropertyFile
 		return _contains(name);
 	}
 
+
 	public String get(final String name)
 	{
 		return get(name, null);
 	}
+
 
 	public String get(final String name, final String defaultValue)
 	{
@@ -600,6 +643,7 @@ public class PropertyFile
 
 		return _get(name, defaultValue);
 	}
+
 
 	public InetAddress getIP(final String name, final InetAddress defaultValue)
 	{
@@ -627,30 +671,36 @@ public class PropertyFile
 		}
 	}
 
+
 	public int get(final String name, final int defaultValue)
 	{
 		return Integer.parseInt(get(name, Integer.toString(defaultValue)).trim());
 	}
+
 
 	public long get(final String name, final long defaultValue)
 	{
 		return Long.parseLong(get(name, Long.toString(defaultValue)).trim());
 	}
 
+
 	public boolean get(final String name, final boolean defaultValue)
 	{
 		return Boolean.parseBoolean(get(name, Boolean.toString(defaultValue)).trim());
 	}
+
 
 	public int getInteger(final String name, final int defaultValue)
 	{
 		return Integer.parseInt(get(name, Integer.toString(defaultValue)).trim());
 	}
 
+
 	public boolean getBoolean(final String name, final boolean defaultValue)
 	{
 		return parseBoolean(get(name, Boolean.toString(defaultValue)).trim());
 	}
+
 
 	private static boolean parseBoolean(final String value)
 	{
@@ -662,10 +712,12 @@ public class PropertyFile
 			throw new IllegalArgumentException("Cannot parse to a boolean value: " + value);
 	}
 
+
 	public long getLong(final String name, final long defaultValue)
 	{
 		return Long.parseLong(get(name, Long.toString(defaultValue)).trim());
 	}
+
 
 	public URI getURI(final String name, final String defaultValue)
 	{
@@ -685,6 +737,7 @@ public class PropertyFile
 			throw new IllegalArgumentException("Illegal URI: " + uri, e);
 		}
 	}
+
 
 	public Class<?> getClass(final String name, final Class<?> defaultValue)
 	{
@@ -707,6 +760,7 @@ public class PropertyFile
 		}
 	}
 
+
 	/**
 	 * Get a value which is Base64 encoded
 	 *
@@ -718,19 +772,19 @@ public class PropertyFile
 	{
 		final String encoded = get(name);
 
-		try
-		{
-			if (encoded == null)
-				return null;
-			else
-				return Base64.decode(encoded.trim());
-		}
-		catch (IOException e)
-		{
-			throw new IllegalArgumentException("Could not decode base64: " + encoded);
-		}
+		if (encoded == null)
+			return null;
+		else
+			return Base64.getDecoder().decode(encoded.trim());
 	}
 
+
+	/**
+	 * Get a value which is Base64 encoded and has a default value
+	 * @param name
+	 * @param defaultValue
+	 * @return
+	 */
 	public byte[] getBase64(final String name, final byte[] defaultValue)
 	{
 		byte[] value = getBase64(name);
@@ -740,6 +794,7 @@ public class PropertyFile
 		else
 			return defaultValue;
 	}
+
 
 	/**
 	 * Get a value which has been encoded in hexidecimal; The encoding may optionally include : delimiters, but no other non-hex
@@ -765,6 +820,7 @@ public class PropertyFile
 		}
 	}
 
+
 	public String set(final String name, final String value)
 	{
 		if (log.isTraceEnabled())
@@ -773,27 +829,32 @@ public class PropertyFile
 		return _set(name, value);
 	}
 
+
 	public String setBase64(final String name, final byte[] value)
 	{
-		final String encoded = Base64.encodeBytes(value);
+		final String encoded = Base64.getEncoder().encodeToString(value);
 
 		return set(name, encoded);
 	}
+
 
 	public String setHex(final String name, final byte[] value)
 	{
 		return set(name, HexHelper.toHex(value));
 	}
 
+
 	public String set(final String name, final long value)
 	{
 		return set(name, Long.toString(value));
 	}
 
+
 	public String set(final String name, final int value)
 	{
 		return set(name, Integer.toString(value));
 	}
+
 
 	public void remove(final String name)
 	{
@@ -802,6 +863,7 @@ public class PropertyFile
 
 		_rm(name);
 	}
+
 
 	public void clear()
 	{
@@ -812,20 +874,24 @@ public class PropertyFile
 	// ITERATORS
 	// ////////////////
 
+
 	public Set<String> keySet()
 	{
 		return vars.keySet();
 	}
+
 
 	public Iterator<String> keyIterator()
 	{
 		return vars.keySet().iterator();
 	}
 
+
 	public int getLineCount()
 	{
 		return entries.size();
 	}
+
 
 	public int getVariableCount()
 	{
@@ -838,40 +904,48 @@ public class PropertyFile
 
 	protected boolean dirty = false;
 
+
 	protected void hook_changed(final String name, final String oldValue, final String newValue)
 	{
 		dirty = true;
 	}
+
 
 	protected void hook_added(final String name, final String newValue)
 	{
 		dirty = true;
 	}
 
+
 	protected void hook_removed(final String name)
 	{
 		dirty = true;
 	}
+
 
 	protected void hook_cleared()
 	{
 		dirty = true;
 	}
 
+
 	protected void hook_merge_begin()
 	{
 
 	}
+
 
 	protected void hook_merge_complete()
 	{
 
 	}
 
+
 	protected void hook_loaded()
 	{
 		dirty = false;
 	}
+
 
 	protected void hook_saved()
 	{
@@ -881,6 +955,7 @@ public class PropertyFile
 	// ////////////////////////////////////////
 	// LOADING AND SAVING PRIMITIVES
 	// /////////////////////////////////
+
 
 	public void load(final Reader r) throws IOException
 	{
@@ -957,6 +1032,7 @@ public class PropertyFile
 		}
 	}
 
+
 	public void save(final String comment, final Writer w) throws IOException
 	{
 		// Write all properties to the file
@@ -993,6 +1069,7 @@ public class PropertyFile
 	// INTERNAL MANIPULATION PRIMITIVES
 	// ////////////////////////////////////
 
+
 	protected void _clear()
 	{
 		if (log.isTraceEnabled())
@@ -1006,6 +1083,7 @@ public class PropertyFile
 
 		hook_cleared();
 	}
+
 
 	protected String _set(String name, final String value)
 	{
@@ -1039,6 +1117,7 @@ public class PropertyFile
 		}
 	}
 
+
 	protected String _get(String name, final String defaultValue)
 	{
 		assert (name != null);
@@ -1046,6 +1125,7 @@ public class PropertyFile
 
 		return _get_core(name, defaultValue);
 	}
+
 
 	protected String _get_core(final String name, final String defaultValue)
 	{
@@ -1064,6 +1144,7 @@ public class PropertyFile
 		}
 	}
 
+
 	protected boolean _contains(String name)
 	{
 		assert (name != null);
@@ -1071,6 +1152,7 @@ public class PropertyFile
 
 		return vars.containsKey(caseSensitive ? name : name.toLowerCase());
 	}
+
 
 	protected void _rm(String name)
 	{
@@ -1084,6 +1166,7 @@ public class PropertyFile
 
 		hook_removed(name);
 	}
+
 
 	/**
 	 * Creates a read-only union of a number of property files<br />
@@ -1113,6 +1196,7 @@ public class PropertyFile
 		return props;
 	}
 
+
 	/**
 	 * Construct a new read-only PropertyFile which merges the contents of a number of other PropertyFile objects<br />
 	 * Null PropertyFiles are ignored.
@@ -1135,6 +1219,7 @@ public class PropertyFile
 
 		return props;
 	}
+
 
 	/**
 	 * Creates a read-only version of a property file<br />

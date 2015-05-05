@@ -1,7 +1,6 @@
 package com.peterphi.std.crypto.digest.impl;
 
 import com.peterphi.std.crypto.digest.IDigester;
-import com.peterphi.std.util.Base64;
 import com.peterphi.std.util.HexHelper;
 
 import java.io.File;
@@ -18,7 +17,6 @@ public abstract class AbstractDigester implements IDigester
 	public static enum DigestEncoding
 	{
 		HEX,
-		BASE64;
 	}
 
 	private final DigestEncoding encoding;
@@ -79,8 +77,6 @@ public abstract class AbstractDigester implements IDigester
 		{
 			case HEX:
 				return HexHelper.toHex(unencoded);
-			case BASE64:
-				return Base64.encodeBytes(unencoded);
 			default:
 				throw new IllegalArgumentException("Illegal encoding: " + encoding);
 		}

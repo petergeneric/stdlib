@@ -1,6 +1,5 @@
 package com.peterphi.std.crypto.digest;
 
-import com.peterphi.std.util.Base64;
 import com.peterphi.std.util.HexHelper;
 import org.apache.commons.io.IOUtils;
 
@@ -16,6 +15,7 @@ import java.io.InputStream;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
@@ -165,7 +165,6 @@ public class DigestHelper
 
 		// Finish the hash then convert it to a hex string
 		return md.digest();
-
 	}
 
 
@@ -223,7 +222,7 @@ public class DigestHelper
 
 	public static String md5(File testFile, int encoding) throws FileNotFoundException, IOException, NoSuchAlgorithmException
 	{
-		return digest(testFile, MD5, ENCODE_HEX);
+		return digest(testFile, MD5, encoding);
 	}
 
 
@@ -234,15 +233,9 @@ public class DigestHelper
 			case ENCODE_HEX:
 				return HexHelper.toHex(in);
 			case ENCODE_BASE64:
-				return toB64(in);
+				return Base64.getEncoder().encodeToString(in);
 			default:
 				throw new IllegalArgumentException("Unsupported encoding method!");
 		}
-	}
-
-
-	private static String toB64(final byte[] in)
-	{
-		return Base64.encodeBytes(in);
 	}
 }
