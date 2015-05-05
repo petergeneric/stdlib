@@ -61,7 +61,7 @@
 
 			<p>
 
-			<form action="@{|${coreRestPrefix}/guice/config/reconfigure|}" method="POST">
+			<form th:action="@{|${coreRestPrefix}/guice/config/reconfigure|}" method="POST">
 				<input type="hidden" name="key" th:value="${prop.name}"/>
 
 				<input th:if="${showProperties}" type="text" name="value" th:value="${config.getString(prop.name,'')}"/>
