@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.testrestclient.db.entity;
+package com.peterphi.std.guice.testwebapp.db.entity;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;

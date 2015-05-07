@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.testrestclient.guice;
+package com.peterphi.std.guice.testwebapp.guice;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;

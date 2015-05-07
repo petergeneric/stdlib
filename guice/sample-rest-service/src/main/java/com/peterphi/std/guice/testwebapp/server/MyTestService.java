@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.testrestclient.server;
+package com.peterphi.std.guice.testwebapp.server;
 
 import com.peterphi.std.annotation.Doc;
 import org.joda.time.DateTime;

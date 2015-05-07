@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.testrestclient.server;
+package com.peterphi.std.guice.testwebapp.server;
 
 import com.codahale.metrics.Counter;
 import com.codahale.metrics.Histogram;
@@ -11,7 +11,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
-import com.peterphi.std.guice.testrestclient.db.entity.SomeEntity;
+import com.peterphi.std.guice.testwebapp.db.entity.SomeEntity;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;

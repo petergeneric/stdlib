@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.testrestclient.server;
+package com.peterphi.std.guice.testwebapp.server;
 
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
