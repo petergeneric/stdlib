@@ -76,6 +76,7 @@
 		<module>freemarker</module>
 		<module>hibernate</module>
 		<module>hibernate-testing</module>
+		<module>liquibase</module>
 		<module>testing</module>
 		<module>restclient</module>
 		<module>sample-rest-service</module>

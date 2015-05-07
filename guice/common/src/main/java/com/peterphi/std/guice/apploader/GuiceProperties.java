@@ -114,4 +114,10 @@ public class GuiceProperties
 	//
 	@Doc("If true then when the guice-dbunit jar is loaded it'll auto-register DB Unit to work with hibernate(default true)")
 	public static final java.lang.String ROLE_DBUNIT_AUTO = "role.dbunit.auto";
+
+	//
+	// Guice Liquibase module
+	//
+	@Doc("The liquibase action to execute (default ASSERT_UPDATED)")
+	public static final java.lang.String LIQUIBASE_ACTION = "liquibase.action";
 }

@@ -9,12 +9,14 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.database.annotation.Transactional;
+import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaDateTimeUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
 import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
+import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -22,10 +24,14 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
+import java.util.Iterator;
 import java.util.Properties;
+import java.util.ServiceLoader;
 
 public abstract class HibernateModule extends AbstractModule
 {
+	private static final Logger log = Logger.getLogger(HibernateModule.class);
+
 	/**
 	 * If hibernate.properties is set to this value, hibernate properties are assumed to be embedded in app config
 	 */
@@ -91,6 +97,24 @@ public abstract class HibernateModule extends AbstractModule
 		configure(config);
 
 		registerTypes(config);
+
+		{
+			ServiceLoader<HibernateConfigurationValidator> services = ServiceLoader.load(HibernateConfigurationValidator.class);
+
+			final Iterator<HibernateConfigurationValidator> it = services.iterator();
+
+			log.trace("Evaluate HibernateConfigurationValidators. has at least one=" + it.hasNext());
+
+			while (it.hasNext())
+			{
+				final HibernateConfigurationValidator validator = it.next();
+
+				log.debug("Validating hibernate configuration with " + validator);
+
+				// Have the validator check the hibernate/database configuration
+				validator.validate(config, properties, configuration);
+			}
+		}
 
 		return config;
 	}

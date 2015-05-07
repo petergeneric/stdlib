@@ -31,8 +31,25 @@
 		</dependency>
 
 		<dependency>
+			<groupId>org.hsqldb</groupId>
+			<artifactId>hsqldb</artifactId>
+			<version>${hsqldb.version}</version>
+		</dependency>
+
+		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-metrics</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-hibernate</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-liquibase</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 	</dependencies>
