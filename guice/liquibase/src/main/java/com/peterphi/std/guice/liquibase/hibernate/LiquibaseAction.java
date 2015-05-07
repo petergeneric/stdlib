@@ -13,11 +13,16 @@ public enum LiquibaseAction
 	/**
 	 * Update all changesets
 	 */
-	UPDATE;
+	UPDATE,
+	/**
+	 * Mark that all pending changesets have been applied without actually executing any of their logic (this is "changeLogSync"
+	 * at the liquibase command-line)
+	 */
+	MARK_RAN;
 
 
 	public boolean isWriteAction()
 	{
-		return (this == UPDATE);
+		return (this == UPDATE) || (this == MARK_RAN);
 	}
 }

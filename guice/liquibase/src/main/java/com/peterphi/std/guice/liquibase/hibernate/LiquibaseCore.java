@@ -209,6 +209,9 @@ public class LiquibaseCore
 					// Perform a schema update
 					liquibase.update(new Contexts(contexts), new LabelExpression(labels));
 					return;
+				case MARK_RAN:
+					// Mark all pending changesets as run
+					liquibase.changeLogSync(new Contexts(contexts), new LabelExpression(labels));
 				default:
 					throw new RuntimeException("Unknown liquibase action: " + action);
 			}
