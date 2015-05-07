@@ -120,4 +120,16 @@ public class GuiceProperties
 	//
 	@Doc("The liquibase action to execute, should be one of LiquibaseAction - IGNORE/ASSERT_UPDATED/UPDATE/MARK_UPDATED (default ASSERT_UPDATED)")
 	public static final java.lang.String LIQUIBASE_ACTION = "liquibase.action";
+
+	@Doc("The liquibase changelog file to use")
+	public static final java.lang.String LIQUIBASE_CHANGELOG = "liquibase.changelog";
+
+	@Doc("The liquibase contexts expression")
+	public static final String LIQUIBASE_CONTEXTS = "liquibase.contexts";
+
+	@Doc("The liquibase labels expression")
+	public static final String LIQUIBASE_LABELS = "liquibase.labels";
+
+	@Doc("The prefix property name for all liquibase parameters (this is not a real configurable property)")
+	public static final String LIQUIBASE_PARAMETER = "liquibase.parameter";
 }

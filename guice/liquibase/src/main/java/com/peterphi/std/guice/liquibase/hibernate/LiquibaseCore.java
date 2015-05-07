@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.liquibase.LiquibaseAction;
 import com.peterphi.std.guice.liquibase.exception.LiquibaseChangesetsPending;
 import liquibase.Contexts;
@@ -39,10 +40,6 @@ class LiquibaseCore
 {
 	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
 
-	private static final String LIQUIBASE_CHANGELOG = "liquibase.changelog";
-	private static final String LIQUIBASE_CONTEXTS = "liquibase.contexts";
-	private static final String LIQUIBASE_LABELS = "liquibase.labels";
-	private static final String LIQUIBASE_PARAMETER = "liquibase.parameter";
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
 
@@ -105,15 +102,15 @@ class LiquibaseCore
 		Map<String, String> map = new HashMap<>();
 
 		// Bind all liquibase.parameter. application properties to liquibase parameters
-		cfg.getKeys(LIQUIBASE_PARAMETER).forEachRemaining(key -> map.put(key.substring(LIQUIBASE_PARAMETER.length()),
+		cfg.getKeys(GuiceProperties.LIQUIBASE_PARAMETER).forEachRemaining(key -> map.put(key.substring(GuiceProperties.LIQUIBASE_PARAMETER.length()),
 		                                                                 cfg.getString(key)));
 
 		// Bind all liquibase.parameter. hibernate properties to liquibase parameters
 		for (String key : hibernate.stringPropertyNames())
 		{
-			if (key.startsWith(LIQUIBASE_PARAMETER))
+			if (key.startsWith(GuiceProperties.LIQUIBASE_PARAMETER))
 			{
-				map.put(key.substring(LIQUIBASE_PARAMETER.length()), hibernate.getProperty(key));
+				map.put(key.substring(GuiceProperties.LIQUIBASE_PARAMETER.length()), hibernate.getProperty(key));
 			}
 		}
 
@@ -148,16 +145,16 @@ class LiquibaseCore
 		}
 
 		final String dataSourceName = config.getDataSource();
-		final String changeLogFile = config.getValue(LIQUIBASE_CHANGELOG);
-		final String contexts = config.getValue(LIQUIBASE_CONTEXTS);
-		final String labels = config.getValue(LIQUIBASE_LABELS);
+		final String changeLogFile = config.getValue(GuiceProperties.LIQUIBASE_CHANGELOG);
+		final String contexts = config.getValue(GuiceProperties.LIQUIBASE_CONTEXTS);
+		final String labels = config.getValue(GuiceProperties.LIQUIBASE_LABELS);
 		final String defaultSchema = config.getDefaultSchema();
 
 
 		if (dataSourceName == null)
 			throw new RuntimeException("Cannot run Liquibase: no datasource set");
 		else if (changeLogFile == null)
-			throw new RuntimeException("Cannot run Liquibase: " + LIQUIBASE_CHANGELOG + " is not set");
+			throw new RuntimeException("Cannot run Liquibase: " + GuiceProperties.LIQUIBASE_CHANGELOG + " is not set");
 
 		Connection connection = null;
 		Database database = null;
