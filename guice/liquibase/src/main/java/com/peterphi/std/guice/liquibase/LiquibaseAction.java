@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.liquibase.hibernate;
+package com.peterphi.std.guice.liquibase;
 
 public enum LiquibaseAction
 {
@@ -18,11 +18,11 @@ public enum LiquibaseAction
 	 * Mark that all pending changesets have been applied without actually executing any of their logic (this is "changeLogSync"
 	 * at the liquibase command-line)
 	 */
-	MARK_RAN;
+	MARK_UPDATED;
 
 
 	public boolean isWriteAction()
 	{
-		return (this == UPDATE) || (this == MARK_RAN);
+		return (this == UPDATE) || (this == MARK_UPDATED);
 	}
 }

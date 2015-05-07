@@ -5,6 +5,7 @@ import liquibase.configuration.ConfigurationValueProvider;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.cfg.AvailableSettings;
 
 import javax.naming.InitialContext;
 import java.util.Properties;
@@ -13,13 +14,11 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 {
 	private static final Logger log = Logger.getLogger(GuiceApplicationValueContainer.class);
 
-	private static final String JAVA_COMP_ENV = "java:comp/env";
-
 	private static final String LIQUIBASE_SCHEMA_DEFAULT = "liquibase.schema.default";
-	private static final String HIBERNATE_SCHEMA_DEFAULT = "hibernate.default_schema";
+	private static final String HIBERNATE_SCHEMA_DEFAULT = AvailableSettings.DEFAULT_SCHEMA;
 
 	private static final String LIQUIBASE_DATASOURCE = "liquibase.datasource";
-	private static final String HIBERNATE_DATASOURCE = "hibernate.connection.datasource";
+	private static final String HIBERNATE_DATASOURCE = AvailableSettings.DATASOURCE;
 
 
 	private final Configuration applicationConfiguration;

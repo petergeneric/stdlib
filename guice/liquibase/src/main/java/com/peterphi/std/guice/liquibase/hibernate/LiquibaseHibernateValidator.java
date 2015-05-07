@@ -2,6 +2,7 @@ package com.peterphi.std.guice.liquibase.hibernate;
 
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
+import com.peterphi.std.guice.liquibase.LiquibaseAction;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.Configuration;
 

@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
+import com.peterphi.std.guice.liquibase.LiquibaseAction;
+import com.peterphi.std.guice.liquibase.exception.LiquibaseChangesetsPending;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
@@ -16,6 +18,7 @@ import liquibase.resource.ResourceAccessor;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.cfg.AvailableSettings;
 
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
@@ -32,7 +35,7 @@ import java.util.Properties;
  *
  * @see liquibase.integration.servlet.LiquibaseServletListener
  */
-public class LiquibaseCore
+class LiquibaseCore
 {
 	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
 
@@ -41,6 +44,7 @@ public class LiquibaseCore
 	private static final String LIQUIBASE_LABELS = "liquibase.labels";
 	private static final String LIQUIBASE_PARAMETER = "liquibase.parameter";
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
+	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
 
 
 	public static void execute(final Configuration applicationConfiguration,
@@ -64,6 +68,7 @@ public class LiquibaseCore
 			final GuiceApplicationValueContainer valueContainer = new GuiceApplicationValueContainer(applicationConfiguration,
 			                                                                                         ic,
 			                                                                                         hibernateConfiguration);
+
 			LiquibaseConfiguration.getInstance().init(valueContainer);
 
 			Map<String, String> parameters = extractLiquibaseParameters(applicationConfiguration, hibernateConfiguration);
@@ -134,21 +139,31 @@ public class LiquibaseCore
 			action = LiquibaseAction.ASSERT_UPDATED;
 		}
 
+		// Fail if hbm2ddl is enabled (Hibernate should not be involved in schema management)
+		if (StringUtils.isNotEmpty(config.getValue(HIBERNATE_SCHEMA_MANAGEMENT)))
+		{
+			throw new RuntimeException("Liquibase is enabled but so is " +
+			                           HIBERNATE_SCHEMA_MANAGEMENT +
+			                           ". Only one of these schema management methods may be used at a time.");
+		}
+
 		final String dataSourceName = config.getDataSource();
 		final String changeLogFile = config.getValue(LIQUIBASE_CHANGELOG);
+		final String contexts = config.getValue(LIQUIBASE_CONTEXTS);
+		final String labels = config.getValue(LIQUIBASE_LABELS);
+		final String defaultSchema = config.getDefaultSchema();
+
+
 		if (dataSourceName == null)
 			throw new RuntimeException("Cannot run Liquibase: no datasource set");
 		else if (changeLogFile == null)
 			throw new RuntimeException("Cannot run Liquibase: " + LIQUIBASE_CHANGELOG + " is not set");
 
-		final String contexts = config.getValue(LIQUIBASE_CONTEXTS);
-		final String labels = config.getValue(LIQUIBASE_LABELS);
-		final String defaultSchema = config.getDefaultSchema();
-
 		Connection connection = null;
 		Database database = null;
 		try
 		{
+			// Set up the resource accessor
 			final ResourceAccessor resourceAccessor;
 			{
 				final CompositeResourceAccessor composite;
@@ -200,18 +215,17 @@ public class LiquibaseCore
 
 					// If any need to be run, fail
 					if (unrun.size() > 0)
-						throw new RuntimeException("There are " +
-						                           unrun.size() +
-						                           " changesets that need to be run against the database!");
+						throw new LiquibaseChangesetsPending(unrun);
 					else
 						return;
 				case UPDATE:
 					// Perform a schema update
 					liquibase.update(new Contexts(contexts), new LabelExpression(labels));
 					return;
-				case MARK_RAN:
+				case MARK_UPDATED:
 					// Mark all pending changesets as run
 					liquibase.changeLogSync(new Contexts(contexts), new LabelExpression(labels));
+					return;
 				default:
 					throw new RuntimeException("Unknown liquibase action: " + action);
 			}
