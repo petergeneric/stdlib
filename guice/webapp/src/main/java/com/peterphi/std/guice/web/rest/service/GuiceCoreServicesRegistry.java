@@ -27,6 +27,18 @@ public class GuiceCoreServicesRegistry
 			this.name = name;
 			this.path = path;
 		}
+
+
+		public String getName()
+		{
+			return name;
+		}
+
+
+		public String getPath()
+		{
+			return path;
+		}
 	}
 
 
@@ -52,7 +64,7 @@ public class GuiceCoreServicesRegistry
 		}
 
 		// Sort the service list so it's stable across runs
-		services.sort(Comparator.comparing(s -> s.name));
+		services.sort(Comparator.comparing(CoreService:: getName));
 
 		return services;
 	}

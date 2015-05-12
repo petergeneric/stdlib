@@ -15,6 +15,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.WeakHashMap;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 
 public class ConfigurationPropertyRegistry
@@ -79,34 +80,36 @@ public class ConfigurationPropertyRegistry
 
 	public List<ConfigurationProperty> getAll()
 	{
-		final List<ConfigurationProperty> props;
-		synchronized (properties)
-		{
-			props = new ArrayList<>(properties.values());
-		}
+		return getAll(p -> true);
+	}
+
+
+	private List<ConfigurationProperty> getAll(Predicate<ConfigurationProperty> predicate)
+	{
+		assert (predicate != null);
 
 		// Sort application properties, then framework properties
 		// Within these groups, sort alphabetically
-		props.sort(Comparator.comparing(p -> {
-			if (p.isFrameworkProperty())
-				return "B" + p.getName();
-			else
-				return "A" + p.getName();
-		}));
 
-		return props;
+		Comparator<ConfigurationProperty> sort = Comparator.comparing(ConfigurationProperty:: isFrameworkProperty)
+		                                                   .thenComparing(ConfigurationProperty:: getName);
+
+		synchronized (properties)
+		{
+			return properties.values().stream().filter(predicate).sorted(sort).collect(Collectors.toList());
+		}
 	}
 
 
 	public List<ConfigurationProperty> getFrameworkProperties()
 	{
-		return getAll().stream().filter(ConfigurationProperty:: isFrameworkProperty).collect(Collectors.toList());
+		return getAll(ConfigurationProperty:: isFrameworkProperty);
 	}
 
 
 	public List<ConfigurationProperty> getApplicationProperties()
 	{
-		return getAll().stream().filter(p -> !p.isFrameworkProperty()).collect(Collectors.toList());
+		return getAll(p -> !p.isFrameworkProperty());
 	}
 
 
@@ -159,5 +162,60 @@ public class ConfigurationPropertyRegistry
 		{
 			return Collections.emptyList();
 		}
+	}
+
+
+	private static final class X
+	{
+		public boolean b;
+		public String name;
+
+
+		public X(final boolean b, final String name)
+		{
+			this.b = b;
+			this.name = name;
+		}
+
+
+		public boolean isB()
+		{
+			return b;
+		}
+
+
+		public String getName()
+		{
+			return name;
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return "X{" +
+			       "b=" + b +
+			       ", name='" + name + '\'' +
+			       '}';
+		}
+	}
+
+
+	public static void main(String[] args) throws Exception
+	{
+		List<X> list = new ArrayList<>();
+
+		list.add(new X(true, "a"));
+		list.add(new X(true, "ab"));
+		list.add(new X(true, "c"));
+		list.add(new X(false, "a"));
+		list.add(new X(false, "b"));
+		list.add(new X(false, "c"));
+
+		Collections.shuffle(list);
+
+		list.sort(Comparator.comparing(X:: isB).thenComparing(X:: getName));
+
+		System.out.println(list);
 	}
 }
