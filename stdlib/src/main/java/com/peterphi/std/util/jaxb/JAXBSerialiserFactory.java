@@ -1,7 +1,10 @@
 package com.peterphi.std.util.jaxb;
 
 import java.lang.ref.SoftReference;
+import java.util.Iterator;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.function.Supplier;
 
 /**
  * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext
@@ -20,35 +23,50 @@ public class JAXBSerialiserFactory
 	}
 
 
-	public JAXBSerialiser getInstance(Class<?> clazz)
+	protected JAXBSerialiser getInstance(final String key, final Supplier<JAXBSerialiser> provider)
 	{
-		final String str = clazz.toString();
-
-		final SoftReference<JAXBSerialiser> ref = cache.get(str);
+		final SoftReference<JAXBSerialiser> ref = cache.get(key);
 		JAXBSerialiser instance = (ref != null) ? ref.get() : null;
 
 		if (instance == null)
 		{
-			instance = construct(clazz);
-			cache.put(str, new SoftReference<>(instance));
+			instance = provider.get();
+			cache.put(key, new SoftReference<>(instance));
+
+			// We just took the penalty to create a JAXBContext, do some maintenance on the map while we're at it
+			prune();
 		}
 
 		return instance;
 	}
 
 
-	public JAXBSerialiser getInstance(String contextPath)
+	/**
+	 * Finds stale entries in the map
+	 */
+	private void prune()
 	{
-		final SoftReference<JAXBSerialiser> ref = cache.get(contextPath);
-		JAXBSerialiser instance = (ref != null) ? ref.get() : null;
+		Iterator<Map.Entry<String, SoftReference<JAXBSerialiser>>> it = cache.entrySet().iterator();
 
-		if (instance == null)
+		while (it.hasNext())
 		{
-			instance = construct(contextPath);
-			cache.put(contextPath, new SoftReference<>(instance));
-		}
+			final Map.Entry<String, SoftReference<JAXBSerialiser>> entry = it.next();
 
-		return instance;
+			if (entry.getValue() == null || entry.getValue().get() == null)
+				it.remove();
+		}
+	}
+
+
+	public JAXBSerialiser getInstance(final Class<?> clazz)
+	{
+		return getInstance(clazz.toString(), () -> construct(clazz));
+	}
+
+
+	public JAXBSerialiser getInstance(final String contextPath)
+	{
+		return getInstance(contextPath, () -> construct(contextPath));
 	}
 
 
