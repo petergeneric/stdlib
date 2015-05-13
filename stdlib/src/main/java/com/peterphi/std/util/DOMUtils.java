@@ -23,21 +23,25 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
+import java.lang.ref.SoftReference;
 
 public class DOMUtils
 {
-	private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
-
-
-	static
-	{
-		DOCUMENT_BUILDER_FACTORY = DocumentBuilderFactory.newInstance();
-		DOCUMENT_BUILDER_FACTORY.setNamespaceAware(true);
-	}
+	private static SoftReference<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY = new SoftReference<>(null);
 
 
 	private DOMUtils()
 	{
+	}
+
+
+	private static DocumentBuilderFactory createDocumentBuilderFactory()
+	{
+		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+
+		factory.setNamespaceAware(true);
+
+		return factory;
 	}
 
 
@@ -50,7 +54,16 @@ public class DOMUtils
 	{
 		try
 		{
-			return DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
+			DocumentBuilderFactory factory = DOCUMENT_BUILDER_FACTORY.get();
+
+			if (factory == null)
+			{
+				factory = createDocumentBuilderFactory();
+
+				DOCUMENT_BUILDER_FACTORY = new SoftReference<>(factory);
+			}
+
+			return factory.newDocumentBuilder();
 		}
 		catch (ParserConfigurationException e)
 		{
