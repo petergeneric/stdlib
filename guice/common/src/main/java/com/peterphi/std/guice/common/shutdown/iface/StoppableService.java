@@ -8,8 +8,16 @@ public interface StoppableService
 {
 	/**
 	 * Called to request this service clean up any ongoing work and terminate.
-	 * <p/>
 	 * See {@link ShutdownManager#shutdown} for the shutdown sequence guarantees
 	 */
-	public void shutdown();
+	void shutdown();
+
+	/**
+	 * Called before the actual shutdown to alert the service to the fact that a shutdown has commenced. The default
+	 * implementation does nothing but implementors may wish to perform some action
+	 * See {@link ShutdownManager#shutdown} for the shutdown sequence guarantees
+	 */
+	default void preShutdown()
+	{
+	}
 }

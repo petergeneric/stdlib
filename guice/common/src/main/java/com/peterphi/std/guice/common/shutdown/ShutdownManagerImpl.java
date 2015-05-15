@@ -4,6 +4,8 @@ import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Stack;
 
 /**
@@ -17,6 +19,7 @@ class ShutdownManagerImpl implements ShutdownManager
 
 	private boolean stopped = false;
 
+
 	@Override
 	public synchronized void register(StoppableService service)
 	{
@@ -29,6 +32,7 @@ class ShutdownManagerImpl implements ShutdownManager
 
 		services.push(service);
 	}
+
 
 	@Override
 	public synchronized void shutdown()
@@ -45,6 +49,27 @@ class ShutdownManagerImpl implements ShutdownManager
 
 			log.info("Shutting down " + services.size() + " service(s)");
 
+			// First, notify all services about the impending shutdown
+			// We can't iterate across the stack in the right order without doing so destructively, so we create a copy as a list
+			// And then reverse it to mimic the stack being iterated across using the right order
+			{
+				final List<StoppableService> toNotify = new ArrayList<>(services);
+
+				for (StoppableService service : toNotify)
+				{
+					try
+					{
+						service.preShutdown();
+					}
+					catch (Throwable t)
+					{
+						failures++;
+						log.warn("Pre-Shutdown failed for " + service + ":" + t.getMessage(), t);
+					}
+				}
+			}
+
+			// Now, shutdown all the services, unregistering them from the service stack at the same time
 			while (!services.empty())
 			{
 				final StoppableService service = services.pop();
