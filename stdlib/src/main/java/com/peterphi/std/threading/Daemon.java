@@ -34,7 +34,17 @@ public abstract class Daemon implements Runnable
 	 */
 	public synchronized Thread startThread() throws IllegalThreadStateException
 	{
-		return startThread(this.getClass().getSimpleName());
+		return startThread(getThreadName());
+	}
+
+
+	/**
+	 * Return the name for this thread
+	 * @return
+	 */
+	protected String getThreadName()
+	{
+		return this.getClass().getSimpleName();
 	}
 
 

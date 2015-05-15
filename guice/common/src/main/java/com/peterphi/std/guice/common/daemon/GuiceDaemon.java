@@ -113,4 +113,11 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 		else
 			return clazz.getSimpleName();
 	}
+
+
+	@Override
+	protected String getThreadName()
+	{
+		return getName();
+	}
 }
