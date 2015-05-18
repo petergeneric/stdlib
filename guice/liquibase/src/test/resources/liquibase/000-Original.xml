@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+	<!-- Add the hibernate_sequence on supported databases (for dbs where autoIncrement doesn't work) -->
+	<changeSet author="nobody" id="pk_sequence_on_supported_dbs">
+		<preConditions onFail="MARK_RAN">
+			<or>
+				<dbms type="postgresql"/>
+				<dbms type="oracle"/>
+				<dbms type="hsqldb"/>
+				<dbms type="h2"/>
+				<dbms type="db2"/>
+			</or>
+		</preConditions>
+		<createSequence sequenceName="hibernate_sequence"/>
+	</changeSet>
+
+	<!-- Set up all the core tables and foreign key constraints -->
+	<changeSet author="nobody" id="original_tables">
+		<createTable tableName="something">
+			<column name="id" type="BIGINT">
+				<constraints primaryKey="true" primaryKeyName="PK__job__3213E83F7F60ED59"/>
+			</column>
+			<column name="name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet author="nobody" id="original_data">
+		<insert tableName="something">
+			<column name="id" value="1"/>
+			<column name="name" value="Example Object"/>
+		</insert>
+	</changeSet>
+</databaseChangeLog>

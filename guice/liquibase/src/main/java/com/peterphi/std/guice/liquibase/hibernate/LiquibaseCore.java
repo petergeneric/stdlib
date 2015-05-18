@@ -25,6 +25,7 @@ import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
 import java.sql.Connection;
+import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.HashMap;
 import java.util.List;
@@ -102,8 +103,8 @@ class LiquibaseCore
 		Map<String, String> map = new HashMap<>();
 
 		// Bind all liquibase.parameter. application properties to liquibase parameters
-		cfg.getKeys(GuiceProperties.LIQUIBASE_PARAMETER).forEachRemaining(key -> map.put(key.substring(GuiceProperties.LIQUIBASE_PARAMETER.length()),
-		                                                                 cfg.getString(key)));
+		cfg.getKeys(GuiceProperties.LIQUIBASE_PARAMETER)
+		   .forEachRemaining(key -> map.put(key.substring(GuiceProperties.LIQUIBASE_PARAMETER.length()), cfg.getString(key)));
 
 		// Bind all liquibase.parameter. hibernate properties to liquibase parameters
 		for (String key : hibernate.stringPropertyNames())
@@ -150,9 +151,12 @@ class LiquibaseCore
 		final String labels = config.getValue(GuiceProperties.LIQUIBASE_LABELS);
 		final String defaultSchema = config.getDefaultSchema();
 
+		final String jdbcUrl = config.getValue(AvailableSettings.URL);
+		final String jdbcUsername = config.getValue(AvailableSettings.USER);
+		final String jdbcPassword = config.getValue(AvailableSettings.PASS);
 
-		if (dataSourceName == null)
-			throw new RuntimeException("Cannot run Liquibase: no datasource set");
+		if (StringUtils.isEmpty(dataSourceName) && StringUtils.isEmpty(jdbcUrl))
+			throw new RuntimeException("Cannot run Liquibase: no JNDI datasource or JDBC URL set");
 		else if (changeLogFile == null)
 			throw new RuntimeException("Cannot run Liquibase: " + GuiceProperties.LIQUIBASE_CHANGELOG + " is not set");
 
@@ -180,12 +184,26 @@ class LiquibaseCore
 
 			// Set up the database
 			{
-				if (log.isDebugEnabled())
-					log.debug("Look up datasource for liquibase: " + dataSourceName);
+				if (StringUtils.isNotEmpty(dataSourceName))
+				{
+					if (log.isDebugEnabled())
+						log.debug("Look up datasource for liquibase: " + dataSourceName);
 
-				final DataSource dataSource = (DataSource) jndi.lookup(dataSourceName);
+					final DataSource dataSource = (DataSource) jndi.lookup(dataSourceName);
 
-				connection = dataSource.getConnection();
+					connection = dataSource.getConnection();
+				}
+				else
+				{
+					if (log.isDebugEnabled())
+						log.debug("Create JDBC Connection directly: " + jdbcUrl);
+
+					// TODO do we need to call Class.forName on the JDBC Driver URL?
+					// TODO JDBC drivers should expose themselves using the service provider interface nowadays so this shouldn't be necessary
+
+					connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword);
+				}
+
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
 				database.setDefaultSchemaName(defaultSchema);
