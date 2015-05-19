@@ -178,8 +178,12 @@ class LiquibaseCore
 					composite = new CompositeResourceAccessor(clFO, fsFO, threadClFO);
 				}
 
+				// If loading a resource with an absolute path fails, re-try it as a path relative to /
+				// This is for unit tests where /liquibase/changelog.xml needs to be accessed as liquibase/changelog.xml
+				final ResourceAccessor fallback = new RetryAbsoluteAsRelativeResourceAccessor(composite);
+
 				// Wrap the resource accessor in a filter that interprets ./ as the changeLogFile folder
-				resourceAccessor = new RelativePathFilteringResourceAccessor(composite, changeLogFile);
+				resourceAccessor = new RelativePathFilteringResourceAccessor(fallback, changeLogFile);
 			}
 
 			// Set up the database

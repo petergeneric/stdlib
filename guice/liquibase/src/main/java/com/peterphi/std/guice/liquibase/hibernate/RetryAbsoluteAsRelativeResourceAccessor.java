@@ -7,27 +7,19 @@ import java.io.InputStream;
 import java.util.Set;
 
 /**
- * Intercepts resource requests, changing ./ to mean relative to the master changeset
+ * A filtering {@link ResourceAccessor} implementation that retries unsuccessful absolute resource accesses as relative to /<br
+ * />
+ * This allows a path like <code>/liquibase/changelog.xml</code> to work within a unit test where it would otherwise need to be
+ * written as <code>liquibase/changelog.xml</code>
  */
-class RelativePathFilteringResourceAccessor implements ResourceAccessor
+class RetryAbsoluteAsRelativeResourceAccessor implements ResourceAccessor
 {
 	private final ResourceAccessor inner;
-	private final String folder;
 
 
-	public RelativePathFilteringResourceAccessor(final ResourceAccessor inner, final String masterChangeset)
+	public RetryAbsoluteAsRelativeResourceAccessor(final ResourceAccessor inner)
 	{
 		this.inner = inner;
-
-		// Extract the folder (assuming the master changeset is in a folder, otherwise we leave it blank)
-		if (masterChangeset.indexOf('/') != -1)
-		{
-			this.folder = masterChangeset.substring(0, masterChangeset.lastIndexOf('/')) + "/";
-		}
-		else
-		{
-			this.folder = "";
-		}
 	}
 
 
@@ -43,17 +35,22 @@ class RelativePathFilteringResourceAccessor implements ResourceAccessor
 	@Override
 	public Set<InputStream> getResourcesAsStream(final String path) throws IOException
 	{
-		// For local paths, try to resolve the path relative to the folder of the master file
-		// N.B. Assumes paths are sensible, not .//someFile.xml
-		if (path.startsWith("./"))
+		// First, try the path as specified
+		final Set<InputStream> streams = inner.getResourcesAsStream(path);
+
+		// If no results were found and the path was absolute, retry without the leading slash
+		if ((streams == null || streams.isEmpty()) && !path.isEmpty() && path.charAt(0) == '/')
 		{
-			final Set<InputStream> streams = inner.getResourcesAsStream(folder + path.substring(2));
+			// Strip the leading slash away and re-try the path
+			// This lets us
+			final String newPath = path.substring(1);
 
-			if (streams != null && !streams.isEmpty())
-				return streams;
+			return inner.getResourcesAsStream(newPath);
 		}
-
-		return inner.getResourcesAsStream(path);
+		else
+		{
+			return streams;
+		}
 	}
 
 
