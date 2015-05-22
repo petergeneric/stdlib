@@ -45,6 +45,12 @@ public final class GuiceMetricNames
 	@Doc("Keeps track of the number of requests from logged in users (i.e. non-anonymous) which have been denied")
 	public static final String AUTH_CONSTRAINT_AUTHENTICATED_DENIED_METER = "feature.AuthConstraint.authenticated-deny";
 
+	//@Cache annotations
+	@Doc("The number of @Cache annotated methods that have returned a cached result")
+	public static final String CACHE_HITS = "cache.hits";
+	@Doc("The number of @Cache annotated methods that have had to calculate a result")
+	public static final String CACHE_MISSES = "cache.misses";
+
 
 	private GuiceMetricNames()
 	{
