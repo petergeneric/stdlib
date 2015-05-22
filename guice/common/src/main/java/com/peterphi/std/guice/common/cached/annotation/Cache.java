@@ -22,7 +22,7 @@ public @interface Cache
 	long timeout() default 60 * 1000;
 
 	/**
-	 * The name of the cache that will be used (if not specified a global cache name based on the fully qualified class/method
+	 * The name of the (global) cache that will be used (if not specified a global cache name based on the fully qualified class/method
 	 * name will be used)
 	 *
 	 * @return
