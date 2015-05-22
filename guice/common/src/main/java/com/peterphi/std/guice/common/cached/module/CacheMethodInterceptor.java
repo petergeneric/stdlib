@@ -6,6 +6,7 @@ import com.peterphi.std.guice.common.cached.annotation.Cache;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
@@ -39,20 +40,28 @@ final class CacheMethodInterceptor implements MethodInterceptor
 		}
 
 
-		final String name = invocation.getMethod().toGenericString();
-
 		final Cache options = invocation.getMethod().getAnnotation(Cache.class);
 
 		long timeout = options.timeout();
 
-		if (results.containsKey(name))
+		final String key;
+		if (StringUtils.isEmpty(options.name()))
 		{
-			CacheResult cacheResult = results.get(name);
+			key = invocation.getMethod().toGenericString();
+		}
+		else
+		{
+			key = options.name();
+		}
+
+		if (results.containsKey(key))
+		{
+			CacheResult cacheResult = results.get(key);
 
 			//if we haven't hit the result's invalidation timeout
 			if (cacheResult.time.withDurationAdded(timeout, 1).isAfterNow())
 			{
-				log.debug("Returning cached result for " + name);
+				log.debug("Returning cached result for " + key);
 				//return the previous result
 				hits.mark();
 				return cacheResult.result;
@@ -65,7 +74,7 @@ final class CacheMethodInterceptor implements MethodInterceptor
 			DateTime now = DateTime.now();
 
 			CacheResult cr = new CacheResult(result, now);
-			results.put(name, cr);
+			results.put(key, cr);
 
 			misses.mark();
 			return result;
