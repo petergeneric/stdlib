@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 
 import java.lang.reflect.Modifier;
@@ -18,13 +19,13 @@ public class QEntityFactory
 	private static final Logger log = Logger.getLogger(QEntityFactory.class);
 
 	private final Map<Class<?>, QEntity> entities = new HashMap<>();
-	private final SessionFactory sessionFactory;
+	private final SessionFactoryImplementor sessionFactory;
 
 
 	@Inject
 	public QEntityFactory(final SessionFactory sessionFactory)
 	{
-		this.sessionFactory = sessionFactory;
+		this.sessionFactory = (SessionFactoryImplementor) sessionFactory;
 
 		log.debug("Known entities: " + sessionFactory.getAllClassMetadata().keySet());
 	}
@@ -58,7 +59,7 @@ public class QEntityFactory
 			QEntity entity = new QEntity(clazz);
 			entities.put(clazz, entity);
 
-			entity.parse(this, metadata);
+			entity.parse(this, metadata, sessionFactory);
 
 			log.debug("End create QEntity " + clazz);
 		}

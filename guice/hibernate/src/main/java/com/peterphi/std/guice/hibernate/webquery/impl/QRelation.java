@@ -5,13 +5,15 @@ public class QRelation
 	private final QEntity owner;
 	private final String name;
 	private final QEntity entity;
+	private final boolean nullable;
 
 
-	public QRelation(final QEntity owner, final String name, final QEntity entity)
+	public QRelation(final QEntity owner, final String name, final QEntity entity, final boolean nullable)
 	{
 		this.owner = owner;
 		this.name = name;
 		this.entity = entity;
+		this.nullable = nullable;
 	}
 
 
@@ -45,5 +47,28 @@ public class QRelation
 	public QEntity getEntity()
 	{
 		return entity;
+	}
+
+
+	/**
+	 * Get the nullability of this relationship
+	 *
+	 * @return
+	 */
+	public boolean isNullable()
+	{
+		return nullable;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "QRelation{" +
+		       "owner=" + owner.getName() +
+		       ", name='" + name + '\'' +
+		       ", entity=" + entity.getName() +
+		       ", nullable=" + nullable +
+		       '}';
 	}
 }

@@ -9,6 +9,8 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import java.util.List;
 
 @Entity
 class MyObject
@@ -30,6 +32,9 @@ class MyObject
 	@ManyToOne(optional = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "other_object_id", nullable = true)
 	private MyOtherObject otherObject;
+
+	@OneToMany(mappedBy = "parent")
+	private List<MyOtherObject> children;
 
 
 	public Long getId()
@@ -89,5 +94,17 @@ class MyObject
 	public void setOtherObject(final MyOtherObject otherObject)
 	{
 		this.otherObject = otherObject;
+	}
+
+
+	public List<MyOtherObject> getChildren()
+	{
+		return children;
+	}
+
+
+	public void setChildren(final List<MyOtherObject> children)
+	{
+		this.children = children;
 	}
 }

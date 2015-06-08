@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.junit.Before;
@@ -26,6 +27,8 @@ public class DynamicQueryTest
 	@Inject
 	ResultSetConstraintBuilderFactory builderFactory;
 
+	@Inject
+	QEntityFactory factory;
 
 	@Transactional
 	@Before
@@ -75,6 +78,25 @@ public class DynamicQueryTest
 		builder.add("otherObject.id", "_null");
 
 		assertEquals(1, dao.findByUriQuery(builder.build()).getList().size());
+	}
+
+
+	/**
+	 * Test that the dynamic query logic sees a ManyToOne which references a column in another Entity (a property of type
+	 * CollectionType)
+	 *
+	 * @throws IllegalArgumentException
+	 * 		if the property is not correctly parsed and available to queries
+	 */
+	@Test
+	public void testDynamicQuerySeesManyToOneRelation() throws IllegalArgumentException
+	{
+		ResultSetConstraintBuilder builder = builderFactory.builder();
+
+		builder.add("children.id", "_null");
+
+		// Will throw an IllegalArgumentException if the "children" field is not parsed from the entity
+		dao.findByUriQuery(builder.build());
 	}
 
 
@@ -147,6 +169,7 @@ public class DynamicQueryTest
 
 		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(builder.build()).getList()));
 	}
+
 
 	@Test
 	public void testComputeSize() throws Exception
