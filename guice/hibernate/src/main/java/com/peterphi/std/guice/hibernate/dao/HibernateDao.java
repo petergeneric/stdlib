@@ -132,18 +132,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
 	{
-		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
-
-		builder.addAll(constraints.getParameters());
-
-		final Criteria criteria;
-
-		if (baseCriteria != null)
-			criteria = baseCriteria.get();
-		else
-			criteria = createCriteria();
-
-		builder.append(criteria);
+		final Criteria criteria = convertCriteria(constraints, baseCriteria);
 
 		// Optionally treat large tables differently (works around a SQL Server performance issue)
 		if (!projectSize && isLargeTable && performSeparateIdQueryForLargeTables)
@@ -160,6 +149,11 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 				dataCriteria.add(Restrictions.in(idProperty(), ids));
 
 				// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
+				final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
+
+				if (constraints != null)
+					builder.addAll(constraints.getParameters());
+
 				builder.append(dataCriteria, false, false);
 
 				return dataCriteria;
@@ -190,6 +184,37 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		{
 			return criteria; // not a large table, execute query as normal
 		}
+	}
+
+
+	/**
+	 * Create a straight conversion of the provided ResultSetConstraint. This does not take into account {@link LargeTable}
+	 * behaviour. If you wish this behaviour, see {@link #createCriteria(ResultSetConstraint, Supplier)}
+	 *
+	 * @param constraints
+	 * 		the constraints (optional, if null then no restrictions will be appended to the base criteria)
+	 * @param baseCriteria
+	 * 		the supplier for a base criteria (optional, if null then a new empty {@link Criteria} will be created instead.
+	 *
+	 * @return
+	 */
+	public Criteria convertCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria)
+	{
+		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
+
+		if (constraints != null)
+			builder.addAll(constraints.getParameters());
+
+		final Criteria criteria;
+
+		if (baseCriteria != null)
+			criteria = baseCriteria.get();
+		else
+			criteria = createCriteria();
+
+		builder.append(criteria);
+
+		return criteria;
 	}
 
 
