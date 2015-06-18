@@ -2,6 +2,7 @@ package com.peterphi.std.guice.hibernate.webquery.impl.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
 import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
+import com.peterphi.std.guice.hibernate.webquery.impl.QSizeProperty;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
@@ -21,6 +22,16 @@ public class EqFunction implements QFunction
 	@Override
 	public Criterion encode()
 	{
-		return Restrictions.eq(property.getName(), value);
+		if (property.getProperty() instanceof QSizeProperty)
+		{
+			final int val = (Integer) value;
+
+			if (val == 0)
+				return Restrictions.isEmpty(property.getName());
+			else
+				return Restrictions.sizeEq(property.getName(), (Integer) value);
+		}
+		else
+			return Restrictions.eq(property.getName(), value);
 	}
 }

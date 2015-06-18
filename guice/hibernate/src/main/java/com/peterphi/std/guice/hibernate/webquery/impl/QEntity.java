@@ -100,16 +100,20 @@ public class QEntity
 		for (int i = 0; i < names.length; i++)
 		{
 			final Type type;
+			final boolean isCollection;
 
 			// Transparently unwrap collections
 			if (types[i].isCollectionType())
 			{
 				final CollectionType collectionType = (CollectionType) types[i];
 				type = collectionType.getElementType(sessionFactory);
+
+				isCollection = true;
 			}
 			else
 			{
 				type = types[i];
+				isCollection = false;
 			}
 
 			final String name = names[i];
@@ -135,6 +139,9 @@ public class QEntity
 			else if (type.isEntityType())
 			{
 				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable));
+
+				// Set up a special property to allow constraining the collection size
+				properties.put(name + ":size", new QSizeProperty(relations.get(name)));
 			}
 			else
 			{

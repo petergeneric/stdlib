@@ -13,7 +13,7 @@ import javax.persistence.OneToMany;
 import java.util.List;
 
 @Entity
-class MyObject
+class ParentEntity
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -31,10 +31,10 @@ class MyObject
 
 	@ManyToOne(optional = true, fetch = FetchType.EAGER)
 	@JoinColumn(name = "other_object_id", nullable = true)
-	private MyOtherObject otherObject;
+	private ChildEntity otherObject;
 
 	@OneToMany(mappedBy = "parent")
-	private List<MyOtherObject> children;
+	private List<ChildEntity> children;
 
 
 	public Long getId()
@@ -85,25 +85,25 @@ class MyObject
 	}
 
 
-	public MyOtherObject getOtherObject()
+	public ChildEntity getOtherObject()
 	{
 		return otherObject;
 	}
 
 
-	public void setOtherObject(final MyOtherObject otherObject)
+	public void setOtherObject(final ChildEntity otherObject)
 	{
 		this.otherObject = otherObject;
 	}
 
 
-	public List<MyOtherObject> getChildren()
+	public List<ChildEntity> getChildren()
 	{
 		return children;
 	}
 
 
-	public void setChildren(final List<MyOtherObject> children)
+	public void setChildren(final List<ChildEntity> children)
 	{
 		this.children = children;
 	}

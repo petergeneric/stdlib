@@ -2,10 +2,10 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 public class QProperty
 {
-	private final QEntity entity;
-	private final String name;
-	private final Class<?> clazz;
-	private final boolean nullable;
+	protected final QEntity entity;
+	protected final String name;
+	protected final Class<?> clazz;
+	protected final boolean nullable;
 
 
 	public QProperty(final QEntity entity, final String prefix, final String name, final Class<?> clazz, final boolean nullable)

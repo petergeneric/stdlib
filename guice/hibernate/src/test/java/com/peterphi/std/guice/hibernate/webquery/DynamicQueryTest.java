@@ -18,11 +18,14 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		            classPackages = MyObject.class)
+		            classPackages = ParentEntity.class)
 public class DynamicQueryTest
 {
 	@Inject
-	HibernateDao<MyObject, Long> dao;
+	HibernateDao<ParentEntity, Long> dao;
+
+	@Inject
+	HibernateDao<ChildEntity, Long> childDao;
 
 	@Inject
 	ResultSetConstraintBuilderFactory builderFactory;
@@ -30,11 +33,12 @@ public class DynamicQueryTest
 	@Inject
 	QEntityFactory factory;
 
+
 	@Transactional
 	@Before
 	public void clearDatabaseBeforeTest()
 	{
-		for (MyObject obj : dao.getAll())
+		for (ParentEntity obj : dao.getAll())
 			dao.delete(obj);
 
 		assertEquals(0, dao.getAll().size());
@@ -69,7 +73,7 @@ public class DynamicQueryTest
 	@Test
 	public void testGetByRelationIdIsNull() throws Exception
 	{
-		MyObject obj = new MyObject();
+		ParentEntity obj = new ParentEntity();
 		obj.setName("Name");
 		dao.save(obj);
 
@@ -104,12 +108,12 @@ public class DynamicQueryTest
 	public void testByBooleanField() throws Exception
 	{
 		{
-			MyObject obj1 = new MyObject();
+			ParentEntity obj1 = new ParentEntity();
 			obj1.setName("Name1");
 			obj1.setDeprecated(true);
 			dao.save(obj1);
 
-			MyObject obj2 = new MyObject();
+			ParentEntity obj2 = new ParentEntity();
 			obj2.setName("Name2");
 			obj2.setDeprecated(true);
 			dao.save(obj2);
@@ -136,11 +140,11 @@ public class DynamicQueryTest
 	@Test
 	public void testOrderAsc() throws Exception
 	{
-		MyObject obj1 = new MyObject();
+		ParentEntity obj1 = new ParentEntity();
 		obj1.setName("Name1");
 		dao.save(obj1);
 
-		MyObject obj2 = new MyObject();
+		ParentEntity obj2 = new ParentEntity();
 		obj2.setName("Name2");
 		dao.save(obj2);
 
@@ -155,11 +159,11 @@ public class DynamicQueryTest
 	@Test
 	public void testOrderDesc() throws Exception
 	{
-		MyObject obj1 = new MyObject();
+		ParentEntity obj1 = new ParentEntity();
 		obj1.setName("Name1");
 		dao.save(obj1);
 
-		MyObject obj2 = new MyObject();
+		ParentEntity obj2 = new ParentEntity();
 		obj2.setName("Name2");
 		dao.save(obj2);
 
@@ -175,11 +179,11 @@ public class DynamicQueryTest
 	public void testComputeSize() throws Exception
 	{
 		{
-			MyObject obj1 = new MyObject();
+			ParentEntity obj1 = new ParentEntity();
 			obj1.setName("Name1");
 			dao.save(obj1);
 
-			MyObject obj2 = new MyObject();
+			ParentEntity obj2 = new ParentEntity();
 			obj2.setName("Name2");
 			dao.save(obj2);
 		}
@@ -189,23 +193,86 @@ public class DynamicQueryTest
 		builder.add("_limit", "1");
 		builder.add("_compute_size", "true");
 
-		ConstrainedResultSet<MyObject> results = dao.findByUriQuery(builder.build());
+		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
 
 		assertEquals(1, results.getList().size());
 		assertEquals(Long.valueOf(2), results.getTotal());
 	}
 
 
-	private List<Long> getIds(MyObject... objs)
+	/**
+	 * Test that it is possible to search based on the size of a collection
+	 *
+	 * @throws Exception
+	 * 		on error
+	 */
+	@Test
+	public void testConstrainSize() throws Exception
+	{
+		// Set up 2 MyObject instances, one of which has 2 child instances
+		{
+			ParentEntity obj1 = new ParentEntity();
+			obj1.setName("Name1");
+			dao.save(obj1);
+
+			ParentEntity obj2 = new ParentEntity();
+			obj2.setName("Name2");
+			dao.save(obj2);
+
+			ChildEntity child1a = new ChildEntity();
+			child1a.setParent(obj1);
+			child1a.setName("a");
+			childDao.save(child1a);
+
+			ChildEntity child1b = new ChildEntity();
+			child1b.setParent(obj1);
+			child1b.setName("b");
+			childDao.save(child1b);
+		}
+
+		// Search for entries without constraints
+		{
+			ResultSetConstraintBuilder builder = builderFactory.builder();
+
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+
+			assertEquals(2, results.getList().size());
+		}
+
+		// Search for entries with at least 2 children
+		{
+			ResultSetConstraintBuilder builder = builderFactory.builder();
+
+			builder.add("children:size", "_f_ge_2");
+
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+
+			assertEquals(1, results.getList().size());
+		}
+
+		// Search for entries with no children
+		{
+			ResultSetConstraintBuilder builder = builderFactory.builder();
+
+			builder.add("children:size", "0");
+
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+
+			assertEquals(1, results.getList().size());
+		}
+	}
+
+
+	private List<Long> getIds(ParentEntity... objs)
 	{
 		return getIds(Arrays.asList(objs));
 	}
 
 
-	private List<Long> getIds(List<MyObject> objs)
+	private List<Long> getIds(List<ParentEntity> objs)
 	{
 		List<Long> list = new ArrayList<>();
-		for (MyObject obj : objs)
+		for (ParentEntity obj : objs)
 			list.add(obj.getId());
 
 		return list;
