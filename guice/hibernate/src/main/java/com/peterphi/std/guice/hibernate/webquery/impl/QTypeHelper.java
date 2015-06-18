@@ -31,7 +31,12 @@ class QTypeHelper
 		SPECIAL_DATE_STRINGS.put("today", () -> LocalDate.now().toDateTimeAtStartOfDay());
 		SPECIAL_DATE_STRINGS.put("tomorrow", () -> LocalDate.now().plusDays(1).toDateTimeAtStartOfDay());
 		SPECIAL_DATE_STRINGS.put("yesterday", () -> LocalDate.now().minusDays(1).toDateTimeAtStartOfDay());
+		// Start of Week
 		SPECIAL_DATE_STRINGS.put("sow", () -> LocalDate.now().withDayOfWeek(DateTimeConstants.MONDAY).toDateTimeAtStartOfDay());
+		// Start of Month
+		SPECIAL_DATE_STRINGS.put("som", () -> LocalDate.now().dayOfMonth().withMinimumValue().toDateTimeAtStartOfDay());
+		// Start of Year
+		SPECIAL_DATE_STRINGS.put("soy", () -> LocalDate.now().dayOfYear().withMinimumValue().toDateTimeAtStartOfDay());
 	}
 
 	public static Object parse(Class<?> clazz, String value)
