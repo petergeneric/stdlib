@@ -13,14 +13,14 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = QEntity.class)
+             classPackages = ParentEntity.class)
 public class HqlChildCountTest
 {
 	@Inject
-	QDao dao;
+	ParentDao dao;
 
 	@Inject
-	HibernateDao<REntity, Long> rDao;
+	HibernateDao<ChildEntity, Long> rDao;
 
 
 	/**
@@ -43,11 +43,11 @@ public class HqlChildCountTest
 		// Find a Q where 0 != count(child.flag=false) AND q.capacity > count(r.flag=true)
 		final String query = "SELECT q.id FROM Q q WHERE q.capacity > (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=true) AND 0 <> (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=false)";
 
-		QEntity q1;
+		ParentEntity p1;
 		{
-			q1 = new QEntity();
-			q1.setCapacity(2);
-			q1 = dao.getById(dao.save(q1));
+			p1 = new ParentEntity();
+			p1.setCapacity(2);
+			p1 = dao.getById(dao.save(p1));
 		}
 
 		List<Long> ids;
@@ -56,8 +56,8 @@ public class HqlChildCountTest
 		assertEquals(0, ids.size());
 
 		{
-			REntity r = new REntity();
-			r.setParent(q1);
+			ChildEntity r = new ChildEntity();
+			r.setParent(p1);
 			r.setFlag(true);
 
 			rDao.save(r);
@@ -67,8 +67,8 @@ public class HqlChildCountTest
 		assertEquals(0, ids.size());
 
 		{
-			REntity r = new REntity();
-			r.setParent(q1);
+			ChildEntity r = new ChildEntity();
+			r.setParent(p1);
 			r.setFlag(false);
 
 			rDao.save(r);
@@ -80,8 +80,8 @@ public class HqlChildCountTest
 
 
 		{
-			REntity r = new REntity();
-			r.setParent(q1);
+			ChildEntity r = new ChildEntity();
+			r.setParent(p1);
 			r.setFlag(true);
 
 			rDao.save(r);

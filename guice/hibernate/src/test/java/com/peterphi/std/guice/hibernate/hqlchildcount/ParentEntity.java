@@ -11,7 +11,7 @@ import javax.persistence.OneToMany;
 import java.util.List;
 
 @Entity(name = "Q")
-class QEntity
+class ParentEntity
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -21,7 +21,7 @@ class QEntity
 	private Integer capacity;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
-	private List<REntity> children;
+	private List<ChildEntity> children;
 
 
 	public Long getId()
@@ -48,13 +48,13 @@ class QEntity
 	}
 
 
-	public List<REntity> getChildren()
+	public List<ChildEntity> getChildren()
 	{
 		return children;
 	}
 
 
-	public void setChildren(final List<REntity> children)
+	public void setChildren(final List<ChildEntity> children)
 	{
 		this.children = children;
 	}

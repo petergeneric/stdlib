@@ -5,7 +5,7 @@ import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 
 import java.util.List;
 
-public class QDao extends HibernateDao<QEntity, Long>
+public class ParentDao extends HibernateDao<ParentEntity, Long>
 {
 	@Transactional
 	public List<Long> getIdsByQuery(String query)

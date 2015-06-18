@@ -12,7 +12,7 @@ public class RangeFunctionTest
 	@Test
 	public void testBinaryRange()
 	{
-		final QProperty prop = new QProperty(null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
 		final Criterion criterion = new RangeFunction(ref, "1..2").encode();
@@ -24,7 +24,7 @@ public class RangeFunctionTest
 	@Test
 	public void testLeftOnlyRange()
 	{
-		final QProperty prop = new QProperty(null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
 		final Criterion criterion = new RangeFunction(ref, "1..").encode();
@@ -36,7 +36,7 @@ public class RangeFunctionTest
 	@Test
 	public void testRightOnlyRange()
 	{
-		final QProperty prop = new QProperty(null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
 		final Criterion criterion = new RangeFunction(ref, "..1").encode();

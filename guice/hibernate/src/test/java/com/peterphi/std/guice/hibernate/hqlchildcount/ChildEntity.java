@@ -10,7 +10,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity(name = "R")
-class REntity
+class ChildEntity
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -18,7 +18,7 @@ class REntity
 
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(nullable = false)
-	private QEntity parent;
+	private ParentEntity parent;
 
 	@Column(nullable = false)
 	private boolean flag;
@@ -36,13 +36,13 @@ class REntity
 	}
 
 
-	public QEntity getParent()
+	public ParentEntity getParent()
 	{
 		return parent;
 	}
 
 
-	public void setParent(final QEntity parent)
+	public void setParent(final ParentEntity parent)
 	{
 		this.parent = parent;
 	}

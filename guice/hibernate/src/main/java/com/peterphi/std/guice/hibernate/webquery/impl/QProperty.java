@@ -8,10 +8,15 @@ public class QProperty
 	private final boolean nullable;
 
 
-	public QProperty(final QEntity entity, final String name, final Class<?> clazz, final boolean nullable)
+	public QProperty(final QEntity entity, final String prefix, final String name, final Class<?> clazz, final boolean nullable)
 	{
 		this.entity = entity;
-		this.name = name;
+
+		if (prefix != null)
+			this.name = prefix + "." + name;
+		else
+			this.name = name;
+
 		this.clazz = clazz;
 		this.nullable = nullable;
 	}

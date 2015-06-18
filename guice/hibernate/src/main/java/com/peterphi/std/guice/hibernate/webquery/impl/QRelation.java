@@ -8,10 +8,15 @@ public class QRelation
 	private final boolean nullable;
 
 
-	public QRelation(final QEntity owner, final String name, final QEntity entity, final boolean nullable)
+	public QRelation(final QEntity owner, final String prefix, final String name, final QEntity entity, final boolean nullable)
 	{
 		this.owner = owner;
-		this.name = name;
+
+		if (prefix != null)
+			this.name = prefix + "." + name;
+		else
+			this.name = name;
+
 		this.entity = entity;
 		this.nullable = nullable;
 	}
