@@ -42,6 +42,9 @@ dependencies:
 package:
 	$(MVN) clean package
 
+test:
+	$(MVN) clean test
+
 install:
 	$(MVN) clean install
 
