@@ -6,13 +6,13 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QSizeProperty;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class NeqFunction implements QFunction
+class Neq implements QFunction
 {
 	private final QPropertyRef property;
 	private final Object value;
 
 
-	public NeqFunction(final QPropertyRef property, final String value)
+	public Neq(final QPropertyRef property, final String value)
 	{
 		this.property = property;
 		this.value = property.parseValue(value);

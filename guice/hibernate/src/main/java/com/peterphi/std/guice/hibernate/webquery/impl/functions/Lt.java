@@ -6,7 +6,7 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QSizeProperty;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class Lt implements QFunction
+class Lt implements QFunction
 {
 
 	private final QPropertyRef property;
@@ -24,7 +24,14 @@ public class Lt implements QFunction
 	public Criterion encode()
 	{
 		if (property.getProperty() instanceof QSizeProperty)
-			return Restrictions.sizeLt(property.getName(), (Integer) value);
+		{
+			final int val = (Integer) value;
+
+			if (val == 1)
+				return Restrictions.isEmpty(property.getName());
+			else
+				return Restrictions.sizeLt(property.getName(), (Integer) value);
+		}
 		else
 			return Restrictions.lt(property.getName(), value);
 	}

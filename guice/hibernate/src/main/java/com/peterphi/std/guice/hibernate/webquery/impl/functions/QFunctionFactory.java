@@ -37,7 +37,7 @@ public class QFunctionFactory
 				switch (function)
 				{
 					case "eq":
-						return new EqFunction(property, param);
+						return new Eq(property, param);
 					case "ge":
 						return new Ge(property, param);
 					case "gt":
@@ -47,30 +47,30 @@ public class QFunctionFactory
 					case "lt":
 						return new Lt(property, param);
 					case "neq":
-						return new NeqFunction(property, param);
+						return new Neq(property, param);
 					case "starts":
 						if (property.getProperty().getClazz() != String.class)
 							throw new IllegalArgumentException("Can only use function on String properties: " + function);
 
-						return new LikeFunction(property, param + "%");
+						return new Like(property, param + "%");
 					case "contains":
 						if (property.getProperty().getClazz() != String.class)
 							throw new IllegalArgumentException("Can only use function on String properties: " + function);
 
-						return new LikeFunction(property, "%" + param + "%");
+						return new Like(property, "%" + param + "%");
 					case "range":
-						return new RangeFunction(property, param);
+						return new Between(property, param);
 					default:
 						throw new IllegalArgumentException("Unknown function " + function);
 				}
 			}
 			else if (constraint.equalsIgnoreCase("_null"))
 			{
-				return new IsNullFunction(property);
+				return new IsNull(property);
 			}
 			else if (constraint.equalsIgnoreCase("_notnull"))
 			{
-				return new IsNotNullFunction(property);
+				return new IsNotNull(property);
 			}
 			else
 			{
@@ -80,7 +80,7 @@ public class QFunctionFactory
 		else
 		{
 			// equals
-			return new EqFunction(property, constraint);
+			return new Eq(property, constraint);
 		}
 	}
 

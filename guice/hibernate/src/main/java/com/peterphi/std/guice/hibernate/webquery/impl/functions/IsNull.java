@@ -5,22 +5,20 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class LikeFunction implements QFunction
+class IsNull implements QFunction
 {
 	private final QPropertyRef property;
-	private final String param;
 
 
-	public LikeFunction(final QPropertyRef property, final String param)
+	public IsNull(final QPropertyRef property)
 	{
 		this.property = property;
-		this.param = param;
 	}
 
 
 	@Override
 	public Criterion encode()
 	{
-		return Restrictions.like(property.getName(), param);
+		return Restrictions.isNull(property.getName());
 	}
 }

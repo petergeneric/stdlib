@@ -7,15 +7,15 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 
-public class RangeFunctionTest
+public class BetweenTest
 {
 	@Test
 	public void testBinaryRange()
 	{
-		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null, null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
-		final Criterion criterion = new RangeFunction(ref, "1..2").encode();
+		final Criterion criterion = new Between(ref, "1..2").encode();
 
 		assertEquals("x between 1 and 2", criterion.toString());
 	}
@@ -24,10 +24,10 @@ public class RangeFunctionTest
 	@Test
 	public void testLeftOnlyRange()
 	{
-		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null, null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
-		final Criterion criterion = new RangeFunction(ref, "1..").encode();
+		final Criterion criterion = new Between(ref, "1..").encode();
 
 		assertEquals("x>=1", criterion.toString());
 	}
@@ -36,10 +36,10 @@ public class RangeFunctionTest
 	@Test
 	public void testRightOnlyRange()
 	{
-		final QProperty prop = new QProperty(null,null, "x", Integer.class, false);
+		final QProperty prop = new QProperty(null, null, "x", Integer.class, false);
 		final QPropertyRef ref = new QPropertyRef(null, prop);
 
-		final Criterion criterion = new RangeFunction(ref, "..1").encode();
+		final Criterion criterion = new Between(ref, "..1").encode();
 
 		assertEquals("x<=1", criterion.toString());
 	}

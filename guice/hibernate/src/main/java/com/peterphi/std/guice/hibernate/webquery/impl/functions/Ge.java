@@ -6,11 +6,12 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QSizeProperty;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class Ge implements QFunction
+class Ge implements QFunction
 {
 
 	private final QPropertyRef property;
 	private final Object value;
+
 
 	public Ge(final QPropertyRef property, final String value)
 	{
@@ -18,12 +19,22 @@ public class Ge implements QFunction
 		this.value = property.parseValue(value);
 	}
 
+
 	@Override
 	public Criterion encode()
 	{
 		if (property.getProperty() instanceof QSizeProperty)
-			return Restrictions.sizeGe(property.getName(), (Integer) value);
+		{
+			final int val = (Integer) value;
+
+			if (val == 0)
+				return Restrictions.conjunction(); // N.B. size can only be positive so "0 or more" is meaningless
+			else if (val == 1)
+				return Restrictions.isNotEmpty(property.getName());
+			else
+				return Restrictions.sizeGe(property.getName(), (Integer) value);
+		}
 		else
-		return Restrictions.ge(property.getName(), value);
+			return Restrictions.ge(property.getName(), value);
 	}
 }

@@ -7,7 +7,7 @@ import org.apache.commons.lang.StringUtils;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class RangeFunction implements QFunction
+class Between implements QFunction
 {
 	private final QPropertyRef property;
 
@@ -15,7 +15,7 @@ public class RangeFunction implements QFunction
 	private final Object to;
 
 
-	public RangeFunction(final QPropertyRef property, final String value)
+	public Between(final QPropertyRef property, final String value)
 	{
 		this.property = property;
 
@@ -61,13 +61,14 @@ public class RangeFunction implements QFunction
 		// Special-case constraints on size properties
 		if (property.getProperty() instanceof QSizeProperty)
 		{
+			// N.B. build from other primitives to take advantage of optimisations for > 0, < 1 etc.
 			if (from != null && to != null)
 				return Restrictions.and(Restrictions.sizeGe(property.getName(), (Integer) from),
 				                        Restrictions.sizeLe(property.getName(), (Integer) to));
 			else if (from != null)
-				return Restrictions.sizeGe(property.getName(), (Integer) from);
+				return new Ge(property, from.toString()).encode();
 			else
-				return Restrictions.sizeLe(property.getName(), (Integer) to);
+				return new Le(property, to.toString()).encode();
 		}
 		else
 		{

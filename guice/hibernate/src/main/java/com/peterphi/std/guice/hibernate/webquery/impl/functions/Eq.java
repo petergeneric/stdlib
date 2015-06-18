@@ -6,13 +6,13 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QSizeProperty;
 import org.hibernate.criterion.Criterion;
 import org.hibernate.criterion.Restrictions;
 
-public class EqFunction implements QFunction
+class Eq implements QFunction
 {
 	private final QPropertyRef property;
 	private final Object value;
 
 
-	public EqFunction(final QPropertyRef property, final String value)
+	public Eq(final QPropertyRef property, final String value)
 	{
 		this.property = property;
 		this.value = property.parseValue(value);

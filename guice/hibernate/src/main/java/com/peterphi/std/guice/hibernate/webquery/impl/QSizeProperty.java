@@ -1,5 +1,8 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+/**
+ * A special type of property that refers to the size of a collection
+ */
 public class QSizeProperty extends QProperty
 {
 	protected final QRelation relation;
@@ -23,8 +26,8 @@ public class QSizeProperty extends QProperty
 	public String toString()
 	{
 		return "QSizeProperty{" +
-		       "relation=" + relation +
-		       "entity.name=" + super.entity.getName() +
+		       "relation.name=" + relation.getName() +
+		       ", entity.name=" + super.entity.getName() +
 		       ", name='" + super.name + '\'' +
 		       ", clazz=" + super.clazz +
 		       ", nullable=" + super.nullable +

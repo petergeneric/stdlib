@@ -248,6 +248,7 @@ public class DynamicQueryTest
 			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
 
 			assertEquals(1, results.getList().size());
+			assertEquals("Name1", results.getList().get(0).getName());
 		}
 
 		// Search for entries with no children
@@ -259,6 +260,7 @@ public class DynamicQueryTest
 			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
 
 			assertEquals(1, results.getList().size());
+			assertEquals("Name2", results.getList().get(0).getName());
 		}
 	}
 
