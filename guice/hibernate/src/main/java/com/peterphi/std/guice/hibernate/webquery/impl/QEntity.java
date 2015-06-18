@@ -122,8 +122,15 @@ public class QEntity
 			{
 				CompositeType composite = (CompositeType) types[i];
 
+				final String newPrefix;
+
+				if (prefix != null)
+					newPrefix = prefix + "." + name;
+				else
+					newPrefix = name;
+
 				// This is a composite type, so add the composite types instead
-				parseFields(entityFactory, sessionFactory, name, composite);
+				parseFields(entityFactory, sessionFactory, newPrefix, composite);
 			}
 			else if (type.isEntityType())
 			{
