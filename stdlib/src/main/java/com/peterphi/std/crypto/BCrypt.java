@@ -6,14 +6,32 @@ import java.security.SecureRandom;
 import java.util.Random;
 
 /**
- * @deprecated use {@link OpenBSDBCrypt} instead
+ * A wrapper around {@link OpenBSDBCrypt}
  */
-@Deprecated
 public class BCrypt
 {
-	// BCrypt parameters
-	private static final int DEFAULT_COST = 10;
+	public static final int DEFAULT_COST = 12;
+
+	/**
+	 * The size of the BCrypt salt (fixed value)
+	 */
 	private static final int BCRYPT_SALT_LEN = 16;
+
+
+	/**
+	 * @param password
+	 * 		the plaintext password
+	 * @param cost
+	 * 		the computation cost (complexity increases at <code>2**cost</code>)
+	 *
+	 * @return
+	 */
+	public static String hash(char[] password, int cost)
+	{
+		final byte[] salt = gensalt(new SecureRandom());
+
+		return hash(password, salt, cost);
+	}
 
 
 	/**
@@ -26,8 +44,7 @@ public class BCrypt
 	 *
 	 * @return true if the passwords match, false otherwise
 	 */
-
-	private static boolean verify(String hash, char[] password)
+	public static boolean verify(final String hash, final char[] password)
 	{
 		return OpenBSDBCrypt.checkPassword(hash, password);
 	}
@@ -37,7 +54,7 @@ public class BCrypt
 	 * Hash a password using the OpenBSD bcrypt scheme
 	 *
 	 * @param password
-	 * 		the plaintext to test
+	 * 		the plaintext to hash
 	 * @param salt
 	 * 		the salt value to use
 	 * @param cost
@@ -45,53 +62,26 @@ public class BCrypt
 	 *
 	 * @return a 60-character BCrypt hash string
 	 */
-	private static String hashpw(char[] password, byte[] salt, int cost)
+	public static String hash(final char[] password, final byte[] salt, final int cost)
 	{
 		return OpenBSDBCrypt.generate(password, salt, cost);
 	}
 
 
 	/**
-	 * Hash a password using the OpenBSD bcrypt scheme
-	 *
-	 * @param password
-	 * 		the password to hash
-	 * @param salt
-	 * 		the salt to hash with (perhaps generated using BCrypt.gensalt)
-	 *
-	 * @return the hashed password
-	 */
-	public static String hashpw(char[] password, byte[] salt)
-	{
-		return hashpw(password, salt, DEFAULT_COST);
-	}
-
-
-	/**
-	 * Generate a salt for use with the {@link #hashpw(char[], byte[])} method
+	 * Generate a salt for use with the {@link #hash(char[], byte[], int)} method
 	 *
 	 * @param random
 	 * 		the random number generator to use
 	 *
 	 * @return an encoded salt value
 	 */
-	public static byte[] gensalt(Random random)
+	public static byte[] gensalt(final Random random)
 	{
 		final byte rnd[] = new byte[BCRYPT_SALT_LEN];
 
 		random.nextBytes(rnd);
 
 		return rnd;
-	}
-
-
-	/**
-	 * Generate a salt for use with the {@link #hashpw(char[], byte[])} method
-	 *
-	 * @return an encoded salt value
-	 */
-	public static byte[] gensalt()
-	{
-		return gensalt(new SecureRandom());
 	}
 }
