@@ -1,9 +1,5 @@
 package com.peterphi.std.crypto.digest;
 
-import com.peterphi.std.crypto.digest.impl.CRC32Digester;
-import com.peterphi.std.crypto.digest.impl.JCEDigester;
-import com.peterphi.std.crypto.digest.impl.LengthDigester;
-
 import java.io.Serializable;
 import java.util.Arrays;
 import java.util.Comparator;
@@ -11,7 +7,7 @@ import java.util.Comparator;
 /**
  * A number of different types of digest algorithm
  */
-public enum DigestAlgorithm
+enum DigestAlgorithm
 {
 	/**
 	 * Length (an algorithm which takes the length of the data, in decimal, as its digest)

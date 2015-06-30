@@ -1,6 +1,4 @@
-package com.peterphi.std.crypto.digest.impl;
-
-import com.peterphi.std.crypto.digest.IDigester;
+package com.peterphi.std.crypto.digest;
 
 import java.io.File;
 import java.io.IOException;
@@ -11,7 +9,7 @@ import java.nio.channels.ByteChannel;
 /**
  * A digest algorithm which takes the length of the data as its digest
  */
-public class LengthDigester implements IDigester
+class LengthDigester implements IDigester
 {
 	private static LengthDigester instance;
 

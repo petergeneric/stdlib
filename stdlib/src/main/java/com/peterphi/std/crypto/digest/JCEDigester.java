@@ -1,4 +1,4 @@
-package com.peterphi.std.crypto.digest.impl;
+package com.peterphi.std.crypto.digest;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -10,7 +10,7 @@ import java.security.NoSuchAlgorithmException;
 /**
  * A digester which uses the default JCE digest providers for its algorithms
  */
-public class JCEDigester extends AbstractDigester
+class JCEDigester extends AbstractDigester
 {
 	public static final JCEDigester MD2 = new JCEDigester("MD2");
 	public static final JCEDigester MD5 = new JCEDigester("MD5");
@@ -46,7 +46,7 @@ public class JCEDigester extends AbstractDigester
 
 
 	/**
-	 * @see com.peterphi.std.crypto.digest.impl.AbstractDigester#makeDigest(byte[])
+	 * @see AbstractDigester#makeDigest(byte[])
 	 */
 	@Override
 	public byte[] makeDigest(byte[] content)
@@ -58,7 +58,7 @@ public class JCEDigester extends AbstractDigester
 
 
 	/**
-	 * @see com.peterphi.std.crypto.digest.impl.AbstractDigester#makeDigest(java.io.InputStream)
+	 * @see AbstractDigester#makeDigest(java.io.InputStream)
 	 */
 	@Override
 	public byte[] makeDigest(InputStream is) throws IOException
@@ -83,7 +83,7 @@ public class JCEDigester extends AbstractDigester
 
 
 	/**
-	 * @see com.peterphi.std.crypto.digest.impl.AbstractDigester#makeDigest(java.nio.channels.ByteChannel)
+	 * @see AbstractDigester#makeDigest(java.nio.channels.ByteChannel)
 	 */
 	@Override
 	public byte[] makeDigest(ByteChannel channel) throws IOException

@@ -1,6 +1,5 @@
-package com.peterphi.std.crypto.digest.impl;
+package com.peterphi.std.crypto.digest;
 
-import com.peterphi.std.crypto.digest.IDigester;
 import com.peterphi.std.util.HexHelper;
 
 import java.io.File;
@@ -12,7 +11,7 @@ import java.nio.channels.ByteChannel;
 /**
  *
  */
-public abstract class AbstractDigester implements IDigester
+abstract class AbstractDigester implements IDigester
 {
 	public static enum DigestEncoding
 	{

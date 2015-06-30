@@ -8,7 +8,7 @@ import java.nio.channels.ByteChannel;
 /**
  * An interface for an implementation of a message digest algorithm
  */
-public interface IDigester
+interface IDigester
 {
 	/**
 	 * Produces the digest of a byte array

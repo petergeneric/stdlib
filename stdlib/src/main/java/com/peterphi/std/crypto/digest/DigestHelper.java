@@ -19,6 +19,9 @@ import java.util.Base64;
 import java.util.zip.CRC32;
 import java.util.zip.CheckedInputStream;
 
+/**
+ * Where possible implementations should use DigestUtils from commons-codec
+ */
 public class DigestHelper
 {
 	public static final int ENCODE_BASE64 = 1;

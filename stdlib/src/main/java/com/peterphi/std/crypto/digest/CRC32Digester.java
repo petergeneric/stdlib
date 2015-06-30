@@ -1,6 +1,4 @@
-package com.peterphi.std.crypto.digest.impl;
-
-import com.peterphi.std.crypto.digest.IDigester;
+package com.peterphi.std.crypto.digest;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -14,7 +12,7 @@ import java.util.zip.Checksum;
 /**
  * Produces CRC32 checksums (in hexidecimal) using the java.util.zip CRC32 class
  */
-public class CRC32Digester implements IDigester
+class CRC32Digester implements IDigester
 {
 	private static CRC32Digester instance = null;
 
