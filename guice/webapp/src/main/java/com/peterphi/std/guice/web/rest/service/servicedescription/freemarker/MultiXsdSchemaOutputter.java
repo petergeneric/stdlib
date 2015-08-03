@@ -44,11 +44,11 @@ class MultiXsdSchemaOutputter extends SchemaOutputResolver
 			// Where there are multiple schemas we need to encode them as a single schema
 
 			StringBuilder sb = new StringBuilder(4096);
-			sb.append("<SchemaFiles xmlns=\"http://ns.peterphi.com/stdlib/xsd/multi-xsd\">");
+			sb.append("<multixsd:SchemaFiles xmlns:multixsd=\"http://ns.peterphi.com/stdlib/xsd/multi-xsd\">");
 
 			for (Map.Entry<String, StringWriter> entry : schemas.entrySet())
 			{
-				sb.append("<SchemaFile name=\"" + entry.getKey() + "\">");
+				sb.append("<multixsd:SchemaFile name=\"" + entry.getKey() + "\">");
 
 				String xml = entry.getValue().toString();
 
@@ -57,10 +57,10 @@ class MultiXsdSchemaOutputter extends SchemaOutputResolver
 					xml = xml.substring(xml.indexOf("?>") + 2);
 
 				sb.append(xml);
-				sb.append("</SchemaFile>");
+				sb.append("</multixsd:SchemaFile>");
 			}
 
-			sb.append("</SchemaFiles>");
+			sb.append("</multixsd:SchemaFiles>");
 
 			return sb.toString();
 		}
