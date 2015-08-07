@@ -181,7 +181,7 @@ public class XSDValidator
 		}
 		catch (SAXException | IOException e)
 		{
-			throw new SchemaValidationException("Schema validation failed!" + e.getMessage(), e);
+			throw new SchemaValidationException(e.getMessage(), e);
 		}
 	}
 }
