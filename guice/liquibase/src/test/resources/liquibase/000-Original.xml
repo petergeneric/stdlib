@@ -27,6 +27,11 @@
 		</createTable>
 	</changeSet>
 
+	<!-- Test that we can use database.defaultSchemaName variable -->
+	<changeSet author="nobody" id="meaningless_delete">
+		<delete schemaName="${database.defaultSchemaName}" tableName="something"></delete>
+	</changeSet>
+
 	<changeSet author="nobody" id="original_data">
 		<insert tableName="something">
 			<column name="id" value="1"/>
