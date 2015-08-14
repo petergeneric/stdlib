@@ -386,7 +386,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		Criteria criteria = createCriteria();
 
 		criteria.add(Restrictions.eq(propertyName, value));
-		criteria.setMaxResults(2);
 
 		return uniqueResult(criteria);
 	}
