@@ -17,11 +17,13 @@ import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
+import java.net.ProxySelector;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -189,6 +191,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 				// By default share the common connection provider
 				builder.setConnectionManager(connectionManager);
+
+				// By default use the JRE default route planner for proxies
+				builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
 
 				// Allow customisation
 				if (httpCustomiser != null)
