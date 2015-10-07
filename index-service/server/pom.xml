@@ -5,7 +5,7 @@
 	<groupId>com.peterphi.std.index</groupId>
 	<artifactId>index-server</artifactId>
 	<packaging>war</packaging>
-	<version>8.3.2</version>
+	<version>8.3.3-SNAPSHOT</version>
 	<name>index service - server</name>
 	<description>Index Service (Server)</description>
 
@@ -17,7 +17,7 @@
 	<parent>
 		<groupId>com.peterphi.std.index</groupId>
 		<artifactId>index-parent</artifactId>
-		<version>8.3.2</version>
+		<version>8.3.3-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
