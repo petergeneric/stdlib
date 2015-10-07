@@ -11,6 +11,7 @@ public class ResultSetConstraintBuilder
 {
 	private Map<String, List<String>> constraints = new HashMap<>();
 	private int defaultLimit;
+	private List<String> defaultOrder = null;
 
 
 	ResultSetConstraintBuilder(int defaultLimit)
@@ -58,6 +59,22 @@ public class ResultSetConstraintBuilder
 	}
 
 
+	public ResultSetConstraintBuilder add(WebQuerySpecialField key, String... values)
+	{
+		add(key.getName(), values);
+
+		return this;
+	}
+
+
+	public ResultSetConstraintBuilder replace(WebQuerySpecialField key, String... values)
+	{
+		replace(key.getName(), values);
+
+		return this;
+	}
+
+
 	public ResultSetConstraintBuilder replace(String key, Collection<String> values)
 	{
 		constraints.put(key, new ArrayList<>(values));
@@ -68,25 +85,40 @@ public class ResultSetConstraintBuilder
 
 	public ResultSetConstraintBuilder limit(int limit)
 	{
-		return replace("_limit", Integer.toString(limit));
+		return replace(WebQuerySpecialField.LIMIT, Integer.toString(limit));
 	}
 
 
 	public ResultSetConstraintBuilder offset(int offset)
 	{
-		return replace("_offset", Integer.toString(offset));
+		return replace(WebQuerySpecialField.OFFSET, Integer.toString(offset));
 	}
 
 
 	public ResultSetConstraintBuilder setOrder(String... orders)
 	{
-		return replace("_order", orders);
+		return replace(WebQuerySpecialField.ORDER, orders);
 	}
 
 
 	public ResultSetConstraintBuilder addOrder(String... orders)
 	{
-		return add("_order", orders);
+		return add(WebQuerySpecialField.ORDER, orders);
+	}
+
+
+	/**
+	 * Specify a default ordering which will take effect if no order is specified by the user
+	 *
+	 * @param orders
+	 *
+	 * @return
+	 */
+	public ResultSetConstraintBuilder defaultOrder(String... orders)
+	{
+		this.defaultOrder = Arrays.asList(orders);
+
+		return this;
 	}
 
 
@@ -100,6 +132,6 @@ public class ResultSetConstraintBuilder
 
 	public ResultSetConstraint build()
 	{
-		return new ResultSetConstraint(new HashMap<>(constraints), defaultLimit);
+		return new ResultSetConstraint(new HashMap<>(constraints), defaultOrder, defaultLimit);
 	}
 }

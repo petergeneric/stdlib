@@ -15,8 +15,30 @@ public class ResultSetConstraint
 	private Map<String, List<String>> parameters = new HashMap<>();
 
 
+	/**
+	 * @param queryString
+	 * @param defaultLimit
+	 *
+	 * @deprecated use {@link ResultSetConstraintBuilder} instead
+	 */
+	@Deprecated
 	public ResultSetConstraint(Map<String, List<String>> queryString, int defaultLimit)
 	{
+		this(queryString, null, defaultLimit);
+	}
+
+
+	/**
+	 * Note, regular consumers should use {@link ResultSetConstraintBuilder} instead
+	 * @param queryString
+	 * @param defaultOrder
+	 * @param defaultLimit
+	 */
+	public ResultSetConstraint(Map<String, List<String>> queryString, List<String> defaultOrder, int defaultLimit)
+	{
+		if (defaultOrder != null && !defaultOrder.isEmpty())
+			parameters.put(WebQuerySpecialField.ORDER.getName(), defaultOrder);
+
 		parameters.put(WebQuerySpecialField.OFFSET.getName(), Arrays.asList("0"));
 		parameters.put(WebQuerySpecialField.LIMIT.getName(), Arrays.asList(Integer.toString(defaultLimit)));
 
