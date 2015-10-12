@@ -13,6 +13,7 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
 import org.apache.http.impl.NoConnectionReuseStrategy;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
@@ -117,6 +118,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                        final AuthScope authScope,
 	                                        final Credentials credentials,
 	                                        final boolean preemptiveAuth,
+	                                        final boolean storeCookies,
 	                                        Consumer<HttpClientBuilder> customiser)
 	{
 		// Customise timeouts if fast fail mode is enabled
@@ -148,6 +150,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			if (preemptiveAuth)
 				customiser = concat(customiser, b -> b.addInterceptorLast(new PreemptiveBasicAuthInterceptor()));
 		}
+
+		// If cookies are enabled then set up a cookie store
+		if (storeCookies)
+			customiser = concat(customiser, b -> b.setDefaultCookieStore(new BasicCookieStore()));
 
 		return getOrCreateClient(customiser, null);
 	}

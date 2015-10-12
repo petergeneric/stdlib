@@ -23,9 +23,19 @@ public interface JAXRSProxyClientFactory
 	public WebTarget getWebTarget(final String... names);
 
 	/**
+	 * Retrieve a WebTarget, using the configuration for the named service interface (but not creating a dynamic proxy client)
+	 *
+	 * @param iface the service interface to read configuration (endpoint, auth policy, etc.) from
+	 * @param names
+	 *
+	 * @return
+	 */
+	public WebTarget getWebTarget(final Class<?> iface, final String... names);
+
+	/**
 	 * Retrieve a Proxy client for the service, searching for the service in configuration using the ordered list of names
 	 *
-	 * @param iface
+	 * @param iface the service iface
 	 * @param names
 	 * @param <T>
 	 *
@@ -36,12 +46,24 @@ public interface JAXRSProxyClientFactory
 	/**
 	 * Get a client for the provided interface, searching for the service in configuration using the default name(s)
 	 *
-	 * @param iface
+	 * @param iface the service iface
 	 * @param <T>
 	 *
 	 * @return
 	 */
 	public <T> T getClient(final Class<T> iface);
+
+
+	/**
+	 * Get a client for the provided interface, building it from the provided WebTarget
+	 *
+	 * @param iface the service iface
+	 * @param target the WebTarget to use to build the dynamic proxy client
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	public <T> T getClient(final Class<T> iface, WebTarget target);
 
 	/**
 	 * Create a WebTarget for a fixed endpoint optionally with a given username and password

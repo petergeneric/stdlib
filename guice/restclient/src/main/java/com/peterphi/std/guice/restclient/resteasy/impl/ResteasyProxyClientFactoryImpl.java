@@ -2,6 +2,8 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
@@ -13,6 +15,7 @@ import org.apache.http.auth.Credentials;
 import org.apache.http.auth.UsernamePasswordCredentials;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
+import javax.ws.rs.client.WebTarget;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
@@ -25,6 +28,11 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	@Inject
 	Configuration config;
+
+	@Inject(optional = true)
+	@Named("jaxrs.cookie-store")
+	@Doc("Whether default JAX-RS clients should maintain a cookie store (default false)")
+	public boolean defaultStoreCookies = false;
 
 
 	public static String getConfiguredBoundServiceName(final Configuration config, Class<?> iface, String... names)
@@ -57,6 +65,15 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	}
 
 
+	@Override
+	public ResteasyWebTarget getWebTarget(final Class<?> iface, final String... names)
+	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		return getWebTarget(fastFail, names);
+	}
+
+
 	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
 	{
 		final String name = getConfiguredBoundServiceName(config, null, names);
@@ -73,6 +90,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final String password = config.getString("service." + name + ".password", getPassword(uri));
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
 		final String authType = config.getString("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
+		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store", defaultStoreCookies);
 
 		final boolean preemptiveAuth;
 		if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
@@ -82,16 +100,14 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return createWebTarget(uri, fastFail, username, password, preemptiveAuth);
+		return createWebTarget(uri, fastFail, username, password, storeCookies, preemptiveAuth);
 	}
 
 
 	@Override
 	public <T> T getClient(final Class<T> iface, final String... names)
 	{
-		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
-
-		return getWebTarget(fastFail, names).proxy(iface);
+		return getWebTarget(iface, names).proxy(iface);
 	}
 
 
@@ -99,6 +115,15 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	public <T> T getClient(final Class<T> iface)
 	{
 		return getClient(iface, getServiceNames(iface));
+	}
+
+
+	@Override
+	public <T> T getClient(final Class<T> iface, final WebTarget target)
+	{
+		final ResteasyWebTarget resteasyTarget = (ResteasyWebTarget) target;
+
+		return resteasyTarget.proxy(iface);
 	}
 
 
@@ -146,13 +171,17 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
 	{
-		return createWebTarget(endpoint, username, password, true);
+		return createWebTarget(endpoint, username, password, defaultStoreCookies, true);
 	}
 
 
-	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password, boolean preemptiveAuth)
+	public ResteasyWebTarget createWebTarget(final URI endpoint,
+	                                         String username,
+	                                         String password,
+	                                         boolean storeCookies,
+	                                         boolean preemptiveAuth)
 	{
-		return createWebTarget(endpoint, false, username, password, preemptiveAuth);
+		return createWebTarget(endpoint, false, username, password, storeCookies, preemptiveAuth);
 	}
 
 
@@ -160,22 +189,33 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                  boolean fastFail,
 	                                  String username,
 	                                  String password,
+	                                  final boolean storeCookies,
 	                                  boolean preemptiveAuth)
 	{
+		final AuthScope scope;
+		final Credentials credentials;
+
 		if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
 		{
-			final AuthScope scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
+			scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
 
-			final Credentials credentials;
 			if (username != null || password != null)
 				credentials = new UsernamePasswordCredentials(username, password);
 			else
 				credentials = new UsernamePasswordCredentials(endpoint.getAuthority());
-
-			return clientFactory.getOrCreateClient(fastFail, scope, credentials, preemptiveAuth, null).target(endpoint);
 		}
 		else
-			return clientFactory.getOrCreateClient(fastFail, null, null, false, null).target(endpoint);
+		{
+			scope = null;
+			credentials = null;
+		}
+
+		return clientFactory.getOrCreateClient(fastFail,
+		                                       scope,
+		                                       credentials,
+		                                       (credentials != null) && preemptiveAuth,
+		                                       storeCookies,
+		                                       null).target(endpoint);
 	}
 
 
@@ -217,7 +257,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return createWebTarget(endpoint, fastFail, username, password, preemptiveAuth).proxy(iface);
+		return createWebTarget(endpoint, fastFail, username, password, defaultStoreCookies, preemptiveAuth).proxy(iface);
 	}
 
 
