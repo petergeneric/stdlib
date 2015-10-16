@@ -33,6 +33,7 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import java.lang.reflect.Method;
 
@@ -70,7 +71,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		try
 		{
-			if (sessionProvider.get().getTransaction().isActive())
+			if (session.getTransaction().getStatus() == TransactionStatus.ACTIVE)
 			{
 				// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
 				if (log.isTraceEnabled())

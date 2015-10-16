@@ -5,12 +5,13 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.BaseSessionEventListener;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
 import java.io.File;
 import java.util.Collection;
 
@@ -54,17 +55,14 @@ public class TransactionHelper
 	}
 
 
-	public void addAction(Synchronization synchronisation) throws HibernateException
+	void addAction(SessionEventListener... listeners) throws HibernateException
 	{
-		if (synchronisation == null)
-			return; // ignore null actions
+		final Session session = sessionProvider.get();
 
-		final Transaction tx = get();
-
-		if (!tx.isActive())
+		if (session.getTransaction().getStatus() != TransactionStatus.ACTIVE)
 			throw new IllegalStateException("Cannot add transaction action with no active transaction!");
 
-		tx.registerSynchronization(synchronisation);
+		session.addEventListeners(listeners);
 	}
 
 
@@ -80,19 +78,12 @@ public class TransactionHelper
 		if (action == null)
 			return; // ignore null actions
 
-		addAction(new Synchronization()
+		addAction(new BaseSessionEventListener()
 		{
 			@Override
-			public void beforeCompletion()
+			public void transactionCompletion(final boolean successful)
 			{
-				// no action required
-			}
-
-
-			@Override
-			public void afterCompletion(final int status)
-			{
-				if (status == Status.STATUS_COMMITTED)
+				if (successful)
 					action.run();
 			}
 		});
@@ -111,19 +102,12 @@ public class TransactionHelper
 		if (action == null)
 			return; // ignore null actions
 
-		addAction(new Synchronization()
+		addAction(new BaseSessionEventListener()
 		{
 			@Override
-			public void beforeCompletion()
+			public void transactionCompletion(final boolean successful)
 			{
-				// no action required
-			}
-
-
-			@Override
-			public void afterCompletion(final int status)
-			{
-				if (status == Status.STATUS_ROLLEDBACK)
+				if (!successful)
 					action.run();
 			}
 		});
