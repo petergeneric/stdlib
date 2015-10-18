@@ -14,6 +14,7 @@ import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 
 /**
  * Provides transaction helper methods
@@ -52,6 +53,48 @@ public class TransactionHelper
 		final Transaction tx = session.beginTransaction();
 
 		return new HibernateTransaction(tx);
+	}
+
+
+	/**
+	 * Execute the provided {@link Callable} within a transaction, committing if no exceptions are thrown and returning the result
+	 * of the Callable
+	 *
+	 * @param statements
+	 * @param <T>
+	 *
+	 * @return
+	 *
+	 * @throws Exception
+	 */
+	public <T> T execute(Callable<T> statements) throws Exception
+	{
+		try (HibernateTransaction tx = start().withAutoRollback())
+		{
+			final T ret = statements.call();
+
+			// Success, perform a TX commit
+			tx.commit();
+
+			return ret;
+		}
+	}
+
+
+	/**
+	 * Execute the provided Runnable within a transaction, committing if no exceptions are thrown
+	 *
+	 * @param statements
+	 */
+	public void execute(Runnable statements)
+	{
+		try (HibernateTransaction tx = start().withAutoRollback())
+		{
+			statements.run();
+
+			// Success, perform a TX commit
+			tx.commit();
+		}
 	}
 
 
