@@ -13,7 +13,7 @@ import javax.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity(name = "Q")
+@Entity(name = "parent_entity")
 class ParentEntity
 {
 	@Id

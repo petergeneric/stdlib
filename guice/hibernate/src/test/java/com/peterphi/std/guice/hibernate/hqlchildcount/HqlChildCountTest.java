@@ -34,7 +34,7 @@ public class HqlChildCountTest
 	@Test
 	public void testEmptyDb() throws Exception
 	{
-		List<Long> ids = dao.getIdsByQuery("select q.id from Q q");
+		List<Long> ids = dao.getIdsByQuery("select q.id FROM parent_entity q");
 
 		assertEquals(0, ids.size());
 	}
@@ -159,7 +159,7 @@ public class HqlChildCountTest
 	public void testFilledDb() throws Exception
 	{
 		// Find a Q where 0 != count(child.flag=false) AND q.capacity > count(r.flag=true)
-		final String query = "SELECT q.id FROM Q q WHERE q.capacity > (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=true) AND 0 <> (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=false)";
+		final String query = "SELECT q.id FROM parent_entity q WHERE q.capacity > (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=true) AND 0 <> (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=false)";
 
 		ParentEntity p1;
 		{
@@ -206,8 +206,9 @@ public class HqlChildCountTest
 		}
 
 		// Now none should match again
-		ids = dao.getIdsByQuery(
-				"SELECT q.id FROM Q q WHERE q.capacity > (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=true) AND (SELECT COUNT(r.id) FROM R r WHERE r.parent=q.id AND r.flag=false) <> 0");
+
+		ids = dao.getIdsByQuery("SELECT q.id FROM parent_entity q WHERE q.capacity > (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=true) AND (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=false) <> 0");
+
 		assertEquals(0, ids.size());
 	}
 }
