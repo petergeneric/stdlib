@@ -55,6 +55,10 @@ public class QCriteriaBuilder
 				{
 					// ignore, should be handled at query execution time
 				}
+				else if (key.equals(WebQuerySpecialField.FETCH.getName()) || key.equals(WebQuerySpecialField.EXPAND.getName()))
+				{
+					// ignore, should be handled at resultset serialisation by client
+				}
 				else
 					throw new IllegalArgumentException("Unknown built-in name: " + key);
 			}
