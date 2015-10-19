@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +11,11 @@ import java.util.Map;
 public class ResultSetConstraintBuilder
 {
 	private Map<String, List<String>> constraints = new HashMap<>();
+
 	private int defaultLimit;
 	private List<String> defaultOrder = null;
+	private String defaultFetch = null;
+	private List<String> defaultExpand = null;
 
 
 	ResultSetConstraintBuilder(int defaultLimit)
@@ -107,6 +111,43 @@ public class ResultSetConstraintBuilder
 	}
 
 
+	public ResultSetConstraintBuilder addExpand(String... expands)
+	{
+		return add(WebQuerySpecialField.EXPAND, expands);
+	}
+
+
+	public ResultSetConstraintBuilder setExpand(String... expands)
+	{
+		return replace(WebQuerySpecialField.EXPAND, expands);
+	}
+
+
+	public ResultSetConstraintBuilder setFetch(String fetch)
+	{
+		return replace(WebQuerySpecialField.FETCH, fetch);
+	}
+
+
+	public ResultSetConstraintBuilder setDefaultFetch(String fetch)
+	{
+		this.defaultFetch = fetch;
+
+		return this;
+	}
+
+
+	public ResultSetConstraintBuilder setDefaultExpand(String... expands)
+	{
+		if (expands == null || expands.length == 0)
+			this.defaultExpand = null;
+		else
+			this.defaultExpand = Arrays.asList(expands);
+
+		return this;
+	}
+
+
 	/**
 	 * Specify a default ordering which will take effect if no order is specified by the user
 	 *
@@ -132,6 +173,34 @@ public class ResultSetConstraintBuilder
 
 	public ResultSetConstraint build()
 	{
-		return new ResultSetConstraint(new HashMap<>(constraints), defaultOrder, defaultLimit);
+		Map<String, List<String>> map = new HashMap<>(constraints);
+
+		applyDefault(WebQuerySpecialField.FETCH, map, defaultFetch);
+		applyDefault(WebQuerySpecialField.EXPAND, map, defaultExpand);
+		applyDefault(WebQuerySpecialField.ORDER, map, defaultOrder);
+		applyDefault(WebQuerySpecialField.OFFSET, map, "0");
+		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
+
+		return new ResultSetConstraint(map);
+	}
+
+
+	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, List<String> defaultValue)
+	{
+		if (defaultValue == null)
+			return;
+		if (constraints.containsKey(field.getName()))
+			return;
+		else
+			constraints.put(field.getName(), defaultValue);
+	}
+
+
+	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, String defaultValue)
+	{
+		if (defaultValue == null)
+			return;
+		else
+			applyDefault(field, constraints, Collections.singletonList(defaultValue));
 	}
 }

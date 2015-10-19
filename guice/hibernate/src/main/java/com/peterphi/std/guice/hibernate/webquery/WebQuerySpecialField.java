@@ -21,7 +21,18 @@ public enum WebQuerySpecialField
 	/**
 	 * Set to some class to specify the subclass to return (for entities with type hierarchies)
 	 */
-	CLASS("_class");
+	CLASS("_class"),
+
+	/**
+	 * Set to some comma-separated list of relationships to expand. This is handled after the query completes and the results are
+	 * being serialised
+	 */
+	EXPAND("_expand"),
+	/**
+	 * Set to <code>entity</code> (the default) or <code>id</code> to fetch back the entity or just the entity primary key. This
+	 * is handled after the query completes and the results are being serialised
+	 */
+	FETCH("_fetch");
 
 	private final String name;
 

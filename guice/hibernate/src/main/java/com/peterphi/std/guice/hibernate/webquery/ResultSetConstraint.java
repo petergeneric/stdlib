@@ -3,9 +3,12 @@ package com.peterphi.std.guice.hibernate.webquery;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Represents a web query constraint set independent of wire representation
@@ -13,6 +16,12 @@ import java.util.Map;
 public class ResultSetConstraint
 {
 	private Map<String, List<String>> parameters = new HashMap<>();
+
+
+	public ResultSetConstraint(Map<String, List<String>> parameters)
+	{
+		this.parameters = parameters;
+	}
 
 
 	/**
@@ -30,10 +39,14 @@ public class ResultSetConstraint
 
 	/**
 	 * Note, regular consumers should use {@link ResultSetConstraintBuilder} instead
+	 *
 	 * @param queryString
 	 * @param defaultOrder
 	 * @param defaultLimit
+	 *
+	 * @deprecated use {@link ResultSetConstraintBuilder} instead
 	 */
+	@Deprecated
 	public ResultSetConstraint(Map<String, List<String>> queryString, List<String> defaultOrder, int defaultLimit)
 	{
 		if (defaultOrder != null && !defaultOrder.isEmpty())
@@ -74,6 +87,38 @@ public class ResultSetConstraint
 	}
 
 
+	/**
+	 * Retrieve the {@link WebQuerySpecialField#EXPAND} parameter as a Set (or "all" if none is defined)
+	 *
+	 * @return
+	 */
+	public Set<String> getExpand()
+	{
+		List<String> values = parameters.get(WebQuerySpecialField.EXPAND.getName());
+
+		if (values == null || values.isEmpty())
+			return Collections.singleton("all");
+		else
+			return new HashSet<>(values);
+	}
+
+
+	/**
+	 * Retrieve the {@link WebQuerySpecialField#FETCH} parameter (or "entity" if none is defined)
+	 *
+	 * @return
+	 */
+	public String getFetch()
+	{
+		List<String> values = parameters.get(WebQuerySpecialField.FETCH.getName());
+
+		if (values == null || values.isEmpty())
+			return "entity";
+		else
+			return values.get(0);
+	}
+
+
 	public Map<String, List<String>> getParameters()
 	{
 		return parameters;
@@ -81,8 +126,7 @@ public class ResultSetConstraint
 
 
 	/**
-	 * Get all parameters except {@link com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#OFFSET}, {@link
-	 * com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField#LIMIT} and {@link WebQuerySpecialField#COMPUTE_SIZE}<br />
+	 * Get all parameters except those with a name in {@link WebQuerySpecialField}<br />
 	 * The returned map should not be modified.
 	 *
 	 * @return
@@ -94,6 +138,8 @@ public class ResultSetConstraint
 		map.remove(WebQuerySpecialField.OFFSET.getName());
 		map.remove(WebQuerySpecialField.LIMIT.getName());
 		map.remove(WebQuerySpecialField.COMPUTE_SIZE.getName());
+		map.remove(WebQuerySpecialField.FETCH.getName());
+		map.remove(WebQuerySpecialField.EXPAND.getName());
 
 		return map;
 	}
