@@ -1,5 +1,8 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQDataType;
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntityProperty;
+
 public class QRelation
 {
 	private final QEntity owner;
@@ -75,5 +78,18 @@ public class QRelation
 		       ", entity=" + entity.getName() +
 		       ", nullable=" + nullable +
 		       '}';
+	}
+
+
+	public WQEntityProperty encode()
+	{
+		WQEntityProperty obj = new WQEntityProperty();
+
+		obj.name = this.getName();
+		obj.nullable = this.isNullable();
+		obj.type = WQDataType.ENTITY;
+		obj.relation = getEntity().getName();
+
+		return obj;
 	}
 }

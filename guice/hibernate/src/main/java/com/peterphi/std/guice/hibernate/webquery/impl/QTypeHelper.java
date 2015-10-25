@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQDates;
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQDataType;
 import com.peterphi.std.types.SampleCount;
 import com.peterphi.std.types.Timecode;
 import org.apache.commons.lang.StringUtils;
@@ -14,6 +15,71 @@ import java.util.UUID;
 
 class QTypeHelper
 {
+	public static WQDataType translate(Class<?> clazz)
+	{
+		if (clazz == String.class)
+		{
+			return WQDataType.STRING;
+		}
+		else if (clazz == Integer.class || clazz == int.class)
+		{
+			return WQDataType.NUMERIC;
+		}
+		else if (clazz == Long.class || clazz == long.class)
+		{
+			return WQDataType.NUMERIC;
+		}
+		else if (clazz == Double.class || clazz == double.class)
+		{
+			return WQDataType.NUMERIC;
+		}
+		else if (clazz == Short.class || clazz == short.class)
+		{
+			return WQDataType.NUMERIC;
+		}
+		else if (clazz == Boolean.class || clazz == boolean.class)
+		{
+			return WQDataType.BOOL;
+		}
+		else if (clazz == DateTime.class)
+		{
+			return WQDataType.DATETIME;
+		}
+		else if (clazz == Date.class)
+		{
+			return WQDataType.DATETIME;
+		}
+		else if (clazz == java.sql.Date.class)
+		{
+			return WQDataType.DATETIME;
+		}
+		else if (clazz == UUID.class)
+		{
+			return WQDataType.STRING;
+		}
+		else if (clazz == Timecode.class)
+		{
+			return WQDataType.TIMECODE;
+		}
+		else if (clazz == SampleCount.class)
+		{
+			return WQDataType.SAMPLE_COUNT;
+		}
+		else if (clazz.isEnum())
+		{
+			return WQDataType.ENUM;
+		}
+		else if (clazz.equals(byte[].class))
+		{
+			return WQDataType.BLOB;
+		}
+		else
+		{
+			throw new IllegalArgumentException("No primitives parser for type: " + clazz);
+		}
+	}
+
+
 	public static Object parse(Class<?> clazz, String value)
 	{
 		if (clazz == String.class)
