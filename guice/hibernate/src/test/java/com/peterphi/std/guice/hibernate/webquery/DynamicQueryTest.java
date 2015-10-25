@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
@@ -13,8 +14,11 @@ import org.junit.runner.RunWith;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
@@ -26,6 +30,9 @@ public class DynamicQueryTest
 
 	@Inject
 	HibernateDao<ChildEntity, Long> childDao;
+
+	@Inject
+	QEntityFactory entityFactory;
 
 
 	@Transactional
@@ -40,24 +47,28 @@ public class DynamicQueryTest
 
 
 	@Test
+	public void testCreateSchema()
+	{
+		final Set<String> names = entityFactory.encode().entities.stream().map(s -> s.name).collect(Collectors.toSet());
+
+		assertTrue(names.contains("inherit_base"));
+		assertTrue(names.contains("inherit_one"));
+		assertTrue(names.contains("inherit_two"));
+	}
+
+
+	@Test
 	public void testNestedAssociatorConstraintWorks() throws Exception
 	{
-		WebQuery query = new WebQuery();
-
-		query.eq("otherObject.parent.name", "Alice");
-
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-		dao.findByUriQuery(query);
+		dao.findByUriQuery(new WebQuery().eq("otherObject.parent.name", "Alice"));
 	}
 
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testNestedAssociatorThatIsMadeUpDoesNotWork() throws Exception
 	{
-		WebQuery query = new WebQuery();
-
-
-		query.eq("otherObject.parent.fictionalfield.name", "Alice");
+		WebQuery query = new WebQuery().eq("otherObject.parent.fictionalfield.name", "Alice");
 
 		// Nonsense field shouldn't work
 		dao.findByUriQuery(query);
@@ -83,8 +94,6 @@ public class DynamicQueryTest
 	@Test
 	public void testNestedAssociatorConstraintWorksInGetByUniqueProperty() throws Exception
 	{
-		WebQuery query = new WebQuery();
-
 		// Hibernate will throw if the join doesn't get automatically set up
 		dao.getByUniqueProperty("otherObject.parent.name", "Alice");
 	}

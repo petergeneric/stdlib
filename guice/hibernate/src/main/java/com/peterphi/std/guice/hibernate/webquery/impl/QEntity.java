@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.CollectionType;
@@ -7,12 +9,15 @@ import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.Entity;
+import javax.persistence.Table;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class QEntity
 {
@@ -153,7 +158,15 @@ public class QEntity
 
 	public String getName()
 	{
-		return this.name;
+		final Table table = this.clazz.getAnnotation(Table.class);
+		final Entity entity = this.clazz.getAnnotation(Entity.class);
+
+		if (table != null && !StringUtils.isBlank(table.name()))
+			return table.name();
+		else if (entity != null && !StringUtils.isBlank(entity.name()))
+			return entity.name();
+		else
+			return this.name;
 	}
 
 
@@ -215,6 +228,23 @@ public class QEntity
 	public List<QEntity> getSubEntities()
 	{
 		return descendants;
+	}
+
+
+	public WQEntitySchema encode()
+	{
+		WQEntitySchema obj = new WQEntitySchema();
+
+		obj.name = getName();
+		obj.discriminator = getDiscriminatorValue();
+
+		if (this.descendants.size() > 0)
+			obj.childEntityNames = descendants.stream().map(QEntity:: getName).collect(Collectors.toList());
+
+		obj.properties = properties.values().stream().map(QProperty:: encode).collect(Collectors.toList());
+		obj.properties.addAll(relations.values().stream().map(QRelation:: encode).collect(Collectors.toList()));
+
+		return obj;
 	}
 
 

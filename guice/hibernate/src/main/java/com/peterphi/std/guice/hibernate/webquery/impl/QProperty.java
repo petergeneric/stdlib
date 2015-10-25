@@ -1,5 +1,10 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQDataType;
+import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntityProperty;
+
+import java.util.ArrayList;
+
 public class QProperty
 {
 	protected final QEntity entity;
@@ -55,5 +60,28 @@ public class QProperty
 		       ", clazz=" + clazz +
 		       ", nullable=" + nullable +
 		       '}';
+	}
+
+
+	public WQEntityProperty encode()
+	{
+		WQEntityProperty obj = new WQEntityProperty();
+
+		obj.name = this.getName();
+		obj.nullable = this.isNullable();
+		obj.relation = null;
+		obj.type = QTypeHelper.translate(getClazz());
+
+		if (obj.type == WQDataType.ENUM)
+		{
+			obj.enumValues = new ArrayList<>();
+
+			for (Object val : clazz.getEnumConstants())
+			{
+				obj.enumValues.add(((Enum) val).name());
+			}
+		}
+
+		return obj;
 	}
 }
