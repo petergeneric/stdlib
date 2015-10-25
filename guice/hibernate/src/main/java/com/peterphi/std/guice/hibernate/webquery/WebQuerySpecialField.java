@@ -3,7 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 /**
  * Special WebQuery fields and their wire representation in the Query String API
  */
-public enum WebQuerySpecialField
+enum WebQuerySpecialField
 {
 	/**
 	 * Set the index of the first result to return for this query
