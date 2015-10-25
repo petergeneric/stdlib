@@ -9,6 +9,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Describes a database query to be executed
@@ -111,79 +112,151 @@ public class WebQuery
 	}
 
 
+	public WebQuery add(final WQConstraintLine line)
+	{
+		this.constraints.constraints.add(line);
+
+		return this;
+	}
+
+
 	public WebQuery eq(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.eq(field, value));
-		return this;
+		return add(WQConstraint.eq(field, value));
 	}
 
 
 	public WebQuery neq(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.neq(field, value));
-		return this;
+		return add(WQConstraint.neq(field, value));
 	}
 
 
 	public WebQuery isNull(final String field)
 	{
-		constraints.constraints.add(WQConstraint.isNull(field));
-		return this;
+		return add(WQConstraint.isNull(field));
 	}
 
 
 	public WebQuery isNotNull(final String field)
 	{
-		constraints.constraints.add(WQConstraint.isNotNull(field));
-		return this;
+		return add(WQConstraint.isNotNull(field));
 	}
 
 
 	public WebQuery lt(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.lt(field, value));
-		return this;
+		return add(WQConstraint.lt(field, value));
 	}
 
 
 	public WebQuery le(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.le(field, value));
-		return this;
+		return add(WQConstraint.le(field, value));
 	}
 
 
 	public WebQuery gt(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.gt(field, value));
-		return this;
+		return add(WQConstraint.gt(field, value));
 	}
 
 
 	public WebQuery ge(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.ge(field, value));
-		return this;
+		return add(WQConstraint.ge(field, value));
 	}
 
 
 	public WebQuery contains(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.contains(field, value));
-		return this;
+		return add(WQConstraint.contains(field, value));
 	}
 
 
 	public WebQuery startsWith(final String field, final Object value)
 	{
-		constraints.constraints.add(WQConstraint.startsWith(field, value));
-		return this;
+		return add(WQConstraint.startsWith(field, value));
 	}
 
 
 	public WebQuery range(final String field, final Object from, final Object to)
 	{
-		constraints.constraints.add(WQConstraint.range(field, from, to));
+		return add(WQConstraint.range(field, from, to));
+	}
+
+
+	/**
+	 * Construct a new AND group and return it for method chaining
+	 *
+	 * @return
+	 */
+	public WQGroup and()
+	{
+		final WQGroup and = WQGroup.and();
+
+		add(and);
+
+		return and;
+	}
+
+
+	/**
+	 * Construct a new OR group and return it for method chaining
+	 *
+	 * @return
+	 */
+	public WQGroup or()
+	{
+		final WQGroup and = WQGroup.and();
+
+		add(and);
+
+		return and;
+	}
+
+
+	/**
+	 * Construct a new AND group, using the supplier to add the constraints to the group. Returns the original {@link WebQuery}
+	 * for method chaining
+	 *
+	 * @param consumer
+	 *
+	 * @return
+	 */
+	public WebQuery and(Consumer<WQGroup> consumer)
+	{
+		final WQGroup and = WQGroup.and();
+
+		add(and);
+
+		// Let the consumer build their sub-constraints
+		if (consumer != null)
+			consumer.accept(and);
+
+		return this;
+	}
+
+
+	/**
+	 * Construct a new OR group, using the supplier to add the constraints to the group. Returns the original {@link WebQuery}
+	 * for
+	 * method chaining
+	 *
+	 * @param consumer
+	 *
+	 * @return
+	 */
+	public WebQuery or(Consumer<WQGroup> consumer)
+	{
+		final WQGroup or = WQGroup.or();
+
+		add(or);
+
+		// Let the consumer build their sub-constraints
+		if (consumer != null)
+			consumer.accept(or);
+
 		return this;
 	}
 

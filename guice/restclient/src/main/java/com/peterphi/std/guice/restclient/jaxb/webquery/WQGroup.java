@@ -43,78 +43,97 @@ public class WQGroup extends WQConstraintLine
 
 	public WQGroup eq(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.eq(field, value));
-		return this;
+		return add(WQConstraint.eq(field, value));
 	}
 
 
 	public WQGroup neq(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.neq(field, value));
-		return this;
+		return add(WQConstraint.neq(field, value));
 	}
 
 
 	public WQGroup isNull(final String field)
 	{
-		constraints.add(WQConstraint.isNull(field));
-		return this;
+		return add(WQConstraint.isNull(field));
 	}
 
 
 	public WQGroup isNotNull(final String field)
 	{
-		constraints.add(WQConstraint.isNotNull(field));
-		return this;
+		return add(WQConstraint.isNotNull(field));
 	}
 
 
 	public WQGroup lt(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.lt(field, value));
-		return this;
+		return add(WQConstraint.lt(field, value));
 	}
 
 
 	public WQGroup le(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.le(field, value));
-		return this;
+		return add(WQConstraint.le(field, value));
 	}
 
 
 	public WQGroup gt(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.gt(field, value));
-		return this;
+		return add(WQConstraint.gt(field, value));
 	}
 
 
 	public WQGroup ge(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.ge(field, value));
-		return this;
+		return add(WQConstraint.ge(field, value));
 	}
 
 
 	public WQGroup contains(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.contains(field, value));
-		return this;
+		return add(WQConstraint.contains(field, value));
 	}
 
 
 	public WQGroup startsWith(final String field, final Object value)
 	{
-		constraints.add(WQConstraint.startsWith(field, value));
-		return this;
+		return add(WQConstraint.startsWith(field, value));
 	}
 
 
 	public WQGroup range(final String field, final Object from, final Object to)
 	{
-		constraints.add(WQConstraint.range(field, from, to));
-		return this;
+		return add(WQConstraint.range(field, from, to));
+	}
+
+
+	/**
+	 * Construct a new AND group and return it for method chaining
+	 *
+	 * @return
+	 */
+	public WQGroup newAnd()
+	{
+		final WQGroup and = WQGroup.and();
+
+		add(and);
+
+		return and;
+	}
+
+
+	/**
+	 * Construct a new OR group and return it for method chaining
+	 *
+	 * @return
+	 */
+	public WQGroup newOr()
+	{
+		final WQGroup and = WQGroup.or();
+
+		add(and);
+
+		return and;
 	}
 
 
