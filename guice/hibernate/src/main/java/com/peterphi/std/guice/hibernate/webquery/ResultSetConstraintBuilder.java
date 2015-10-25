@@ -188,15 +188,7 @@ public class ResultSetConstraintBuilder
 	@SuppressWarnings("deprecation")
 	public ResultSetConstraint build()
 	{
-		Map<String, List<String>> map = new HashMap<>(constraints);
-
-		applyDefault(WQUriControlField.FETCH, map, defaultFetch);
-		applyDefault(WQUriControlField.EXPAND, map, defaultExpand);
-		applyDefault(WQUriControlField.ORDER, map, defaultOrder);
-		applyDefault(WQUriControlField.OFFSET, map, "0");
-		applyDefault(WQUriControlField.LIMIT, map, Integer.toString(defaultLimit));
-
-		return new ResultSetConstraint(map);
+		return new ResultSetConstraint(buildQuery().encode());
 	}
 
 

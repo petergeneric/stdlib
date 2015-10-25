@@ -294,8 +294,6 @@ public class WebQuery
 	{
 		final WQGroup and = and();
 
-		add(and);
-
 		// Let the consumer build their sub-constraints
 		if (consumer != null)
 			consumer.accept(and);
@@ -317,7 +315,6 @@ public class WebQuery
 	{
 		final WQGroup or = or();
 
-		add(or);
 
 		// Let the consumer build their sub-constraints
 		if (consumer != null)
@@ -438,5 +435,21 @@ public class WebQuery
 			return false;
 		else
 			throw new IllegalArgumentException("Cannot parse boolean: " + value);
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Decoding URI Query
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	/**
+	 * Encode this query to the equivalent (where possible) URI web query
+	 *
+	 * @return
+	 */
+	public Map<String, List<String>> encode()
+	{
+		return WebQueryToQueryStringConverter.convert(this);
 	}
 }
