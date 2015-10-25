@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
 /**
- * Special WebQuery fields
+ * Special WebQuery fields and their wire representation in the Query String API
  */
 public enum WebQuerySpecialField
 {
