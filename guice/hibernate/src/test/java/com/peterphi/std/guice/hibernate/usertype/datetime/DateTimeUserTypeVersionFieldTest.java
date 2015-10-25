@@ -2,7 +2,6 @@ package com.peterphi.std.guice.hibernate.usertype.datetime;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.joda.time.DateTime;
@@ -18,15 +17,12 @@ import static org.junit.Assert.assertTrue;
  */
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = DateTimeUserTypeVersionFieldTest.class)
+		            classPackages = DateTimeUserTypeVersionFieldTest.class)
 public class DateTimeUserTypeVersionFieldTest
 {
 
 	@Inject
 	HibernateDao<ObjWithDateTimeVersionField, Long> dao;
-
-	@Inject
-	ResultSetConstraintBuilderFactory builderFactory;
 
 
 	@Test

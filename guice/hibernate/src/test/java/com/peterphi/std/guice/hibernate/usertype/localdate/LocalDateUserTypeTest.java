@@ -2,7 +2,6 @@ package com.peterphi.std.guice.hibernate.usertype.localdate;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.joda.time.LocalDate;
@@ -19,10 +18,6 @@ public class LocalDateUserTypeTest
 {
 	@Inject
 	HibernateDao<LocalDateEntity, Long> dao;
-
-	@Inject
-	ResultSetConstraintBuilderFactory builderFactory;
-
 
 	@Test
 	public void testThatDateTimeVersionGetsUpdatedOnStore() throws Exception

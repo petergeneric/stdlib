@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQDateMaths;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQDates;
 import com.peterphi.std.types.SampleCount;
 import com.peterphi.std.types.Timecode;
 import org.apache.commons.lang.StringUtils;
@@ -69,15 +69,15 @@ class QTypeHelper
 		}
 		else if (clazz == DateTime.class)
 		{
-			return WQDateMaths.resolve(value);
+			return WQDates.resolve(value);
 		}
 		else if (clazz == Date.class)
 		{
-			return WQDateMaths.resolve(value).toDate();
+			return WQDates.resolve(value).toDate();
 		}
 		else if (clazz == java.sql.Date.class)
 		{
-			return new java.sql.Date(WQDateMaths.resolve(value).getMillis());
+			return new java.sql.Date(WQDates.resolve(value).getMillis());
 		}
 		else if (clazz == UUID.class)
 		{

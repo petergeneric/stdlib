@@ -2,8 +2,7 @@ package com.peterphi.std.guice.hibernate.webquery.embeddedpktest;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilder;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.junit.Test;
@@ -20,9 +19,6 @@ public class DynamicQueryEmbeddedPkTest
 	@Inject
 	EmbeddedPkDaoImpl dao;
 
-	@Inject
-	ResultSetConstraintBuilderFactory builderFactory;
-
 
 	/**
 	 * Test that searching by timestamp alone works
@@ -32,12 +28,8 @@ public class DynamicQueryEmbeddedPkTest
 	@Test
 	public void testSearchByTimestamp()
 	{
-		ResultSetConstraintBuilder builder = builderFactory.builder();
-
-		builder.add("timestamp", "123");
-
 		// We'll get an exception if the property isn't understood
-		dao.findByUriQuery(builder.buildQuery());
+		dao.findByUriQuery(new WebQuery().eq("timestamp", 123));
 	}
 
 
@@ -51,13 +43,8 @@ public class DynamicQueryEmbeddedPkTest
 	@Test
 	public void testSearchByIdAndTimestamp()
 	{
-		ResultSetConstraintBuilder builder = builderFactory.builder();
-
-		builder.add("id", "123");
-		builder.add("timestamp", "123");
-
 		// We'll get an exception if the property isn't understood
-		dao.findByUriQuery(builder.buildQuery());
+		dao.findByUriQuery(new WebQuery().eq("id", 123).eq("timestamp", 123));
 	}
 
 

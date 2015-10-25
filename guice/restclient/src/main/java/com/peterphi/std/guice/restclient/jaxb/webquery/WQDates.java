@@ -13,7 +13,7 @@ import java.util.function.Supplier;
 /**
  * Helper class to allow date maths to be encoded and resolved
  */
-public class WQDateMaths
+public class WQDates
 {
 	private static final DateTimeFormatter ISO_FORMAT = ISODateTimeFormat.dateOptionalTimeParser();
 
@@ -43,7 +43,7 @@ public class WQDateMaths
 	}
 
 
-	private WQDateMaths()
+	private WQDates()
 	{
 	}
 

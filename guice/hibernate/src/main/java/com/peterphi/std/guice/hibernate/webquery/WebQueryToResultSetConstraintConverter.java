@@ -6,6 +6,7 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraints;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQUriControlField;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 
@@ -38,9 +39,9 @@ class WebQueryToResultSetConstraintConverter
 		       .offset(query.constraints.offset);
 
 		if (query.constraints.computeSize)
-			builder.replace(WebQuerySpecialField.COMPUTE_SIZE, String.valueOf(query.constraints.computeSize));
+			builder.replace(WQUriControlField.COMPUTE_SIZE, String.valueOf(query.constraints.computeSize));
 		if (query.constraints.subclass != null)
-			builder.replace(WebQuerySpecialField.CLASS, list(query.constraints.subclass));
+			builder.replace(WQUriControlField.CLASS, list(query.constraints.subclass));
 
 		addConstraints(builder, query.constraints);
 

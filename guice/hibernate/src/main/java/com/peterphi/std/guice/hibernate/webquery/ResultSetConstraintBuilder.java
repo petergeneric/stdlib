@@ -1,12 +1,9 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQUriControlField;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
-import org.apache.commons.lang.StringUtils;
 
+import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,8 +11,11 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
+/**
+ * @deprecated use {@link WebQuery} and the associated builder methods, particularly {@link WebQuery#decode(UriInfo)}
+ */
+@Deprecated
 public class ResultSetConstraintBuilder
 {
 	private Map<String, List<String>> constraints = new HashMap<>();
@@ -71,7 +71,7 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	public ResultSetConstraintBuilder add(WebQuerySpecialField key, String... values)
+	public ResultSetConstraintBuilder add(WQUriControlField key, String... values)
 	{
 		add(key.getName(), values);
 
@@ -79,7 +79,7 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	public ResultSetConstraintBuilder replace(WebQuerySpecialField key, String... values)
+	public ResultSetConstraintBuilder replace(WQUriControlField key, String... values)
 	{
 		replace(key.getName(), values);
 
@@ -97,43 +97,43 @@ public class ResultSetConstraintBuilder
 
 	public ResultSetConstraintBuilder limit(int limit)
 	{
-		return replace(WebQuerySpecialField.LIMIT, Integer.toString(limit));
+		return replace(WQUriControlField.LIMIT, Integer.toString(limit));
 	}
 
 
 	public ResultSetConstraintBuilder offset(int offset)
 	{
-		return replace(WebQuerySpecialField.OFFSET, Integer.toString(offset));
+		return replace(WQUriControlField.OFFSET, Integer.toString(offset));
 	}
 
 
 	public ResultSetConstraintBuilder setOrder(String... orders)
 	{
-		return replace(WebQuerySpecialField.ORDER, orders);
+		return replace(WQUriControlField.ORDER, orders);
 	}
 
 
 	public ResultSetConstraintBuilder addOrder(String... orders)
 	{
-		return add(WebQuerySpecialField.ORDER, orders);
+		return add(WQUriControlField.ORDER, orders);
 	}
 
 
 	public ResultSetConstraintBuilder addExpand(String... expands)
 	{
-		return add(WebQuerySpecialField.EXPAND, expands);
+		return add(WQUriControlField.EXPAND, expands);
 	}
 
 
 	public ResultSetConstraintBuilder setExpand(String... expands)
 	{
-		return replace(WebQuerySpecialField.EXPAND, expands);
+		return replace(WQUriControlField.EXPAND, expands);
 	}
 
 
 	public ResultSetConstraintBuilder setFetch(String fetch)
 	{
-		return replace(WebQuerySpecialField.FETCH, fetch);
+		return replace(WQUriControlField.FETCH, fetch);
 	}
 
 
@@ -190,11 +190,11 @@ public class ResultSetConstraintBuilder
 	{
 		Map<String, List<String>> map = new HashMap<>(constraints);
 
-		applyDefault(WebQuerySpecialField.FETCH, map, defaultFetch);
-		applyDefault(WebQuerySpecialField.EXPAND, map, defaultExpand);
-		applyDefault(WebQuerySpecialField.ORDER, map, defaultOrder);
-		applyDefault(WebQuerySpecialField.OFFSET, map, "0");
-		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
+		applyDefault(WQUriControlField.FETCH, map, defaultFetch);
+		applyDefault(WQUriControlField.EXPAND, map, defaultExpand);
+		applyDefault(WQUriControlField.ORDER, map, defaultOrder);
+		applyDefault(WQUriControlField.OFFSET, map, "0");
+		applyDefault(WQUriControlField.LIMIT, map, Integer.toString(defaultLimit));
 
 		return new ResultSetConstraint(map);
 	}
@@ -207,79 +207,19 @@ public class ResultSetConstraintBuilder
 	 */
 	public WebQuery buildQuery()
 	{
-		WebQuery def = new WebQuery();
-
 		Map<String, List<String>> map = new HashMap<>(constraints);
 
-		applyDefault(WebQuerySpecialField.FETCH, map, defaultFetch);
-		applyDefault(WebQuerySpecialField.EXPAND, map, defaultExpand);
-		applyDefault(WebQuerySpecialField.ORDER, map, defaultOrder);
-		applyDefault(WebQuerySpecialField.OFFSET, map, "0");
-		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
+		applyDefault(WQUriControlField.FETCH, map, defaultFetch);
+		applyDefault(WQUriControlField.EXPAND, map, defaultExpand);
+		applyDefault(WQUriControlField.ORDER, map, defaultOrder);
+		applyDefault(WQUriControlField.OFFSET, map, "0");
+		applyDefault(WQUriControlField.LIMIT, map, Integer.toString(defaultLimit));
 
-		for (Map.Entry<String, List<String>> entry : map.entrySet())
-		{
-			if (entry.getKey().charAt(0) == '_')
-			{
-				final WebQuerySpecialField specialField = WebQuerySpecialField.getByName(entry.getKey());
-
-				switch (specialField)
-				{
-					case OFFSET:
-						def.offset(Integer.valueOf(entry.getValue().get(0)));
-						break;
-					case LIMIT:
-						def.limit(Integer.valueOf(entry.getValue().get(0)));
-						break;
-					case CLASS:
-						def.subclass(entry.getValue().toArray(new String[entry.getValue().size()]));
-						break;
-					case COMPUTE_SIZE:
-						def.computeSize(parseBoolean(entry.getValue().get(0)));
-						break;
-					case EXPAND:
-						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
-						break;
-					case ORDER:
-						for (String expr : entry.getValue())
-							def.orderings.add(WQOrder.parseLegacy(expr));
-						break;
-					case FETCH:
-						// Ordinarily we'd expect a single value here, but allow for multiple values to be provied as a comma-separated list
-						def.fetch(entry.getValue().stream().collect(Collectors.joining(",")));
-						break;
-					default:
-						throw new IllegalArgumentException("Unknown query field: " + specialField);
-				}
-			}
-			else
-			{
-				if (entry.getValue().size() == 1)
-				{
-					def.constraints.constraints.add(WQConstraint.decode(entry.getKey(), entry.getValue().get(0)));
-				}
-				else if (entry.getValue().size() > 0)
-				{
-					WQGroup group = new WQGroup();
-
-					group.operator = WQGroupType.OR;
-
-					for (String value : entry.getValue())
-					{
-						group.constraints.add(WQConstraint.decode(entry.getKey(), value));
-					}
-
-					def.constraints.constraints.add(group);
-				}
-			}
-		}
-
-
-		return def;
+		return new WebQuery().decode(map);
 	}
 
 
-	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, List<String> defaultValue)
+	private void applyDefault(WQUriControlField field, Map<String, List<String>> constraints, List<String> defaultValue)
 	{
 		if (defaultValue == null)
 			return;
@@ -290,24 +230,11 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, String defaultValue)
+	private void applyDefault(WQUriControlField field, Map<String, List<String>> constraints, String defaultValue)
 	{
 		if (defaultValue == null)
 			return;
 		else
 			applyDefault(field, constraints, Collections.singletonList(defaultValue));
-	}
-
-
-	private static boolean parseBoolean(String value)
-	{
-		if (StringUtils.equalsIgnoreCase(value, "true") || StringUtils.equalsIgnoreCase(value, "yes") ||
-		    StringUtils.equalsIgnoreCase(value, "on"))
-			return true;
-		else if (StringUtils.equalsIgnoreCase(value, "false") || StringUtils.equalsIgnoreCase(value, "no") ||
-		         StringUtils.equalsIgnoreCase(value, "off"))
-			return false;
-		else
-			throw new IllegalArgumentException("Cannot parse boolean: " + value);
 	}
 }

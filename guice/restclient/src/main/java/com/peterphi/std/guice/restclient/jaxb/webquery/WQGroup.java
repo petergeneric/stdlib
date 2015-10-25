@@ -56,9 +56,33 @@ public class WQGroup extends WQConstraintLine
 	}
 
 
-	public WQGroup eq(final String field, final Object value)
+	/**
+	 * Assert that a field equals one of the provided values. Implicitly creates a new OR group if multiple values are supplied
+	 *
+	 * @param field
+	 * @param values
+	 *
+	 * @return
+	 */
+	public WQGroup eq(final String field, final Object... values)
 	{
-		return add(WQConstraint.eq(field, value));
+		if (values == null)
+		{
+			add(WQConstraint.eq(field, null));
+		}
+		else if (values.length == 1)
+		{
+			add(WQConstraint.eq(field, values[0]));
+		}
+		else if (values.length > 1)
+		{
+			final WQGroup or = or();
+
+			for (Object value : values)
+				or.eq(field, value);
+		}
+
+		return this;
 	}
 
 

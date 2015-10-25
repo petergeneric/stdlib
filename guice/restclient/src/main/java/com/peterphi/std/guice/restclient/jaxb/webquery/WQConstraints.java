@@ -13,7 +13,7 @@ public class WQConstraints
 	@XmlAttribute
 	public int offset = 0;
 	@XmlAttribute
-	public int limit;
+	public int limit = 200;
 	@XmlAttribute
 	public boolean computeSize = false;
 
