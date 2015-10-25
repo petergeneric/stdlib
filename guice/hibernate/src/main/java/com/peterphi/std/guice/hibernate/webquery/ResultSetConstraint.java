@@ -12,13 +12,18 @@ import java.util.Map;
 import java.util.Set;
 
 /**
- * Represents a web query constraint set independent of wire representation
+ * Represents a web query constraint that ANDs together constraints, but ORs together constraints for the same field<br />
+ * This is a direct representation of the limited Query String Query API format
+ *
+ * @deprecated use {@link WebQuery} instead
  */
+@Deprecated
 public class ResultSetConstraint
 {
 	private Map<String, List<String>> parameters = new HashMap<>();
 
 
+	@Deprecated
 	public ResultSetConstraint(Map<String, List<String>> parameters)
 	{
 		this.parameters = parameters;

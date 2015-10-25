@@ -1,10 +1,10 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -185,6 +185,7 @@ public class ResultSetConstraintBuilder
 	 * @deprecated use {@link #buildQuery()} instead
 	 */
 	@Deprecated
+	@SuppressWarnings("deprecation")
 	public ResultSetConstraint build()
 	{
 		Map<String, List<String>> map = new HashMap<>(constraints);

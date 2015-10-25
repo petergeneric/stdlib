@@ -67,7 +67,7 @@ public class ConstrainedResultSet<T>
 	public ResultSetConstraint getConstraint()
 	{
 		if (constraint == null)
-			constraint = ResultSetConstraintToWebQueryDefinitionConverter.convert(query);
+			constraint = WebQueryToResultSetConstraintConverter.convert(query);
 
 		return constraint;
 	}

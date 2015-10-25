@@ -67,6 +67,18 @@ public class WebQuery
 		return constraints.computeSize;
 	}
 
+
+	@Override
+	public String toString()
+	{
+		return "WebQueryDefinition{" +
+		       "fetch='" + fetch + '\'' +
+		       ", expand='" + expand + '\'' +
+		       ", constraints=" + constraints +
+		       ", orderings=" + orderings +
+		       '}';
+	}
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Builder methods
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -110,6 +122,27 @@ public class WebQuery
 
 		return this;
 	}
+
+
+	public WebQuery orderAsc(final String field)
+	{
+		orderings.add(WQOrder.asc(field));
+
+		return this;
+	}
+
+
+	public WebQuery orderDesc(final String field)
+	{
+		orderings.add(WQOrder.desc(field));
+
+		return this;
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Constraints
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	public WebQuery add(final WQConstraintLine line)
@@ -186,6 +219,11 @@ public class WebQuery
 	}
 
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Sub-groups
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
 	/**
 	 * Construct a new AND group and return it for method chaining
 	 *
@@ -193,7 +231,7 @@ public class WebQuery
 	 */
 	public WQGroup and()
 	{
-		final WQGroup and = WQGroup.and();
+		final WQGroup and = WQGroup.newAnd();
 
 		add(and);
 
@@ -208,7 +246,7 @@ public class WebQuery
 	 */
 	public WQGroup or()
 	{
-		final WQGroup and = WQGroup.and();
+		final WQGroup and = WQGroup.newOr();
 
 		add(and);
 
@@ -226,7 +264,7 @@ public class WebQuery
 	 */
 	public WebQuery and(Consumer<WQGroup> consumer)
 	{
-		final WQGroup and = WQGroup.and();
+		final WQGroup and = and();
 
 		add(and);
 
@@ -249,7 +287,7 @@ public class WebQuery
 	 */
 	public WebQuery or(Consumer<WQGroup> consumer)
 	{
-		final WQGroup or = WQGroup.or();
+		final WQGroup or = or();
 
 		add(or);
 
@@ -258,33 +296,5 @@ public class WebQuery
 			consumer.accept(or);
 
 		return this;
-	}
-
-
-	public WebQuery orderAsc(final String field)
-	{
-		orderings.add(WQOrder.asc(field));
-
-		return this;
-	}
-
-
-	public WebQuery orderDesc(final String field)
-	{
-		orderings.add(WQOrder.desc(field));
-
-		return this;
-	}
-
-
-	@Override
-	public String toString()
-	{
-		return "WebQueryDefinition{" +
-		       "fetch='" + fetch + '\'' +
-		       ", expand='" + expand + '\'' +
-		       ", constraints=" + constraints +
-		       ", orderings=" + orderings +
-		       '}';
 	}
 }

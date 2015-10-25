@@ -1,15 +1,18 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraints;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 
-class ResultSetConstraintToWebQueryDefinitionConverter
+/**
+ * Converts a WebQuery to a ResultSetConstraint (ResultSetConstraint is a legacy type and should not be used in new code)
+ */
+class WebQueryToResultSetConstraintConverter
 {
 	/**
 	 * Convert a WebQueryDefinition to the equivalent legacy ResultSetConstraint (if possible)

@@ -7,6 +7,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Consumer;
 
 /**
  * Defines a group of constraints to be ANDed or ORred together
@@ -32,6 +33,20 @@ public class WQGroup extends WQConstraintLine
 	{
 		this.operator = operator;
 	}
+
+
+	@Override
+	public String toString()
+	{
+		return "WQGroup{" +
+		       "operator=" + operator +
+		       ", constraints=" + constraints +
+		       "} " + super.toString();
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Constraints
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	public WQGroup add(WQConstraintLine line)
@@ -106,15 +121,19 @@ public class WQGroup extends WQConstraintLine
 		return add(WQConstraint.range(field, from, to));
 	}
 
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Sub-groups
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 
 	/**
 	 * Construct a new AND group and return it for method chaining
 	 *
 	 * @return
 	 */
-	public WQGroup newAnd()
+	public WQGroup and()
 	{
-		final WQGroup and = WQGroup.and();
+		final WQGroup and = WQGroup.newAnd();
 
 		add(and);
 
@@ -127,9 +146,9 @@ public class WQGroup extends WQConstraintLine
 	 *
 	 * @return
 	 */
-	public WQGroup newOr()
+	public WQGroup or()
 	{
-		final WQGroup and = WQGroup.or();
+		final WQGroup and = WQGroup.newAnd();
 
 		add(and);
 
@@ -138,11 +157,61 @@ public class WQGroup extends WQConstraintLine
 
 
 	/**
+	 * Construct a new AND group, using the supplier to add the constraints to the group. Returns the original {@link WQGroup}
+	 * for method chaining
+	 *
+	 * @param consumer
+	 *
+	 * @return
+	 */
+	public WQGroup and(Consumer<WQGroup> consumer)
+	{
+		final WQGroup and = WQGroup.newAnd();
+
+		add(and);
+
+		// Let the consumer build their sub-constraints
+		if (consumer != null)
+			consumer.accept(and);
+
+		return this;
+	}
+
+
+	/**
+	 * Construct a new OR group, using the supplier to add the constraints to the group. Returns the original {@link WQGroup}
+	 * for
+	 * method chaining
+	 *
+	 * @param consumer
+	 *
+	 * @return
+	 */
+	public WQGroup or(Consumer<WQGroup> consumer)
+	{
+		final WQGroup or = WQGroup.newOr();
+
+		add(or);
+
+		// Let the consumer build their sub-constraints
+		if (consumer != null)
+			consumer.accept(or);
+
+		return this;
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Helper constructors
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	/**
 	 * Construct a new empty AND group
 	 *
 	 * @return
 	 */
-	public static WQGroup and()
+	public static WQGroup newAnd()
 	{
 		return new WQGroup(WQGroupType.AND);
 	}
@@ -153,7 +222,7 @@ public class WQGroup extends WQConstraintLine
 	 *
 	 * @return
 	 */
-	public static WQGroup or()
+	public static WQGroup newOr()
 	{
 		return new WQGroup(WQGroupType.OR);
 	}

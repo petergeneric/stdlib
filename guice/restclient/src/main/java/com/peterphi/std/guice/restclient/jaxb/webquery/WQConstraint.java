@@ -52,6 +52,27 @@ public class WQConstraint extends WQConstraintLine
 	}
 
 
+	@Override
+	public String toString()
+	{
+		return "WebQueryConstraint{" +
+		       "field='" + field + '\'' +
+		       ", function='" + function + '\'' +
+		       ", value='" + value + '\'' +
+		       ", value2='" + value2 + '\'' +
+		       "} " + super.toString();
+	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Encode to query string format
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	/**
+	 * Encode this constraint in the query string value format
+	 *
+	 * @return
+	 */
 	public String encodeValue()
 	{
 		switch (function)
@@ -72,16 +93,9 @@ public class WQConstraint extends WQConstraintLine
 	}
 
 
-	@Override
-	public String toString()
-	{
-		return "WebQueryConstraint{" +
-		       "field='" + field + '\'' +
-		       ", function='" + function + '\'' +
-		       ", value='" + value + '\'' +
-		       ", value2='" + value2 + '\'' +
-		       "} " + super.toString();
-	}
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Helper constructors
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	public static WQConstraint eq(final String field, final Object value)
@@ -154,6 +168,10 @@ public class WQConstraint extends WQConstraintLine
 	{
 		return new WQConstraint(field, WQFunctionType.RANGE, Objects.toString(from), Objects.toString(to));
 	}
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Decode query string value encoding
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
 	/**
