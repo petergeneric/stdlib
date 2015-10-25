@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Arrays;
@@ -142,6 +143,17 @@ public class ResultSetConstraint
 		map.remove(WebQuerySpecialField.EXPAND.getName());
 
 		return map;
+	}
+
+
+	/**
+	 * Convert this query to a {@link WebQueryDefinition} using the legacy web query semantics
+	 *
+	 * @return
+	 */
+	public WebQueryDefinition toQuery()
+	{
+		return new ResultSetConstraintBuilderFactory().builder(getParameters()).buildQuery();
 	}
 
 

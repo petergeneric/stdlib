@@ -54,7 +54,7 @@ public enum WebQuerySpecialField
 	}
 
 
-	public WebQuerySpecialField getByName(final String fieldName)
+	public static WebQuerySpecialField getByName(final String fieldName)
 	{
 		for (WebQuerySpecialField field : values())
 		{

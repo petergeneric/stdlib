@@ -37,7 +37,7 @@ public class DynamicQueryEmbeddedPkTest
 		builder.add("timestamp", "123");
 
 		// We'll get an exception if the property isn't understood
-		dao.findByUriQuery(builder.build());
+		dao.findByUriQuery(builder.buildQuery());
 	}
 
 
@@ -57,7 +57,7 @@ public class DynamicQueryEmbeddedPkTest
 		builder.add("timestamp", "123");
 
 		// We'll get an exception if the property isn't understood
-		dao.findByUriQuery(builder.build());
+		dao.findByUriQuery(builder.buildQuery());
 	}
 
 

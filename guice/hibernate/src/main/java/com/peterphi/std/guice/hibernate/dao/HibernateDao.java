@@ -14,6 +14,10 @@ import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraint;
 import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryOrder;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
@@ -27,7 +31,9 @@ import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
 
@@ -102,176 +108,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
-	/**
-	 * Create a Dynamic query with the specified constraints
-	 *
-	 * @param constraints
-	 * @param baseCriteria
-	 * 		the base Criteria to add constraints to
-	 *
-	 * @return
-	 */
-	@Transactional(readOnly = true)
-	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria)
-	{
-		return createCriteria(constraints, baseCriteria, false);
-	}
-
-
-	/**
-	 * Create a Dynamic query with the specified constraints
-	 *
-	 * @param constraints
-	 * @param baseCriteria
-	 * 		the base Criteria to add constraints to
-	 * @param projectSize
-	 * 		if true, will request a rowCount projection and ignore offset/limit
-	 *
-	 * @return
-	 */
-	@Transactional(readOnly = true)
-	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
-	{
-		final Criteria criteria = convertCriteria(constraints, baseCriteria);
-
-		// Optionally treat large tables differently (works around a SQL Server performance issue)
-		if (!projectSize && isLargeTable && performSeparateIdQueryForLargeTables)
-		{
-			criteria.setProjection(Projections.id());
-
-			// Retrieve the primary keys separately from the data
-			final List<ID> ids = getIdList(criteria);
-
-			final Criteria dataCriteria = createCriteria();
-
-			if (ids.size() > 0)
-			{
-				dataCriteria.add(Restrictions.in(idProperty(), ids));
-
-				// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
-				final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
-
-				if (constraints != null)
-					builder.addAll(constraints.getParameters());
-
-				builder.append(dataCriteria, false, false);
-
-				return dataCriteria;
-			}
-			else
-			{
-				// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
-				dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
-
-				// Hint that we don't want any results
-				dataCriteria.setMaxResults(0);
-
-				return dataCriteria;
-			}
-		}
-		else if (projectSize)
-		{
-			// Discount offset/limit
-			criteria.setFirstResult(0);
-			criteria.setMaxResults(Integer.MAX_VALUE);
-
-			// Request the row count
-			criteria.setProjection(Projections.rowCount());
-
-			return criteria;
-		}
-		else
-		{
-			return criteria; // not a large table, execute query as normal
-		}
-	}
-
-
-	/**
-	 * Create a straight conversion of the provided ResultSetConstraint. This does not take into account {@link LargeTable}
-	 * behaviour. If you wish this behaviour, see {@link #createCriteria(ResultSetConstraint, Supplier)}
-	 *
-	 * @param constraints
-	 * 		the constraints (optional, if null then no restrictions will be appended to the base criteria)
-	 * @param baseCriteria
-	 * 		the supplier for a base criteria (optional, if null then a new empty {@link Criteria} will be created instead.
-	 *
-	 * @return
-	 */
-	public Criteria convertCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria)
-	{
-		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
-
-		if (constraints != null)
-			builder.addAll(constraints.getParameters());
-
-		final Criteria criteria;
-
-		if (baseCriteria != null)
-			criteria = baseCriteria.get();
-		else
-			criteria = createCriteria();
-
-		builder.append(criteria);
-
-		return criteria;
-	}
-
-
 	public QEntity getQEntity()
 	{
 		return entityFactory.get(clazz);
-	}
-
-
-	@Override
-	@Transactional(readOnly = true)
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints)
-	{
-		return findByUriQuery(constraints, this :: createCriteria);
-	}
-
-
-	/**
-	 * @param constraints
-	 * 		the criteria
-	 * @param base
-	 * 		a supplier for base criteria objects to extend. May be called twice if computations are requested (e.g. max resultset
-	 * 		size)
-	 *
-	 * @return
-	 */
-	@Transactional(readOnly = true)
-	@Override
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Supplier<Criteria> base)
-	{
-		final Criteria criteria = createCriteria(constraints, base);
-
-		final List<T> results = getList(criteria);
-
-		ConstrainedResultSet<T> resultset = new ConstrainedResultSet<>(constraints, results);
-
-		// If we have a partial page then we know we're at the end
-		// If we have no results then we must have an offset of 0 to be sure of the size (we could be beyond the end)
-		if (resultset.getList().size() < constraints.getLimit() && (resultset.getOffset() > 0 || resultset.getList().size() > 0))
-		{
-			// If we only got a partial page then are at the end and know the size
-			final int offset = constraints.getOffset();
-			final int resultSize = resultset.getList().size();
-
-			resultset.setTotal(Long.valueOf(offset + resultSize));
-		}
-		else if (constraints.isComputeSize())
-		{
-			// Re-run the query to obtain the size
-			final Criteria countCriteria = createCriteria(constraints, base, true);
-
-			final Number size = (Number) countCriteria.uniqueResult();
-
-			resultset.setTotal(size.longValue());
-		}
-
-		return resultset;
 	}
 
 
@@ -381,11 +220,17 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	@Override
+	@Transactional(readOnly = true)
 	public T getByUniqueProperty(final String propertyName, final Object value)
 	{
-		Criteria criteria = createCriteria();
+		final Criteria criteria = createCriteria();
 
-		criteria.add(Restrictions.eq(propertyName, value));
+		// Interpret this property name with the criteria builder
+		QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity());
+		QPropertyRef property = builder.getProperty(propertyName);
+		builder.appendTo(criteria, false, false);
+
+		criteria.add(Restrictions.eq(property.getName(), value));
 
 		return uniqueResult(criteria);
 	}
@@ -583,5 +428,245 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected SessionFactory getSessionFactory()
 	{
 		return this.sessionFactory;
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// WebQueryDefinition query methods
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	@Override
+	public ConstrainedResultSet<T> findByUriQuery(final WebQueryDefinition constraints)
+	{
+		return findByUriQuery(constraints, this :: createCriteria);
+	}
+
+
+	/**
+	 * @param query
+	 * 		the criteria
+	 * @param base
+	 * 		a supplier for base criteria objects to extend. May be called twice if computations are requested (e.g. max resultset
+	 * 		size)
+	 *
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	@Override
+	public ConstrainedResultSet<T> findByUriQuery(final WebQueryDefinition query, final Supplier<Criteria> base)
+	{
+		// Optionally execute the count query
+		final Long total;
+		if (query.constraints.computeSize)
+		{
+			// Re-run the query to obtain the size
+			final Criteria countCriteria = createCriteria(query, base, true);
+
+			final Number size = (Number) countCriteria.uniqueResult();
+
+			total = size.longValue();
+		}
+		else
+		{
+			total = null;
+		}
+
+
+		// Now fetch back the data
+		final ConstrainedResultSet<T> resultset;
+		{
+			if (total == null || total > 0)
+			{
+				final Criteria criteria = createCriteria(query, base, false);
+
+				final List<T> results = getList(criteria);
+
+				resultset = new ConstrainedResultSet<>(query, results);
+			}
+			else
+			{
+				// We know there were no results because the collection size was computed
+				resultset = new ConstrainedResultSet<>(query, Collections.emptyList());
+			}
+		}
+
+		resultset.setTotal(total);
+
+
+		return resultset;
+	}
+
+
+	/**
+	 * Create a straight conversion of the provided ResultSetConstraint. This does not take into account {@link LargeTable}
+	 * behaviour. If you wish this behaviour, see {@link #createCriteria(ResultSetConstraint, Supplier)}
+	 *
+	 * @param query
+	 * 		the constraints (optional, if null then no restrictions will be appended to the base criteria)
+	 * @param baseCriteria
+	 * 		the supplier for a base criteria (optional, if null then a new empty {@link Criteria} will be created instead.
+	 *
+	 * @return
+	 */
+	public Criteria convertCriteria(WebQueryDefinition query, Supplier<Criteria> baseCriteria)
+	{
+		final QCriteriaBuilder builder = builder(query);
+
+		final Criteria criteria;
+
+		if (baseCriteria != null)
+			criteria = baseCriteria.get();
+		else
+			criteria = createCriteria();
+
+		builder.appendTo(criteria);
+
+		return criteria;
+	}
+
+
+	private QCriteriaBuilder builder(final WebQueryDefinition query)
+	{
+		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity()).offset(query.constraints.offset)
+		                                                                   .limit(query.constraints.limit);
+
+		// Add the sort order
+		for (WebQueryOrder order : query.orderings)
+			builder.addOrder(builder.getProperty(order.field), order.isAsc());
+
+		if (StringUtils.isNotBlank(query.constraints.subclass))
+			builder.addClass(Arrays.asList(query.constraints.subclass.split(",")));
+
+		builder.addConstraints(query.constraints.constraints);
+		return builder;
+	}
+
+
+	/**
+	 * Create a Dynamic query with the specified constraints
+	 *
+	 * @param constraints
+	 * @param baseCriteria
+	 * 		the base Criteria to add constraints to
+	 * @param projectSize
+	 * 		if true, will request a rowCount projection and ignore offset/limit
+	 *
+	 * @return
+	 */
+	@Transactional(readOnly = true)
+	public Criteria createCriteria(WebQueryDefinition constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
+	{
+		final Criteria criteria = convertCriteria(constraints, baseCriteria);
+
+		// Optionally treat large tables differently (works around a SQL Server performance issue)
+		if (!projectSize && isLargeTable && performSeparateIdQueryForLargeTables)
+		{
+			criteria.setProjection(Projections.id());
+
+			// Retrieve the primary keys separately from the data
+			final List<ID> ids = getIdList(criteria);
+
+			final Criteria dataCriteria = createCriteria();
+
+			if (ids.size() > 0)
+			{
+				dataCriteria.add(Restrictions.in(idProperty(), ids));
+
+				// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
+				builder(constraints).appendTo(dataCriteria, false, false);
+
+				return dataCriteria;
+			}
+			else
+			{
+				// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
+				dataCriteria.add(Restrictions.sqlRestriction("(0=1)"));
+
+				// Hint that we don't want any results
+				dataCriteria.setMaxResults(0);
+
+				return dataCriteria;
+			}
+		}
+		else if (projectSize)
+		{
+			// Discount offset/limit
+			criteria.setFirstResult(0);
+			criteria.setMaxResults(Integer.MAX_VALUE);
+
+			// Request the row count
+			criteria.setProjection(Projections.rowCount());
+
+			return criteria;
+		}
+		else
+		{
+			return criteria; // not a large table, not a size query. Execute as normal
+		}
+	}
+
+
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+	// Deprecated ResultSetConstraint query methods
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+
+	@Override
+	@Deprecated
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints)
+	{
+		return findByUriQuery(constraints, this :: createCriteria);
+	}
+
+
+	/**
+	 * @param constraints
+	 * 		the criteria
+	 * @param base
+	 * 		a supplier for base criteria objects to extend. May be called twice if computations are requested (e.g. max resultset
+	 * 		size)
+	 *
+	 * @return
+	 */
+	@Deprecated
+	@Override
+	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Supplier<Criteria> base)
+	{
+		return findByUriQuery(constraints.toQuery(), base);
+	}
+
+
+	/**
+	 * Create a Dynamic query with the specified constraints
+	 *
+	 * @param constraints
+	 * @param baseCriteria
+	 * 		the base Criteria to add constraints to
+	 *
+	 * @return
+	 */
+	@Deprecated
+	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria)
+	{
+		return createCriteria(constraints.toQuery(), baseCriteria, false);
+	}
+
+
+	/**
+	 * Create a Dynamic query with the specified constraints
+	 *
+	 * @param constraints
+	 * @param baseCriteria
+	 * 		the base Criteria to add constraints to
+	 * @param projectSize
+	 * 		if true, will request a rowCount projection and ignore offset/limit
+	 *
+	 * @return
+	 */
+	@Deprecated
+	public Criteria createCriteria(ResultSetConstraint constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
+	{
+		return createCriteria(constraints.toQuery(), baseCriteria, projectSize);
 	}
 }

@@ -53,7 +53,7 @@ public class DynamicQueryTest
 		builder.add("otherObject.parent.name", "Alice");
 
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-		dao.findByUriQuery(builder.build());
+		dao.findByUriQuery(builder.buildQuery());
 	}
 
 
@@ -66,7 +66,33 @@ public class DynamicQueryTest
 		builder.add("otherObject.parent.fictionalfield.name", "Alice");
 
 		// Nonsense field shouldn't work
-		dao.findByUriQuery(builder.build());
+		dao.findByUriQuery(builder.buildQuery());
+	}
+
+
+	@Test
+	public void testGetByUniqueProperty() throws Exception
+	{
+		// Hibernate will throw if the property doesn't work
+		dao.getByUniqueProperty("otherObject.id", 1L);
+	}
+
+
+	@Test
+	public void testGetByUniquePropertyOnCollection() throws Exception
+	{
+		// Hibernate will throw if the property doesn't work
+		dao.getByUniqueProperty("children.id", 1L);
+	}
+
+
+	@Test
+	public void testNestedAssociatorConstraintWorksInGetByUniqueProperty() throws Exception
+	{
+		ResultSetConstraintBuilder builder = builderFactory.builder();
+
+		// Hibernate will throw if the join doesn't get automatically set up
+		dao.getByUniqueProperty("otherObject.parent.name", "Alice");
 	}
 
 
@@ -81,7 +107,7 @@ public class DynamicQueryTest
 
 		builder.add("otherObject.id", "_null");
 
-		assertEquals(1, dao.findByUriQuery(builder.build()).getList().size());
+		assertEquals(1, dao.findByUriQuery(builder.buildQuery()).getList().size());
 	}
 
 
@@ -100,7 +126,7 @@ public class DynamicQueryTest
 		builder.add("children.id", "_null");
 
 		// Will throw an IllegalArgumentException if the "children" field is not parsed from the entity
-		dao.findByUriQuery(builder.build());
+		dao.findByUriQuery(builder.buildQuery());
 	}
 
 
@@ -124,7 +150,7 @@ public class DynamicQueryTest
 
 			builder.add("deprecated", "true");
 
-			assertEquals("deprecated=true matches 2", 2, dao.findByUriQuery(builder.build()).getList().size());
+			assertEquals("deprecated=true matches 2", 2, dao.findByUriQuery(builder.buildQuery()).getList().size());
 		}
 
 		{
@@ -132,7 +158,7 @@ public class DynamicQueryTest
 
 			builder.add("deprecated", "false");
 
-			assertEquals("deprecated=false matches nothing", 0, dao.findByUriQuery(builder.build()).getList().size());
+			assertEquals("deprecated=false matches nothing", 0, dao.findByUriQuery(builder.buildQuery()).getList().size());
 		}
 	}
 
@@ -152,7 +178,7 @@ public class DynamicQueryTest
 
 		builder.addOrder("id asc");
 
-		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(dao.findByUriQuery(builder.build()).getList()));
+		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(dao.findByUriQuery(builder.buildQuery()).getList()));
 	}
 
 
@@ -171,7 +197,7 @@ public class DynamicQueryTest
 
 		builder.add("_order", "id desc");
 
-		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(builder.build()).getList()));
+		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(builder.buildQuery()).getList()));
 	}
 
 
@@ -193,7 +219,7 @@ public class DynamicQueryTest
 		builder.add("_limit", "1");
 		builder.add("_compute_size", "true");
 
-		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.buildQuery());
 
 		assertEquals(1, results.getList().size());
 		assertEquals(Long.valueOf(2), results.getTotal());
@@ -234,7 +260,7 @@ public class DynamicQueryTest
 		{
 			ResultSetConstraintBuilder builder = builderFactory.builder();
 
-			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.buildQuery());
 
 			assertEquals(2, results.getList().size());
 		}
@@ -245,7 +271,7 @@ public class DynamicQueryTest
 
 			builder.add("children:size", "_f_ge_2");
 
-			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.buildQuery());
 
 			assertEquals(1, results.getList().size());
 			assertEquals("Name1", results.getList().get(0).getName());
@@ -257,7 +283,7 @@ public class DynamicQueryTest
 
 			builder.add("children:size", "0");
 
-			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.build());
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(builder.buildQuery());
 
 			assertEquals(1, results.getList().size());
 			assertEquals("Name2", results.getList().get(0).getName());

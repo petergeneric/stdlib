@@ -23,7 +23,10 @@ public class ResultSetConstraintBuilderFactory
 	 * @param constraints
 	 *
 	 * @return
+	 *
+	 * @deprecated use {@link #builder(Map)} and then call {@link ResultSetConstraintBuilder#buildQuery()}
 	 */
+	@Deprecated
 	public ResultSetConstraint build(Map<String, List<String>> constraints)
 	{
 		return builder(constraints).build();

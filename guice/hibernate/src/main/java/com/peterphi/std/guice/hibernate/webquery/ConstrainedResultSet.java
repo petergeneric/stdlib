@@ -1,10 +1,13 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+
 import java.util.List;
 
 public class ConstrainedResultSet<T>
 {
-	protected final ResultSetConstraint constraint;
+	protected /*final*/ ResultSetConstraint constraint;
+	protected /*final*/ WebQueryDefinition query;
 	protected final List<T> list;
 
 	protected Long total;
@@ -12,20 +15,40 @@ public class ConstrainedResultSet<T>
 
 	public ConstrainedResultSet(ResultSetConstraint constraint, List<T> list)
 	{
+		if (constraint == null)
+			throw new IllegalArgumentException("Must provide non-null ResultSetConstraint!");
+
 		this.constraint = constraint;
+		this.query = null;
+		this.list = list;
+	}
+
+
+	public ConstrainedResultSet(WebQueryDefinition query, List<T> list)
+	{
+		if (query == null)
+			throw new IllegalArgumentException("Must provide non-null ResultSetConstraint!");
+		this.constraint = null;
+		this.query = query;
 		this.list = list;
 	}
 
 
 	public int getOffset()
 	{
-		return constraint.getOffset();
+		if (constraint != null)
+			return constraint.getOffset();
+		else
+			return query.constraints.offset;
 	}
 
 
 	public int getLimit()
 	{
-		return constraint.getLimit();
+		if (constraint != null)
+			return constraint.getLimit();
+		else
+			return query.constraints.limit;
 	}
 
 
@@ -35,9 +58,27 @@ public class ConstrainedResultSet<T>
 	}
 
 
+	/**
+	 * @return
+	 *
+	 * @deprecated use WebQueryDefinition instead
+	 */
+	@Deprecated
 	public ResultSetConstraint getConstraint()
 	{
+		if (constraint == null)
+			constraint = ResultSetConstraintToWebQueryDefinitionConverter.convert(query);
+
 		return constraint;
+	}
+
+
+	public WebQueryDefinition getQuery()
+	{
+		if (query == null)
+			query = constraint.toQuery();
+
+		return query;
 	}
 
 

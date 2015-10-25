@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = MyBaseObject.class)
+		            classPackages = MyBaseObject.class)
 public class DiscriminatorDynamicQueryTest
 {
 	@Inject
@@ -52,13 +52,14 @@ public class DiscriminatorDynamicQueryTest
 		{
 			ResultSetConstraintBuilder builder = builderFactory.builder();
 
+
 			builder.add("id", String.valueOf(a.id), String.valueOf(b.id));
 			builder.add("_class", "one");
 
 			// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(builder.build());
+			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(builder.buildQuery());
 
-			assertEquals(1, results.getList().size());
+			assertEquals("discriminator should match exactly one entity", 1, results.getList().size());
 			assertEquals(a.id, results.getList().get(0).id);
 		}
 	}

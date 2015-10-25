@@ -1,5 +1,12 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryCombiningOperator;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraint;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryOrder;
+import org.apache.commons.lang.StringUtils;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -7,6 +14,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 public class ResultSetConstraintBuilder
 {
@@ -171,6 +179,12 @@ public class ResultSetConstraintBuilder
 	}
 
 
+	/**
+	 * @return
+	 *
+	 * @deprecated use {@link #buildQuery()} instead
+	 */
+	@Deprecated
 	public ResultSetConstraint build()
 	{
 		Map<String, List<String>> map = new HashMap<>(constraints);
@@ -182,6 +196,85 @@ public class ResultSetConstraintBuilder
 		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
 
 		return new ResultSetConstraint(map);
+	}
+
+
+	/**
+	 * Construct a WebQueryDefinition from this, applying the web query semantics
+	 *
+	 * @return
+	 */
+	public WebQueryDefinition buildQuery()
+	{
+		WebQueryDefinition def = new WebQueryDefinition();
+
+		Map<String, List<String>> map = new HashMap<>(constraints);
+
+		applyDefault(WebQuerySpecialField.FETCH, map, defaultFetch);
+		applyDefault(WebQuerySpecialField.EXPAND, map, defaultExpand);
+		applyDefault(WebQuerySpecialField.ORDER, map, defaultOrder);
+		applyDefault(WebQuerySpecialField.OFFSET, map, "0");
+		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
+
+		for (Map.Entry<String, List<String>> entry : map.entrySet())
+		{
+			if (entry.getKey().charAt(0) == '_')
+			{
+				final WebQuerySpecialField specialField = WebQuerySpecialField.getByName(entry.getKey());
+
+				switch (specialField)
+				{
+					case OFFSET:
+						def.offset(Integer.valueOf(entry.getValue().get(0)));
+						break;
+					case LIMIT:
+						def.limit(Integer.valueOf(entry.getValue().get(0)));
+						break;
+					case CLASS:
+						def.subclass(entry.getValue().toArray(new String[entry.getValue().size()]));
+						break;
+					case COMPUTE_SIZE:
+						def.computeSize(parseBoolean(entry.getValue().get(0)));
+						break;
+					case EXPAND:
+						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
+						break;
+					case ORDER:
+						for (String expr : entry.getValue())
+							def.orderings.add(WebQueryOrder.parseLegacy(expr));
+						break;
+					case FETCH:
+						// Ordinarily we'd expect a single value here, but allow for multiple values to be provied as a comma-separated list
+						def.fetch(entry.getValue().stream().collect(Collectors.joining(",")));
+						break;
+					default:
+						throw new IllegalArgumentException("Unknown query field: " + specialField);
+				}
+			}
+			else
+			{
+				if (entry.getValue().size() == 1)
+				{
+					def.constraints.constraints.add(WebQueryConstraint.decode(entry.getKey(), entry.getValue().get(0)));
+				}
+				else if (entry.getValue().size() > 0)
+				{
+					WebQueryConstraintGroup group = new WebQueryConstraintGroup();
+
+					group.operator = WebQueryCombiningOperator.OR;
+
+					for (String value : entry.getValue())
+					{
+						group.constraints.add(WebQueryConstraint.decode(entry.getKey(), value));
+					}
+
+					def.constraints.constraints.add(group);
+				}
+			}
+		}
+
+
+		return def;
 	}
 
 
@@ -202,5 +295,18 @@ public class ResultSetConstraintBuilder
 			return;
 		else
 			applyDefault(field, constraints, Collections.singletonList(defaultValue));
+	}
+
+
+	private static boolean parseBoolean(String value)
+	{
+		if (StringUtils.equalsIgnoreCase(value, "true") || StringUtils.equalsIgnoreCase(value, "yes") ||
+		    StringUtils.equalsIgnoreCase(value, "on"))
+			return true;
+		else if (StringUtils.equalsIgnoreCase(value, "false") || StringUtils.equalsIgnoreCase(value, "no") ||
+		         StringUtils.equalsIgnoreCase(value, "off"))
+			return false;
+		else
+			throw new IllegalArgumentException("Cannot parse boolean: " + value);
 	}
 }

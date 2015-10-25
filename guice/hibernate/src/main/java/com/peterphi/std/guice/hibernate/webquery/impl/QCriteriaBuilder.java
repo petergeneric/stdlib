@@ -1,6 +1,9 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.peterphi.std.guice.hibernate.webquery.WebQuerySpecialField;
+import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraint;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintLine;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
@@ -20,7 +23,7 @@ public class QCriteriaBuilder
 	private final QEntity entity;
 
 	private final Map<String, QJoin> joins = new HashMap<>();
-	private final List<QConstraints> constraints = new ArrayList<>();
+	private final List<QFunction> constraints = new ArrayList<>();
 	private final List<QOrder> order = new ArrayList<>();
 
 	private final List<String> discriminators = new ArrayList<>();
@@ -35,42 +38,70 @@ public class QCriteriaBuilder
 	}
 
 
-	public void addAll(Map<String, List<String>> parameters)
+	public QCriteriaBuilder limit(int limit)
 	{
-		for (Map.Entry<String, List<String>> entry : parameters.entrySet())
-		{
-			final String key = entry.getKey();
+		this.limit = limit;
 
-			if (key.charAt(0) == '_')
-			{
-				if (key.equals(WebQuerySpecialField.OFFSET.getName()))
-					offset = Integer.parseInt(entry.getValue().get(0));
-				else if (key.equals(WebQuerySpecialField.LIMIT.getName()))
-					limit = Integer.parseInt(entry.getValue().get(0));
-				else if (key.equals(WebQuerySpecialField.ORDER.getName()))
-					addOrder(entry.getValue());
-				else if (key.equals(WebQuerySpecialField.CLASS.getName()))
-					addClass(entry.getValue());
-				else if (key.equals(WebQuerySpecialField.COMPUTE_SIZE.getName()))
-				{
-					// ignore, should be handled at query execution time
-				}
-				else if (key.equals(WebQuerySpecialField.FETCH.getName()) || key.equals(WebQuerySpecialField.EXPAND.getName()))
-				{
-					// ignore, should be handled at resultset serialisation by client
-				}
-				else
-					throw new IllegalArgumentException("Unknown built-in name: " + key);
-			}
+		return this;
+	}
+
+
+	public QCriteriaBuilder offset(int offset)
+	{
+		this.offset = offset;
+
+		return this;
+	}
+
+
+	public void addConstraints(final List<WebQueryConstraintLine> constraints)
+	{
+		this.constraints.addAll(parseConstraint(constraints));
+	}
+
+
+	private List<QFunction> parseConstraint(List<WebQueryConstraintLine> constraints)
+	{
+		List<QFunction> list = new ArrayList<>(constraints.size());
+
+		for (WebQueryConstraintLine line : constraints)
+		{
+			if (line instanceof WebQueryConstraint)
+				list.add(parseConstraint((WebQueryConstraint) line));
 			else
-			{
-				addConstraint(key, entry.getValue());
-			}
+				list.add(parseConstraint((WebQueryConstraintGroup) line));
+		}
+
+		return list;
+	}
+
+
+	private QFunction parseConstraint(WebQueryConstraint constraint)
+	{
+		return QFunctionFactory.getInstance(getProperty(constraint.field),
+		                                    constraint.function,
+		                                    constraint.value,
+		                                    constraint.value2);
+	}
+
+
+	private QFunction parseConstraint(WebQueryConstraintGroup group)
+	{
+		List<QFunction> contents = parseConstraint(group.constraints);
+
+		switch (group.operator)
+		{
+			case AND:
+				return QFunctionFactory.and(contents);
+			case OR:
+				return QFunctionFactory.or(contents);
+			default:
+				throw new IllegalArgumentException("Unknown group operator: " + group.operator);
 		}
 	}
 
 
-	private void addClass(final List<String> values)
+	public void addClass(final List<String> values)
 	{
 		this.discriminators.addAll(values);
 	}
@@ -83,9 +114,9 @@ public class QCriteriaBuilder
 	 * @param criteria
 	 * 		the base criteria to use
 	 */
-	public void append(Criteria criteria)
+	public void appendTo(Criteria criteria)
 	{
-		append(criteria, true, true);
+		appendTo(criteria, true, true);
 	}
 
 
@@ -97,7 +128,7 @@ public class QCriteriaBuilder
 	 * @param includePagination
 	 * 		if true, LIMIT and OFFSET will be set in the query
 	 */
-	public void append(Criteria criteria, boolean includeConstraints, boolean includePagination)
+	public void appendTo(Criteria criteria, boolean includeConstraints, boolean includePagination)
 	{
 		appendJoins(criteria);
 
@@ -106,7 +137,7 @@ public class QCriteriaBuilder
 		if (includeConstraints)
 		{
 			// Add the constraints
-			for (QConstraints constraint : constraints)
+			for (QFunction constraint : constraints)
 				criteria.add(constraint.encode());
 		}
 
@@ -199,49 +230,18 @@ public class QCriteriaBuilder
 	}
 
 
-	public void addOrder(List<String> orderings)
+	public QCriteriaBuilder addOrder(QPropertyRef property, boolean asc)
 	{
-		for (String ordering : orderings)
-			addOrder(ordering);
+		if (asc)
+			order.add(new QOrder(property, true));
+		else
+			order.add(new QOrder(property, false));
+
+		return this;
 	}
 
 
-	public void addOrder(String ordering)
-	{
-		if (ordering.indexOf(' ') != -1)
-		{
-			final String[] pathAndOrder = ordering.split(" ", 2);
-
-			final String sortPath = pathAndOrder[0];
-			final String direction = pathAndOrder[1];
-
-			final QPropertyRef property = getProperty(sortPath);
-
-			if (direction.equalsIgnoreCase("asc"))
-			{
-				order.add(new QOrder(property, true));
-				return;
-			}
-			else if (direction.equalsIgnoreCase("desc"))
-			{
-				order.add(new QOrder(property, false));
-				return;
-			}
-		}
-
-		throw new IllegalArgumentException("Order expected [property] [asc|desc], but got: " + ordering);
-	}
-
-
-	public void addConstraint(String path, List<String> filters)
-	{
-		final QPropertyRef ref = getProperty(path);
-
-		constraints.add(new QConstraints(ref, filters));
-	}
-
-
-	protected QPropertyRef getProperty(String path)
+	public QPropertyRef getProperty(String path)
 	{
 		try
 		{
