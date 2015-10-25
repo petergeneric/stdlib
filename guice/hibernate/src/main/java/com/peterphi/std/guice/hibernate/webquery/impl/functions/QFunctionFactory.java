@@ -2,93 +2,52 @@ package com.peterphi.std.guice.hibernate.webquery.impl.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
 import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
-import org.apache.commons.lang.StringUtils;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class QFunctionFactory
 {
-	public static List<QFunction> parse(final QPropertyRef property, List<String> constraints)
+	public static QFunction getInstance(QPropertyRef property, WQFunctionType function, String param, String param2)
 	{
-		List<QFunction> functions = new ArrayList<>(constraints.size());
-
-		for (String constraint : constraints)
+		switch (function)
 		{
-			// TODO merge eq and neq properties?
-			functions.add(parse(property, constraint));
-		}
-
-		return functions;
-	}
-
-
-	protected static QFunction parse(final QPropertyRef property, String constraint)
-	{
-		if (constraint.charAt(0) == '_')
-		{
-			if (constraint.startsWith("_f_"))
-			{
-				final String[] functionAndParam = getFunctionAndParam(constraint);
-
-				final String function = functionAndParam[0];
-				final String param = functionAndParam[1];
-
-				switch (function)
-				{
-					case "eq":
-						return new Eq(property, param);
-					case "ge":
-						return new Ge(property, param);
-					case "gt":
-						return new Gt(property, param);
-					case "le":
-						return new Le(property, param);
-					case "lt":
-						return new Lt(property, param);
-					case "neq":
-						return new Neq(property, param);
-					case "starts":
-						if (property.getProperty().getClazz() != String.class)
-							throw new IllegalArgumentException("Can only use function on String properties: " + function);
-
-						return new Like(property, param + "%");
-					case "contains":
-						if (property.getProperty().getClazz() != String.class)
-							throw new IllegalArgumentException("Can only use function on String properties: " + function);
-
-						return new Like(property, "%" + param + "%");
-					case "range":
-						return new Between(property, param);
-					default:
-						throw new IllegalArgumentException("Unknown function " + function);
-				}
-			}
-			else if (constraint.equalsIgnoreCase("_null"))
-			{
+			case EQ:
+				return new Eq(property, param);
+			case NEQ:
+				return new Neq(property, param);
+			case IS_NULL:
 				return new IsNull(property);
-			}
-			else if (constraint.equalsIgnoreCase("_notnull"))
-			{
+			case NOT_NULL:
 				return new IsNotNull(property);
-			}
-			else
-			{
-				throw new IllegalArgumentException("Unknown constraint: " + constraint);
-			}
-		}
-		else
-		{
-			// equals
-			return new Eq(property, constraint);
+			case CONTAINS:
+				return new Like(property, "%" + param + "%");
+			case STARTS_WITH:
+				return new Like(property, param + "%");
+			case RANGE:
+				return new Between(property, param, param2);
+			case GE:
+				return new Ge(property, param);
+			case GT:
+				return new Gt(property, param);
+			case LE:
+				return new Le(property, param);
+			case LT:
+				return new Lt(property, param);
+			default:
+				throw new IllegalArgumentException("No mapping for function: " + function);
 		}
 	}
 
 
-	protected static String[] getFunctionAndParam(String constraint)
+	public static QFunction and(List<QFunction> constraints)
 	{
-		final String remainder = constraint.substring("_f_".length());
+		return new AndGroup(constraints);
+	}
 
-		return StringUtils.split(remainder, "_", 2);
+
+	public static QFunction or(List<QFunction> constraints)
+	{
+		return new OrGroup(constraints);
 	}
 }

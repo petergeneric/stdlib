@@ -3,8 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery.discriminatortest;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilder;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraintBuilderFactory;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.junit.Test;
@@ -15,14 +14,11 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-             classPackages = MyBaseObject.class)
+		            classPackages = MyBaseObject.class)
 public class DiscriminatorDynamicQueryTest
 {
 	@Inject
 	HibernateDao<MyBaseObject, Long> dao;
-
-	@Inject
-	ResultSetConstraintBuilderFactory builderFactory;
 
 
 	@Test
@@ -50,15 +46,13 @@ public class DiscriminatorDynamicQueryTest
 		b.id = dao.save(b);
 
 		{
-			ResultSetConstraintBuilder builder = builderFactory.builder();
-
-			builder.add("id", String.valueOf(a.id), String.valueOf(b.id));
-			builder.add("_class", "one");
-
 			// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(builder.build());
+			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(new WebQuery().eq("id",
+			                                                                                  String.valueOf(a.id),
+			                                                                                  String.valueOf(b.id))
+			                                                                              .subclass("one"));
 
-			assertEquals(1, results.getList().size());
+			assertEquals("discriminator should match exactly one entity", 1, results.getList().size());
 			assertEquals(a.id, results.getList().get(0).id);
 		}
 	}

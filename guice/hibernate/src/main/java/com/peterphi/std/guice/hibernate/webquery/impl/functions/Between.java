@@ -15,43 +15,22 @@ class Between implements QFunction
 	private final Object to;
 
 
-	public Between(final QPropertyRef property, final String value)
+	public Between(final QPropertyRef property, final String from, final String to)
 	{
+		if (StringUtils.isBlank(from) && StringUtils.isBlank(to))
+			throw new IllegalArgumentException("Must provide at least one anchor point for between!");
+
 		this.property = property;
 
-		try
-		{
-			final String[] bounds = StringUtils.splitByWholeSeparator(value, "..", 2);
+		if (StringUtils.isNotBlank(to))
+			this.to = property.parseValue(to);
+		else
+			this.to = null;
 
-			if (bounds.length == 2)
-			{
-				from = property.parseValue(bounds[0]);
-
-				if (StringUtils.isNotEmpty(bounds[1]))
-					to = property.parseValue(bounds[1]);
-				else
-					to = null;
-			}
-			else if (bounds.length == 1)
-			{
-				if (!value.startsWith(".."))
-					throw new RuntimeException("Assertion failed: should start with ..");
-
-				from = null;
-				to = property.parseValue(bounds[0]);
-			}
-			else
-			{
-				throw new IllegalArgumentException("Unexpected format!");
-			}
-		}
-		catch (RuntimeException e)
-		{
-			throw new IllegalArgumentException("Expected form: [min value]..[max value], not: " +
-			                                   value +
-			                                   ". Error: " +
-			                                   e.getMessage(), e);
-		}
+		if (StringUtils.isNotBlank(from))
+			this.from = property.parseValue(from);
+		else
+			this.from = null;
 	}
 
 

@@ -1,9 +1,9 @@
-package com.peterphi.std.guice.hibernate.webquery;
+package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 /**
- * Special WebQuery fields
+ * Special WebQuery fields and their wire representation in the Query String API
  */
-public enum WebQuerySpecialField
+public enum WQUriControlField
 {
 	/**
 	 * Set the index of the first result to return for this query
@@ -37,7 +37,7 @@ public enum WebQuerySpecialField
 	private final String name;
 
 
-	WebQuerySpecialField(final String name)
+	WQUriControlField(final String name)
 	{
 		this.name = name;
 	}
@@ -54,9 +54,9 @@ public enum WebQuerySpecialField
 	}
 
 
-	public WebQuerySpecialField getByName(final String fieldName)
+	public static WQUriControlField getByName(final String fieldName)
 	{
-		for (WebQuerySpecialField field : values())
+		for (WQUriControlField field : values())
 		{
 			if (field.name.equals(fieldName))
 				return field;

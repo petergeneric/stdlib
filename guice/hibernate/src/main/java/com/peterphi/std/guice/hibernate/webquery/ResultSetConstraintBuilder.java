@@ -1,5 +1,9 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQUriControlField;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+
+import javax.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -8,6 +12,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @deprecated use {@link WebQuery} and the associated builder methods, particularly {@link WebQuery#decode(UriInfo)}
+ */
+@Deprecated
 public class ResultSetConstraintBuilder
 {
 	private Map<String, List<String>> constraints = new HashMap<>();
@@ -63,7 +71,7 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	public ResultSetConstraintBuilder add(WebQuerySpecialField key, String... values)
+	public ResultSetConstraintBuilder add(WQUriControlField key, String... values)
 	{
 		add(key.getName(), values);
 
@@ -71,7 +79,7 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	public ResultSetConstraintBuilder replace(WebQuerySpecialField key, String... values)
+	public ResultSetConstraintBuilder replace(WQUriControlField key, String... values)
 	{
 		replace(key.getName(), values);
 
@@ -89,43 +97,43 @@ public class ResultSetConstraintBuilder
 
 	public ResultSetConstraintBuilder limit(int limit)
 	{
-		return replace(WebQuerySpecialField.LIMIT, Integer.toString(limit));
+		return replace(WQUriControlField.LIMIT, Integer.toString(limit));
 	}
 
 
 	public ResultSetConstraintBuilder offset(int offset)
 	{
-		return replace(WebQuerySpecialField.OFFSET, Integer.toString(offset));
+		return replace(WQUriControlField.OFFSET, Integer.toString(offset));
 	}
 
 
 	public ResultSetConstraintBuilder setOrder(String... orders)
 	{
-		return replace(WebQuerySpecialField.ORDER, orders);
+		return replace(WQUriControlField.ORDER, orders);
 	}
 
 
 	public ResultSetConstraintBuilder addOrder(String... orders)
 	{
-		return add(WebQuerySpecialField.ORDER, orders);
+		return add(WQUriControlField.ORDER, orders);
 	}
 
 
 	public ResultSetConstraintBuilder addExpand(String... expands)
 	{
-		return add(WebQuerySpecialField.EXPAND, expands);
+		return add(WQUriControlField.EXPAND, expands);
 	}
 
 
 	public ResultSetConstraintBuilder setExpand(String... expands)
 	{
-		return replace(WebQuerySpecialField.EXPAND, expands);
+		return replace(WQUriControlField.EXPAND, expands);
 	}
 
 
 	public ResultSetConstraintBuilder setFetch(String fetch)
 	{
-		return replace(WebQuerySpecialField.FETCH, fetch);
+		return replace(WQUriControlField.FETCH, fetch);
 	}
 
 
@@ -171,21 +179,47 @@ public class ResultSetConstraintBuilder
 	}
 
 
+	/**
+	 * @return
+	 *
+	 * @deprecated use {@link #buildQuery()} instead
+	 */
+	@Deprecated
+	@SuppressWarnings("deprecation")
 	public ResultSetConstraint build()
 	{
 		Map<String, List<String>> map = new HashMap<>(constraints);
 
-		applyDefault(WebQuerySpecialField.FETCH, map, defaultFetch);
-		applyDefault(WebQuerySpecialField.EXPAND, map, defaultExpand);
-		applyDefault(WebQuerySpecialField.ORDER, map, defaultOrder);
-		applyDefault(WebQuerySpecialField.OFFSET, map, "0");
-		applyDefault(WebQuerySpecialField.LIMIT, map, Integer.toString(defaultLimit));
+		applyDefault(WQUriControlField.FETCH, map, defaultFetch);
+		applyDefault(WQUriControlField.EXPAND, map, defaultExpand);
+		applyDefault(WQUriControlField.ORDER, map, defaultOrder);
+		applyDefault(WQUriControlField.OFFSET, map, "0");
+		applyDefault(WQUriControlField.LIMIT, map, Integer.toString(defaultLimit));
 
 		return new ResultSetConstraint(map);
 	}
 
 
-	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, List<String> defaultValue)
+	/**
+	 * Construct a WebQueryDefinition from this, applying the web query semantics
+	 *
+	 * @return
+	 */
+	public WebQuery buildQuery()
+	{
+		Map<String, List<String>> map = new HashMap<>(constraints);
+
+		applyDefault(WQUriControlField.FETCH, map, defaultFetch);
+		applyDefault(WQUriControlField.EXPAND, map, defaultExpand);
+		applyDefault(WQUriControlField.ORDER, map, defaultOrder);
+		applyDefault(WQUriControlField.OFFSET, map, "0");
+		applyDefault(WQUriControlField.LIMIT, map, Integer.toString(defaultLimit));
+
+		return new WebQuery().decode(map);
+	}
+
+
+	private void applyDefault(WQUriControlField field, Map<String, List<String>> constraints, List<String> defaultValue)
 	{
 		if (defaultValue == null)
 			return;
@@ -196,7 +230,7 @@ public class ResultSetConstraintBuilder
 	}
 
 
-	private void applyDefault(WebQuerySpecialField field, Map<String, List<String>> constraints, String defaultValue)
+	private void applyDefault(WQUriControlField field, Map<String, List<String>> constraints, String defaultValue)
 	{
 		if (defaultValue == null)
 			return;

@@ -4,11 +4,17 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
+import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * @deprecated use {@link WebQuery} and the associated builder methods, particularly {@link WebQuery#decode(UriInfo)}
+ */
 @Singleton
+@Deprecated
 public class ResultSetConstraintBuilderFactory
 {
 	@Inject(optional = true)
@@ -23,7 +29,10 @@ public class ResultSetConstraintBuilderFactory
 	 * @param constraints
 	 *
 	 * @return
+	 *
+	 * @deprecated use {@link #builder(Map)} and then call {@link ResultSetConstraintBuilder#buildQuery()}
 	 */
+	@Deprecated
 	public ResultSetConstraint build(Map<String, List<String>> constraints)
 	{
 		return builder(constraints).build();
