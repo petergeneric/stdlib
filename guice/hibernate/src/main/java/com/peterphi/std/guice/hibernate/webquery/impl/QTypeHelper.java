@@ -1,44 +1,19 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDateMaths;
 import com.peterphi.std.types.SampleCount;
 import com.peterphi.std.types.Timecode;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
-import org.joda.time.DateTimeConstants;
-import org.joda.time.LocalDate;
-import org.joda.time.Period;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 
 import java.nio.charset.Charset;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.UUID;
-import java.util.function.Supplier;
 
 class QTypeHelper
 {
-	private static final DateTimeFormatter ISO_FORMAT = ISODateTimeFormat.dateOptionalTimeParser();
-
-	private static Map<String, Supplier<DateTime>> SPECIAL_DATE_STRINGS = new HashMap<>();
-
-	static
-	{
-		SPECIAL_DATE_STRINGS.put("now", DateTime:: now);
-		SPECIAL_DATE_STRINGS.put("today", () -> LocalDate.now().toDateTimeAtStartOfDay());
-		SPECIAL_DATE_STRINGS.put("tomorrow", () -> LocalDate.now().plusDays(1).toDateTimeAtStartOfDay());
-		SPECIAL_DATE_STRINGS.put("yesterday", () -> LocalDate.now().minusDays(1).toDateTimeAtStartOfDay());
-		// Start of Week
-		SPECIAL_DATE_STRINGS.put("sow", () -> LocalDate.now().withDayOfWeek(DateTimeConstants.MONDAY).toDateTimeAtStartOfDay());
-		// Start of Month
-		SPECIAL_DATE_STRINGS.put("som", () -> LocalDate.now().dayOfMonth().withMinimumValue().toDateTimeAtStartOfDay());
-		// Start of Year
-		SPECIAL_DATE_STRINGS.put("soy", () -> LocalDate.now().dayOfYear().withMinimumValue().toDateTimeAtStartOfDay());
-	}
-
 	public static Object parse(Class<?> clazz, String value)
 	{
 		if (clazz == String.class)
@@ -94,15 +69,15 @@ class QTypeHelper
 		}
 		else if (clazz == DateTime.class)
 		{
-			return parseDate(value);
+			return WebQueryDateMaths.resolve(value);
 		}
 		else if (clazz == Date.class)
 		{
-			return parseDate(value).toDate();
+			return WebQueryDateMaths.resolve(value).toDate();
 		}
 		else if (clazz == java.sql.Date.class)
 		{
-			return new java.sql.Date(parseDate(value).getMillis());
+			return new java.sql.Date(WebQueryDateMaths.resolve(value).getMillis());
 		}
 		else if (clazz == UUID.class)
 		{
@@ -128,55 +103,6 @@ class QTypeHelper
 		{
 			throw new IllegalArgumentException("No primitives parser for type: " + clazz + ", cannot interpret " + value);
 		}
-	}
-
-
-	private static DateTime parseDate(String value)
-	{
-		for (String specialString : SPECIAL_DATE_STRINGS.keySet())
-		{
-			if (StringUtils.startsWithIgnoreCase(value, specialString))
-			{
-				final DateTime baseDate = SPECIAL_DATE_STRINGS.get(specialString).get();
-
-				if (value.equalsIgnoreCase(specialString))
-				{
-					return baseDate;
-				}
-				else
-				{
-					// Consider + and -
-					final String maths = value.substring(specialString.length());
-
-					final boolean plus;
-					if (maths.charAt(0) == '+' || maths.charAt(0) == ' ')
-					{
-						plus = true;
-					}
-					else if (maths.charAt(0) == '-')
-						plus = false;
-					else
-					{
-						throw new IllegalArgumentException("Expected [+- ] but got char " +
-						                                   maths.charAt(0) +
-						                                   " while processing " +
-						                                   value);
-					}
-
-					final String period = maths.substring(1);
-
-					final Period timePeriod = Period.parse(period);
-
-					if (plus)
-						return baseDate.plus(timePeriod);
-					else
-						return baseDate.minus(timePeriod);
-				}
-			}
-		}
-
-		// Not a special string
-		return ISO_FORMAT.parseDateTime(value);
 	}
 
 
