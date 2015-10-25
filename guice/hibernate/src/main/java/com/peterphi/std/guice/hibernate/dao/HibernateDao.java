@@ -15,8 +15,8 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Criteria;
@@ -437,7 +437,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	@Override
-	public ConstrainedResultSet<T> findByUriQuery(final WebQueryDefinition constraints)
+	public ConstrainedResultSet<T> findByUriQuery(final WebQuery constraints)
 	{
 		return findByUriQuery(constraints, this :: createCriteria);
 	}
@@ -454,7 +454,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 */
 	@Transactional(readOnly = true)
 	@Override
-	public ConstrainedResultSet<T> findByUriQuery(final WebQueryDefinition query, final Supplier<Criteria> base)
+	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query, final Supplier<Criteria> base)
 	{
 		// Optionally execute the count query
 		final Long total;
@@ -509,7 +509,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 *
 	 * @return
 	 */
-	public Criteria convertCriteria(WebQueryDefinition query, Supplier<Criteria> baseCriteria)
+	public Criteria convertCriteria(WebQuery query, Supplier<Criteria> baseCriteria)
 	{
 		final QCriteriaBuilder builder = builder(query);
 
@@ -526,13 +526,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
-	private QCriteriaBuilder builder(final WebQueryDefinition query)
+	private QCriteriaBuilder builder(final WebQuery query)
 	{
-		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity()).offset(query.constraints.offset)
-		                                                                   .limit(query.constraints.limit);
+		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity()).offset(query.getOffset()).limit(query.getLimit());
 
 		// Add the sort order
-		for (WebQueryOrder order : query.orderings)
+		for (WQOrder order : query.orderings)
 			builder.addOrder(builder.getProperty(order.field), order.isAsc());
 
 		if (StringUtils.isNotBlank(query.constraints.subclass))
@@ -555,7 +554,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	public Criteria createCriteria(WebQueryDefinition constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
+	public Criteria createCriteria(WebQuery constraints, Supplier<Criteria> baseCriteria, boolean projectSize)
 	{
 		final Criteria criteria = convertCriteria(constraints, baseCriteria);
 

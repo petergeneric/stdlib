@@ -1,10 +1,10 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryCombiningOperator;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintGroup;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.ArrayList;
@@ -204,9 +204,9 @@ public class ResultSetConstraintBuilder
 	 *
 	 * @return
 	 */
-	public WebQueryDefinition buildQuery()
+	public WebQuery buildQuery()
 	{
-		WebQueryDefinition def = new WebQueryDefinition();
+		WebQuery def = new WebQuery();
 
 		Map<String, List<String>> map = new HashMap<>(constraints);
 
@@ -241,7 +241,7 @@ public class ResultSetConstraintBuilder
 						break;
 					case ORDER:
 						for (String expr : entry.getValue())
-							def.orderings.add(WebQueryOrder.parseLegacy(expr));
+							def.orderings.add(WQOrder.parseLegacy(expr));
 						break;
 					case FETCH:
 						// Ordinarily we'd expect a single value here, but allow for multiple values to be provied as a comma-separated list
@@ -255,17 +255,17 @@ public class ResultSetConstraintBuilder
 			{
 				if (entry.getValue().size() == 1)
 				{
-					def.constraints.constraints.add(WebQueryConstraint.decode(entry.getKey(), entry.getValue().get(0)));
+					def.constraints.constraints.add(WQConstraint.decode(entry.getKey(), entry.getValue().get(0)));
 				}
 				else if (entry.getValue().size() > 0)
 				{
-					WebQueryConstraintGroup group = new WebQueryConstraintGroup();
+					WQGroup group = new WQGroup();
 
-					group.operator = WebQueryCombiningOperator.OR;
+					group.operator = WQGroupType.OR;
 
 					for (String value : entry.getValue())
 					{
-						group.constraints.add(WebQueryConstraint.decode(entry.getKey(), value));
+						group.constraints.add(WQConstraint.decode(entry.getKey(), value));
 					}
 
 					def.constraints.constraints.add(group);

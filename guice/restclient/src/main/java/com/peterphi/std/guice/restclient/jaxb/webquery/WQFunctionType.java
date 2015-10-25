@@ -2,10 +2,15 @@ package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 import org.apache.commons.lang.StringUtils;
 
+import javax.xml.bind.annotation.XmlEnum;
+import javax.xml.bind.annotation.XmlType;
+
 /**
  * Defines the functions that an be applied to fields (data-type permitting)
  */
-public enum WebQueryConstraintFunction
+@XmlEnum
+@XmlType(name = "FunctionType")
+public enum WQFunctionType
 {
 	EQ("_f_eq_", true),
 	NEQ("_f_neq_", true),
@@ -23,7 +28,7 @@ public enum WebQueryConstraintFunction
 	private final boolean hasParam;
 
 
-	WebQueryConstraintFunction(final String prefix, final boolean hasParam)
+	WQFunctionType(final String prefix, final boolean hasParam)
 	{
 		this.prefix = prefix;
 		this.hasParam = hasParam;
@@ -48,9 +53,9 @@ public enum WebQueryConstraintFunction
 	}
 
 
-	public static WebQueryConstraintFunction getByPrefix(String value)
+	public static WQFunctionType getByPrefix(String value)
 	{
-		for (WebQueryConstraintFunction function : values())
+		for (WQFunctionType function : values())
 			if (StringUtils.startsWithIgnoreCase(value, function.getPrefix()))
 				return function;
 

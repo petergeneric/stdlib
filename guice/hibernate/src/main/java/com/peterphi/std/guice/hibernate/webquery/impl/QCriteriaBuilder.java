@@ -1,9 +1,9 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintGroup;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintLine;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
@@ -54,29 +54,29 @@ public class QCriteriaBuilder
 	}
 
 
-	public void addConstraints(final List<WebQueryConstraintLine> constraints)
+	public void addConstraints(final List<WQConstraintLine> constraints)
 	{
 		this.constraints.addAll(parseConstraint(constraints));
 	}
 
 
-	private List<QFunction> parseConstraint(List<WebQueryConstraintLine> constraints)
+	private List<QFunction> parseConstraint(List<WQConstraintLine> constraints)
 	{
 		List<QFunction> list = new ArrayList<>(constraints.size());
 
-		for (WebQueryConstraintLine line : constraints)
+		for (WQConstraintLine line : constraints)
 		{
-			if (line instanceof WebQueryConstraint)
-				list.add(parseConstraint((WebQueryConstraint) line));
+			if (line instanceof WQConstraint)
+				list.add(parseConstraint((WQConstraint) line));
 			else
-				list.add(parseConstraint((WebQueryConstraintGroup) line));
+				list.add(parseConstraint((WQGroup) line));
 		}
 
 		return list;
 	}
 
 
-	private QFunction parseConstraint(WebQueryConstraint constraint)
+	private QFunction parseConstraint(WQConstraint constraint)
 	{
 		return QFunctionFactory.getInstance(getProperty(constraint.field),
 		                                    constraint.function,
@@ -85,7 +85,7 @@ public class QCriteriaBuilder
 	}
 
 
-	private QFunction parseConstraint(WebQueryConstraintGroup group)
+	private QFunction parseConstraint(WQGroup group)
 	{
 		List<QFunction> contents = parseConstraint(group.constraints);
 

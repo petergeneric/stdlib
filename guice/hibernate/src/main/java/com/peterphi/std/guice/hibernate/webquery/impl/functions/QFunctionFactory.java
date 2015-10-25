@@ -2,13 +2,13 @@ package com.peterphi.std.guice.hibernate.webquery.impl.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
 import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintFunction;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 
 import java.util.List;
 
 public class QFunctionFactory
 {
-	public static QFunction getInstance(QPropertyRef property, WebQueryConstraintFunction function, String param, String param2)
+	public static QFunction getInstance(QPropertyRef property, WQFunctionType function, String param, String param2)
 	{
 		switch (function)
 		{

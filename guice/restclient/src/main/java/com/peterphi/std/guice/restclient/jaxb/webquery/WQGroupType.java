@@ -8,7 +8,7 @@ import javax.xml.bind.annotation.XmlType;
  */
 @XmlEnum
 @XmlType(name = "CombiningOperatorType")
-public enum WebQueryCombiningOperator
+public enum WQGroupType
 {
 	AND,
 	OR;

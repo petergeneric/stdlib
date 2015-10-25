@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlType(name = "ConstraintsType")
-public class WebQueryConstraints
+public class WQConstraints
 {
 	@XmlAttribute
 	public int offset = 0;
@@ -26,8 +26,8 @@ public class WebQueryConstraints
 	/**
 	 * The constraints. This group will be implicitly ANDed together
 	 */
-	@XmlElementRefs({@XmlElementRef(type = WebQueryConstraint.class), @XmlElementRef(type = WebQueryConstraintGroup.class)})
-	public List<WebQueryConstraintLine> constraints = new ArrayList<>();
+	@XmlElementRefs({@XmlElementRef(type = WQConstraint.class), @XmlElementRef(type = WQGroup.class)})
+	public List<WQConstraintLine> constraints = new ArrayList<>();
 
 
 	@Override

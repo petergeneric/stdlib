@@ -7,7 +7,7 @@ import javax.xml.bind.annotation.XmlType;
  * Defines a sort instruction
  */
 @XmlType(name = "OrderType")
-public class WebQueryOrder
+public class WQOrder
 {
 	@XmlAttribute
 	public String field;
@@ -19,12 +19,12 @@ public class WebQueryOrder
 	public String direction;
 
 
-	public WebQueryOrder()
+	public WQOrder()
 	{
 	}
 
 
-	public WebQueryOrder(final String field, final String direction)
+	public WQOrder(final String field, final String direction)
 	{
 		if (!direction.equalsIgnoreCase("asc") && !direction.equalsIgnoreCase("desc"))
 			throw new IllegalArgumentException("Direction must be asc or desc, not " + direction);
@@ -56,22 +56,22 @@ public class WebQueryOrder
 	}
 
 
-	public static WebQueryOrder asc(final String field)
+	public static WQOrder asc(final String field)
 	{
-		return new WebQueryOrder(field, "asc");
+		return new WQOrder(field, "asc");
 	}
 
 
-	public static WebQueryOrder desc(final String field)
+	public static WQOrder desc(final String field)
 	{
-		return new WebQueryOrder(field, "desc");
+		return new WQOrder(field, "desc");
 	}
 
 
-	public static WebQueryOrder parseLegacy(final String expr)
+	public static WQOrder parseLegacy(final String expr)
 	{
 		final String[] parts = expr.split(" ", 2);
 
-		return new WebQueryOrder(parts[0], parts[1]);
+		return new WQOrder(parts[0], parts[1]);
 	}
 }

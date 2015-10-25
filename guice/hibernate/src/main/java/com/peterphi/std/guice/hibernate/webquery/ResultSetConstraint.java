@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 
 import java.util.Arrays;
@@ -147,11 +147,11 @@ public class ResultSetConstraint
 
 
 	/**
-	 * Convert this query to a {@link WebQueryDefinition} using the legacy web query semantics
+	 * Convert this query to a {@link WebQuery} using the legacy web query semantics
 	 *
 	 * @return
 	 */
-	public WebQueryDefinition toQuery()
+	public WebQuery toQuery()
 	{
 		return new ResultSetConstraintBuilderFactory().builder(getParameters()).buildQuery();
 	}

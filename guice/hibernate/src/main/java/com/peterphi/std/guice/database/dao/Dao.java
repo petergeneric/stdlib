@@ -2,7 +2,7 @@ package com.peterphi.std.guice.database.dao;
 
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.hibernate.Criteria;
 
 import java.io.Serializable;
@@ -35,7 +35,7 @@ public interface Dao<T, ID extends Serializable>
 	 *
 	 * @return a resultset containing the requested number of results
 	 */
-	ConstrainedResultSet<T> findByUriQuery(WebQueryDefinition constraints);
+	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
 
 	/**
 	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
@@ -47,7 +47,7 @@ public interface Dao<T, ID extends Serializable>
 	 *
 	 * @return a resultset containing the requested number of results
 	 */
-	ConstrainedResultSet<T> findByUriQuery(WebQueryDefinition constraints, Supplier<Criteria> base);
+	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints, Supplier<Criteria> base);
 
 	/**
 	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet

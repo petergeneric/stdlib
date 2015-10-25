@@ -1,12 +1,12 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryCombiningOperator;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintGroup;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraintLine;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryConstraints;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraints;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import org.apache.commons.lang.StringUtils;
 
 class ResultSetConstraintToWebQueryDefinitionConverter
@@ -22,14 +22,14 @@ class ResultSetConstraintToWebQueryDefinitionConverter
 	 * 		if the provided query definition cannot be represented using legacy semantics
 	 */
 	@SuppressWarnings("deprecation")
-	public static ResultSetConstraint convert(WebQueryDefinition query)
+	public static ResultSetConstraint convert(WebQuery query)
 	{
 		final ResultSetConstraintBuilder builder = new ResultSetConstraintBuilderFactory().builder();
 
 		builder.setFetch(query.fetch)
 		       .setExpand(list(query.expand))
 		       .setOrder(query.orderings.stream()
-		                                .map(WebQueryOrder:: toLegacyForm)
+		                                .map(WQOrder:: toLegacyForm)
 		                                .toArray(String[] ::new))
 		       .limit(query.constraints.limit)
 		       .offset(query.constraints.offset);
@@ -45,29 +45,29 @@ class ResultSetConstraintToWebQueryDefinitionConverter
 	}
 
 
-	private static void addConstraints(final ResultSetConstraintBuilder builder, final WebQueryConstraints constraints)
+	private static void addConstraints(final ResultSetConstraintBuilder builder, final WQConstraints constraints)
 	{
-		for (WebQueryConstraintLine line : constraints.constraints)
+		for (WQConstraintLine line : constraints.constraints)
 		{
-			if (line instanceof WebQueryConstraint)
+			if (line instanceof WQConstraint)
 			{
-				WebQueryConstraint c = (WebQueryConstraint) line;
+				WQConstraint c = (WQConstraint) line;
 
 				builder.add(c.field, c.encodeValue());
 			}
-			else if (line instanceof WebQueryConstraintGroup)
+			else if (line instanceof WQGroup)
 			{
-				WebQueryConstraintGroup g = (WebQueryConstraintGroup) line;
+				WQGroup g = (WQGroup) line;
 
-				if (g.operator != WebQueryCombiningOperator.OR)
+				if (g.operator != WQGroupType.OR)
 					throw new IllegalArgumentException("Can only convert OR groups to legacy ResultSetConstraint type!");
-				else if (!g.constraints.stream().allMatch(l -> l instanceof WebQueryConstraint))
+				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint))
 					throw new IllegalArgumentException("Can only convert un-nested groups to legacy ResultSetConstraint type!");
-				else if (g.constraints.stream().map(l -> ((WebQueryConstraint) l).field).distinct().count() == 1)
+				else if (g.constraints.stream().map(l -> ((WQConstraint) l).field).distinct().count() == 1)
 					throw new IllegalArgumentException("Can only convert OR groups containing same field name to legacy ResultSetConstraint type!");
 
 				// Add all the constraints
-				g.constraints.stream().map(l -> (WebQueryConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
+				g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
 			}
 		}
 	}

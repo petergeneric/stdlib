@@ -1,13 +1,13 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryDefinition;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
 import java.util.List;
 
 public class ConstrainedResultSet<T>
 {
 	protected /*final*/ ResultSetConstraint constraint;
-	protected /*final*/ WebQueryDefinition query;
+	protected /*final*/ WebQuery query;
 	protected final List<T> list;
 
 	protected Long total;
@@ -24,7 +24,7 @@ public class ConstrainedResultSet<T>
 	}
 
 
-	public ConstrainedResultSet(WebQueryDefinition query, List<T> list)
+	public ConstrainedResultSet(WebQuery query, List<T> list)
 	{
 		if (query == null)
 			throw new IllegalArgumentException("Must provide non-null ResultSetConstraint!");
@@ -73,7 +73,7 @@ public class ConstrainedResultSet<T>
 	}
 
 
-	public WebQueryDefinition getQuery()
+	public WebQuery getQuery()
 	{
 		if (query == null)
 			query = constraint.toQuery();
