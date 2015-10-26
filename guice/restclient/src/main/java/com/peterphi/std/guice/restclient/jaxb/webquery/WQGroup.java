@@ -38,10 +38,9 @@ public class WQGroup extends WQConstraintLine
 	@Override
 	public String toString()
 	{
-		return "WQGroup{" +
-		       "operator=" + operator +
+		return "WQGroup{" + operator +
 		       ", constraints=" + constraints +
-		       "} " + super.toString();
+		       "} ";
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -84,7 +83,6 @@ public class WQGroup extends WQConstraintLine
 
 		return this;
 	}
-
 
 	public WQGroup neq(final String field, final Object value)
 	{

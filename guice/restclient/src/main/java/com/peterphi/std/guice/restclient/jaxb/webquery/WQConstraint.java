@@ -55,12 +55,22 @@ public class WQConstraint extends WQConstraintLine
 	@Override
 	public String toString()
 	{
-		return "WebQueryConstraint{" +
-		       "field='" + field + '\'' +
-		       ", function='" + function + '\'' +
-		       ", value='" + value + '\'' +
-		       ", value2='" + value2 + '\'' +
-		       "} " + super.toString();
+		if (function.hasBinaryParam())
+			return "QConstraint{" +
+			       "'" + field + '\'' +
+			       " " + function +
+			       " value='" + value + '\'' +
+			       " value2='" + value2 + '\'' +
+			       "}";
+		else if (function.hasParam())
+			return "QConstraint{" +
+			       "'" + field + '\'' +
+			       " " + function +
+			       " '" + value + "'}";
+		else
+			return "QConstraint{" +
+			       "'" + field + '\'' +
+			       " " + function + '}';
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

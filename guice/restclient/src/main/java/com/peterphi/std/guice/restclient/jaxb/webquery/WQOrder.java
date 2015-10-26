@@ -49,10 +49,7 @@ public class WQOrder
 	@Override
 	public String toString()
 	{
-		return "WebQueryOrder{" +
-		       "field='" + field + '\'' +
-		       ", direction='" + direction + '\'' +
-		       '}';
+		return "WQOrder{" + toLegacyForm() + '}';
 	}
 
 

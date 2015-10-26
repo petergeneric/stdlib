@@ -10,10 +10,12 @@ public class WebQueryTest
 	{
 		new WebQuery().orderDesc("id")
 		              .orderAsc("name")
+		              .orderAsc("name2")
 		              .limit(99)
 		              .computeSize(true)
-		              .or(g -> g.eq("id", 1).contains("id",
-		                                              "some_value"))
+		              .or(g -> g.eq("id", 1)
+		                        .contains("id",
+		                                  "some_value"))
 		              .eq("name", "x")
 		              .encode();
 	}

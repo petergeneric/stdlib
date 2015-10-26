@@ -10,8 +10,11 @@ import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -66,6 +69,18 @@ public class WebQuery
 	}
 
 
+	public String getFetch()
+	{
+		return this.fetch;
+	}
+
+
+	public Set<String> getExpand()
+	{
+		return new HashSet<>(Arrays.asList(expand.split(",")));
+	}
+
+
 	public boolean isComputeSize()
 	{
 		return constraints.computeSize;
@@ -75,7 +90,7 @@ public class WebQuery
 	@Override
 	public String toString()
 	{
-		return "WebQueryDefinition{" +
+		return "WebQuery{" +
 		       "fetch='" + fetch + '\'' +
 		       ", expand='" + expand + '\'' +
 		       ", constraints=" + constraints +
@@ -128,9 +143,23 @@ public class WebQuery
 	}
 
 
+	public WebQuery order(WQOrder order)
+	{
+		if (orderings.stream().anyMatch(o -> StringUtils.equalsIgnoreCase(order.field, o.field)))
+			throw new IllegalArgumentException("Cannot add field to order twice! Existing orderings " +
+			                                   orderings +
+			                                   ", new ordering: " +
+			                                   order);
+
+		orderings.add(order);
+
+		return this;
+	}
+
+
 	public WebQuery orderAsc(final String field)
 	{
-		orderings.add(WQOrder.asc(field));
+		order(WQOrder.asc(field));
 
 		return this;
 	}
@@ -138,7 +167,7 @@ public class WebQuery
 
 	public WebQuery orderDesc(final String field)
 	{
-		orderings.add(WQOrder.desc(field));
+		order(WQOrder.desc(field));
 
 		return this;
 	}
