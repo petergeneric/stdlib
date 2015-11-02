@@ -72,6 +72,15 @@ public class WQDates
 	}
 
 
+	public static String encode(WebQueryDateAnchor anchor)
+	{
+		if (anchor == null)
+			throw new IllegalArgumentException("Must provide non-null web query anchor!");
+		else
+			return anchor.name().toLowerCase();
+	}
+
+
 	public static String encode(WebQueryDateAnchor anchor, final boolean add, String period)
 	{
 		return encode(anchor, add, Period.parse(period));
@@ -80,7 +89,14 @@ public class WQDates
 
 	public static String encode(WebQueryDateAnchor anchor, final boolean add, Period period)
 	{
-		return anchor.name() + (add ? "+" : "-") + period.toString();
+		if (period.toStandardSeconds().getSeconds() == 0)
+		{
+			return encode(anchor);
+		}
+		else
+		{
+			return encode(anchor) + (add ? "+" : "-") + period.toString();
+		}
 	}
 
 
