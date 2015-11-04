@@ -1,14 +1,11 @@
 package com.peterphi.std.guice.database.dao;
 
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.ResultSetConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
-import org.hibernate.Criteria;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
-import java.util.function.Supplier;
 
 /**
  * An abstraction over the store/retrieve semantics of hibernate to allow a higher-level pattern of access
@@ -38,57 +35,11 @@ public interface Dao<T, ID extends Serializable>
 	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
 
 	/**
-	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
-	 *
-	 * @param constraints
-	 * 		the constraints to apply
-	 * @param base
-	 * 		the base criteria to use (the constraints will be ANDed with this Criteria)
-	 *
-	 * @return a resultset containing the requested number of results
-	 */
-	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints, Supplier<Criteria> base);
-
-	/**
-	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
-	 *
-	 * @param constraints
-	 * 		the constraints to apply
-	 *
-	 * @return a resultset containing the requested number of results
-	 */
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints);
-
-	/**
-	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
-	 *
-	 * @param constraints
-	 * 		the constraints to apply
-	 * @param base
-	 * 		the base criteria to use (the constraints will be ANDed with this Criteria)
-	 *
-	 * @return a resultset containing the requested number of results
-	 */
-	public ConstrainedResultSet<T> findByUriQuery(ResultSetConstraint constraints, Supplier<Criteria> base);
-
-	/**
 	 * Retrieve every object accessible through this DAO
 	 *
 	 * @return all entities of this type in the database
 	 */
 	public List<T> getAll();
-
-	/**
-	 * Retrieve a page from the list of every object accessible through this DAO
-	 *
-	 * @param offset
-	 * 		the first result to return
-	 * @param limit
-	 * 		the maximum number of results (the "page size")
-	 *
-	 * @return
-	 */
-	public List<T> getAll(int offset, int limit);
 
 	/**
 	 * Retrieve an item by its primary key
@@ -184,7 +135,7 @@ public interface Dao<T, ID extends Serializable>
 	 *
 	 * @return the entity, or null if no results were found
 	 *
-	 * @throws HibernateException
+	 * @throws org.hibernate.HibernateException
 	 * 		if more than one property is returned
 	 */
 	public T getByUniqueProperty(String propertyName, Object value);
