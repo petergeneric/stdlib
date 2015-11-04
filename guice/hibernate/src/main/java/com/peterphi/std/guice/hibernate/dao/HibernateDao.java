@@ -488,7 +488,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Criteria toGetByIdCriteria(WebQuery constraints)
 	{
 		// Retrieve the primary keys separately from the data
-		final List<ID> ids = toGetByIdCriteria(constraints).list();
+		final List<ID> ids = toGetIdCriteria(constraints).list();
 
 		final Criteria criteria = createCriteria();
 
@@ -537,6 +537,17 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 		return criteria;
 	}
+
+/*
+	protected DetachedCriteria toDetachedCriteria(WebQuery query)
+	{
+		final DetachedCriteria criteria = DetachedCriteria.forClass(getEntityType());
+
+		// Encode the WebQuery and add the constraints
+		toCriteriaBuilder(query).appendTo(criteria);
+
+		return criteria;
+	}*/
 
 
 	/**

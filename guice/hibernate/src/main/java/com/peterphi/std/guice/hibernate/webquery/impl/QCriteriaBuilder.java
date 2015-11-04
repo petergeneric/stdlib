@@ -2,8 +2,8 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
@@ -118,7 +118,6 @@ public class QCriteriaBuilder
 	{
 		appendTo(criteria, true, true);
 	}
-
 
 	/**
 	 * @param criteria
