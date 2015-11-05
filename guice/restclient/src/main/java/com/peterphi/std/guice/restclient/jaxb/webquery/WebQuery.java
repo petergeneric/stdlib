@@ -93,9 +93,20 @@ public class WebQuery
 		return "WebQuery{" +
 		       "fetch='" + fetch + '\'' +
 		       ", expand='" + expand + '\'' +
-		       ", constraints=" + constraints +
+		       ", constraints=" + constraintsToQueryFragment() +
 		       ", orderings=" + orderings +
 		       '}';
+	}
+
+
+	/**
+	 * Encode the constraints of this query to a readable string representation
+	 *
+	 * @return
+	 */
+	private String constraintsToQueryFragment()
+	{
+		return new WQGroup(WQGroupType.AND, constraints.constraints).toQueryFragment();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

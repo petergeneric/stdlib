@@ -8,4 +8,5 @@ import javax.xml.bind.annotation.XmlType;
 @XmlType(name = "ConstraintLineType")
 public abstract class WQConstraintLine
 {
+	public abstract String toQueryFragment();
 }

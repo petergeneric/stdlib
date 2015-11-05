@@ -52,7 +52,6 @@ public enum WQFunctionType
 		return (this == RANGE);
 	}
 
-
 	public static WQFunctionType getByPrefix(String value)
 	{
 		for (WQFunctionType function : values())

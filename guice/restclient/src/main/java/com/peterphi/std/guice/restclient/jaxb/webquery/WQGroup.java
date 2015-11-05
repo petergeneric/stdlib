@@ -8,6 +8,7 @@ import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 
 /**
  * Defines a group of constraints to be ANDed or ORred together
@@ -32,6 +33,14 @@ public class WQGroup extends WQConstraintLine
 	public WQGroup(final WQGroupType operator)
 	{
 		this.operator = operator;
+	}
+
+
+	public WQGroup(final WQGroupType operator, final List<WQConstraintLine> constraints)
+	{
+		this(operator);
+
+		this.constraints.addAll(constraints);
 	}
 
 
@@ -83,6 +92,7 @@ public class WQGroup extends WQConstraintLine
 
 		return this;
 	}
+
 
 	public WQGroup neq(final String field, final Object value)
 	{
@@ -247,5 +257,21 @@ public class WQGroup extends WQConstraintLine
 	public static WQGroup newOr()
 	{
 		return new WQGroup(WQGroupType.OR);
+	}
+
+
+	@Override
+	public String toQueryFragment()
+	{
+		if (constraints.size() == 1)
+			return constraints.get(0).toQueryFragment();
+		else
+		{
+			final String operatorStr = " " + operator.name() + " ";
+
+			return constraints.stream().map(WQConstraintLine:: toQueryFragment).collect(Collectors.joining(operatorStr,
+			                                                                                               "(",
+			                                                                                               ")"));
+		}
 	}
 }

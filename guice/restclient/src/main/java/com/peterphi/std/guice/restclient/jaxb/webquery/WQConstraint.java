@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -232,5 +233,33 @@ public class WQConstraint extends WQConstraintLine
 		}
 
 		return new WQConstraint(field, function, value);
+	}
+
+
+	@Override
+	public String toQueryFragment()
+	{
+		if (function.hasBinaryParam())
+			return field +
+			       " " +
+			       function +
+			       " " + escape(value) +
+			       "\" TO " +
+			       escape(value2);
+		else if (function.hasParam())
+			return field + " " + function + " " + escape(value);
+		else
+			return field + " " + function;
+	}
+
+
+	private static String escape(String val)
+	{
+		if (val == null)
+			return "NIL"; // avoid using null
+		else if (!val.isEmpty() && StringUtils.isNumeric(val))
+			return val; // Don't quote numbers
+		else
+			return "\"" + StringEscapeUtils.escapeJava(val) + "\""; // Quote all strings
 	}
 }
