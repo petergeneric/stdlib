@@ -27,6 +27,11 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 	private Instant lastRan = null;
 
+	/**
+	 * True while the user {@link #execute()} method is running
+	 */
+	private volatile boolean userCodeRunning = false;
+
 
 	/**
 	 * Creates a new Daemon; the Daemon will start once the guice object is fully constructed
@@ -56,6 +61,12 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			throw new IllegalArgumentException("Cannot provide a negative sleep time!");
 		else
 			this.sleepTime = sleepTime;
+	}
+
+
+	public boolean isUserCodeRunning()
+	{
+		return this.userCodeRunning;
 	}
 
 
@@ -116,6 +127,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 			try
 			{
+				userCodeRunning = true;
 				execute();
 			}
 			catch (Throwable t)
@@ -127,6 +139,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			}
 			finally
 			{
+				userCodeRunning = false;
+
 				if (timer != null)
 					timer.stop();
 			}
@@ -176,5 +190,31 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 		this.exceptions = metrics.meter(GuiceMetricNames.name(getClass(), "exceptions"));
 
 		super.postConstruct();
+	}
+
+
+	/**
+	 * Trigger the user code to run ASAP
+	 *
+	 * @throws IllegalStateException
+	 * 		if the user code is already running or if the daemon is stopped
+	 */
+	public void trigger()
+	{
+		if (userCodeRunning)
+		{
+			throw new IllegalStateException("User code already running!");
+		}
+		else if (!isRunning())
+		{
+			throw new IllegalStateException("Daemon is in the process of terminating!");
+		}
+		else
+		{
+			synchronized (this)
+			{
+				this.notifyAll();
+			}
+		}
 	}
 }

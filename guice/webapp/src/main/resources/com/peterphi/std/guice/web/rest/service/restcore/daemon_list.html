@@ -2,6 +2,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 <!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
 <!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--@thymesVar id="message" type="java.lang.String"-->
 <head>
 	<title>Daemons</title>
 
@@ -15,6 +16,10 @@
 <div class="container">
 	<h1>Threads</h1>
 
+	<div th:if="${message}" class="alert alert-success">
+		<th:block th:text="${message}"></th:block>
+	</div>
+
 	<p>This page lists daemons and centrally-managed threads started by this application</p>
 
 	<th:block th:with="daemons = ${registry.daemons}">
@@ -25,6 +30,7 @@
 				<tr>
 					<th>Name</th>
 					<th>Alive?</th>
+					<th>Running?</th>
 					<th>Description</th>
 				</tr>
 				</thead>
@@ -32,8 +38,7 @@
 				<tr th:each="daemon: ${daemons}">
 					<td th:text="${daemon.name}">name</td>
 
-					<td th:if="${daemon.threadRunning}">Yes</td>
-					<td th:unless="${daemon.threadRunning}">No</td>
+					<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
 
 					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
 				</tr>
@@ -50,25 +55,34 @@
 				<tr>
 					<th>Name</th>
 					<th>Alive?</th>
+					<th>Running?</th>
 					<th>Interval</th>
 					<th>Last Ran</th>
-					<th>Executions</th>
-					<th>Exceptions</th>
+					<th>Runs</th>
+					<th>Errors</th>
 					<th>Description</th>
+					<th>&nbsp;</th>
 				</tr>
 				</thead>
 				<tbody>
 				<tr th:each="daemon: ${daemons}">
 					<td th:text="${daemon.name}">name</td>
-					<td th:if="${daemon.threadRunning}">Yes</td>
-					<td th:unless="${daemon.threadRunning}">No</td>
+					<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
+					<td th:text="${daemon.userCodeRunning ? '✔' : '✖'}">Yes / No</td>
 
-					<td th:text="${daemon.sleepTime}"></td>
+					<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
 					<td th:text="${daemon.lastRan}"></td>
 					<td th:text="${daemon.calls.count}"></td>
 					<td th:text="${daemon.exceptions.count}"></td>
 
 					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
+					<td>
+						<form th:if="${daemon.threadRunning}" method="POST"
+						      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
+							<input type="hidden" name="name" th:value="${daemon.name}"/>
+							<input type="submit" value="Run Now"/>
+						</form>
+					</td>
 				</tr>
 				</tbody>
 			</table>

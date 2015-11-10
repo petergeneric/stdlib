@@ -1,13 +1,21 @@
 package com.peterphi.std.guice.web.rest.service.daemons;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
+import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
+import javax.ws.rs.core.Response;
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
+import java.util.Optional;
 import java.util.function.Function;
 
 public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
@@ -24,16 +32,51 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 	GuiceDaemonRegistry registry;
 
 
+	@Inject
+	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
+	URI restEndpoint;
+
+
 	@Override
-	public String getIndex()
+	public String getIndex(String message)
 	{
 		final TemplateCall template = templater.template(PREFIX + "daemon_list.html");
 
+		template.set("message", message);
 		template.set("registry", registry);
-		template.set("daemonDescriber", (Function<GuiceDaemon,String>)this::getDescription);
+		template.set("daemonDescriber", (Function<GuiceDaemon, String>) this :: getDescription);
 
 		return template.process();
 	}
+
+
+	@Override
+	public Response trigger(final String name)
+	{
+		final Optional<GuiceRecurringDaemon> result = registry.getRecurring()
+		                                                      .stream()
+		                                                      .filter(d -> StringUtils.equals(name,
+		                                                                                      d.getName()))
+		                                                      .findFirst();
+
+		if (result.isPresent())
+		{
+			final GuiceRecurringDaemon daemon = result.get();
+
+			daemon.trigger();
+
+			final String message = "Daemon " + daemon.getName() + " triggered at " + DateTime.now();
+
+			return Response.seeOther(UriBuilder.fromUri(restEndpoint.toString() + "/guice/threads")
+			                                   .queryParam("message", message)
+			                                   .build()).build();
+		}
+		else
+		{
+			throw new IllegalArgumentException("No recurring daemon with name: " + name);
+		}
+	}
+
 
 	private String getDescription(GuiceDaemon daemon)
 	{

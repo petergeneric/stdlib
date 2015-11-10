@@ -18,7 +18,6 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	@Inject
 	GuiceDaemonRegistry registry;
 
-
 	public GuiceDaemon()
 	{
 		this(true);

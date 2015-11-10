@@ -208,7 +208,13 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	@Override
 	public String toString()
 	{
-		return "[Timeout: " + Long.toString(period) + " " + unit.toString().toLowerCase() + "]";
+		return "[Timeout: " + toEnglishString() + "]";
+	}
+
+
+	public String toEnglishString()
+	{
+		return Long.toString(period) + " " + unit.toString().toLowerCase();
 	}
 
 
