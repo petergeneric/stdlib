@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
+import com.peterphi.std.annotation.Doc;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
 
@@ -24,6 +25,7 @@ import java.util.stream.Collectors;
 @BadgerFish
 @XmlRootElement(name = "WebQueryDefinition")
 @XmlType(name = "QueryDefinitionType")
+@Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")
 public class WebQuery
 {
 	/**

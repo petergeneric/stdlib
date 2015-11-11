@@ -90,6 +90,10 @@ public class RestServiceResourceParamInfo
 
 			return "CookieParam " + p.value();
 		}
+		else if (hasAnnotation(Context.class))
+		{
+			return "Internal Context";
+		}
 		else
 		{
 			return "unknown";
@@ -137,16 +141,13 @@ public class RestServiceResourceParamInfo
 
 	public String getDescription()
 	{
-		final Doc doc = getAnnotation(Doc.class);
+		final Doc doc = getDoc();
 
 		if (doc != null)
-		{
 			return StringUtils.join(doc.value(), "\n");
-		}
-
-		return "";
+		else
+			return "";
 	}
-
 
 	@SuppressWarnings("unchecked")
 	public boolean isEntity()
@@ -156,8 +157,7 @@ public class RestServiceResourceParamInfo
 		                   QueryParam.class,
 		                   FormParam.class,
 		                   HeaderParam.class,
-		                   CookieParam.class,
-		                   Context.class))
+		                   CookieParam.class))
 			return false;
 
 		// Not if this comes from the JAX-RS context and not the request
@@ -175,7 +175,7 @@ public class RestServiceResourceParamInfo
 
 	public List<String> getSeeAlsoURLs()
 	{
-		Doc doc = getAnnotation(Doc.class);
+		final Doc doc = getDoc();
 
 		if (doc != null)
 		{
@@ -186,4 +186,19 @@ public class RestServiceResourceParamInfo
 			return Collections.emptyList();
 		}
 	}
+
+
+
+	private Doc getDoc()
+	{
+		Doc doc = getAnnotation(Doc.class);
+
+		if (doc == null && getDataType().isAnnotationPresent(Doc.class))
+		{
+			doc = getDataType().getAnnotation(Doc.class);
+		}
+
+		return doc;
+	}
+
 }

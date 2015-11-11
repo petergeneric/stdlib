@@ -107,7 +107,8 @@
 			</thead>
 			<tbody>
 			<tr th:each="param: ${resource.parameters}">
-				<td th:text="${param.name}"></td>
+				<td th:unless="${param.entity}" th:text="${param.name}"></td>
+				<td th:if="${param.entity}">Request Body</td>
 				<td th:text="${param.type}"></td>
 				<td><span style="white-space: pre-line;" th:text="${param.description}"></span>
 					<th:block th:unless="${#lists.isEmpty(param.seeAlsoURLs)}">
