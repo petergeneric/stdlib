@@ -1,5 +1,5 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org/">
 <!--@thymesVar id="service" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo"-->
 <!--@thymesVar id="schemaGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil"-->
 <head>
@@ -132,13 +132,7 @@
 		<pre th:text="${schemaGenerator.getSchema(resource.returnType)}"></pre>
 
 		<h5>curl template</h5>
-		<code>curl -X <span th:text="${resource.httpMethod}">GET</span> "<span th:text="${url}">path</span>"
-			<span th:if="${resource.requestEntity}">
-				<span th:if="${resource.httpMethod != 'GET'}">
-					--data-binary @file.xml
-				</span>
-			</span>
-		</code>
+		<code th:text="${resource.getCurlTemplate(url)}"></code>
 		<br/>
 		<hr/>
 		<br/>
