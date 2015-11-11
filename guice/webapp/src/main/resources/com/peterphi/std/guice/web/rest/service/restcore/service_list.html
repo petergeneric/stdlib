@@ -52,7 +52,11 @@
 		</thead>
 		<tbody>
 		<tr th:each="service,itStat: ${services}">
-			<td th:text="${service.path}">path</td>
+			<td>
+				<ul class="unstyled list-unstyled">
+					<li th:each="path: ${service.paths}" th:text="${path}">path</li>
+				</ul>
+			</td>
 			<td>
 				<strong><a th:href="@{|${coreRestPrefix}/guice/service/${itStat.index}|}"
 				           th:text="${service.interfaceName}">iface</a></strong>

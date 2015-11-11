@@ -123,7 +123,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	}
 
 
-	private static String concat(String a, String b)
+	static String concat(String a, String b)
 	{
 		// Strip trailing slashes from a
 		while (!a.isEmpty() && a.charAt(a.length() - 1) == '/')

@@ -43,6 +43,67 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 	}
 
 
+	public List<String> getPaths()
+	{
+		String[] paths = getResources().stream().map(r -> r.getLocalPath()).toArray(i -> new String[i]);
+
+		return getCommonPaths(getPath(), paths);
+	}
+
+
+	static List<String> getCommonPaths(final String servicePath, final String... resourcePaths)
+	{
+		// TODO build up a set of paths underneath this resource and identify the commonalities
+		// e.g. /api/activity/{id} /api/activities /api/activities/create should return:
+		// /api/activity /api/activities
+
+		final String commonPrefix = StringUtils.getCommonPrefix(resourcePaths);
+
+		// TODO if we have too many paths then just fall back on the service path?
+		if (StringUtils.isNotBlank(commonPrefix) && commonPrefix.length() > 1)
+			return Arrays.asList(resourcePaths)
+			             .stream()
+			             .map(path -> truncatePath(path, commonPrefix))
+			             .map(RestServiceInfo:: stripTrailingSlash)
+			             .map(path -> RestServiceResourceInfo.concat(servicePath, path)) // now build up the full path
+			             .distinct()
+			             .collect(Collectors.toList());
+		else
+			return Arrays.asList(servicePath);
+	}
+
+
+	static String stripTrailingSlash(String path)
+	{
+		if (path.endsWith("/"))
+			return path.substring(0, path.length() - 1);
+		else
+			return path;
+	}
+
+
+	/**
+	 * Truncate path to the completion of the segment ending with the common prefix
+	 *
+	 * @param path
+	 * @param commonPrefix
+	 *
+	 * @return
+	 */
+	static String truncatePath(String path, String commonPrefix)
+	{
+		final int nextSlash = path.indexOf('/', commonPrefix.length());
+		final int nextOpenCurly = path.indexOf('{', commonPrefix.length());
+
+		if (nextSlash > 0)
+			return path.substring(0, nextSlash);
+		else if (nextOpenCurly > 0)
+			return path.substring(0, nextOpenCurly);
+		else
+			return path;
+	}
+
+
 	public List<RestServiceResourceInfo> getResources()
 	{
 		return Arrays.stream(clazz.getMethods())
