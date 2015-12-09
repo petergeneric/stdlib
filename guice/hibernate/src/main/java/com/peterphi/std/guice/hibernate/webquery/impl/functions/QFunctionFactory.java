@@ -5,10 +5,15 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 
 import java.util.List;
+import java.util.function.Function;
 
 public class QFunctionFactory
 {
-	public static QFunction getInstance(QPropertyRef property, WQFunctionType function, String param, String param2)
+	public static QFunction getInstance(QPropertyRef property,
+	                                    WQFunctionType function,
+	                                    String param,
+	                                    String param2,
+	                                    Function<String, QPropertyRef> propertyResolver)
 	{
 		switch (function)
 		{
@@ -34,6 +39,16 @@ public class QFunctionFactory
 				return new Le(property, param);
 			case LT:
 				return new Lt(property, param);
+			// Functions referencing a property (can't optimise these so use a PropertyRestriction)
+			case EQ_REF:
+			case NEQ_REF:
+			case LE_REF:
+			case LT_REF:
+			case GE_REF:
+			case GT_REF:
+				QPropertyRef paramRef = propertyResolver.apply(param);
+
+				return new PropertyRestriction(property, function, paramRef);
 			default:
 				throw new IllegalArgumentException("No mapping for function: " + function);
 		}

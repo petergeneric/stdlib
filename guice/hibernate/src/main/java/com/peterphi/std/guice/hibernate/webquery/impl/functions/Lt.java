@@ -8,7 +8,6 @@ import org.hibernate.criterion.Restrictions;
 
 class Lt implements QFunction
 {
-
 	private final QPropertyRef property;
 	private final Object value;
 

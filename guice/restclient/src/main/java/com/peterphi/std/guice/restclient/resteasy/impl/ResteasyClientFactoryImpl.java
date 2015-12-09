@@ -121,6 +121,32 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                        final boolean storeCookies,
 	                                        Consumer<HttpClientBuilder> customiser)
 	{
+		customiser = createHttpClientCustomiser(fastFail, authScope, credentials, preemptiveAuth, storeCookies, customiser);
+
+
+		return getOrCreateClient(customiser, null);
+	}
+
+
+	/**
+	 * N.B. This method signature may change in the future to add new parameters
+	 *
+	 * @param fastFail
+	 * @param authScope
+	 * @param credentials
+	 * @param preemptiveAuth
+	 * @param storeCookies
+	 * @param customiser
+	 *
+	 * @return
+	 */
+	public Consumer<HttpClientBuilder> createHttpClientCustomiser(final boolean fastFail,
+	                                                              final AuthScope authScope,
+	                                                              final Credentials credentials,
+	                                                              final boolean preemptiveAuth,
+	                                                              final boolean storeCookies,
+	                                                              Consumer<HttpClientBuilder> customiser)
+	{
 		// Customise timeouts if fast fail mode is enabled
 		if (fastFail)
 		{
@@ -154,8 +180,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// If cookies are enabled then set up a cookie store
 		if (storeCookies)
 			customiser = concat(customiser, b -> b.setDefaultCookieStore(new BasicCookieStore()));
-
-		return getOrCreateClient(customiser, null);
+		return customiser;
 	}
 
 
@@ -176,37 +201,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		}
 		else
 		{
-			// Build an HttpClient
-			final CloseableHttpClient http;
-			{
-				final HttpClientBuilder builder = HttpClientBuilder.create();
+			final CloseableHttpClient http = createHttpClient(httpCustomiser);
 
-				// By default set long call timeouts
-				{
-					RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-					requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-					              .setSocketTimeout((int) socketTimeout.getMilliseconds());
-
-					builder.setDefaultRequestConfig(requestBuilder.build());
-				}
-
-				// Set the default keepalive setting
-				if (noKeepalive)
-					builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
-
-				// By default share the common connection provider
-				builder.setConnectionManager(connectionManager);
-
-				// By default use the JRE default route planner for proxies
-				builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-
-				// Allow customisation
-				if (httpCustomiser != null)
-					httpCustomiser.accept(builder);
-
-				http = builder.build();
-			}
 
 			// Now build a resteasy client
 			{
@@ -220,6 +216,45 @@ public class ResteasyClientFactoryImpl implements StoppableService
 				return builder.build();
 			}
 		}
+	}
+
+
+	/**
+	 * Build an HttpClient
+	 *
+	 * @param customiser
+	 *
+	 * @return
+	 */
+	public CloseableHttpClient createHttpClient(final Consumer<HttpClientBuilder> customiser)
+	{
+		final HttpClientBuilder builder = HttpClientBuilder.create();
+
+		// By default set long call timeouts
+		{
+			RequestConfig.Builder requestBuilder = RequestConfig.custom();
+
+			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
+			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+
+			builder.setDefaultRequestConfig(requestBuilder.build());
+		}
+
+		// Set the default keepalive setting
+		if (noKeepalive)
+			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
+
+		// By default share the common connection provider
+		builder.setConnectionManager(connectionManager);
+
+		// By default use the JRE default route planner for proxies
+		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
+
+		// Allow customisation
+		if (customiser != null)
+			customiser.accept(builder);
+
+		return builder.build();
 	}
 
 

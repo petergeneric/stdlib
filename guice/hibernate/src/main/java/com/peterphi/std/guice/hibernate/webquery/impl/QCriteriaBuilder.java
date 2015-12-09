@@ -81,7 +81,8 @@ public class QCriteriaBuilder
 		return QFunctionFactory.getInstance(getProperty(constraint.field),
 		                                    constraint.function,
 		                                    constraint.value,
-		                                    constraint.value2);
+		                                    constraint.value2,
+		                                    this :: getProperty);
 	}
 
 
@@ -118,6 +119,7 @@ public class QCriteriaBuilder
 	{
 		appendTo(criteria, true, true);
 	}
+
 
 	/**
 	 * @param criteria

@@ -51,18 +51,6 @@ public class QProperty
 	}
 
 
-	@Override
-	public String toString()
-	{
-		return "QProperty{" +
-		       "entity.name=" + entity.getName() +
-		       ", name='" + name + '\'' +
-		       ", clazz=" + clazz +
-		       ", nullable=" + nullable +
-		       '}';
-	}
-
-
 	public WQEntityProperty encode()
 	{
 		WQEntityProperty obj = new WQEntityProperty();
@@ -83,5 +71,17 @@ public class QProperty
 		}
 
 		return obj;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "QProperty{" +
+		       "entity.name=" + entity.getName() +
+		       ", name='" + name + '\'' +
+		       ", clazz=" + clazz +
+		       ", nullable=" + nullable +
+		       '}';
 	}
 }

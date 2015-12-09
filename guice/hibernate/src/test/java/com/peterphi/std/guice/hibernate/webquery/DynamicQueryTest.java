@@ -22,7 +22,7 @@ import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		            classPackages = ParentEntity.class)
+		classPackages = ParentEntity.class)
 public class DynamicQueryTest
 {
 	@Inject
@@ -62,6 +62,33 @@ public class DynamicQueryTest
 	{
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
 		dao.findByUriQuery(new WebQuery().eq("otherObject.parent.name", "Alice"));
+	}
+
+
+	@Test
+	public void testPropertyRefWorks() throws Exception
+	{
+		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
+		dao.findByUriQuery(new WebQuery().eqRef("otherObject.parent.name", "otherObject.parent.name"));
+
+		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
+		dao.findByUriQuery(new WebQuery().leRef("otherObject.parent.name", "otherObject.parent.name"));
+	}
+
+
+	@Test
+	public void testEqRefReturnsValue() throws Exception
+	{
+		ParentEntity obj = new ParentEntity();
+		obj.setName("Name");
+		obj.setOtherObject(new ChildEntity());
+		obj.getOtherObject().setName("Name");
+
+		childDao.save(obj.getOtherObject());
+		dao.save(obj);
+
+		assertEquals(1, dao.findByUriQuery(new WebQuery().eqRef("name", "otherObject.name")).getList().size());
+		assertEquals(0, dao.findByUriQuery(new WebQuery().neqRef("name", "otherObject.name")).getList().size());
 	}
 
 

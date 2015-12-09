@@ -180,6 +180,43 @@ public class WQConstraint extends WQConstraintLine
 		return new WQConstraint(field, WQFunctionType.RANGE, Objects.toString(from), Objects.toString(to));
 	}
 
+
+	public static WQConstraint eqRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.EQ_REF, field2);
+	}
+
+
+	public static WQConstraint neqRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.NEQ_REF, field2);
+	}
+
+
+	public static WQConstraint leRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.LE_REF, field2);
+	}
+
+
+	public static WQConstraint ltRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.LT_REF, field2);
+	}
+
+
+	public static WQConstraint geRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.GE_REF, field2);
+	}
+
+
+	public static WQConstraint gtRef(final String field, final String field2)
+	{
+		return new WQConstraint(field, WQFunctionType.GT_REF, field2);
+	}
+
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Decode query string value encoding
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

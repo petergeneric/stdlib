@@ -289,6 +289,42 @@ public class WebQuery
 	}
 
 
+	public WebQuery eqRef(final String field, final String field2)
+	{
+		return add(WQConstraint.eqRef(field, field2));
+	}
+
+
+	public WebQuery neqRef(final String field, final String field2)
+	{
+		return add(WQConstraint.neqRef(field, field2));
+	}
+
+
+	public WebQuery leRef(final String field, final String field2)
+	{
+		return add(WQConstraint.leRef(field, field2));
+	}
+
+
+	public WebQuery ltRef(final String field, final String field2)
+	{
+		return add(WQConstraint.ltRef(field, field2));
+	}
+
+
+	public WebQuery geRef(final String field, final String field2)
+	{
+		return add(WQConstraint.geRef(field, field2));
+	}
+
+
+	public WebQuery gtRef(final String field, final String field2)
+	{
+		return add(WQConstraint.gtRef(field, field2));
+	}
+
+
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Sub-groups
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

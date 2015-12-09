@@ -31,4 +31,15 @@ class QJoin
 	{
 		return entity;
 	}
+
+
+	@Override
+	public String toString()
+	{
+		return "QJoin{" +
+		       "path='" + path + '\'' +
+		       ", alias='" + alias + '\'' +
+		       ", entity=" + entity +
+		       '}';
+	}
 }
