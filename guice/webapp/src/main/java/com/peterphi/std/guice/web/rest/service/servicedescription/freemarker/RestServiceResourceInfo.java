@@ -3,7 +3,6 @@ package com.peterphi.std.guice.web.rest.service.servicedescription.freemarker;
 import com.google.common.collect.ComparisonChain;
 import com.peterphi.std.annotation.Doc;
 import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.enums.EnumUtils;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HttpMethod;
@@ -16,6 +15,8 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Helper type to provide
@@ -253,7 +254,6 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 				sb.append(" -H \"Content-Type: " + getConsumes() + "\" --data-binary \"...\"");
 		}
 
-
 		return sb.toString();
 	}
 
@@ -263,8 +263,14 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		if (getRequestEntity() == null || getRequestEntity().getDataType() == null)
 			return "???";
 
-		Class<?> clazz = getRequestEntity().getDataType();
+		final Class<?> clazz = getRequestEntity().getDataType();
 
+		return getExampleTextPlain(clazz);
+	}
+
+
+	private static String getExampleTextPlain(final Class<?> clazz)
+	{
 		if (clazz.equals(Boolean.class) || clazz.equals(Boolean.TYPE))
 			return "true";
 		else if (clazz.equals(Integer.class) || clazz.equals(Integer.TYPE) ||
@@ -274,7 +280,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		         clazz.equals(Double.class) || clazz.equals(Double.TYPE))
 			return "123";
 		else if (clazz.isEnum())
-			return ((Enum) EnumUtils.getEnumList(clazz).get(0)).name();
+			return Stream.of(clazz.getEnumConstants()).map(Object:: toString).collect(Collectors.joining("|"));
 		else
 			return "...";
 	}
