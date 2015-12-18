@@ -120,9 +120,11 @@ public interface Dao<T, ID extends Serializable>
 	 * @param obj
 	 * 		the entity
 	 *
+	 * @return a Hibernate entity version of obj
+	 *
 	 * @see org.hibernate.Session#merge(Object)
 	 */
-	public void merge(T obj);
+	public T merge(T obj);
 
 
 	/**

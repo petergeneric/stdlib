@@ -190,9 +190,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	@Override
 	@Transactional
-	public void merge(T obj)
+	public T merge(T obj)
 	{
-		getWriteSession().merge(obj);
+		return (T) getWriteSession().merge(obj);
 	}
 
 
