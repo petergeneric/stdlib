@@ -7,6 +7,7 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -32,6 +33,9 @@ public class DynamicQueryTest
 	HibernateDao<ChildEntity, Long> childDao;
 
 	@Inject
+	HibernateDao<MappedSuperclassEntity, Long> mappedSuperclassEntityDao;
+
+	@Inject
 	QEntityFactory entityFactory;
 
 
@@ -43,6 +47,13 @@ public class DynamicQueryTest
 			dao.delete(obj);
 
 		assertEquals(0, dao.getAll().size());
+	}
+
+
+	@Test
+	public void testMappedSuperclassFieldSearch()
+	{
+		mappedSuperclassEntityDao.findByUriQuery(new WebQuery().eq("id", 123).neq("name", "test").lt("created", DateTime.now()));
 	}
 
 
