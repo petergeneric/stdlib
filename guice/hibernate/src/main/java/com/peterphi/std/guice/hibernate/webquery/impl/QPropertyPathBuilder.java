@@ -1,9 +1,11 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class QPropertyPathBuilder
 {
-	private QPath path;
-	private QPath leaf;
+	private List<QRelation> path = new ArrayList<>();
 
 	private QProperty property;
 
@@ -13,19 +15,7 @@ public class QPropertyPathBuilder
 		if (property != null)
 			throw new IllegalStateException("Cannot append a relation path when a property has already been appended!");
 
-		if (leaf == null)
-		{
-			path = new QPath(relation, null);
-			leaf = path;
-		}
-		else
-		{
-			final QPath newPath = new QPath(relation, null);
-
-			leaf.withChild(newPath);
-
-			leaf = newPath;
-		}
+		path.add(relation);
 	}
 
 
@@ -40,7 +30,10 @@ public class QPropertyPathBuilder
 
 	public QPath getPath()
 	{
-		return path;
+		if (!path.isEmpty())
+			return new QPath(path, path.size());
+		else
+			return null;
 	}
 
 
@@ -49,6 +42,6 @@ public class QPropertyPathBuilder
 		if (property == null)
 			throw new IllegalArgumentException("Expected property but path referred to a relation: " + path.toString());
 
-		return new QPropertyPath(path, property);
+		return new QPropertyPath(getPath(), property);
 	}
 }

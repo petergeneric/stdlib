@@ -1,88 +1,85 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import java.lang.ref.WeakReference;
+import java.util.List;
 
-public class QPath implements Cloneable
+public class QPath
 {
-	private final QRelation relation;
-	private QPath child;
-
-	private WeakReference<String> path = null;
+	private final List<QRelation> components;
+	private final int depth;
 
 
-	public QPath(final QRelation relation, final QPath child)
+	public QPath(final List<QRelation> components, final int depth)
 	{
-		if (relation == null)
-			throw new IllegalArgumentException("Must specify a relation!");
+		if (components.isEmpty())
+			throw new IllegalArgumentException("Must provide at least one component for a path!");
+		else if (depth > components.size())
+			throw new IllegalArgumentException("Depth must be <= component list size!");
 
-		this.relation = relation;
-		this.child = child;
+		this.components = components;
+		this.depth = depth;
 	}
 
 
-	public QRelation getRelation()
+	public QPath getParent()
 	{
-		return relation;
+		if (depth > 1)
+			return new QPath(this.components, depth - 1);
+		else
+			return null;
 	}
 
 
-	public QPath getChild()
+	public QRelation getRelation(final int index)
 	{
-		return child;
+		if (index > depth || index < 0)
+			throw new IllegalArgumentException("Illegal value for index: must be between 0 and " + depth);
+		else
+			return components.get(index);
 	}
 
 
 	public String toJoinAlias()
 	{
-		return toString().replace('.', '_');
+		return toString('_');
+	}
+
+
+	private String toString(char separator)
+	{
+		StringBuilder sb = new StringBuilder();
+
+		for (int i = 0; i < depth; i++)
+		{
+			if (i != 0)
+				sb.append(separator);
+
+			sb.append(components.get(i).getName());
+		}
+
+		return sb.toString();
 	}
 
 
 	@Override
 	public String toString()
 	{
-		if (child == null)
-		{
-			return relation.getName();
-		}
+		if (depth == 1)
+			return components.get(0).getName();
 		else
-		{
-			// If we have a cached value already then return that
-			{
-				final String path = (this.path != null) ? this.path.get() : null;
-
-				if (path != null)
-					return path;
-			}
-
-			// Compute and store the built path
-			{
-				StringBuilder sb = new StringBuilder();
-
-				QPath node = this;
-				for (int i = 0; node != null; i++)
-				{
-					if (i != 0)
-						sb.append('.');
-
-					sb.append(node.getRelation().getName());
-
-					node = node.getChild();
-				}
-
-				final String path = sb.toString();
-				this.path = new WeakReference<>(path);
-
-				return path;
-			}
-		}
+			return toString('.');
 	}
 
 
 	@Override
 	public int hashCode()
 	{
-		return toString().hashCode();
+		// Copied from AbstractList.hashCode
+		int hashCode = 1;
+
+		for (int i = 0; i < depth; i++)
+			hashCode = 31 * hashCode + (components.get(i).hashCode());
+
+		return hashCode;
 	}
 
 
@@ -94,51 +91,19 @@ public class QPath implements Cloneable
 		else if (!(o instanceof QPath))
 			return false;
 		else
-			return o.toString().equals(toString());
-	}
+		{
+			QPath other = (QPath) o;
 
+			// Must have the same depth to be identical
+			if (other.depth != this.depth)
+				return false;
 
-	@Override
-	public QPath clone()
-	{
-		QPath newPath = new QPath(getRelation(), null);
+			for (int i = 0; i < depth; i++)
+				if (!other.components.get(i).equals(this.components.get(i)))
+					return false; // path mismatch
 
-		// Clone the child
-		if (getChild() != null)
-			newPath.withChild(getChild().clone());
-
-		return newPath;
-	}
-
-
-	public void withChild(final QPath child)
-	{
-		if (this.child != null)
-			throw new IllegalArgumentException("Cannot set child: already set!");
-		else
-			this.child = child;
-
-		// invalidate the cached toString value
-		this.path = null;
-	}
-
-
-	public void withNoChild()
-	{
-		this.child = null;
-
-		// invalidate the cached toString value
-		this.path = null;
-	}
-
-
-	public QPath getParentOfLeaf()
-	{
-		if (getChild() == null)
-			return null; // we are already a leaf node
-		else if (getChild().getChild() == null)
-			return this;
-		else
-			return getChild().getParentOfLeaf();
+			// No mismatch encountered
+			return true;
+		}
 	}
 }

@@ -246,10 +246,10 @@ public class QCriteriaBuilder
 	{
 		try
 		{
-			QPropertyPathBuilder propertyPath = entity.getPath(path);
+			QPropertyPath propertyPath = entity.getPath(path).getPropertyPath();
 
 			final QJoin join = join(propertyPath.getPath());
-			final QProperty property = propertyPath.getPropertyPath().getProperty();
+			final QProperty property = propertyPath.getProperty();
 
 			return new QPropertyRef(join, property);
 		}
@@ -267,16 +267,18 @@ public class QCriteriaBuilder
 
 		final QJoin parent;
 
-		if (joins.containsKey(path.toString()))
+		if (joins.containsKey(path))
 		{
-			return joins.get(path.toString());
+			return joins.get(path);
 		}
 		else
 		{
-			parent = join(getParent(path));
+			parent = join(path.getParent());
 		}
 
-		final QJoin join = new QJoin(path, path.toJoinAlias(), parent != null ? parent.getEntity() : path.getRelation().getEntity());
+		final QJoin join = new QJoin(path,
+		                             path.toJoinAlias(),
+		                             parent != null ? parent.getEntity() : path.getRelation(0).getEntity());
 
 		joins.put(path, join);
 
@@ -289,27 +291,5 @@ public class QCriteriaBuilder
 		final QPropertyPathBuilder builder = entity.getPath(path);
 
 		return join(builder.getPath());
-	}
-
-
-	protected QPath getParent(QPath path)
-	{
-		if (path == null)
-			return null;
-
-		QPath newPath = path.clone();
-
-		final QPath parentOfLeaf = newPath.getParentOfLeaf();
-
-		if (parentOfLeaf != null)
-		{
-			parentOfLeaf.withNoChild();
-
-			return newPath;
-		}
-		else
-		{
-			return null;
-		}
 	}
 }

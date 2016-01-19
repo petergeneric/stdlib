@@ -2,20 +2,20 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 public class QPropertyPath
 {
-	private final QPath parent;
+	private final QPath path;
 	private final QProperty property;
 
 
 	public QPropertyPath(final QPath parent, final QProperty property)
 	{
-		this.parent = parent;
+		this.path = parent;
 		this.property = property;
 	}
 
 
-	public QPath getParent()
+	public QPath getPath()
 	{
-		return parent;
+		return path;
 	}
 
 
@@ -28,8 +28,8 @@ public class QPropertyPath
 	@Override
 	public String toString()
 	{
-		if (parent != null)
-			return parent.toString() + "." + property.getName();
+		if (path != null)
+			return path.toString() + "." + property.getName();
 		else
 			return property.getName();
 	}
