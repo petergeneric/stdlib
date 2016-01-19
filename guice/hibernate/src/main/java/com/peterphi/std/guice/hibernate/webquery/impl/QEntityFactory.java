@@ -29,7 +29,17 @@ public class QEntityFactory
 	{
 		this.sessionFactory = (SessionFactoryImplementor) sessionFactory;
 
-		log.debug("Known entities: " + sessionFactory.getAllClassMetadata().keySet());
+		if (log.isDebugEnabled())
+			log.debug("Known entities: " + sessionFactory.getAllClassMetadata().keySet());
+
+		// Pre-construct the QEntity instances for all known entities
+		for (ClassMetadata metadata : sessionFactory.getAllClassMetadata().values())
+		{
+			final Class clazz = metadata.getMappedClass();
+
+			if (clazz != null && !Modifier.isAbstract(clazz.getModifiers()))
+				get(clazz);
+		}
 	}
 
 
@@ -37,10 +47,8 @@ public class QEntityFactory
 	{
 		List<QEntity> subclasses = new ArrayList<>();
 
-		for (Map.Entry<String, ClassMetadata> entry : sessionFactory.getAllClassMetadata().entrySet())
+		for (ClassMetadata meta : sessionFactory.getAllClassMetadata().values())
 		{
-			final ClassMetadata meta = entry.getValue();
-
 			final Class<?> clazz = meta.getMappedClass();
 
 			if (clazz != null && !Modifier.isAbstract(clazz.getModifiers()) && superclass.isAssignableFrom(clazz))
