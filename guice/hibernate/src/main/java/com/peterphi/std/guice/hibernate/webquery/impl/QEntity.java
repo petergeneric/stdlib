@@ -1,5 +1,8 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
@@ -14,6 +17,7 @@ import javax.persistence.Table;
 import java.lang.reflect.Modifier;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -25,9 +29,16 @@ public class QEntity
 	private String name;
 
 	private Map<String, QProperty> properties = new HashMap<>();
+	private Map<String, String> aliases = new HashMap<>(0);
 	private Map<String, QRelation> relations = new HashMap<>();
 
 	private List<QEntity> descendants = Collections.emptyList();
+
+	private final Cache<String, QPropertyPathBuilder> builderCache = CacheBuilder.newBuilder()
+	                                                                             .weakKeys()
+	                                                                             .weakValues()
+	                                                                             .initialCapacity(0)
+	                                                                             .build();
 
 
 	public QEntity(Class<?> clazz)
@@ -69,6 +80,12 @@ public class QEntity
 
 				parseFields(entityFactory, sessionFactory, name, composite);
 			}
+		}
+
+		// Add field aliases defined on the class
+		for (SearchFieldAlias alias : clazz.getAnnotationsByType(SearchFieldAlias.class))
+		{
+			aliases.put(alias.name(), alias.aliasOf());
 		}
 
 		// Add links to descendants
@@ -193,6 +210,30 @@ public class QEntity
 	}
 
 
+	public Set<String> getAliasNames()
+	{
+		return Collections.unmodifiableSet(this.aliases.keySet());
+	}
+
+
+	public boolean hasProperty(String name)
+	{
+		return properties.containsKey(name);
+	}
+
+
+	public boolean hasAlias(String name)
+	{
+		return aliases.containsKey(name);
+	}
+
+
+	public boolean hasRelation(String name)
+	{
+		return relations.containsKey(name);
+	}
+
+
 	public QProperty getProperty(String name)
 	{
 		final QProperty property = properties.get(name);
@@ -206,6 +247,88 @@ public class QEntity
 			                                   this.clazz.getSimpleName() +
 			                                   ", expected one of " +
 			                                   properties.keySet());
+	}
+
+
+	public QPropertyPathBuilder getPath(final String path)
+	{
+		QPropertyPathBuilder cached = builderCache.getIfPresent(path);
+
+		if (cached == null)
+		{
+			final QPropertyPathBuilder builder = new QPropertyPathBuilder();
+
+			cached = getPath(builder, path);
+
+			builderCache.put(path, cached);
+		}
+
+		return cached;
+	}
+
+
+	public QPropertyPathBuilder getPath(final QPropertyPathBuilder builder, String path)
+	{
+		final int firstDot = path.indexOf('.');
+
+		final boolean terminal = (firstDot == -1);
+
+		final String head = terminal ? path : path.substring(0, firstDot);
+		final String tail = terminal ? null : path.substring(firstDot + 1);
+
+		if (hasAlias(head))
+		{
+			final String newPath;
+
+			if (terminal)
+				newPath = getAlias(head);
+			else
+				newPath = getAlias(head) + "." + tail;
+
+			return getPath(builder, newPath);
+		}
+		else if (hasProperty(head))
+		{
+			if (tail != null)
+				throw new IllegalArgumentException("Found property " + head + " but there are other path components: " + tail);
+
+			builder.append(getProperty(head));
+
+			return builder;
+		}
+		else if (hasRelation(head))
+		{
+			final QRelation relation = getRelation(head);
+
+			builder.append(getRelation(head));
+
+			return relation.getEntity().getPath(builder, tail);
+		}
+		else
+		{
+			final Set<String> expected = new HashSet<>(getPropertyNames());
+			expected.addAll(getRelationNames());
+			expected.addAll(getAliasNames());
+
+			throw new IllegalArgumentException("Relationship path error: got " +
+			                                   head +
+			                                   ", expected one of: " + expected);
+		}
+	}
+
+
+	/**
+	 * Retrieve the resolution of a defined alias on this entity. If there is no such destination alias then return null<br />
+	 * This is designed to allow underlying database schema changes without changing the query API exposed to users
+	 *
+	 * @param name
+	 * 		some aliased name (e.g. "assetId")
+	 *
+	 * @return some alias destination (e.g. "asset.id")
+	 */
+	public String getAlias(String name)
+	{
+		return aliases.get(name);
 	}
 
 
@@ -267,6 +390,7 @@ public class QEntity
 		       ", name='" + name + '\'' +
 		       ", properties=" + properties.values() +
 		       ", relations=" + relations.values() +
+		       ", aliases=" + aliases.values() +
 		       '}';
 	}
 }

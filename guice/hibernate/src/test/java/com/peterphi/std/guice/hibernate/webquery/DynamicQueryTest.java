@@ -66,6 +66,22 @@ public class DynamicQueryTest
 
 
 	@Test
+	public void testAliasedNestedAssociatorConstraintWorks() throws Exception
+	{
+		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
+		dao.findByUriQuery(new WebQuery().eq("otherObjectParentName", "Alice"));
+	}
+
+
+	@Test
+	public void testPartiallyAliasedNestedAssociatorConstraintWorks() throws Exception
+	{
+		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
+		dao.findByUriQuery(new WebQuery().eq("otherObjectParent.name", "Alice"));
+	}
+
+
+	@Test
 	public void testPropertyRefWorks() throws Exception
 	{
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand

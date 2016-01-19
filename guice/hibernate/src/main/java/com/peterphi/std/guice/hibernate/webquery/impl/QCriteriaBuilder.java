@@ -22,7 +22,7 @@ public class QCriteriaBuilder
 {
 	private final QEntity entity;
 
-	private final Map<String, QJoin> joins = new HashMap<>();
+	private final Map<QPath, QJoin> joins = new HashMap<>();
 	private final List<QFunction> constraints = new ArrayList<>();
 	private final List<QOrder> order = new ArrayList<>();
 
@@ -181,7 +181,7 @@ public class QCriteriaBuilder
 	{
 		// Set up the joins
 		for (QJoin join : joins.values())
-			criteria.createAlias(join.getPath(), join.getAlias(), JoinType.LEFT_OUTER_JOIN);
+			criteria.createAlias(join.getPath().toString(), join.getAlias(), JoinType.LEFT_OUTER_JOIN);
 	}
 
 
@@ -246,25 +246,10 @@ public class QCriteriaBuilder
 	{
 		try
 		{
-			final int index = path.lastIndexOf('.');
+			QPropertyPathBuilder propertyPath = entity.getPath(path);
 
-			final QJoin join;
-			final QProperty property;
-			if (index != -1)
-			{
-				// Dotted path
-				final String parent = path.substring(0, index);
-				final String name = path.substring(index + 1);
-
-				join = join(parent);
-				property = join.getEntity().getProperty(name);
-			}
-			else
-			{
-				// Non-dotted path
-				join = null;
-				property = entity.getProperty(path);
-			}
+			final QJoin join = join(propertyPath.getPath());
+			final QProperty property = propertyPath.getPropertyPath().getProperty();
 
 			return new QPropertyRef(join, property);
 		}
@@ -275,43 +260,56 @@ public class QCriteriaBuilder
 	}
 
 
-	public QJoin join(String path)
+	public QJoin join(QPath path)
 	{
-		if (joins.containsKey(path))
-			return joins.get(path);
+		if (path == null)
+			return null;
 
-		// If this is a dotted path, join to the LHS (which is the parent entity for this join) and store the RHS in name
-		// If this is not a dotted path, we are the parent entity for this join (and leave the path untouched)
-		final QEntity parent;
-		final String name;
+		final QJoin parent;
+
+		if (joins.containsKey(path.toString()))
 		{
-			final int index = path.lastIndexOf('.');
-
-			if (index != -1)
-			{
-				final String parentPath = path.substring(0, index);
-				name = path.substring(index + 1);
-
-				parent = join(parentPath).getEntity();
-			}
-			else
-			{
-				name = path; // no dots in path
-				parent = entity;
-			}
+			return joins.get(path.toString());
+		}
+		else
+		{
+			parent = join(getParent(path));
 		}
 
-		final QRelation relation = parent.getRelation(name);
+		final QJoin join = new QJoin(path, path.toJoinAlias(), parent != null ? parent.getEntity() : path.getRelation().getEntity());
 
-		final String alias = pathToJoinAlias(path);
-		joins.put(path, new QJoin(path, alias, relation.getEntity()));
+		joins.put(path, join);
 
-		return joins.get(path);
+		return join;
 	}
 
 
-	private static String pathToJoinAlias(final String path)
+	public QJoin join(String path)
 	{
-		return path.replace('.', '_');
+		final QPropertyPathBuilder builder = entity.getPath(path);
+
+		return join(builder.getPath());
+	}
+
+
+	protected QPath getParent(QPath path)
+	{
+		if (path == null)
+			return null;
+
+		QPath newPath = path.clone();
+
+		final QPath parentOfLeaf = newPath.getParentOfLeaf();
+
+		if (parentOfLeaf != null)
+		{
+			parentOfLeaf.withNoChild();
+
+			return newPath;
+		}
+		else
+		{
+			return null;
+		}
 	}
 }

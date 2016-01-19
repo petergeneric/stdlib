@@ -2,12 +2,12 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 class QJoin
 {
-	private final String path;
+	private final QPath path;
 	private final String alias;
 	private final QEntity entity;
 
 
-	public QJoin(final String path, final String alias, final QEntity entity)
+	public QJoin(final QPath path, final String alias, final QEntity entity)
 	{
 		this.path = path;
 		this.alias = alias;
@@ -15,7 +15,7 @@ class QJoin
 	}
 
 
-	public String getPath()
+	public QPath getPath()
 	{
 		return path;
 	}
