@@ -3,7 +3,6 @@ package com.peterphi.std.util.jaxb;
 import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
 import org.apache.log4j.Logger;
-import org.eclipse.persistence.jaxb.JAXBContextFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -104,7 +103,7 @@ public class JAXBSerialiser
 
 	/**
 	 * Optionally specify the schema to use for all future serialisation/deserialisation methods
-	 * <p/>
+	 * <p>
 	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
 	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
 	 * JAXBSerialiserFactory
@@ -138,7 +137,7 @@ public class JAXBSerialiser
 
 	/**
 	 * Specify an output encoding to use when marshalling the XML data. The default is UTF-8
-	 * <p/>
+	 * <p>
 	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
 	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
 	 * JAXBSerialiserFactory
@@ -157,7 +156,7 @@ public class JAXBSerialiser
 
 	/**
 	 * Specify an xsi:schemaLocation attribute in the generated XML
-	 * <p/>
+	 * <p>
 	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
 	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
 	 * JAXBSerialiserFactory
@@ -176,7 +175,7 @@ public class JAXBSerialiser
 
 	/**
 	 * Specify an xsi:noNamespaceSchemaLocation in the generated XML
-	 * <p/>
+	 * <p>
 	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
 	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
 	 * JAXBSerialiserFactory
@@ -195,7 +194,7 @@ public class JAXBSerialiser
 
 	/**
 	 * Specify the value of jaxb.fragment used by the underlying marshaller
-	 * <p/>
+	 * <p>
 	 * Note that if this serializer is returned from and cached by a {@link com.peterphi.std.util.jaxb.JAXBSerialiserFactory
 	 * JAXBSerialiserFactory} then use of this method could result in unintended side effects for other classes sharing the
 	 * JAXBSerialiserFactory
@@ -623,7 +622,7 @@ public class JAXBSerialiser
 
 		try
 		{
-			JAXBContext ctx = JAXBContextFactory.createContext(contextPath, Thread.currentThread().getContextClassLoader());
+			JAXBContext ctx = org.eclipse.persistence.jaxb.JAXBContext.newInstance(contextPath);
 
 			return getInstance(ctx);
 		}
@@ -648,7 +647,7 @@ public class JAXBSerialiser
 
 		try
 		{
-			JAXBContext ctx = JAXBContextFactory.createContext(classes, null);
+			JAXBContext ctx = org.eclipse.persistence.jaxb.JAXBContext.newInstance(classes);
 
 			return getInstance(ctx);
 		}
