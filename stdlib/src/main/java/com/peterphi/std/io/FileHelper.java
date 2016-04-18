@@ -18,6 +18,7 @@ import java.io.StringReader;
 import java.net.URL;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileLock;
+import java.nio.file.Files;
 import java.util.Set;
 
 /**
@@ -1039,6 +1040,28 @@ public class FileHelper
 
 			if (!success)
 				log.warn("[FileHelper] {touch} Failed to update modify time on " + f);
+		}
+	}
+
+
+	/**
+	 * Create a directory and any necessary parent directories, throwing a {@link RuntimeException} on failure
+	 *
+	 * @param f
+	 * 		the directory to create
+	 *
+	 * @throws RuntimeException
+	 * 		wrapping the inner IOException if the filesystem cannot create a directory
+	 */
+	public static void mkdirs(File f)
+	{
+		try
+		{
+			Files.createDirectories(f.toPath());
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Could not create directory: " + e.getMessage(), e);
 		}
 	}
 }
