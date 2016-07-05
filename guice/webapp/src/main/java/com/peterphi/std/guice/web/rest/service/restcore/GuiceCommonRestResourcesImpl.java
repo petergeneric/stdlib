@@ -6,7 +6,7 @@ public class GuiceCommonRestResourcesImpl implements GuiceCommonRestResources
 {
 
 	@Override
-	public String getBootstrapCSS()
+	public byte[] getBootstrapCSS()
 	{
 		return BootstrapStaticResources.get().getCSS();
 	}

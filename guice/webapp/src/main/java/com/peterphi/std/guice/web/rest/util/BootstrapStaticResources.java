@@ -4,6 +4,7 @@ import org.apache.commons.io.IOUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.zip.GZIPInputStream;
 
 public class BootstrapStaticResources
 {
@@ -12,21 +13,24 @@ public class BootstrapStaticResources
 		return new BootstrapStaticResources();
 	}
 
+
 	/**
 	 * Retrieve static bootstrap source
 	 *
 	 * @return
 	 */
-	public String getCSS()
+	public byte[] getCSS()
 	{
-		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bootstrap.min.css");
+		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bootstrap.min.css.gz");
 	}
 
-	protected static String getResource(final String resourceName)
+
+	protected static byte[] getResource(final String resourceName)
 	{
+		InputStream is = null;
 		try
 		{
-			final InputStream is = BootstrapStaticResources.class.getClassLoader().getResourceAsStream(resourceName);
+			is = BootstrapStaticResources.class.getClassLoader().getResourceAsStream(resourceName);
 
 			if (is == null)
 				throw new RuntimeException("Could not find resource '" +
@@ -34,11 +38,32 @@ public class BootstrapStaticResources
 				                           "' using ClassLoader for " +
 				                           BootstrapStaticResources.class);
 
-			return IOUtils.toString(is, "UTF-8");
+			// auto decompress gzip resources
+			if (resourceName.endsWith(".gz"))
+				is = new GZIPInputStream(is);
+
+			return IOUtils.toByteArray(is);
 		}
 		catch (IOException e)
 		{
 			throw new RuntimeException("Failed to load resource '" + resourceName + "'", e);
+		}
+		finally
+		{
+			IOUtils.closeQuietly(is);
+		}
+	}
+
+
+	public void appendCSS(final StringBuilder sb)
+	{
+		try
+		{
+			sb.append(new String(getCSS(), "UTF-8"));
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Error parsing bootstrap CSS as UTF-8", e);
 		}
 	}
 }

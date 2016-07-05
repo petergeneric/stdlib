@@ -56,7 +56,7 @@ public class TwitterBootstrapPageWriter
 	protected void writeBootstrapCSS(StringBuilder sb)
 	{
 		sb.append("\n<style>\n");
-		sb.append(BootstrapStaticResources.get().getCSS());
+		BootstrapStaticResources.get().appendCSS(sb);
 		sb.append("\n</style>\n");
 	}
 }

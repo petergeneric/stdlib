@@ -17,5 +17,5 @@ public interface GuiceCommonRestResources
 	@Path("/bootstrap.css")
 	@Produces("text/css")
 	@Cache(maxAge = 2629740, mustRevalidate = false)
-	public String getBootstrapCSS();
+	byte[] getBootstrapCSS();
 }
