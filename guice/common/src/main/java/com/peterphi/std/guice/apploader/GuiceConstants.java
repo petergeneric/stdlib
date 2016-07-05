@@ -11,4 +11,7 @@ public class GuiceConstants
 
 	@Doc("CurrentUser retrieved from HttpServletRequest (delegating authentication to servlet container)")
 	public static final String JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER = "servlet";
+
+	@Doc("CurrentUser retrieved from JWT in HttpServletRequest")
+	public static final String JAXRS_SERVER_WEBAUTH_JWT_PROVIDER = "jwt";
 }

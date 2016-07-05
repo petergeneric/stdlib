@@ -78,6 +78,19 @@ public class GuiceProperties
 	@Doc("If true then AuthConstraints will be ignored. Can only be enabled if framework.webauth.enabled=false (default false)")
 	public static final String AUTH_BYPASS = "framework.webauth.bypass";
 
+	@Doc("The JWT Secret value (if not set then JWT will not be usable)")
+	public static final String AUTH_JWT_SECRET = "framework.webauth.jwt.secret";
+	@Doc("The JWT Issuer value (default unset)")
+	public static final String AUTH_JWT_ISSUER = "framework.webauth.jwt.issuer";
+	@Doc("The JWT Audience value (default unset)")
+	public static final String AUTH_JWT_AUDIENCE = "framework.webauth.jwt.audience";
+
+	@Doc("The HTTP Header to read JWTs from (default X-JWT)")
+	public static final String AUTH_JWT_HTTP_HEADER = "framework.webauth.jwt.header-name";
+	@Doc("The HTTP Cookie to read JWTs from (default X-JWT)")
+	public static final String AUTH_JWT_HTTP_COOKIE = "framework.webauth.jwt.cookie-name";
+
+
 	@Doc("If true then the CharacterEncoding for HttpServletRequest (and InputParts for multipart/form-data resources) with no charset provided by the client will default to UTF-8 (default true)")
 	public static final java.lang.String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";
 

@@ -69,11 +69,12 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 					// Set up provider for CurrentUser
 					String[] authProviderNames = config.getStringArray(GuiceProperties.AUTH_PROVIDER_NAMES);
 
-					// If no providers set, use the default (defer to servlet)
+					// If no providers set, use the default (JWT, or the Servlet's preferred auth scheme)
 					if (authProviderNames == null || authProviderNames.length == 0)
-						authProviderNames = new String[]{GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER};
+						authProviderNames = new String[]{GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER,
+						                                 GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER,};
 
-					modules.add(new WebappAuthenticationModule(metrics, authProviderNames));
+					modules.add(new WebappAuthenticationModule(metrics, authProviderNames, config));
 				}
 
 				// Set up authorisation
