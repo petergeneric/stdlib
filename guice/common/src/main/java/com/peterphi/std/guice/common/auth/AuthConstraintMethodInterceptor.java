@@ -63,8 +63,6 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		final AuthConstraint constraint = readConstraint(invocation);
 		final CurrentUser user = userProvider.get();
 
-		if (constraint == null)
-			throw new IllegalArgumentException("Cannot find AuthConstraint associated with method: " + invocation.getMethod());
 		if (user == null)
 			throw new IllegalArgumentException("Provider for CurrentUser returned null! Cannot apply AuthConstraint to method " +
 			                                   invocation.getMethod());
