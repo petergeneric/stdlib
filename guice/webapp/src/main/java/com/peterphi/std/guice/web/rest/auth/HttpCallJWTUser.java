@@ -32,6 +32,7 @@ class HttpCallJWTUser implements CurrentUser
 	}
 
 
+	@SuppressWarnings("unchecked")
 	private Map<String, Object> get()
 	{
 		final HttpServletRequest request = HttpCallContext.get().getRequest();
@@ -41,7 +42,7 @@ class HttpCallJWTUser implements CurrentUser
 			final Object obj = request.getAttribute(DECODED_JWT);
 
 			if (obj != null && obj instanceof Map)
-				return (Map) obj;
+				return (Map<String, Object>) (Map) obj;
 		}
 
 		final String token = getToken(request);
@@ -138,6 +139,7 @@ class HttpCallJWTUser implements CurrentUser
 
 
 	@Override
+	@SuppressWarnings("unchecked")
 	public boolean hasRole(final String role)
 	{
 		final Map<String, Object> data = get();
