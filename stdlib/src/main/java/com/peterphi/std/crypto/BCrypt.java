@@ -5,6 +5,9 @@ package com.peterphi.std.crypto;
  */
 public class BCrypt
 {
+	public static final int DEFAULT_COST = 12;
+
+
 	/**
 	 * @param password
 	 * 		the plaintext password
