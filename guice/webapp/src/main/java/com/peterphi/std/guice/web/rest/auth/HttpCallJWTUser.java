@@ -73,6 +73,11 @@ class HttpCallJWTUser implements CurrentUser
 	}
 
 
+	/**
+	 * Returns true if and only if a JWT has been provided, but <strong>does not validate the token</strong>
+	 *
+	 * @return
+	 */
 	public boolean hasToken()
 	{
 		final HttpServletRequest request = HttpCallContext.get().getRequest();
