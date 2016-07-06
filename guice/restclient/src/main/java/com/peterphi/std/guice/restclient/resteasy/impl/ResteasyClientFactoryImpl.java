@@ -8,10 +8,13 @@ import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
+import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
 import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
+import org.apache.http.config.Registry;
+import org.apache.http.config.RegistryBuilder;
 import org.apache.http.impl.NoConnectionReuseStrategy;
 import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.BasicCredentialsProvider;
@@ -170,10 +173,23 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			else
 				credentialsProvider.setCredentials(AuthScope.ANY, credentials);
 
+			// Set up bearer auth scheme provider if we're using bearer credentials
+			if (credentials instanceof BearerCredentials)
+			{
+				customiser = concat(customiser, b -> {
+					Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create().register(
+							"Bearer",
+							new BearerAuthSchemeProvider()).build();
+					b.setDefaultAuthSchemeRegistry(authSchemeRegistry);
+				});
+			}
+
 			// Set up the credentials customisation
 			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
 
-			if (preemptiveAuth)
+			if (preemptiveAuth && credentials instanceof BearerCredentials)
+				customiser = concat(customiser, b -> b.addInterceptorFirst(new PreemptiveBearerAuthInterceptor()));
+			else
 				customiser = concat(customiser, b -> b.addInterceptorLast(new PreemptiveBasicAuthInterceptor()));
 		}
 

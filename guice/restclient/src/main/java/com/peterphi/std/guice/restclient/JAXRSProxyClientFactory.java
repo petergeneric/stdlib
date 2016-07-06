@@ -6,6 +6,7 @@ import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 import javax.ws.rs.client.WebTarget;
 import java.net.URI;
+import java.util.function.Supplier;
 
 /**
  * A factory that builds dynamic proxy clients (using JAX-RS RESTful client interfaces) for services at a known location
@@ -25,7 +26,8 @@ public interface JAXRSProxyClientFactory
 	/**
 	 * Retrieve a WebTarget, using the configuration for the named service interface (but not creating a dynamic proxy client)
 	 *
-	 * @param iface the service interface to read configuration (endpoint, auth policy, etc.) from
+	 * @param iface
+	 * 		the service interface to read configuration (endpoint, auth policy, etc.) from
 	 * @param names
 	 *
 	 * @return
@@ -35,7 +37,8 @@ public interface JAXRSProxyClientFactory
 	/**
 	 * Retrieve a Proxy client for the service, searching for the service in configuration using the ordered list of names
 	 *
-	 * @param iface the service iface
+	 * @param iface
+	 * 		the service iface
 	 * @param names
 	 * @param <T>
 	 *
@@ -46,7 +49,8 @@ public interface JAXRSProxyClientFactory
 	/**
 	 * Get a client for the provided interface, searching for the service in configuration using the default name(s)
 	 *
-	 * @param iface the service iface
+	 * @param iface
+	 * 		the service iface
 	 * @param <T>
 	 *
 	 * @return
@@ -57,8 +61,10 @@ public interface JAXRSProxyClientFactory
 	/**
 	 * Get a client for the provided interface, building it from the provided WebTarget
 	 *
-	 * @param iface the service iface
-	 * @param target the WebTarget to use to build the dynamic proxy client
+	 * @param iface
+	 * 		the service iface
+	 * @param target
+	 * 		the WebTarget to use to build the dynamic proxy client
 	 * @param <T>
 	 *
 	 * @return
@@ -148,6 +154,26 @@ public interface JAXRSProxyClientFactory
 	                                          final URI endpoint,
 	                                          final String username,
 	                                          final String password);
+
+
+	/**
+	 * Create a dynamic proxy client for the desired service, setting the base endpoint & setting up HTTP Basic auth
+	 *
+	 * @param iface
+	 * 		the service interface
+	 * @param endpoint
+	 * 		a valid URI to use as a base point for the provided service interface
+	 * @param token
+	 * 		a supplier that will be asked to provide a token for each HTTP call
+	 * @param <T>
+	 * 		the type of the service
+	 *
+	 * @return a dynamic proxy for the service
+	 *
+	 * @throws IllegalArgumentException
+	 * 		if <code>endpoint</code> cannot be parsed as a valid URI
+	 */
+	public <T> T createClientWithBearerAuth(final Class<T> iface, final URI endpoint, final Supplier<String> token);
 
 
 	/**

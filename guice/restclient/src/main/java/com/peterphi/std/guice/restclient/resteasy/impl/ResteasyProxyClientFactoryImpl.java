@@ -19,6 +19,7 @@ import javax.ws.rs.client.WebTarget;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 @Singleton
 public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
@@ -91,16 +92,20 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
 		final String authType = config.getString("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store", defaultStoreCookies);
+		final String bearerToken = config.getString("service." + name + ".bearer", null);
+		final Supplier<String> bearerSupplier = (bearerToken != null) ? () -> bearerToken : null; // Supply fixed token
 
 		final boolean preemptiveAuth;
-		if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
+		if (bearerToken != null)
+			preemptiveAuth = true; // force pre-emptive auth
+		else if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
 			preemptiveAuth = false;
 		else if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_PREEMPT))
 			preemptiveAuth = true;
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return createWebTarget(uri, fastFail, username, password, storeCookies, preemptiveAuth);
+		return createWebTarget(uri, fastFail, username, password, bearerSupplier, storeCookies, preemptiveAuth);
 	}
 
 
@@ -171,17 +176,18 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
 	{
-		return createWebTarget(endpoint, username, password, defaultStoreCookies, true);
+		return createWebTarget(endpoint, username, password, null, defaultStoreCookies, true);
 	}
 
 
 	public ResteasyWebTarget createWebTarget(final URI endpoint,
 	                                         String username,
 	                                         String password,
+	                                         Supplier<String> bearerToken,
 	                                         boolean storeCookies,
 	                                         boolean preemptiveAuth)
 	{
-		return createWebTarget(endpoint, false, username, password, storeCookies, preemptiveAuth);
+		return createWebTarget(endpoint, false, username, password, bearerToken, storeCookies, preemptiveAuth);
 	}
 
 
@@ -189,13 +195,20 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                  boolean fastFail,
 	                                  String username,
 	                                  String password,
+	                                  final Supplier<String> bearerToken,
 	                                  final boolean storeCookies,
 	                                  boolean preemptiveAuth)
 	{
 		final AuthScope scope;
 		final Credentials credentials;
 
-		if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
+		if (bearerToken != null)
+		{
+			scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT, AuthScope.ANY_REALM, "Bearer");
+
+			credentials = new BearerCredentials(bearerToken);
+		}
+		else if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
 		{
 			scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
 
@@ -249,6 +262,15 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 
 	@Override
+	public <T> T createClientWithBearerAuth(final Class<T> iface, final URI endpoint, final Supplier<String> token)
+	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		return createWebTarget(endpoint, fastFail, null, null, token, defaultStoreCookies, true).proxy(iface);
+	}
+
+
+	@Override
 	public <T> T createClientWithPasswordAuth(final Class<T> iface,
 	                                          final URI endpoint,
 	                                          final String username,
@@ -257,7 +279,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return createWebTarget(endpoint, fastFail, username, password, defaultStoreCookies, preemptiveAuth).proxy(iface);
+		return createWebTarget(endpoint, fastFail, username, password, null, defaultStoreCookies, preemptiveAuth).proxy(iface);
 	}
 
 
