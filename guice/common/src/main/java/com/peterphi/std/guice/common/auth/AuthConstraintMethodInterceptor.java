@@ -2,10 +2,17 @@ package com.peterphi.std.guice.common.auth;
 
 import com.codahale.metrics.Meter;
 import com.google.inject.Provider;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.configuration.CompositeConfiguration;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * Intercepts calls to methods annotated with AuthConstraint (or whose superclass is annotated with AuthConstraint) and enforces
@@ -13,14 +20,20 @@ import org.aopalliance.intercept.MethodInvocation;
  */
 class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
+	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
+
 	private final Provider<CurrentUser> userProvider;
+	private final CompositeConfiguration config;
 	private final Meter calls;
 	private final Meter granted;
 	private final Meter denied;
 	private final Meter authenticatedDenied;
 
+	private final Map<String, AuthScope> scopes = new HashMap<>();
+
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
+	                                       final CompositeConfiguration config,
 	                                       final Meter calls,
 	                                       final Meter granted,
 	                                       final Meter denied,
@@ -28,7 +41,9 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	{
 		if (userProvider == null)
 			throw new IllegalArgumentException("Must have a Provider for CurrentUser!");
+
 		this.userProvider = userProvider;
+		this.config = config;
 		this.calls = calls;
 		this.granted = granted;
 		this.denied = denied;
@@ -86,10 +101,46 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	 */
 	private boolean passes(final AuthConstraint constraint, final CurrentUser user)
 	{
-		if (constraint.skip())
+		final AuthScope scope = getScope(constraint);
+
+		if (scope.getSkip(constraint))
 			return true;
 		else
-			return user.hasRole(constraint.role());
+			return user.hasRole(scope.getRole(constraint));
+	}
+
+
+	private AuthScope getScope(final AuthConstraint constraint)
+	{
+		if (constraint == null)
+			return getScope("default");
+		else
+			return getScope(constraint.id());
+	}
+
+
+	private AuthScope getScope(final String id)
+	{
+		if (!scopes.containsKey(id))
+		{
+			final String role;
+			final Boolean skip;
+
+			if (StringUtils.equals("default", id))
+			{
+				role = config.getString(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
+				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
+			}
+			else
+			{
+				role = config.getString("framework.webauth.scope." + id + ".role", null);
+				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
+			}
+
+			scopes.put(id, new AuthScope(role, skip));
+		}
+
+		return scopes.get(id);
 	}
 
 
@@ -97,7 +148,9 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	{
 		if (invocation.getMethod().isAnnotationPresent(AuthConstraint.class))
 			return invocation.getMethod().getAnnotation(AuthConstraint.class);
-		else
+		else if (invocation.getMethod().getDeclaringClass().isAnnotationPresent(AuthConstraint.class))
 			return invocation.getMethod().getDeclaringClass().getAnnotation(AuthConstraint.class);
+		else
+			return null; // No AuthConstraint specified
 	}
 }

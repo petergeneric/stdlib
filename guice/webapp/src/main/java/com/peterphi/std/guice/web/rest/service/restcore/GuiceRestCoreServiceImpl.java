@@ -5,6 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.web.rest.exception.TextWebException;
@@ -16,6 +17,7 @@ import java.io.StringWriter;
  * A helper REST service that allows basic services; superseded by other core services
  */
 @Singleton
+@AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 {
 	private final long started = System.currentTimeMillis();
@@ -40,6 +42,7 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 
 
 	@Override
+	@AuthConstraint(skip = true)
 	public String ping()
 	{
 		final long now = System.currentTimeMillis();

@@ -4,12 +4,11 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.PropertyConfigurator;
@@ -22,6 +21,7 @@ import java.net.URI;
 import java.util.function.Supplier;
 
 @Singleton
+@AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 {
 	/**

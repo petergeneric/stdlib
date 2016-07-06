@@ -45,7 +45,7 @@ public class GuiceProperties
 	@Doc("The servlet context name without slashes")
 	public static final String CONTEXT_NAME = "context-name";
 
-	@Doc("If true then when the guice webapp jar is loaded it'll search for all JAX-RS @Path annotated interfaces in the scan.packages packages and register them as  (default true)")
+	@Doc("If true then when the guice webapp jar is loaded it'll search for all JAX-RS @Path annotated interfaces in the scan.packages packages and make them available to be called remotely (default true)")
 	public static final String ROLE_JAXRS_SERVER_AUTO = "role.jaxrs-server.auto";
 
 	@Doc("The endpoint of the remote index service to register with")
@@ -69,14 +69,16 @@ public class GuiceProperties
 	@Doc("If true then UnhandledExceptions thrown as a result of a ClientAbortException will only be logged at TRACE (default true)")
 	public static final String SUPPRESS_CLIENT_ABORT_EXCEPTIONS = "framework.suppress-ClientAbortException";
 
-	@Doc("The names of providers for CurrentUser records, able to extract the user associated with an HTTP call (default: servlet)")
+	@Doc("The names of providers for CurrentUser records, able to extract the user associated with an HTTP call (default: jwt,servlet)")
 	public static final String AUTH_PROVIDER_NAMES = "framework.webauth.provider";
 
 	@Doc("If true then server auth will be enabled, and providers specified in framework.webauth.provider called to retrieve details of the current user based on the HTTP request (default true)")
 	public static final String AUTH_ENABLED = "framework.webauth.enabled";
 
-	@Doc("If true then AuthConstraints will be ignored. Can only be enabled if framework.webauth.enabled=false (default false)")
-	public static final String AUTH_BYPASS = "framework.webauth.bypass";
+	@Doc("If set, the default role to require when accessing REST methods with no AuthConstraint on the method/class (default not specified)")
+	public static final String AUTHZ_DEFAULT_ROLE = "framework.webauth.scope.default.role";
+	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default true)")
+	public static final String AUTHZ_DEFAULT_SKIP = "framework.webauth.scope.default.skip";
 
 	@Doc("The JWT Secret value (if not set then JWT will not be usable)")
 	public static final String AUTH_JWT_SECRET = "framework.webauth.jwt.secret";

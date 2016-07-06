@@ -58,12 +58,6 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 
 			// Set up authentication and authorisation logic
 			{
-				final boolean authEnabled = config.getBoolean(GuiceProperties.AUTH_ENABLED, true);
-				final boolean authBypass = config.getBoolean(GuiceProperties.AUTH_BYPASS, false);
-
-				if (authBypass && authEnabled)
-					throw new IllegalArgumentException("Cannot enable webauth and bypass webauth!");
-
 				// Set up authentication
 				{
 					// Set up provider for CurrentUser
@@ -77,13 +71,9 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 					modules.add(new WebappAuthenticationModule(metrics, authProviderNames, config));
 				}
 
-				// Set up authorisation
-				if (authEnabled)
-					modules.add(new AuthConstraintInterceptorModule(metrics,
-					                                                false)); // use normal interceptor (deny based on CurrentUser group data)
-				else if (!authBypass)
-					modules.add(new AuthConstraintInterceptorModule(metrics,
-					                                                true)); // Use default deny interceptor (deny all unless @AuthConstraint(skip=true))
+				// Optionally set up authorisation
+				if (config.getBoolean(GuiceProperties.AUTH_ENABLED, true))
+					modules.add(new AuthConstraintInterceptorModule(metrics, config));
 			}
 		}
 	}

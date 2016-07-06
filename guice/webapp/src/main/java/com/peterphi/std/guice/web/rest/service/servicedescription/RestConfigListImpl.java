@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationProperty;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
@@ -14,6 +15,7 @@ import org.apache.commons.configuration.PropertiesConfiguration;
 
 import java.io.IOException;
 
+@AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class RestConfigListImpl implements RestConfigList
 {
 	/**

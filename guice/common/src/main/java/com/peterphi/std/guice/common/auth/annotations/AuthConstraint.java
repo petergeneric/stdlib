@@ -14,7 +14,7 @@ public @interface AuthConstraint
 	 *
 	 * @return
 	 */
-	public String id() default "all";
+	public String id() default "no-id";
 
 	/**
 	 * If true, authentication will not be enforced on calls made to the annotation target

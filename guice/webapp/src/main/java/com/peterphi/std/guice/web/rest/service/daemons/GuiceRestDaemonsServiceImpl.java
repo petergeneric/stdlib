@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
@@ -18,6 +19,7 @@ import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;
 
+@AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 {
 	/**
