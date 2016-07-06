@@ -5,7 +5,7 @@ import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
-import org.jboss.resteasy.util.BasicAuthHelper;
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.thymeleaf.util.StringUtils;
 
@@ -16,6 +16,8 @@ import java.util.Map;
 
 class HttpCallJWTUser implements CurrentUser
 {
+	private static final Logger log = Logger.getLogger(HttpCallJWTUser.class);
+
 	private static final String DECODED_JWT = "decoded-jwt";
 
 	private final String headerName;
@@ -66,12 +68,20 @@ class HttpCallJWTUser implements CurrentUser
 		}
 		else
 		{
-			return null;
+			throw new RuntimeException("User is authenticated by JWT but no JWT found!");
 		}
 	}
 
 
-	private String getToken(final HttpServletRequest request)
+	public boolean hasToken()
+	{
+		final HttpServletRequest request = HttpCallContext.get().getRequest();
+
+		return getToken(request) != null;
+	}
+
+
+	String getToken(final HttpServletRequest request)
 	{
 		String token = null;
 
@@ -102,13 +112,55 @@ class HttpCallJWTUser implements CurrentUser
 
 			if (header != null)
 			{
-				final String[] userAndPass = BasicAuthHelper.parseHeader(header);
-
-				token = userAndPass[0];
+				token = parseBasicAuth(header);
 			}
 		}
 
 		return token;
+	}
+
+
+	private String parseBasicAuth(final String header)
+	{
+		try
+		{
+			if (header.length() < 6)
+				return null;
+
+			String type = header.substring(0, 5);
+			type = type.toLowerCase();
+
+			if (type.equalsIgnoreCase("Basic"))
+			{
+				// JWT bundled into HTTP Basic auth
+				String val = header.substring(6);
+
+				val = new String(org.apache.commons.codec.binary.Base64.decodeBase64(val.getBytes()), "UTF-8");
+
+				String[] split = val.split(":", 2);
+
+				if (split.length != 2)
+					return null;
+				else if (StringUtils.equals("jwt", split[1])) // Username jwt
+					return split[1];
+				else
+					return null;
+			}
+			else if (type.equalsIgnoreCase("Bearer"))
+			{
+				// Bearer token
+				return header.substring(6);
+			}
+			else
+			{
+				return null; // unrecognised auth type
+			}
+		}
+		catch (Exception e)
+		{
+			log.warn("Error extracting JWT from HTTP Auth header", e);
+			return null;
+		}
 	}
 
 
@@ -144,6 +196,10 @@ class HttpCallJWTUser implements CurrentUser
 	{
 		final Map<String, Object> data = get();
 
+		// Special case the "authenticated" role - need only have a valid token, no role is required
+		if (StringUtils.equals("authenticated", role))
+			return data != null;
+
 		final List<String> roles = (List<String>) data.get("roles");
 
 		if (roles == null)
@@ -160,7 +216,8 @@ class HttpCallJWTUser implements CurrentUser
 			if (user.isAnonymous())
 				return new RestException(401, "You must log in to access this resource");
 			else
-				return new RestException(403, "Access denied by rule: " + constraint.comment());
+				return new RestException(403,
+				                         "Access denied by rule: " + ((constraint != null) ? constraint.comment() : "(default)"));
 		};
 	}
 }

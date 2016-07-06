@@ -60,7 +60,8 @@ class HttpCallUser implements CurrentUser
 			if (user.isAnonymous())
 				return new RestException(401, "You must log in to access this resource");
 			else
-				return new RestException(403, "Access denied by rule: " + constraint.comment());
+				return new RestException(403,
+				                         "Access denied by rule: " + ((constraint != null) ? constraint.comment() : "(default)"));
 		};
 	}
 }

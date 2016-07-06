@@ -32,7 +32,15 @@ class JWTUserProvider implements Provider<CurrentUser>
 	public CurrentUser get()
 	{
 		if (verifier != null)
-			return new HttpCallJWTUser(headerName, cookieName, verifier);
+		{
+			// Only use JWT if there's a verifier and if the HTTP request includes a JWT
+			HttpCallJWTUser user = new HttpCallJWTUser(headerName, cookieName, verifier);
+
+			if (user.hasToken())
+				return user;
+			else
+				return null;
+		}
 		else
 			return null; // No JWT Verifier available
 	}
