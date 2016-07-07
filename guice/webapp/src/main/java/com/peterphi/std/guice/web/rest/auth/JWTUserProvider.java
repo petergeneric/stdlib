@@ -8,6 +8,7 @@ class JWTUserProvider implements Provider<CurrentUser>
 {
 	private final String headerName;
 	private final String cookieName;
+	private final boolean requireSecure;
 
 	private final JWTVerifier verifier;
 
@@ -16,10 +17,12 @@ class JWTUserProvider implements Provider<CurrentUser>
 	                       final String cookieName,
 	                       final String secret,
 	                       final String issuer,
-	                       final String audience)
+	                       final String audience,
+	                       final boolean requireSecure)
 	{
 		this.headerName = headerName;
 		this.cookieName = cookieName;
+		this.requireSecure = requireSecure;
 
 		if (secret != null)
 			this.verifier = new JWTVerifier(secret, issuer, audience);
@@ -34,7 +37,7 @@ class JWTUserProvider implements Provider<CurrentUser>
 		if (verifier != null)
 		{
 			// Only use JWT if there's a verifier and if the HTTP request includes a JWT
-			HttpCallJWTUser user = new HttpCallJWTUser(headerName, cookieName, verifier);
+			HttpCallJWTUser user = new HttpCallJWTUser(headerName, cookieName, requireSecure, verifier);
 
 			if (user.hasToken())
 				return user;

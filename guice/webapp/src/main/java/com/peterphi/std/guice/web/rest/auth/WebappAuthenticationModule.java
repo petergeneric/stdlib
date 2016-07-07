@@ -17,6 +17,11 @@ import javax.servlet.http.HttpServletRequest;
 
 public class WebappAuthenticationModule extends AbstractModule
 {
+	/**
+	 * Special role indicating that the user has been authenticated in some manner
+	 */
+	public static final String ROLE_SPECIAL_AUTHENTICATED = "authenticated";
+
 	private final MetricRegistry metrics;
 	private final String[] providerNames;
 
@@ -25,6 +30,7 @@ public class WebappAuthenticationModule extends AbstractModule
 	private final String jwtSecret;
 	private final String jwtIssuer;
 	private final String jwtAudience;
+	private final boolean jwtRequireSecure;
 
 
 	public WebappAuthenticationModule(final MetricRegistry metrics, final String[] providerNames, CompositeConfiguration config)
@@ -37,6 +43,7 @@ public class WebappAuthenticationModule extends AbstractModule
 		this.jwtCookie = config.getString(GuiceProperties.AUTH_JWT_HTTP_COOKIE, "X-JWT");
 		this.jwtIssuer = config.getString(GuiceProperties.AUTH_JWT_ISSUER, null);
 		this.jwtAudience = config.getString(GuiceProperties.AUTH_JWT_AUDIENCE, null);
+		this.jwtRequireSecure = config.getBoolean(GuiceProperties.AUTH_JWT_AUDIENCE, false);
 	}
 
 
@@ -53,7 +60,8 @@ public class WebappAuthenticationModule extends AbstractModule
 		                                                                                                            jwtCookie,
 		                                                                                                            jwtSecret,
 		                                                                                                            jwtIssuer,
-		                                                                                                            jwtAudience));
+		                                                                                                            jwtAudience,
+		                                                                                                            jwtRequireSecure));
 	}
 
 

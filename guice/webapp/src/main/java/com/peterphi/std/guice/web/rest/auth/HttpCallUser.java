@@ -4,6 +4,7 @@ import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
+import org.thymeleaf.util.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
@@ -49,7 +50,14 @@ class HttpCallUser implements CurrentUser
 	{
 		HttpServletRequest request = HttpCallContext.get().getRequest();
 
-		return request.isUserInRole(role);
+		if (StringUtils.equals(WebappAuthenticationModule.ROLE_SPECIAL_AUTHENTICATED, role))
+		{
+			return request.getUserPrincipal() != null;
+		}
+		else
+		{
+			return request.isUserInRole(role);
+		}
 	}
 
 
