@@ -12,6 +12,7 @@
 
 	<properties>
 		<guice.version>3.2.6</guice.version>
+<!--		<guice.version>4.1.0</guice.version> -->
 		<metrics.version>3.0.2</metrics.version>
 		<resteasy.version>3.0.11.Final</resteasy.version>
 		<javassist.version>3.19.0-GA</javassist.version>
@@ -44,6 +45,20 @@
 		</dependency>
 
 		<!-- guice -->
+		<!-- official guice 
+		<dependency>
+		  <groupId>com.google.inject</groupId>
+		  <artifactId>guice</artifactId>
+			<version>${guice.version}</version>
+		</dependency>
+
+		<dependency>
+		  <groupId>com.google.inject.extensions</groupId>
+		  <artifactId>guice-multibindings</artifactId>
+			<version>${guice.version}</version>
+		</dependency>
+		-->
+		
 		<dependency>
 			<groupId>org.sonatype.sisu</groupId>
 			<artifactId>sisu-guice</artifactId>
