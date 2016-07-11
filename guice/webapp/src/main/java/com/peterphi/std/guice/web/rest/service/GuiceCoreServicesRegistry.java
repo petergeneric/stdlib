@@ -7,7 +7,7 @@ import com.peterphi.std.guice.web.rest.service.restcore.GuiceCommonRestResources
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestConfigList;
 import com.peterphi.std.guice.web.rest.service.servicedescription.RestServiceList;
-import org.thymeleaf.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import javax.ws.rs.Path;
 import java.util.ArrayList;

@@ -4,7 +4,7 @@ import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
-import org.thymeleaf.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
