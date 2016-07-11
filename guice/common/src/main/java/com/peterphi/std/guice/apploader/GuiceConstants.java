@@ -14,4 +14,7 @@ public class GuiceConstants
 
 	@Doc("CurrentUser retrieved from JWT in HttpServletRequest")
 	public static final String JAXRS_SERVER_WEBAUTH_JWT_PROVIDER = "jwt";
+
+	@Doc("Cookie name to use for JWT")
+	public static final String JAXRS_SERVER_WEBAUTH_JWT_COOKIE_NAME = "X-JWT";
 }

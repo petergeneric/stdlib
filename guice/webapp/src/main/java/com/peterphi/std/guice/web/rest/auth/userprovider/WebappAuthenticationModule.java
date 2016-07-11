@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.auth;
+package com.peterphi.std.guice.web.rest.auth.userprovider;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;

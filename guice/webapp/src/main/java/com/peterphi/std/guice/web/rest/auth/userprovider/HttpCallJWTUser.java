@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.auth;
+package com.peterphi.std.guice.web.rest.auth.userprovider;
 
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.JWTVerifyException;

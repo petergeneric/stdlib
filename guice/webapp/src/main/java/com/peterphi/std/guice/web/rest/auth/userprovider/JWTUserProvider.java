@@ -1,8 +1,9 @@
-package com.peterphi.std.guice.web.rest.auth;
+package com.peterphi.std.guice.web.rest.auth.userprovider;
 
 import com.auth0.jwt.JWTVerifier;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.web.HttpCallContext;
 
 class JWTUserProvider implements Provider<CurrentUser>
 {
@@ -34,6 +35,9 @@ class JWTUserProvider implements Provider<CurrentUser>
 	@Override
 	public CurrentUser get()
 	{
+		if (HttpCallContext.peek() == null)
+			return null; // Not an HTTP call
+
 		if (verifier != null)
 		{
 			// Only use JWT if there's a verifier and if the HTTP request includes a JWT

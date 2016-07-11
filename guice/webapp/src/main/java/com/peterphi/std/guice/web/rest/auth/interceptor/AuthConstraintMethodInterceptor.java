@@ -1,15 +1,15 @@
-package com.peterphi.std.guice.common.auth;
+package com.peterphi.std.guice.web.rest.auth.interceptor;
 
 import com.codahale.metrics.Meter;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,14 +20,13 @@ import java.util.Map;
  */
 class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
-
 	private final Provider<CurrentUser> userProvider;
 	private final CompositeConfiguration config;
 	private final Meter calls;
 	private final Meter granted;
 	private final Meter denied;
 	private final Meter authenticatedDenied;
+	private final boolean onlyServletRequest;
 
 	private final Map<String, AuthScope> scopes = new HashMap<>();
 
@@ -48,6 +47,8 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		this.granted = granted;
 		this.denied = denied;
 		this.authenticatedDenied = authenticatedDenied;
+
+		this.onlyServletRequest = config.getBoolean(GuiceProperties.AUTHZ_ONLY_SERVLET_REQUEST, true);
 	}
 
 
@@ -56,6 +57,10 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	{
 		// Never handle calls to base methods (like hashCode, toString, etc.)
 		if (invocation.getMethod().getDeclaringClass().equals(Object.class))
+			return invocation.proceed();
+
+		// Skip auth if we're not inside a Servlet call and we are only to enforce auth constraints on service calls
+		if (onlyServletRequest && HttpCallContext.peek() == null)
 			return invocation.proceed();
 
 		calls.mark();

@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.auth;
+package com.peterphi.std.guice.web.rest.auth.userprovider;
 
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
