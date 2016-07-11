@@ -52,6 +52,12 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 
 	@Reconfigurable
 	@Inject(optional = true)
+	@Named("rest.exception.html.feature.jvminfo.environment")
+	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
+	protected boolean jvmInfoEnvironmentVariablesEnabled = false;
+
+	@Reconfigurable
+	@Inject(optional = true)
 	@Named("rest.exception.html.feature.requestinfo")
 	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
 	protected boolean requestInfoEnabled = true;
@@ -122,6 +128,11 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 			writer.enableJVMInfo();
 		}
 
+		if (jvmInfoEnvironmentVariablesEnabled)
+		{
+			writer.enableEnvironmentVariables();
+		}
+
 		if (stackTraceEnabled)
 		{
 			writer.enableStackTrace();
@@ -145,8 +156,8 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 
 	private boolean shouldRenderHtmlForRequest(HttpServletRequest request)
 	{
-		@SuppressWarnings("unchecked")
-		final List<String> accepts = ListUtility.list(ListUtility.iterate(request.getHeaders("Accept")));
+		@SuppressWarnings("unchecked") final List<String> accepts = ListUtility.list(ListUtility.iterate(request.getHeaders(
+				"Accept")));
 
 		for (String accept : accepts)
 		{

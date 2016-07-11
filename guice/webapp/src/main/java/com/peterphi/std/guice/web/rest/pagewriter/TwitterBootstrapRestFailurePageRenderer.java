@@ -10,6 +10,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Map;
 
 public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPageWriter
 {
@@ -26,6 +27,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private boolean renderStackTrace = false;
 	private boolean renderRequestInfo = false;
 	private boolean renderRequestAttributes = false;
+	private boolean renderEnvironmentVariables = true;
 
 
 	public TwitterBootstrapRestFailurePageRenderer(RestFailure failure)
@@ -172,17 +174,10 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 
 		appendHeader(sb);
 
-		sb.append("<p>There was a problem processing your request:<br /><code>")
-		  .append(failure.exception.shortName)
-		  .append("</code> thrown <code>")
-		  .append(failure.date)
-		  .append("</code> with id <code>")
-		  .append(failure.id)
-		  .append("</code> and error code <code>")
-		  .append(failure.errorCode)
-		  .append("</code> returning HTTP Code <code>")
-		  .append(failure.httpCode)
-		  .append("</code>.");
+		sb.append("<p>There was a problem processing your request:<br /><code>").append(failure.exception.shortName).append(
+				"</code> thrown <code>").append(failure.date).append("</code> with id <code>").append(failure.id).append(
+				"</code> and error code <code>").append(failure.errorCode).append("</code> returning HTTP Code <code>").append(
+				failure.httpCode).append("</code>.");
 
 		if (failure.source != null && !failure.source.equals("unknown"))
 			sb.append(" Source listed as ").append(failure.source);
@@ -291,12 +286,28 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 		// HTTP cookies
 		sb.append("<h3 id='jvm'>Java Virtual Machine</h3>\n");
 
+		sb.append("<h4 id='jvm-properties'>Properties</h3>\n");
+
 		sb.append("<dl class=\"dl-horizontal\">\n");
 		for (String name : System.getProperties().stringPropertyNames())
 		{
 			appendKeyValueListElement(sb, name, System.getProperty(name));
 		}
 		sb.append("</dl>\n");
+
+		if (renderEnvironmentVariables)
+		{
+			sb.append("<h4 id='jvm-environment-variables'>Environment Variables</h3>\n");
+
+			sb.append("<dl class=\"dl-horizontal\">\n");
+
+			for (Map.Entry<String, String> entry : System.getenv().entrySet())
+			{
+				appendKeyValueListElement(sb, entry.getKey(), entry.getValue());
+			}
+
+			sb.append("</dl>\n");
+		}
 	}
 
 
@@ -411,6 +422,12 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	public void enableJVMInfo()
 	{
 		this.renderJvmInfo = true;
+	}
+
+
+	public void enableEnvironmentVariables()
+	{
+		this.renderEnvironmentVariables = true;
 	}
 
 
