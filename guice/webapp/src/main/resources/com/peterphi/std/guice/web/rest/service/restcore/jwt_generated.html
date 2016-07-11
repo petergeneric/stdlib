@@ -1,0 +1,39 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--@thymesVar id="message" type="java.lang.String"-->
+<head>
+	<title>Daemons</title>
+
+	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+</head>
+
+<body id="top">
+<div class="navbar" th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+
+
+<div class="container">
+	<h1>JWT Generate / Save</h1>
+
+	<div th:if="${message}" class="alert alert-info">
+		<th:block th:text="${message}"></th:block>
+	</div>
+
+	<p>Your request has been completed. If requested, the JWT has been stored in a cookie which expires 1 minute before the
+		JWT.</p>
+
+	<h3>JWT</h3>
+	<div>
+		<code>
+			<pre th:text="${token}"></pre>
+		</code>
+	</div>
+
+	<div>
+		<h3>Usage</h3>
+		<code>curl -H "Authorization: Bearer <span th:text="${token}"></span>" http://...</code>
+	</div>
+</div>
+</body>
+</html>
