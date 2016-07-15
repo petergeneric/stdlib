@@ -8,6 +8,7 @@ import javax.json.JsonNumber;
 import javax.json.JsonObject;
 import javax.json.JsonString;
 import javax.json.JsonValue;
+import java.io.ByteArrayInputStream;
 import java.io.StringReader;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -17,6 +18,15 @@ import java.util.Map;
 class JSONUtil
 {
 	private static final Logger log = Logger.getLogger(JSONUtil.class);
+
+
+	public static Map<String, Object> parse(final byte[] value)
+	{
+		// Decode JSON from payload object
+		final JsonObject json = Json.createReader(new ByteArrayInputStream(value)).readObject();
+
+		return decodeMap(json);
+	}
 
 
 	public static Map<String, Object> parse(final String value)
