@@ -12,6 +12,7 @@ import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.Cookie;
+import javax.servlet.http.HttpSession;
 import java.util.Map;
 
 /**
@@ -80,6 +81,13 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 			if (expireTime != null)
 				cookie.setMaxAge(expireTime.intValue() - 60);
 
+			// Kill the current session (just in case it's associated with a job manager login)
+			final HttpSession session = HttpCallContext.get().getRequest().getSession(false);
+
+			if (session != null)
+				session.invalidate();
+
+			// Now add the JWT cookie
 			HttpCallContext.get().getResponse().addCookie(cookie);
 		}
 
