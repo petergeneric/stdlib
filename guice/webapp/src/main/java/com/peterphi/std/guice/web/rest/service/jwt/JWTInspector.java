@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.service.jwt;
 
+import java.util.Base64;
 import java.util.Map;
 
 public final class JWTInspector
@@ -20,7 +21,9 @@ public final class JWTInspector
 		if (pieces.length != 3)
 			throw new IllegalStateException("Wrong number of segments: " + pieces.length);
 
+		final byte[] json = Base64.getDecoder().decode(pieces[1]);
+
 		// Return only the claim
-		return JSONUtil.parse(pieces[1]);
+		return JSONUtil.parse(json);
 	}
 }
