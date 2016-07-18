@@ -1,10 +1,12 @@
 package com.peterphi.std.guice.web.rest.jaxrs.exception;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
@@ -47,6 +49,19 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Named("rest.exception.html.enabled")
 	@Doc("If set, pretty HTML pages will be rendered for browsers when an exception occurs (default true)")
 	protected boolean enabled = true;
+
+	@Reconfigurable
+	@Inject(optional = true)
+	@Named("rest.exception.html.enabled.only-for-logged-in")
+	@Doc("If set, pretty HTML pages will only be rendered for logged-in users (default false)")
+	protected boolean requireLoggedIn = false;
+
+	@Reconfigurable
+	@Inject(optional = true)
+	@Named("rest.exception.html.enabled.only-for-logged-in.role")
+	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
+	protected String requireRole = null;
+	;
 
 	@Reconfigurable
 	@Inject(optional = true)
@@ -105,6 +120,9 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Inject
 	Configuration config;
 
+	@Inject
+	Provider<CurrentUser> currentUserProvider;
+
 
 	@Override
 	public Response render(RestFailure failure)
@@ -115,6 +133,8 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 			return null; // Don't run unless we have an HttpCallContext
 		else if (!shouldRenderHtmlForRequest(HttpCallContext.get().getRequest()))
 			return null; // Don't run unless we should be rendering HTML for this request
+		else if (requireLoggedIn && isLoggedIn(requireRole))
+			return null;
 
 		TwitterBootstrapRestFailurePageRenderer writer = new TwitterBootstrapRestFailurePageRenderer(failure);
 
@@ -168,6 +188,25 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 		builder.entity(sb.toString());
 
 		return builder.build();
+	}
+
+
+	private boolean isLoggedIn(String role)
+	{
+		try
+		{
+			final CurrentUser currentUser = currentUserProvider.get();
+
+			if (role == null)
+				return !currentUser.isAnonymous();
+			else
+				return currentUser.hasRole(role);
+		}
+		catch (Throwable t)
+		{
+			// ignore errors here
+			return false; // assume not logged in
+		}
 	}
 
 
