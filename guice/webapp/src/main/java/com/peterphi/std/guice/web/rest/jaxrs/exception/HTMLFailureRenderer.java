@@ -4,16 +4,20 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.ListUtility;
+import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
 
@@ -29,8 +33,8 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Reconfigurable
 	@Inject(optional = true)
 	@Named("rest.exception.html.highlight.terms")
-	@Doc("A comma-delimited list of terms to use to decide if a stack trace line should be highlighted (default 'peterphi')")
-	protected String highlightTerms = "peterphi";
+	@Doc("A comma-delimited list of terms to use to decide if a stack trace line should be highlighted (default 'scan-packages', which takes the value from scan.packages)")
+	protected String highlightTerms = "scan-packages";
 
 	@Reconfigurable
 	@Inject(optional = true)
@@ -98,6 +102,9 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Doc("If JIRA is enabled, the base address for JIRA")
 	protected String jiraEndpoint = "https://somecompany.atlassian.net";
 
+	@Inject
+	Configuration config;
+
 
 	@Override
 	public Response render(RestFailure failure)
@@ -114,7 +121,17 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 		// Optionally enable highlighting
 		if (highlightEnabled)
 		{
-			writer.setHighlightTerms(highlightTerms.split(","));
+			if (StringUtils.equals(highlightTerms, "scan-packages"))
+			{
+				// Read scan.packages and use this instead. N.B. need to cast to a string
+				final List<?> list = config.getList(GuiceProperties.SCAN_PACKAGES);
+
+				writer.setHighlightTerms((List<String>) list);
+			}
+			else
+			{
+				writer.setHighlightTerms(Arrays.asList(highlightTerms.split(",")));
+			}
 		}
 
 		// Optionally enable JIRA integration

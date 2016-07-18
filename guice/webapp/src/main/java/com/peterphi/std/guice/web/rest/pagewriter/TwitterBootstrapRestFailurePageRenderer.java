@@ -10,6 +10,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.List;
 import java.util.Map;
 
 public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPageWriter
@@ -21,7 +22,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private int jiraPid;
 	private int jiraIssueType;
 
-	private String[] highlightTerms = null;
+	private List<String> highlightTerms = null;
 
 	private boolean renderJvmInfo = false;
 	private boolean renderStackTrace = false;
@@ -45,7 +46,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	}
 
 
-	public void setHighlightTerms(String[] terms)
+	public void setHighlightTerms(List<String> terms)
 	{
 		this.highlightTerms = terms;
 	}
