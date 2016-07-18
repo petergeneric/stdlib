@@ -36,6 +36,24 @@ public class ThymeleafCurrentUserUtils
 	}
 
 
+	public String getName()
+	{
+		return getUser().getName();
+	}
+
+
+	public String getUsername()
+	{
+		return getUser().getUsername();
+	}
+
+
+	public DateTime getExpires()
+	{
+		return getUser().getExpires();
+	}
+
+
 	public boolean isAnonymous()
 	{
 		return getUser().isAnonymous();
