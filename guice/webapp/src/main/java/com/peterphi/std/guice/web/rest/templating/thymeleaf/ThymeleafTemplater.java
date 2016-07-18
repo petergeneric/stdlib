@@ -4,7 +4,9 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.Templater;
@@ -19,7 +21,11 @@ import java.util.Map;
 
 /**
  * Light abstraction over a ThymeLeaf TemplateEngine allowing cleaner construction of the current web context (when the template
- * engine is being used inside an http call)
+ * engine is being used inside an http call).<br />
+ * Exposes the following special variables:
+ * <ul><li><code>currentUser</code> - of type {@link ThymeleafCurrentUserUtils}</li>
+ * <ul><li><code>config</code> - of type {@link Configuration}</li>
+ * </ul>
  */
 @Singleton
 public class ThymeleafTemplater implements Templater
@@ -29,13 +35,15 @@ public class ThymeleafTemplater implements Templater
 
 	private Map<String, Object> data = new HashMap<String, Object>();
 
-
 	private final Timer calls;
 	private final Meter failures;
 
 
 	@Inject
-	public ThymeleafTemplater(final TemplateEngine engine, final Configuration configuration, MetricRegistry metrics)
+	public ThymeleafTemplater(final TemplateEngine engine,
+	                          final Configuration configuration,
+	                          MetricRegistry metrics,
+	                          Provider<CurrentUser> userProvider)
 	{
 		if (engine.getTemplateResolvers().isEmpty())
 		{
@@ -47,6 +55,8 @@ public class ThymeleafTemplater implements Templater
 
 		this.calls = metrics.timer(GuiceMetricNames.THYMELEAF_CALL_TIMER);
 		this.failures = metrics.meter(GuiceMetricNames.THYMELEAF_RENDER_EXCEPTION_METER);
+
+		data.put("currentUser", new ThymeleafCurrentUserUtils(userProvider));
 	}
 
 

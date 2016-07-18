@@ -2,9 +2,11 @@ package com.peterphi.std.guice.web.rest.service;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 import org.thymeleaf.TemplateEngine;
@@ -31,6 +33,9 @@ public class GuiceCoreTemplater
 	URI coreRestEndpoint;
 	@Inject
 	GuiceCoreServicesRegistry services;
+
+	@Inject
+	Provider<CurrentUser> userProvider;
 
 	/**
 	 * We cache the TemplateEngine directly because Java may discard the ThymeleafTemplater wrapper but not the TemplateEngine
@@ -62,7 +67,7 @@ public class GuiceCoreTemplater
 		{
 			final TemplateEngine engine = getOrCreateEngine();
 
-			templater = new ThymeleafTemplater(engine, configuration, metrics);
+			templater = new ThymeleafTemplater(engine, configuration, metrics, userProvider);
 
 			templater.set("coreRestPrefix", coreRestPrefix);
 			templater.set("coreRestEndpoint", coreRestEndpoint.toString());
