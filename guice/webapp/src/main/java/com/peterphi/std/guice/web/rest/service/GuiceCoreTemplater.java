@@ -97,18 +97,6 @@ public class GuiceCoreTemplater
 	}
 
 
-	private ThymeleafTemplater templater(TemplateEngine engine)
-	{
-		ThymeleafTemplater templater = new ThymeleafTemplater(engine, configuration, metrics);
-
-		templater.set("coreRestPrefix", coreRestPrefix);
-		templater.set("coreRestEndpoint", coreRestEndpoint.toString());
-		templater.set("coreServices", services);
-
-		return templater;
-	}
-
-
 	private static TemplateEngine createEngine()
 	{
 		ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
