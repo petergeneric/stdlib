@@ -20,17 +20,14 @@ import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
-import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
-class HttpCallJWTUser implements CurrentUser, JWTUser
+class HttpCallJWTUser implements CurrentUser
 {
 	private static final Logger log = Logger.getLogger(HttpCallJWTUser.class);
+
 
 	/**
 	 * {@link HttpServletRequest} attribute to store the decoded token under
@@ -46,9 +43,6 @@ class HttpCallJWTUser implements CurrentUser, JWTUser
 	private final String cookieName;
 	private final boolean requireSecure;
 	private final JWTVerifier verifier;
-
-	private transient String lastToken;
-	private transient Map<String, Object> lastTokenDecoded;
 
 
 	public HttpCallJWTUser(final String headerName,
@@ -310,7 +304,8 @@ class HttpCallJWTUser implements CurrentUser, JWTUser
 				return new RestException(401, "You must log in to access this resource");
 			else
 				return new RestException(403,
-				                         "Access denied by rule: " + ((constraint != null) ? constraint.comment() : "(default)"));
+				                         "Access denied for your JWT by rule: " +
+				                         ((constraint != null) ? constraint.comment() : "(default)"));
 		};
 	}
 
@@ -318,11 +313,11 @@ class HttpCallJWTUser implements CurrentUser, JWTUser
 	@Override
 	public DateTime getExpires()
 	{
-		final Number expireSecondsSince1970 = (Number) get().get("exp");
+		final Number epochSeconds = (Number) get().get("exp");
 
-		if (expireSecondsSince1970 != null)
+		if (epochSeconds != null)
 		{
-			final long millis = expireSecondsSince1970.longValue() * 1000L;
+			final long millis = epochSeconds.longValue() * 1000L;
 
 			return new DateTime(millis);
 		}
@@ -337,66 +332,5 @@ class HttpCallJWTUser implements CurrentUser, JWTUser
 	public Map<String, Object> getClaims()
 	{
 		return Collections.unmodifiableMap(get());
-	}
-
-
-	@Override
-	public String getSimpleClaim(final String name)
-	{
-		final Object value = get().get(name);
-
-		if (value == null)
-			return null;
-		else if (value instanceof String || value instanceof Number)
-			return value.toString();
-		else
-			throw new IllegalArgumentException("Claim" + name + " did not have simple value as expected. Had: " + value);
-	}
-
-
-	@Override
-	public List<String> getSimpleListClaim(final String name)
-	{
-		final Object value = get().get(name);
-
-		if (value == null)
-			return null;
-		else if (value instanceof List)
-			return populate(new ArrayList<String>(), (List<?>) value);
-		else
-			throw new IllegalArgumentException("Claim " + name + " did not have list of simple value as expected. Had: " + value);
-	}
-
-
-	@Override
-	public Set<String> getSimpleSetClaim(final String name)
-	{
-		final Object value = get().get(name);
-
-		if (value == null)
-			return null;
-		else if (value instanceof List)
-			return populate(new HashSet<String>(), (List<?>) value);
-		else
-			throw new IllegalArgumentException("Claim " + name + " did not have list of simple value as expected. Had: " + value);
-	}
-
-
-	private <T extends Collection<String>> T populate(final T collection, final List<?> list)
-	{
-		for (Object value : list)
-		{
-			if (value == null)
-				collection.add(null);
-			else if (value instanceof String || value instanceof Number)
-				collection.add(value.toString());
-			else
-				throw new IllegalArgumentException("Claim collection " +
-				                                   list +
-				                                   " was not composed of simple values. Found: " +
-				                                   value);
-		}
-
-		return collection;
 	}
 }

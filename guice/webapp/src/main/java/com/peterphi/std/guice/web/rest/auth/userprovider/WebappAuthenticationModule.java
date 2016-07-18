@@ -12,6 +12,8 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import org.apache.commons.configuration.CompositeConfiguration;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -21,6 +23,10 @@ public class WebappAuthenticationModule extends AbstractModule
 	 * Special role indicating that the user has been authenticated in some manner
 	 */
 	public static final String ROLE_SPECIAL_AUTHENTICATED = "authenticated";
+
+	public static final DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss zzz")
+	                                                                          .withZoneUTC();
+
 
 	private final MetricRegistry metrics;
 	private final String[] providerNames;

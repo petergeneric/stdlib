@@ -6,9 +6,12 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.Collections;
+import java.util.Map;
 
 /**
  * An implementation of {@link com.peterphi.std.guice.common.auth.iface.CurrentUser} using the user attached to the context's
@@ -70,6 +73,20 @@ class HttpCallUser implements CurrentUser
 
 
 	@Override
+	public DateTime getExpires()
+	{
+		return null;
+	}
+
+
+	@Override
+	public Map<String, Object> getClaims()
+	{
+		return Collections.emptyMap();
+	}
+
+
+	@Override
 	public AccessRefuser getAccessRefuser()
 	{
 		return (constraint, user) ->
@@ -78,7 +95,8 @@ class HttpCallUser implements CurrentUser
 				return new RestException(401, "You must log in to access this resource");
 			else
 				return new RestException(403,
-				                         "Access denied by rule: " + ((constraint != null) ? constraint.comment() : "(default)"));
+				                         "Access denied for your Servlet user by rule: " +
+				                         ((constraint != null) ? constraint.comment() : "(default)"));
 		};
 	}
 }
