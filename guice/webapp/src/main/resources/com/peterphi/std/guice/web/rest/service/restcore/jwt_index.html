@@ -23,9 +23,9 @@
 	<p>This page allows you to generate / save JWT authentication tokens for service access.</p>
 
 	<h4>Current User Provider</h4>
-	<div>The user provider associated with this session is <span th:text="${currentUser.authType}">type</span>. Username is <span
-			th:text="${currentUser.username}">username</span> and the current token has an expiry date of <span
-			th:text="${currentUser.format(currentUser.expires)}">date</span>. Clicking one of the <em>Save</em> buttons below will
+	<div>The user provider associated with this session is '<span th:text="${currentUser.authType}">type</span>'. Username is '<span
+			th:text="${currentUser.username}">username</span>' and the current token has an expiry date of '<span
+			th:text="${currentUser.format(currentUser.expires)}">date</span>'. Clicking one of the <em>Save</em> buttons below will
 		start a new session (so that the JWT provider can claim the session).
 	</div>
 
