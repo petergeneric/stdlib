@@ -3,6 +3,13 @@ package com.peterphi.std.guice.common.auth.iface;
 public interface CurrentUser
 {
 	/**
+	 * Return the type of authentication used
+	 *
+	 * @return
+	 */
+	public String getAuthType();
+
+	/**
 	 * Return true if the user is not authenticated
 	 *
 	 * @return true if the user is not authenticated, false if the user is authenticated

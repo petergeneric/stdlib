@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
+import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
@@ -15,6 +16,13 @@ import java.security.Principal;
  */
 class HttpCallUser implements CurrentUser
 {
+	@Override
+	public String getAuthType()
+	{
+		return GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER;
+	}
+
+
 	@Override
 	public boolean isAnonymous()
 	{
@@ -64,7 +72,8 @@ class HttpCallUser implements CurrentUser
 	@Override
 	public AccessRefuser getAccessRefuser()
 	{
-		return (constraint, user) -> {
+		return (constraint, user) ->
+		{
 			if (user.isAnonymous())
 				return new RestException(401, "You must log in to access this resource");
 			else
