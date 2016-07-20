@@ -1,6 +1,8 @@
 package com.peterphi.std.guice.web.rest.auth.interceptor;
 
 import com.codahale.metrics.Meter;
+import com.google.common.cache.Cache;
+import com.google.common.cache.CacheBuilder;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.AuthScope;
@@ -12,9 +14,6 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-
-import java.util.HashMap;
-import java.util.Map;
 
 /**
  * Intercepts calls to methods annotated with AuthConstraint (or whose superclass is annotated with AuthConstraint) and enforces
@@ -32,7 +31,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private final Meter authenticatedDenied;
 	private final boolean onlyServletRequest;
 
-	private final Map<String, AuthScope> scopes = new HashMap<>();
+	private final Cache<String, AuthScope> scopes = CacheBuilder.newBuilder().build();
 
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
@@ -63,9 +62,17 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		if (invocation.getMethod().getDeclaringClass().equals(Object.class))
 			return invocation.proceed();
 
+		if (log.isTraceEnabled())
+			log.trace("Check authz for: " + invocation);
+
 		// Skip auth if we're not inside a Servlet call and we are only to enforce auth constraints on service calls
 		if (onlyServletRequest && HttpCallContext.peek() == null)
+		{
+			if (log.isTraceEnabled())
+				log.trace("Skip authz, should only run on servlet requests and this is not a servlet request");
+
 			return invocation.proceed();
+		}
 
 		calls.mark();
 
@@ -114,7 +121,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		if (scope.getSkip(constraint))
 		{
 			if (log.isTraceEnabled())
-				log.trace("Allowing method invocation; skip=true");
+				log.trace("Allowing method invocation (skip=true).");
 
 			return true;
 		}
@@ -123,12 +130,10 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			final boolean pass = user.hasRole(scope.getRole(constraint));
 
 			if (log.isTraceEnabled())
-				log.trace("Method invocation requires testing if user " +
-				          user +
-				          " has role " +
-				          scope.getRole(constraint) +
-				          ". Result: " +
-				          pass);
+				if (pass)
+					log.trace("Allow method invocation: user " + user + " has role " + scope.getRole(constraint));
+				else
+					log.trace("Deny method invocation: user " + user + " does not have role " + scope.getRole(constraint));
 
 			return pass;
 		}
@@ -146,7 +151,9 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 	private AuthScope getScope(final String id)
 	{
-		if (!scopes.containsKey(id))
+		AuthScope scope = scopes.getIfPresent(id);
+
+		if (scope == null)
 		{
 			final String role;
 			final Boolean skip;
@@ -162,10 +169,12 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
 			}
 
-			scopes.put(id, new AuthScope(role, skip));
+			scope = new AuthScope(role, skip);
+
+			scopes.put(id, scope);
 		}
 
-		return scopes.get(id);
+		return scope;
 	}
 
 
