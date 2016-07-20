@@ -23,6 +23,8 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
 
+	public static final String SCOPE_DEFAULT = "default";
+
 	private final Provider<CurrentUser> userProvider;
 	private final CompositeConfiguration config;
 	private final Meter calls;
@@ -143,7 +145,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private AuthScope getScope(final AuthConstraint constraint)
 	{
 		if (constraint == null)
-			return getScope("default");
+			return getScope(SCOPE_DEFAULT);
 		else
 			return getScope(constraint.id());
 	}
@@ -158,7 +160,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			final String role;
 			final Boolean skip;
 
-			if (StringUtils.equals("default", id))
+			if (StringUtils.equals(SCOPE_DEFAULT, id))
 			{
 				role = config.getString(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
 				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
@@ -169,7 +171,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
 			}
 
-			scope = new AuthScope(role, skip);
+			scope = new AuthScope(id, role, skip);
 
 			scopes.put(id, scope);
 		}
