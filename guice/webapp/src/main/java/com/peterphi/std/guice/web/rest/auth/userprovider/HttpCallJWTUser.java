@@ -2,6 +2,7 @@ package com.peterphi.std.guice.web.rest.auth.userprovider;
 
 import com.auth0.jwt.JWTVerifier;
 import com.auth0.jwt.JWTVerifyException;
+import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.apploader.GuiceConstants;
@@ -298,14 +299,17 @@ class HttpCallJWTUser implements CurrentUser
 	@Override
 	public AccessRefuser getAccessRefuser()
 	{
-		return (constraint, user) ->
+		return (scope, constraint, user) ->
 		{
 			if (user.isAnonymous())
-				return new RestException(401, "You must log in to access this resource");
+				return new RestException(401,
+				                         "You must log in to access this resource. Required role: " + scope.getRole(constraint));
 			else
 				return new RestException(403,
 				                         "Access denied for your JWT by rule: " +
-				                         ((constraint != null) ? constraint.comment() : "(default)"));
+				                         ((constraint != null) ?
+				                          constraint.comment() :
+				                          "(default)" + ". Required role: " + scope.getRole(constraint)));
 		};
 	}
 
@@ -332,5 +336,12 @@ class HttpCallJWTUser implements CurrentUser
 	public Map<String, Object> getClaims()
 	{
 		return Collections.unmodifiableMap(get());
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return Objects.toStringHelper(this).add("claims", get()).toString();
 	}
 }

@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.common.auth.iface;
 
+import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 
 public interface AccessRefuser
@@ -15,5 +16,5 @@ public interface AccessRefuser
 	 *
 	 * @return an implementation of Error or RuntimeException to be thrown
 	 */
-	public Throwable refuse(AuthConstraint constraint, CurrentUser user);
+	public Throwable refuse(final AuthScope scope, AuthConstraint constraint, CurrentUser user);
 }

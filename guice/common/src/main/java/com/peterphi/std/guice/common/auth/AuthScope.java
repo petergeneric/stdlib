@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.auth.interceptor;
+package com.peterphi.std.guice.common.auth;
 
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 

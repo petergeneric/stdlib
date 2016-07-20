@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
+import com.google.common.base.Objects;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
@@ -89,14 +90,24 @@ class HttpCallUser implements CurrentUser
 	@Override
 	public AccessRefuser getAccessRefuser()
 	{
-		return (constraint, user) ->
+		return (scope, constraint, user) ->
 		{
 			if (user.isAnonymous())
-				return new RestException(401, "You must log in to access this resource");
+				return new RestException(401,
+				                         "You must log in to access this resource. Required role: " + scope.getRole(constraint));
 			else
 				return new RestException(403,
 				                         "Access denied for your Servlet user by rule: " +
-				                         ((constraint != null) ? constraint.comment() : "(default)"));
+				                         ((constraint != null) ?
+				                          constraint.comment() :
+				                          "(default)" + ". Required role: " + scope.getRole(constraint)));
 		};
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return Objects.toStringHelper(this).add("principal", getName()).toString();
 	}
 }

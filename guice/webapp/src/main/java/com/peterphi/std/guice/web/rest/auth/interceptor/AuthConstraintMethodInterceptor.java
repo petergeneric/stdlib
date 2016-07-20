@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.auth.interceptor;
 import com.codahale.metrics.Meter;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.HttpCallContext;
@@ -10,6 +11,7 @@ import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -20,6 +22,8 @@ import java.util.Map;
  */
 class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
+	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
+
 	private final Provider<CurrentUser> userProvider;
 	private final CompositeConfiguration config;
 	private final Meter calls;
@@ -72,8 +76,11 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			throw new IllegalArgumentException("Provider for CurrentUser returned null! Cannot apply AuthConstraint to method " +
 			                                   invocation.getMethod());
 
+		// Acquire the auth scope (for constraint override)
+		final AuthScope scope = getScope(constraint);
+
 		// Test the user
-		if (passes(constraint, user))
+		if (passes(scope, constraint, user))
 		{
 			granted.mark();
 
@@ -87,7 +94,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			denied.mark();
 
 			// Throw an exception to refuse access
-			throw user.getAccessRefuser().refuse(constraint, user);
+			throw user.getAccessRefuser().refuse(scope, constraint, user);
 		}
 	}
 
@@ -102,14 +109,29 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	 *
 	 * @return true if the user passes, otherwise false
 	 */
-	private boolean passes(final AuthConstraint constraint, final CurrentUser user)
+	private boolean passes(final AuthScope scope, final AuthConstraint constraint, final CurrentUser user)
 	{
-		final AuthScope scope = getScope(constraint);
-
 		if (scope.getSkip(constraint))
+		{
+			if (log.isTraceEnabled())
+				log.trace("Allowing method invocation; skip=true");
+
 			return true;
+		}
 		else
-			return user.hasRole(scope.getRole(constraint));
+		{
+			final boolean pass = user.hasRole(scope.getRole(constraint));
+
+			if (log.isTraceEnabled())
+				log.trace("Method invocation requires testing if user " +
+				          user +
+				          " has role " +
+				          scope.getRole(constraint) +
+				          ". Result: " +
+				          pass);
+
+			return pass;
+		}
 	}
 
 
