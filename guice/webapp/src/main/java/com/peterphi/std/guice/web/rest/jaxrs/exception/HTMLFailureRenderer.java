@@ -143,10 +143,8 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 		{
 			if (StringUtils.equals(highlightTerms, "scan-packages"))
 			{
-				// Read scan.packages and use this instead. N.B. need to cast to a string
-				final List<?> list = config.getList(GuiceProperties.SCAN_PACKAGES);
-
-				writer.setHighlightTerms((List<String>) list);
+				// Read scan.packages and use this instead
+				writer.setHighlightTerms(Arrays.asList(config.getStringArray(GuiceProperties.SCAN_PACKAGES)));
 			}
 			else
 			{
