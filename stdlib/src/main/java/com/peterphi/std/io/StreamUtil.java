@@ -4,7 +4,6 @@ import org.apache.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.ByteArrayOutputStream;
 import java.io.IOError;
 import java.io.IOException;
 import java.io.InputStream;
@@ -85,7 +84,6 @@ public class StreamUtil
 		public void start()
 		{
 		}
-
 	}
 
 
@@ -305,36 +303,6 @@ public class StreamUtil
 	}
 
 
-	public static byte[] readBytes(final InputStream is, final int size) throws IOException
-	{
-		ByteArrayOutputStream os = new ByteArrayOutputStream(size);
-		try
-		{
-			int left = size;
-			byte[] buffer = new byte[1024];
-
-			while (left != 0)
-			{
-				int read = is.read(buffer, 0, Math.min(buffer.length, left));
-
-				if (read == -1)
-					throw new IOException("Error reading from InputStream");
-				else if (read != 0)
-				{
-					os.write(buffer, 0, read);
-					left -= read;
-				}
-			}
-		}
-		finally
-		{
-			os.close();
-		}
-
-		return os.toByteArray();
-	}
-
-
 	public static void streamCopy(final Reader reader, final Writer writer) throws IOException
 	{
 		Reader in = (reader.getClass() == BufferedReader.class) ? reader : new BufferedReader(reader);
@@ -356,7 +324,6 @@ public class StreamUtil
 			{
 				out.close();
 			}
-
 		}
 		finally
 		{
