@@ -132,7 +132,6 @@ public class FileHelper
 		{
 			return false;
 		}
-
 	}
 
 
@@ -201,7 +200,9 @@ public class FileHelper
 	public static void copy(File src, File dest) throws IOException
 	{
 		if (!src.exists())
-			throw new FileNotFoundException("Cannot copy from non-existant source " + src.getAbsolutePath() + " to " +
+			throw new FileNotFoundException("Cannot copy from non-existant source " +
+			                                src.getAbsolutePath() +
+			                                " to " +
 			                                dest.getAbsolutePath());
 
 		if (log.isInfoEnabled())
@@ -237,7 +238,9 @@ public class FileHelper
 	public static void move(File src, File dest) throws IOException
 	{
 		if (!src.exists())
-			throw new FileNotFoundException("Cannot copy from non-existant source " + src.getAbsolutePath() + " to " +
+			throw new FileNotFoundException("Cannot copy from non-existant source " +
+			                                src.getAbsolutePath() +
+			                                " to " +
 			                                dest.getAbsolutePath());
 
 		if (log.isInfoEnabled())
@@ -352,94 +355,6 @@ public class FileHelper
 		}
 	}
 
-
-	/*
-			if (log.isInfoEnabled())
-				log.info("[FileHelper] {saveMove} Safe moving " + src + " to " + dest);
-
-			boolean copyStarted = false;
-			boolean copyComplete = false;
-			boolean deleteComplete = false;
-
-			// Try a fast renaming move first (works if the files are on the same partition
-			try {
-				if (src.renameTo(dest)) {
-					return true;
-				}
-			}
-			catch (SecurityException e) {
-				log.debug("[FileHelper] {safeMove} rename failed due to security exception (" + e.getMessage() +
-				    ") - could not source.renameTo(dest). Failing", e);
-				return false;
-			}
-
-			try {
-
-				// Safely copy the file: either leave a whole destination or no destination
-				try {
-					copyStarted = true;
-					copy(src, dest);
-					copyComplete = true;
-				}
-				finally {
-					if (copyStarted && !copyComplete) {
-						if (dest.exists()) {
-							log.error("[FileHelper] {safeMove} Rolling back partial file copy");
-							try {
-								boolean fileDeletionSuccess = dest.delete();
-								if (!fileDeletionSuccess) {
-									log
-									    .error("[FileHelper] {safeMove} Error in rollback on incomplete file transfer could not delete partial file");
-								}
-							}
-							catch (Exception e) {
-								log
-								    .error("[FileHelper] {safeMove} Error in rollback on incomplete file transfer could not delete partial file");
-							}
-							finally {
-								dest.delete();
-							}
-						}
-					}
-				}
-
-				// delete the source file ONLY if the copy is complete and the destination exists
-				if (copyComplete && dest.exists()) {
-					log.debug("[FileHelper] {safeMove} Copying completed. Deleting source...");
-					src.delete();
-					deleteComplete = true;
-				}
-			}
-			finally {
-				if (copyComplete && deleteComplete) {
-					log.debug("[FileHelper] {safeMove} Move complete success");
-					return true;
-				}
-				else if (copyComplete && !deleteComplete) {
-					log
-					    .error("[FileHelper] {safeMove} copied source file to new destination, but could not delete it. Rolling back changes");
-					try {
-						if (dest.exists()) {
-							boolean rollbackByDeleting = dest.delete();
-							if (!rollbackByDeleting) {
-								log.error("[FileHelper] {safeMove} Error in rollback: could not delete destination (" + dest + ")");
-							}
-						}
-					}
-					finally {
-						return false;
-					}
-				}
-				else if (!copyComplete && !deleteComplete) {
-					log.error("[FileHelper] {safeMove} Clean failure: no changes made to filesystem.");
-					return false;
-				}
-				else {
-					log.error("[FileHelper] {safeMove} impossible failure: copied=" + copyComplete + " deleted=" + deleteComplete);
-					return false;
-				}
-			}
-		}*/
 
 	/**
 	 * Deletes a local file or directory from the filesystem
@@ -650,6 +565,7 @@ public class FileHelper
 		return cat(new File(filename));
 	}
 
+
 	public static String cat(InputStream is) throws IOException
 	{
 		return cat(new InputStreamReader(is), 1024);
@@ -743,7 +659,6 @@ public class FileHelper
 			log.error("[FileHelper] {chown} Failure: " + e.getMessage(), e);
 			return false;
 		}
-
 	}
 
 
@@ -752,7 +667,8 @@ public class FileHelper
 	 *
 	 * @param f
 	 * @param permissions
-	 * 		<strong>REMEMBER TO SPECIFY THIS VALUE IN OCTAL (ie. with a leading zero) IF YOU ARE USING NUMBERS IDENTICAL TO THE CHMOD
+	 * 		<strong>REMEMBER TO SPECIFY THIS VALUE IN OCTAL (ie. with a leading zero) IF YOU ARE USING NUMBERS IDENTICAL TO THE
+	 * 		CHMOD
 	 * 		COMMAND-LINE REPRESENTATION (eg. 755)</strong>
 	 *
 	 * @return
@@ -953,6 +869,7 @@ public class FileHelper
 			return false;
 		}
 	}
+
 
 	public static class LockRecord
 	{
