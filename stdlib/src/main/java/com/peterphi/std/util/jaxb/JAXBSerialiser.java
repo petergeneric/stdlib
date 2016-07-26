@@ -537,6 +537,17 @@ public class JAXBSerialiser
 	}
 
 
+	/**
+	 * Helper method to print a serialised object to stdout (for dev/debugging use)
+	 *
+	 * @param obj
+	 */
+	public static void print(final Object obj)
+	{
+		System.out.println(getInstance(obj.getClass()).serialise(obj));
+	}
+
+
 	public void serialise(final Object obj, final Node node)
 	{
 		final Marshaller marshaller = getMarshaller();
