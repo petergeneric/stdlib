@@ -11,7 +11,6 @@ import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
 import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
-import com.peterphi.std.indexservice.rest.client.guice.IndexServiceModule;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.PropertiesConfiguration;
@@ -78,7 +77,6 @@ public class WebappGuiceRole implements GuiceRole
 		// Expose ServletContext and Filter/Servlet Config instances
 		modules.add(contextModule);
 
-
 		modules.add(new ServletScopingModule());
 		modules.add(new JAXRSJodaConverterModule());
 
@@ -89,19 +87,6 @@ public class WebappGuiceRole implements GuiceRole
 			else
 				log.info("REST Core Services disabled by config parameter");
 		}
-
-		// Enable the index service if the webapp wants to use it
-		final boolean indexServiceDisabled = config.getBoolean(GuiceProperties.DISABLE_INDEX_SERVICE, false);
-
-		final boolean hasIndexEndpoint = config.containsKey(GuiceProperties.INDEX_SERVICE_ENDPOINT);
-
-		if (hasIndexEndpoint && !indexServiceDisabled)
-		{
-			log.info("Enabling index service capabilities...");
-			modules.add(new IndexServiceModule());
-		}
-		else
-			log.info("Index service capabilities were not enabled");
 	}
 
 

@@ -65,7 +65,6 @@
 	<modules>
 		<module>stdlib</module>
 		<module>guice</module>
-		<module>index-service</module>
 		<module>util/carbon-client</module>
 	</modules>
 

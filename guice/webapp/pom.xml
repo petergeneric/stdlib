@@ -20,14 +20,7 @@
 	<dependencies>
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
-			<artifactId>stdlib-guice-restclient</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<!-- Allow us to use the Index Service -->
-		<dependency>
-			<groupId>com.peterphi.std.index</groupId>
-			<artifactId>index-common</artifactId>
+			<artifactId>stdlib-guice-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
 

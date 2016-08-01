@@ -93,7 +93,6 @@
 		<module>hibernate-testing</module>
 		<module>liquibase</module>
 		<module>testing</module>
-		<module>restclient</module>
 		<module>sample-rest-service</module>
 	</modules>
 </project>

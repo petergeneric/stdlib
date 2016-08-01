@@ -19,12 +19,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.peterphi.std.index</groupId>
-			<artifactId>index-common</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-webapp</artifactId>
 			<version>${project.version}</version>

@@ -48,11 +48,6 @@ public class GuiceProperties
 	@Doc("If true then when the guice webapp jar is loaded it'll search for all JAX-RS @Path annotated interfaces in the scan.packages packages and make them available to be called remotely (default true)")
 	public static final String ROLE_JAXRS_SERVER_AUTO = "role.jaxrs-server.auto";
 
-	@Doc("The endpoint of the remote index service to register with")
-	public static final String INDEX_SERVICE_ENDPOINT = "service.IndexRestService.endpoint";
-	@Doc("The override for the index service enable property - allows services to opt out of a globally configured index service. If false, we should register with a remote index service. If true then index service registration is disabled (default true)")
-	public static final String DISABLE_INDEX_SERVICE = "framework.indexservice.disabled";
-
 	@Doc("Override for the core rest services. If false, core guice rest services will be registered (default false)")
 	public static final String DISABLE_CORE_SERVICES = "framework.restcoreservices.disabled";
 
