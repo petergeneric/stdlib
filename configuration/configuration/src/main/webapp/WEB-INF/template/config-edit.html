@@ -113,7 +113,7 @@
 			</thead>
 			<tbody>
 			<tr th:each="kvp: ${inheritedProperties}">
-				<td><a th:href="@{'/config/edit/' + ${kvp.path}}" th:text="${kvp.path}">path</a></td>
+				<td><a th:href="@{'/edit/' + ${kvp.path}}" th:text="${kvp.path}">path</a></td>
 				<td th:text="${kvp.name}">name</td>
 				<td>
 					<textarea readonly="readonly" th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128"
