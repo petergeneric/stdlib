@@ -1,0 +1,59 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="commits" type="java.util.List<com.peterphi.configuration.service.git.ConfigCommit>"-->
+<!--@thymesVar id="paths" type="java.util.List<java.lang.String>"-->
+<head>
+	<title>Config Service</title>
+	<meta th:fragment="htmlhead" charset="utf-8"/>
+	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+
+	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
+
+	<style th:fragment="htmlhead">
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body id="top">
+
+<div class="container">
+	<h1>Config Service</h1>
+
+	Paths:
+	<option id="path-nav">
+		<select th:each="pathopt: ${paths}" th:selected="${path} == ${pathopt}" th:text="${pathopt}"></select>
+	</option>
+
+	<h2>Recent Changes</h2>
+	<ul>
+		<li th:each="commit: ${commits}">
+			<span th:text="${commit.timestamp}"></span> - <span th:text="${commit.email}"></span> - <code
+				th:text="${commit.message}"></code>
+		</li>
+	</ul>
+
+	<h1>Actions</h1>
+	<form th:action="@{/config/pull-remote}" method="POST">
+		<input type="submit" value="Pull From Remote"/>
+	</form>
+
+	<form th:action="@{/config/edit}" method="GET">
+		<input type="submit" value="Edit Config"/>
+	</form>
+
+
+</div>
+</body>
+</html>

@@ -13,17 +13,26 @@ import java.util.stream.Collectors;
 public class ConfigRepository
 {
 	private final Repository repo;
+	private final boolean hasRemote;
 
 
 	public ConfigRepository(final Repository repo)
 	{
 		this.repo = repo;
+
+		hasRemote = repo.getRemoteNames().size() > 0;
 	}
 
 
 	public ConfigPropertyData get(String ref, String path)
 	{
 		return RepoHelper.read(repo, ref, path);
+	}
+
+
+	public List<ConfigCommit> getRecentCommits(int max)
+	{
+		return RepoHelper.log(repo, max);
 	}
 
 
@@ -107,5 +116,24 @@ public class ConfigRepository
 
 			throw new RuntimeException("Error writing updated repository, work tree reset", e);
 		}
+
+		// Push the changes to the remote
+		if (hasRemote)
+		{
+			try
+			{
+				RepoHelper.push(repo, "origin");
+			}
+			catch (Throwable t)
+			{
+				throw new RuntimeException("Saved changes to the local repository but push to remote failed!", t);
+			}
+		}
+	}
+
+
+	public void pull(final String origin)
+	{
+		RepoHelper.pull(repo, origin);
 	}
 }

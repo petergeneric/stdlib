@@ -29,9 +29,14 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 
 	@Override
-	public Response getIndex()
+	public String getIndex()
 	{
-		return Response.seeOther(URI.create("/config/edit//")).build();
+		final TemplateCall call = templater.template("index");
+
+		call.set("paths", repo.getPaths("HEAD"));
+		call.set("commits", repo.getRecentCommits(10));
+
+		return call.process();
 	}
 
 
@@ -79,16 +84,25 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public Response applyChanges(final MultivaluedMap<String, String> fields)
 	{
-		final String name = fields.getFirst("_name");
-		final String email = fields.getFirst("_email");
+		final String name = StringUtils.defaultIfBlank(fields.getFirst("_name"), "Unknown UI User");
+		final String email = StringUtils.defaultIfBlank(fields.getFirst("_email"), "nobody@localhost");
 		final String path = fields.getFirst("_path");
-		final String message = fields.getFirst("_message");
+		final String message = StringUtils.defaultIfBlank(fields.getFirst("_message"), "No message");
 
 		Map<String, Map<String, ConfigPropertyValue>> data = parseFields(path, fields);
 
 		repo.set(name, email, data, false, message);
 
 		return Response.seeOther(URI.create("/config/edit/" + path)).build();
+	}
+
+
+	@Override
+	public Response pullRemote()
+	{
+		repo.pull("origin");
+
+		return Response.seeOther(URI.create("/")).build();
 	}
 
 

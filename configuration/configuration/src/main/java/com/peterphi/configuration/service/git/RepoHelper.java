@@ -8,15 +8,22 @@ import com.peterphi.std.io.FileHelper;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
+import org.eclipse.jgit.api.RemoteAddCommand;
 import org.eclipse.jgit.api.ResetCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
+import org.eclipse.jgit.lib.ConfigConstants;
+import org.eclipse.jgit.lib.PersonIdent;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.lib.StoredConfig;
+import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -25,7 +32,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-class RepoHelper
+public class RepoHelper
 {
 	public static final String KEY_INCLUDE = "include";
 	public static final String KEY_INCLUDE_SHALLOW = "shallow-include";
@@ -302,13 +309,95 @@ class RepoHelper
 	{
 		try
 		{
-			Git git = new Git(repo);
-
-			git.reset().setMode(ResetCommand.ResetType.HARD).setRef("HEAD").call();
+			new Git(repo).reset().setMode(ResetCommand.ResetType.HARD).setRef("HEAD").call();
 		}
 		catch (GitAPIException e)
 		{
-			throw new RuntimeException("Failed to issue git reset HEAD!");
+			throw new RuntimeException("Failed to issue git reset HEAD!", e);
+		}
+	}
+
+
+	public static void addRemote(final Repository repo, final String remote, final String url)
+	{
+		try
+		{
+			// Add the new remote
+			{
+				final RemoteAddCommand remoteAdd = new Git(repo).remoteAdd();
+
+				remoteAdd.setName(remote);
+				remoteAdd.setUri(new URIish(url));
+
+				remoteAdd.call();
+			}
+
+			// Set up tracking
+			{
+				StoredConfig config = repo.getConfig();
+
+				config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, "master", "remote", remote);
+				config.setString(ConfigConstants.CONFIG_BRANCH_SECTION, "master", "merge", "refs/heads/master");
+
+				config.save();
+			}
+		}
+		catch (IOException | URISyntaxException | GitAPIException e)
+		{
+			throw new RuntimeException("Failed to issue git remote add", e);
+		}
+	}
+
+
+	public static void pull(final Repository repo, final String remote)
+	{
+		try
+		{
+			new Git(repo).pull().setRemote(remote).setStrategy(MergeStrategy.OURS).call();
+		}
+		catch (GitAPIException e)
+		{
+			throw new RuntimeException("Failed to issue git push", e);
+		}
+	}
+
+
+	public static void push(final Repository repo, final String remote)
+	{
+		try
+		{
+			new Git(repo).push().setForce(true).setRemote(remote).call();
+		}
+		catch (GitAPIException e)
+		{
+			throw new RuntimeException("Failed to issue git push", e);
+		}
+	}
+
+
+	public static List<ConfigCommit> log(final Repository repo, final int max)
+	{
+		try
+		{
+			Git git = new Git(repo);
+
+			final Iterable<RevCommit> commits = git.log().setMaxCount(max).call();
+
+			List<ConfigCommit> ret = new ArrayList<>();
+
+			for (RevCommit commit : commits)
+			{
+				final PersonIdent author = commit.getAuthorIdent();
+				final Date timestamp = new Date(commit.getCommitTime() * 1000L);
+
+				ret.add(new ConfigCommit(timestamp, author.getName(), author.getEmailAddress(), commit.getFullMessage()));
+			}
+
+			return ret;
+		}
+		catch (GitAPIException e)
+		{
+			throw new RuntimeException("Error issuing git log", e);
 		}
 	}
 }

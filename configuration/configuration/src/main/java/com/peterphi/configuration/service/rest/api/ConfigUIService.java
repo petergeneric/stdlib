@@ -16,7 +16,7 @@ public interface ConfigUIService
 	@GET
 	@Path("/")
 	@Produces(MediaType.TEXT_HTML)
-	Response getIndex();
+	String getIndex();
 
 	@GET
 	@Path("/config/edit")
@@ -33,4 +33,10 @@ public interface ConfigUIService
 	@Produces(MediaType.TEXT_HTML)
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	Response applyChanges(MultivaluedMap<String, String> fields);
+
+
+	@POST
+	@Path("/config/pull-remote")
+	@Produces(MediaType.TEXT_HTML)
+	Response pullRemote();
 }
