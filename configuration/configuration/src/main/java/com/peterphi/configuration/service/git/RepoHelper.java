@@ -393,7 +393,7 @@ public class RepoHelper
 		}
 		catch (GitAPIException e)
 		{
-			throw new RuntimeException("Failed to issue git push", e);
+			throw new RuntimeException("Failed to issue git pull", e);
 		}
 	}
 
