@@ -1,38 +1,23 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<!--@thymesVar id="inheritedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"-->
-<!--@thymesVar id="definedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"-->
-<!--@thymesVar id="path" type="java.lang.String"-->
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
+	<meta th:substituteby="includes :: htmlhead"/>
+
 	<title th:text="'config:'+${path}">config:path</title>
-	<meta th:fragment="htmlhead" charset="utf-8"/>
-	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
-
-	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
-
-	<style th:fragment="htmlhead">
-		pre {
-			font-size: 11px;
-		}
-
-		body {
-			padding-bottom: 40px;
-		}
-
-		.dl-horizontal > dd:after {
-			display: table;
-			content: "";
-			clear: both;
-		}
-	</style>
 </head>
 
 <body id="top">
-
+<!--/*@thymesVar id="inheritedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"*/-->
+<!--/*@thymesVar id="definedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"*/-->
+<!--/*@thymesVar id="path" type="java.lang.String"*/-->
+<!--/*@thymesVar id="parent" type="java.lang.String"*/-->
+<!--/*@thymesVar id="children" type="java.util.List<java.lang.String>"*/-->
+<!--/*@thymesVar id="paths" type="java.util.List<java.lang.String>"*/-->
 <div class="container">
 	<h1 th:text="${path}"></h1>
 
 	<ul>
+
 		<li th:if="${parent}"><a th:href="@{'/edit/'+${parent}}">Parent</a></li>
 	</ul>
 
@@ -58,12 +43,49 @@
 					<textarea th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128" th:text="${kvp.value}"></textarea>
 				</td>
 			</tr>
-			<tr id="add-property">
-				<input type="text" name="_newpath" th:placeholder="some.property.name" />
+			<tr id="new-property-template" style="display: none;" class="changed-property">
+				<td>
+					<span>New Property Name</span>
+				</td>
+				<td>
+					<textarea rows="3" cols="128"/>
+				</td>
+			</tr>
+			<tr id="add-property" th:attr="data-path=${path}">
+				<td>
+					<input type="text" placeholder="New property name"/>
+				</td>
+				<td>
+					<textarea placeholder="Property value"/><br />
+					<button type="button">Add</button>
+				</td>
 			</tr>
 			</tbody>
 		</table>
 
+		<script>
+			$("#add-property button").click(function(e) {
+				var newRow = $("#new-property-template").clone();
+
+				newRow.removeAttr('id'); // Remove the id
+
+				// Extract the path
+				var path = $('#add-property').data('path');
+				var name = $('#add-property input').val();
+
+				newRow.find('td span').text(name);
+				newRow.find('textarea').attr('name',path + '|' + name);
+				newRow.find('textarea').val($('#add-property textarea').val());
+
+				// Insert in place and show
+				newRow.insertBefore($('#new-property-template'));
+				newRow.show();
+
+				// Clear values
+				$('#add-property input').val('');
+				$('#add-property textarea').val('');
+			});
+		</script>
 
 		<!-- Commit details -->
 		<th:block>

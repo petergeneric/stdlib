@@ -138,7 +138,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 		repo.set(name, email, data, ConfigChangeMode.WIPE_REFERENCED_PATHS, message);
 
-		return Response.seeOther(URI.create("/config/edit/" + path)).build();
+		return Response.seeOther(URI.create("/edit/" + path)).build();
 	}
 
 
