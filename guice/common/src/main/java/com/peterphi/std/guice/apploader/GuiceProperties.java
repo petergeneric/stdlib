@@ -30,6 +30,14 @@ public class GuiceProperties
 	public static final String UNIT_TEST = "unit-test";
 
 	//
+	// Configuration Service Properties
+	//
+	public static final String CONFIG_ENDPOINT = "service.config.endpoint";
+	@Doc("The config path to read. Defaults to: ${servlet:context-name}")
+	public static final String CONFIG_PATH = "service.config.path";
+	public static final String CONFIG_INSTANCE_ID = "service.config.instance-id";
+
+	//
 	// Guice Webapp Properties
 	//
 

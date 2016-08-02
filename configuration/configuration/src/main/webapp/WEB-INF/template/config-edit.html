@@ -1,0 +1,94 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="inheritedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"-->
+<!--@thymesVar id="definedProperties" type="java.util.List<com.peterphi.std.guice.config.rest.types.ConfigPropertyValue>"-->
+<!--@thymesVar id="path" type="java.lang.String"-->
+<head>
+	<title th:text="'config:'+${path}">config:path</title>
+	<meta th:fragment="htmlhead" charset="utf-8"/>
+	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+
+	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/guice/bootstrap.css}"/>
+
+	<style th:fragment="htmlhead">
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body id="top">
+
+<div class="container">
+	<h1 th:text="${path}"></h1>
+
+	<form th:action="@{/config/update}" method="POST">
+		<h1>Defined Properties</h1>
+
+		<table class="table">
+			<thead>
+			<tr>
+				<th>Name</th>
+				<th>Value</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr th:each="kvp: ${definedProperties}">
+				<td th:text="${kvp.name}">name</td>
+				<td>
+					<textarea th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128" th:text="${kvp.value}"></textarea>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+
+
+		<!-- Commit details -->
+		<th:block>
+			<input type="hidden" name="_path" th:value="${path}" />
+			Your name: <input type="text" name="_name" value="" placeholder="Unknown UI User"/><br/>
+			Your e-mail: <input type="text" name="_email" value="" placeholder="nobody@localhost"/><br/>
+			Commit Message:<br/>
+			<textarea name="_message" rows="5" cols="80"/><br/>
+			<br/>
+			<input type="submit" value="Commit"/>
+		</th:block>
+	</form>
+
+
+	<th:block th:if="${inheritedProperties.size() > 0}">
+		<h1>Inherited Properties</h1>
+
+		<table class="table">
+			<thead>
+			<tr>
+				<th>Path</th>
+				<th>Name</th>
+				<th>Value</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr th:each="kvp: ${inheritedProperties}">
+				<td><a th:href="@{'/config/edit/' + ${kvp.path}}" th:text="${kvp.path}">path</a></td>
+				<td th:text="${kvp.name}">name</td>
+				<td>
+					<textarea readonly="readonly" th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128"
+					          th:text="${kvp.value}"></textarea>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+	</th:block>
+</div>
+</body>
+</html>

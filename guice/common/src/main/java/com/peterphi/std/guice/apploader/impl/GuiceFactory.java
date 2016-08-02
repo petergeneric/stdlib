@@ -12,9 +12,18 @@ import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
+import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
+import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
+import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
+import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import com.peterphi.std.types.SimpleId;
+import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.configuration.Configuration;
 import org.apache.commons.configuration.ConfigurationException;
+import org.apache.commons.configuration.MapConfiguration;
 import org.apache.commons.configuration.PropertiesConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -25,6 +34,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Enumeration;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.ServiceLoader;
@@ -189,10 +199,7 @@ class GuiceFactory
 				final long finished = System.currentTimeMillis();
 				final String contextName = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
-				log.debug("Injector for " +
-				          contextName +
-				          " created in " +
-				          (finished - started) + " ms");
+				log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
 
 				if (scanner != null)
 					log.debug("Class scanner stats: insts=" +
@@ -220,7 +227,7 @@ class GuiceFactory
 	{
 		List<Configuration> configs = new ArrayList<>();
 
-		// Load all the configs
+		// Load all the local configs
 		for (String configFile : getPropertyFiles(tempConfig))
 		{
 			try
@@ -233,7 +240,67 @@ class GuiceFactory
 			}
 		}
 
+		try
+		{
+			// Load the network config (if enabled)
+			final MapConfiguration networkConfig = loadNetworkConfiguration(combine(tempConfig, configs));
+
+			if (networkConfig != null)
+				configs.add(networkConfig);
+		}
+		catch (Throwable t)
+		{
+			throw new RuntimeException("Failed to retrieve configuration from network!", t);
+		}
+
+
 		return configs;
+	}
+
+
+	private static MapConfiguration loadNetworkConfiguration(final CompositeConfiguration config)
+	{
+		final String instanceId = SimpleId.alphanumeric(32);
+
+		if (config.getString(GuiceProperties.CONFIG_ENDPOINT, null) != null)
+		{
+			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
+			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, jaxb);
+
+			try
+			{
+				final ResteasyProxyClientFactoryImpl proxyFactory = new ResteasyProxyClientFactoryImpl(clientFactory, config);
+
+				final ConfigRestService client = proxyFactory.getClient(ConfigRestService.class);
+
+				// Get the config path to read
+				final String path = config.getString(GuiceProperties.CONFIG_PATH,
+				                                     config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
+
+				final ConfigPropertyData data = client.read(path, instanceId, null);
+
+				MapConfiguration remoteConfig = new MapConfiguration(new HashMap<>());
+
+				for (ConfigPropertyValue property : data.properties)
+				{
+					remoteConfig.getMap().put(property.name, property.value);
+				}
+
+				// Make the randomly generated instance id available
+				remoteConfig.getMap().put(GuiceProperties.CONFIG_INSTANCE_ID, SimpleId.alphanumeric(32));
+
+				return remoteConfig;
+			}
+			finally
+			{
+				clientFactory.shutdown();
+			}
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 

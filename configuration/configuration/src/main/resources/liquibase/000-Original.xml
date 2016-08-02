@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+	<!-- Add the hibernate_sequence on supported databases (for dbs where autoIncrement doesn't work) -->
+	<changeSet author="peter.wright@peterphi.com" id="pk_sequence_on_supported_dbs">
+		<preConditions onFail="MARK_RAN">
+			<or>
+				<dbms type="postgresql"/>
+				<dbms type="oracle"/>
+				<dbms type="hsqldb"/>
+				<dbms type="h2"/>
+				<dbms type="db2"/>
+			</or>
+		</preConditions>
+		<createSequence sequenceName="hibernate_sequence"/>
+	</changeSet>
+</databaseChangeLog>

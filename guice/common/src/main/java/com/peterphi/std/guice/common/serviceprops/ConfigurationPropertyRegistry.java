@@ -199,23 +199,4 @@ public class ConfigurationPropertyRegistry
 			       '}';
 		}
 	}
-
-
-	public static void main(String[] args) throws Exception
-	{
-		List<X> list = new ArrayList<>();
-
-		list.add(new X(true, "a"));
-		list.add(new X(true, "ab"));
-		list.add(new X(true, "c"));
-		list.add(new X(false, "a"));
-		list.add(new X(false, "b"));
-		list.add(new X(false, "c"));
-
-		Collections.shuffle(list);
-
-		list.sort(Comparator.comparing(X:: isB).thenComparing(X:: getName));
-
-		System.out.println(list);
-	}
 }

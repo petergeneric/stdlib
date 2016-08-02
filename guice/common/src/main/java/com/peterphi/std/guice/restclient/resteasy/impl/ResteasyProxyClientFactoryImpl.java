@@ -36,6 +36,18 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	public boolean defaultStoreCookies = false;
 
 
+	public ResteasyProxyClientFactoryImpl()
+	{
+	}
+
+
+	public ResteasyProxyClientFactoryImpl(ResteasyClientFactoryImpl clientFactory, Configuration config)
+	{
+		this.clientFactory = clientFactory;
+		this.config = config;
+	}
+
+
 	public static String getConfiguredBoundServiceName(final Configuration config, Class<?> iface, String... names)
 	{
 		if (names == null || names.length == 0)

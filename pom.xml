@@ -66,6 +66,7 @@
 		<module>stdlib</module>
 		<module>guice</module>
 		<module>util/carbon-client</module>
+		<module>configuration</module>
 	</modules>
 
 	<dependencyManagement>
