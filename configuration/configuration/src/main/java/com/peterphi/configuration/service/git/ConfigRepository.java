@@ -4,6 +4,7 @@ package com.peterphi.configuration.service.git;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import org.eclipse.jgit.lib.Repository;
+import org.eclipse.jgit.transport.CredentialsProvider;
 
 import java.io.IOException;
 import java.util.List;
@@ -14,13 +15,14 @@ public class ConfigRepository
 {
 	private final Repository repo;
 	private final boolean hasRemote;
+	private final CredentialsProvider credentials;
 
 
-	public ConfigRepository(final Repository repo)
+	public ConfigRepository(final Repository repo, final boolean hasRemote, final CredentialsProvider credentials)
 	{
 		this.repo = repo;
-
-		hasRemote = repo.getRemoteNames().size() > 0;
+		this.credentials = credentials;
+		this.hasRemote = hasRemote;
 	}
 
 
@@ -125,7 +127,7 @@ public class ConfigRepository
 		{
 			try
 			{
-				RepoHelper.push(repo, "origin");
+				RepoHelper.push(repo, "origin", credentials);
 			}
 			catch (Throwable t)
 			{
@@ -137,6 +139,6 @@ public class ConfigRepository
 
 	public void pull(final String origin)
 	{
-		RepoHelper.pull(repo, origin);
+		RepoHelper.pull(repo, origin, credentials);
 	}
 }

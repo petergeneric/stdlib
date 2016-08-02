@@ -13,9 +13,13 @@ import org.eclipse.jgit.api.InitCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
 import org.eclipse.jgit.lib.Repository;
 import org.eclipse.jgit.storage.file.FileRepositoryBuilder;
+import org.eclipse.jgit.transport.CredentialsProvider;
+import org.eclipse.jgit.transport.URIish;
+import org.eclipse.jgit.transport.UsernamePasswordCredentialsProvider;
 
 import java.io.File;
 import java.io.IOException;
+import java.net.URISyntaxException;
 
 public class ConfigGuiceModule extends AbstractModule
 {
@@ -33,7 +37,8 @@ public class ConfigGuiceModule extends AbstractModule
 	@Singleton
 	@Named("config")
 	public ConfigRepository getRepository(@Named("repo.config.path") final File workingDirectory,
-	                                      @Named("repo.config.remote") final String remote) throws IOException, GitAPIException
+	                                      @Named("repo.config.remote")
+	                                      final String remote) throws IOException, URISyntaxException, GitAPIException
 	{
 		final File gitDir = new File(workingDirectory, ".git");
 
@@ -59,26 +64,47 @@ public class ConfigGuiceModule extends AbstractModule
 		FileRepositoryBuilder frb = new FileRepositoryBuilder();
 		Repository repo = frb.setGitDir(gitDir).readEnvironment().findGitDir().build();
 
+		final boolean hasRemote = !remote.equalsIgnoreCase("none");
+
+		final CredentialsProvider credentials;
+
+		if (hasRemote)
+		{
+			// Try to extract username/password from the remote URL
+			final URIish uri = new URIish(remote);
+
+			if (uri.getUser() != null && uri.getPass() != null)
+				credentials = new UsernamePasswordCredentialsProvider(uri.getUser(), uri.getPass());
+			else
+				credentials = null;
+		}
+		else
+		{
+			credentials = null;
+		}
+
 		if (newlyCreated)
 		{
-			final boolean hasRemote = !remote.equalsIgnoreCase("none");
 
 			// Add the remote and pull from it
 			if (hasRemote)
 			{
 				RepoHelper.addRemote(repo, "origin", remote);
-				RepoHelper.pull(repo, "origin");
+				RepoHelper.pull(repo, "origin", credentials);
 			}
 
 			Git git = new Git(repo);
 
-			// If there are no commits in this repository, create some
+			// If there are no commits in this repository, create one
 			if (!git.log().setMaxCount(1).call().iterator().hasNext())
 			{
 				git.commit().setAll(true).setAuthor("system", "system@localhost").setMessage("initial commit").call();
+
+				if (hasRemote)
+					RepoHelper.push(repo, "origin", credentials);
 			}
 		}
 
-		return new ConfigRepository(repo);
+		return new ConfigRepository(repo, hasRemote, credentials);
 	}
 }

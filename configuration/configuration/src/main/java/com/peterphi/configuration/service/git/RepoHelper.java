@@ -19,6 +19,7 @@ import org.eclipse.jgit.lib.StoredConfig;
 import org.eclipse.jgit.merge.MergeStrategy;
 import org.eclipse.jgit.revwalk.RevCommit;
 import org.eclipse.jgit.revwalk.RevWalk;
+import org.eclipse.jgit.transport.CredentialsProvider;
 import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
@@ -308,7 +309,7 @@ public class RepoHelper
 					else
 					{
 						path = pathString.substring(0, lastSlash);
-						propertyName = pathString.substring(lastSlash+1);
+						propertyName = pathString.substring(lastSlash + 1);
 					}
 				}
 
@@ -371,24 +372,24 @@ public class RepoHelper
 	}
 
 
-	public static void pull(final Repository repo, final String remote)
+	public static void pull(final Repository repo, final String remote, final CredentialsProvider credentials)
 	{
 		try
 		{
-			new Git(repo).pull().setRemote(remote).setStrategy(MergeStrategy.OURS).call();
+			new Git(repo).pull().setRemote(remote).setStrategy(MergeStrategy.OURS).setCredentialsProvider(credentials).call();
 		}
 		catch (GitAPIException e)
 		{
-			throw new RuntimeException("Failed to issue git push", e);
+			throw new RuntimeException("Failed to issue git pull", e);
 		}
 	}
 
 
-	public static void push(final Repository repo, final String remote)
+	public static void push(final Repository repo, final String remote, final CredentialsProvider credentials)
 	{
 		try
 		{
-			new Git(repo).push().setForce(true).setRemote(remote).call();
+			new Git(repo).push().setForce(true).setRemote(remote).setCredentialsProvider(credentials).call();
 		}
 		catch (GitAPIException e)
 		{
