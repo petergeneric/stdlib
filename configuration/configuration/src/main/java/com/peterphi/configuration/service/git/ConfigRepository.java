@@ -40,11 +40,14 @@ public class ConfigRepository
 	{
 		try
 		{
-			return RepoHelper.parseCommit(repo, RepoHelper.resolve(repo, ref))
-			                 .keySet()
-			                 .stream()
-			                 .sorted()
-			                 .collect(Collectors.toList());
+			List<String> list = RepoHelper.parseCommit(repo, RepoHelper.resolve(repo, ref)).keySet().stream().sorted().collect(
+					Collectors.toList());
+
+			// Make sure we always include the root path
+			if (!list.contains(""))
+				list.add("");
+
+			return list;
 		}
 		catch (IOException e)
 		{
@@ -79,7 +82,7 @@ public class ConfigRepository
 	                   final Map<String, Map<String, ConfigPropertyValue>> data,
 	                   final String message)
 	{
-		set(name, email, data, true, message);
+		set(name, email, data, ConfigChangeMode.WIPE_ALL, message);
 	}
 
 
@@ -96,12 +99,12 @@ public class ConfigRepository
 	public void set(final String name,
 	                final String email,
 	                final Map<String, Map<String, ConfigPropertyValue>> data,
-	                final boolean erase,
+	                final ConfigChangeMode changeMode,
 	                final String message)
 	{
 		try
 		{
-			RepoHelper.write(repo, name, email, data, erase, message);
+			RepoHelper.write(repo, name, email, data, changeMode, message);
 		}
 		catch (Exception e)
 		{

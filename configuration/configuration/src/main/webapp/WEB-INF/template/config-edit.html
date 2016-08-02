@@ -32,11 +32,16 @@
 <div class="container">
 	<h1 th:text="${path}"></h1>
 
-	<option id="path-nav">
-		<select th:each="pathopt: ${paths}"  th:selected="${path} == ${pathopt}" th:text="${pathopt}"></select>
-	</option>
+	<ul>
+		<li th:if="${parent}"><a th:href="@{'/edit/'+${parent}}">Parent</a></li>
+	</ul>
 
-	<form th:action="@{/config/update}" method="POST">
+	<select id="path-nav" th:if="${children.size() > 0}">
+		<option th:each="pathopt: ${children}" th:value="@{'/edit/' + ${pathopt}}" th:selected="${path} == ${pathopt}"
+		        th:text="${pathopt}"></option>
+	</select>
+
+	<form th:action="@{/update}" method="POST">
 		<h1>Defined Properties</h1>
 
 		<table class="table">
@@ -53,6 +58,9 @@
 					<textarea th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128" th:text="${kvp.value}"></textarea>
 				</td>
 			</tr>
+			<tr id="add-property">
+				<input type="text" name="_newpath" th:placeholder="some.property.name" />
+			</tr>
 			</tbody>
 		</table>
 
@@ -67,32 +75,32 @@
 			<br/>
 			<input type="submit" value="Commit"/>
 		</th:block>
+	</form>
 
 
-		<th:block th:if="${inheritedProperties.size() > 0}">
-			<h1>Inherited Properties</h1>
+	<th:block th:if="${inheritedProperties.size() > 0}">
+		<h1>Inherited Properties</h1>
 
-			<table class="table">
-				<thead>
-				<tr>
-					<th>Path</th>
-					<th>Name</th>
-					<th>Value</th>
-				</tr>
-				</thead>
-				<tbody>
-				<tr th:each="kvp: ${inheritedProperties}">
-					<td><a th:href="@{'/config/edit/' + ${kvp.path}}" th:text="${kvp.path}">path</a></td>
-					<td th:text="${kvp.name}">name</td>
-					<td>
+		<table class="table">
+			<thead>
+			<tr>
+				<th>Path</th>
+				<th>Name</th>
+				<th>Value</th>
+			</tr>
+			</thead>
+			<tbody>
+			<tr th:each="kvp: ${inheritedProperties}">
+				<td><a th:href="@{'/config/edit/' + ${kvp.path}}" th:text="${kvp.path}">path</a></td>
+				<td th:text="${kvp.name}">name</td>
+				<td>
 					<textarea readonly="readonly" th:name="${kvp.path}+'|'+${kvp.name}" rows="3" cols="128"
 					          th:text="${kvp.value}"></textarea>
-					</td>
-				</tr>
-				</tbody>
-			</table>
-		</th:block>
-	</form>
+				</td>
+			</tr>
+			</tbody>
+		</table>
+	</th:block>
 </div>
 </body>
 </html>

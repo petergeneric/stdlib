@@ -2,6 +2,7 @@ package com.peterphi.configuration.service.rest.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.peterphi.configuration.service.git.ConfigChangeMode;
 import com.peterphi.configuration.service.git.ConfigRepository;
 import com.peterphi.configuration.service.rest.api.ConfigUIService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
@@ -13,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -27,13 +29,15 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Named("config")
 	ConfigRepository repo;
 
+	private static final String REF = "HEAD";
+
 
 	@Override
 	public String getIndex()
 	{
 		final TemplateCall call = templater.template("index");
 
-		call.set("paths", repo.getPaths("HEAD"));
+		call.set("paths", repo.getPaths(REF));
 		call.set("commits", repo.getRecentCommits(10));
 
 		return call.process();
@@ -50,11 +54,10 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public String getConfigPage(final String path)
 	{
-		final String ref = "HEAD";
 
-		final ConfigPropertyData config = repo.get(ref, path);
+		final ConfigPropertyData config = repo.get(REF, path);
 
-		final List<String> paths = repo.getPaths(ref);
+		final List<String> paths = repo.getPaths(REF);
 
 		final List<ConfigPropertyValue> inheritedProperties;
 		final List<ConfigPropertyValue> definedProperties;
@@ -76,8 +79,50 @@ public class ConfigUIServiceImpl implements ConfigUIService
 		call.set("definedProperties", definedProperties);
 		call.set("path", config.path);
 		call.set("paths", paths);
+		call.set("children", getChildren(config.path, paths));
+		call.set("parent", getParent(config.path));
 
 		return call.process();
+	}
+
+
+	static List<String> getChildren(final String path, final List<String> paths)
+	{
+		if (path.isEmpty())
+		{
+			return paths.stream().filter(s -> s.indexOf('/') == -1).collect(Collectors.toList());
+		}
+		else
+		{
+			final String prefix = path + "/";
+
+			List<String> children = new ArrayList<>();
+
+			for (String child : paths)
+			{
+				if (child.startsWith(prefix) && child.lastIndexOf('/') == path.length())
+				{
+					children.add(child);
+				}
+			}
+
+			return children;
+		}
+	}
+
+
+	static String getParent(final String path)
+	{
+		if (StringUtils.isBlank(path))
+			return null;
+		else if (path.indexOf('/') == -1)
+			return "";
+		else
+		{
+			final int lastIndex = path.lastIndexOf('/');
+
+			return path.substring(0, lastIndex);
+		}
 	}
 
 
@@ -91,7 +136,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 		Map<String, Map<String, ConfigPropertyValue>> data = parseFields(path, fields);
 
-		repo.set(name, email, data, false, message);
+		repo.set(name, email, data, ConfigChangeMode.WIPE_REFERENCED_PATHS, message);
 
 		return Response.seeOther(URI.create("/config/edit/" + path)).build();
 	}

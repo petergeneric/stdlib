@@ -19,24 +19,24 @@ public interface ConfigUIService
 	String getIndex();
 
 	@GET
-	@Path("/config/edit")
+	@Path("/edit")
 	@Produces(MediaType.TEXT_HTML)
 	String getRootConfigPage();
 
 	@GET
-	@Path("/config/edit/{path:.*}")
+	@Path("/edit/{path:.*}")
 	@Produces(MediaType.TEXT_HTML)
 	String getConfigPage(@PathParam("path") String path);
 
 	@POST
-	@Path("/config/update")
+	@Path("/update")
 	@Produces(MediaType.TEXT_HTML)
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	Response applyChanges(MultivaluedMap<String, String> fields);
 
 
 	@POST
-	@Path("/config/pull-remote")
+	@Path("/pull-remote")
 	@Produces(MediaType.TEXT_HTML)
 	Response pullRemote();
 }

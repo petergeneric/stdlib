@@ -6,6 +6,7 @@ import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.io.FileHelper;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.filefilter.FileFilterUtils;
 import org.apache.commons.lang.StringUtils;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.RemoteAddCommand;
@@ -22,6 +23,7 @@ import org.eclipse.jgit.transport.URIish;
 import org.eclipse.jgit.treewalk.TreeWalk;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.nio.charset.StandardCharsets;
@@ -167,12 +169,12 @@ public class RepoHelper
 	                         final String name,
 	                         final String email,
 	                         final Map<String, Map<String, ConfigPropertyValue>> data,
-	                         final boolean erase,
+	                         final ConfigChangeMode changeMode,
 	                         final String message)
 	{
 		final File workTree = repo.getWorkTree();
 
-		if (erase)
+		if (changeMode == ConfigChangeMode.WIPE_ALL)
 		{
 			// Remove all existing config
 			try
@@ -198,7 +200,18 @@ public class RepoHelper
 				final Map<String, ConfigPropertyValue> props = entry.getValue();
 
 				final File folder = new File(workTree, path.replace('/', File.separatorChar));
+
+				// Make sure the path exists
 				FileUtils.forceMkdir(folder);
+
+				if (changeMode == ConfigChangeMode.WIPE_REFERENCED_PATHS)
+				{
+					File[] files = folder.listFiles((FileFilter) FileFilterUtils.fileFileFilter());
+
+					if (files != null)
+						for (File file : files)
+							FileUtils.forceDelete(file);
+				}
 
 				for (Map.Entry<String, ConfigPropertyValue> propEntry : props.entrySet())
 				{
@@ -269,26 +282,35 @@ public class RepoHelper
 		// Map of Path to properties defined at this path
 		Map<String, Map<String, ConfigPropertyValue>> all = new HashMap<>();
 
-		Map<String, ConfigPropertyValue> properties = new HashMap<>();
-
-		String path = "";
-
-		all.put(path, properties);
+		all.put("", new HashMap<>());
 		while (walk.next())
 		{
 			if (walk.isSubtree())
 			{
-				path = walk.getPathString();
-				properties = new HashMap<>();
-				all.put(path, properties);
+				final String path = walk.getPathString();
+				all.put(path, new HashMap<>());
 
 				walk.enterSubtree();
 			}
 			else
 			{
-				final String propertyName = (path.length() == 0) ?
-				                            walk.getPathString() :
-				                            walk.getPathString().substring(path.length() + 1);
+				final String path;
+				final String propertyName;
+				{
+					final String pathString = walk.getPathString();
+					final int lastSlash = pathString.lastIndexOf('/');
+
+					if (lastSlash == -1)
+					{
+						path = "";
+						propertyName = pathString;
+					}
+					else
+					{
+						path = pathString.substring(0, lastSlash);
+						propertyName = pathString.substring(lastSlash+1);
+					}
+				}
 
 				final byte[] bytes = repo.open(walk.getObjectId(0)).getCachedBytes();
 
@@ -297,7 +319,7 @@ public class RepoHelper
 
 				ConfigPropertyValue val = new ConfigPropertyValue(path, propertyName, str);
 
-				properties.put(propertyName, val);
+				all.get(path).put(propertyName, val);
 			}
 		}
 

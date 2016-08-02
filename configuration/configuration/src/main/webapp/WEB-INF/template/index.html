@@ -32,9 +32,9 @@
 	<h1>Config Service</h1>
 
 	Paths:
-	<option id="path-nav">
-		<select th:each="pathopt: ${paths}" th:selected="${path} == ${pathopt}" th:text="${pathopt}"></select>
-	</option>
+	<select id="path-nav">
+		<option th:each="pathopt: ${paths}" th:value="@{'/edit/' + ${pathopt}}" th:selected="${path} == ${pathopt}" th:text="${pathopt}"></option>
+	</select>
 
 	<h2>Recent Changes</h2>
 	<ul>
@@ -45,11 +45,11 @@
 	</ul>
 
 	<h1>Actions</h1>
-	<form th:action="@{/config/pull-remote}" method="POST">
+	<form th:action="@{/pull-remote}" method="POST">
 		<input type="submit" value="Pull From Remote"/>
 	</form>
 
-	<form th:action="@{/config/edit}" method="GET">
+	<form th:action="@{/edit}" method="GET">
 		<input type="submit" value="Edit Config"/>
 	</form>
 
