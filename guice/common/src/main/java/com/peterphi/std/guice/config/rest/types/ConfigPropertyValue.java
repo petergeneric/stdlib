@@ -9,6 +9,10 @@ import javax.xml.bind.annotation.XmlValue;
 @XmlType(name = "ConfigValueType")
 public class ConfigPropertyValue
 {
+	public ConfigPropertyValue(){
+		//default constructor for jaxb
+	}
+
 	/**
 	 *
 	 */
