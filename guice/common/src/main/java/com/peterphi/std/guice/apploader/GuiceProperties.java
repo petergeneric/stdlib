@@ -23,6 +23,9 @@ public class GuiceProperties
 	@Doc("If set, log4j.properties will be loaded from the named file. If set to embedded then the log4j.properties will be loaded from the current in-memory configuration properties (default null)")
 	public static final String LOG4J_PROPERTIES_FILE = "log4j.properties";
 
+	@Doc("If set, the text will be treated as the log4j configuration to use overrides log4j.properties (default null)")
+	public static final String LOG4J_PROPERTIES_STRING = "log4j.config";
+
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
 	public static final String MOXY_ENABLED = "guice.jaxb.moxy";
 

@@ -230,6 +230,32 @@ public class PropertyFile
 	}
 
 
+	public static PropertyFile fromString(final String contents)
+	{
+		return fromString(contents, "unknown");
+	}
+
+
+	public static PropertyFile fromString(final String contents, final String filename)
+	{
+		if (log.isTraceEnabled())
+			log.trace("[ProprtyFile] {fromString} filename " + filename);
+
+		PropertyFile props = new PropertyFile();
+		try
+		{
+			props.load(new StringReader(contents));
+		}
+		catch (IOException e)
+		{
+
+			throw new IllegalArgumentException("Error loading property file from string. Error: " + e.getMessage(), e);
+		}
+
+		return props;
+	}
+
+
 	public static PropertyFile openResource(final ClassLoader classloader, final URL resource, final String fileName)
 	{
 		try
@@ -781,8 +807,10 @@ public class PropertyFile
 
 	/**
 	 * Get a value which is Base64 encoded and has a default value
+	 *
 	 * @param name
 	 * @param defaultValue
+	 *
 	 * @return
 	 */
 	public byte[] getBase64(final String name, final byte[] defaultValue)

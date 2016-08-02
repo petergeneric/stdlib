@@ -26,6 +26,7 @@ public class Log4JModule extends AbstractModule
 	private Configuration guiceConfig;
 	private String configFile;
 	private MetricRegistry registry;
+	private String configStr;
 
 
 	public Log4JModule(Configuration configuration, MetricRegistry registry)
@@ -33,30 +34,44 @@ public class Log4JModule extends AbstractModule
 		this.registry = registry;
 		this.guiceConfig = configuration;
 		configFile = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
+		configStr = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_STRING, null);
 	}
 
 
 	@Override
 	protected void configure()
 	{
-		if (configFile != null)
+		if (configStr != null || configFile != null)
 		{
-			log.debug("Loading log4j configuration from " + configFile);
-
 			final Properties config;
-
-			if (configFile.equals("embedded"))
 			{
-				// Load the log4j config from the guice configuration
-				config = ConfigurationConverter.toProperties(guiceConfig);
-			}
-			else
-			{
-				// Load the log4j config file directly
-				// TODO it'd be nice if we could use variables for interpolation here.
-				config = PropertyFile.find(configFile).toProperties();
-			}
+				if (configStr != null)
+				{
+					log.debug("Using configuration defined log4j properties");
+					config = PropertyFile.fromString(configStr, "log4j.inline").toProperties();
+				}
+				else if (configFile != null)
+				{
+					log.debug("Loading log4j configuration from " + configFile);
 
+					if (configFile.equals("embedded"))
+					{
+						// Load the log4j config from the guice configuration
+						config = ConfigurationConverter.toProperties(guiceConfig);
+					}
+					else
+					{
+						// Load the log4j config file directly
+						// TODO it'd be nice if we could use variables for interpolation here.
+						config = PropertyFile.find(configFile).toProperties();
+					}
+				}
+				else
+				{
+					//wont actually happen but to guarrente there is a value for config later on
+					throw new RuntimeException("Unexpected logging configuration");
+				}
+			}
 			//reset any existing log config
 			LogManager.resetConfiguration();
 
