@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.configuration.service.git.ConfigChangeMode;
 import com.peterphi.configuration.service.git.ConfigRepository;
+import com.peterphi.configuration.service.git.RepoHelper;
 import com.peterphi.configuration.service.rest.api.ConfigUIService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
@@ -54,7 +55,6 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public String getConfigPage(final String path)
 	{
-
 		final ConfigPropertyData config = repo.get(REF, path);
 
 		final List<String> paths = repo.getPaths(REF);
@@ -86,11 +86,20 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	}
 
 
+	@Override
+	public Response getConfigPage(final String path, final String child)
+	{
+		final String newPath = RepoHelper.normalisePath(path + "/" + child);
+
+		return Response.seeOther(URI.create("/edit/" + newPath)).build();
+	}
+
+
 	static List<String> getChildren(final String path, final List<String> paths)
 	{
 		if (path.isEmpty())
 		{
-			return paths.stream().filter(s -> s.indexOf('/') == -1).collect(Collectors.toList());
+			return paths.stream().filter(s -> s.length() > 0).filter(s -> s.indexOf('/') == -1).collect(Collectors.toList());
 		}
 		else
 		{

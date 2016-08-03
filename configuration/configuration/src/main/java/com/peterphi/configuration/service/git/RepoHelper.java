@@ -134,7 +134,7 @@ public class RepoHelper
 	}
 
 
-	private static String normalisePath(String path)
+	public static String normalisePath(String path)
 	{
 		// Remove double slashes
 		path = path.replace("//", "/");

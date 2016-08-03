@@ -1,6 +1,7 @@
 package com.peterphi.configuration.service.rest.api;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -27,6 +28,11 @@ public interface ConfigUIService
 	@Path("/edit/{path:.*}")
 	@Produces(MediaType.TEXT_HTML)
 	String getConfigPage(@PathParam("path") String path);
+
+	@POST
+	@Path("/create-path")
+	@Produces(MediaType.TEXT_HTML)
+	Response getConfigPage(@FormParam("parent_path") String path, @FormParam("child_path") String child);
 
 	@POST
 	@Path("/update")

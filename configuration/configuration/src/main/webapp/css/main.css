@@ -3,22 +3,35 @@ pre {
 }
 
 body {
-/*	padding-top: 60px; */
+	/*	padding-top: 60px; */
 	padding-bottom: 40px;
 }
 
-
 /* display empty dd elements in a dl */
 .dl-horizontal > dd:after {
-  display: table;
-  content: "";
-  clear: both;
+	display: table;
+	content: "";
+	clear: both;
+}
+
+/* ==========================================================================
+   Properties UI
+   ========================================================================== */
+tr.changed-property {
+	background-color: #ecffdc;
+}
+
+tr.deleted-property {
+	background-color: #ffa2b3;
+}
+
+.properties-table textarea {
+	margin-right: 10px;
 }
 
 /* ==========================================================================
    Table Sorter
    ========================================================================== */
-
 
 table.tablesorter thead tr .header {
 	background-image: url(../img/bg.gif);
@@ -26,16 +39,14 @@ table.tablesorter thead tr .header {
 	background-position: center right;
 	cursor: pointer;
 }
+
 table.tablesorter thead tr .headerSortUp {
 	background-image: url(../img/asc.gif);
 }
+
 table.tablesorter thead tr .headerSortDown {
 	background-image: url(../img/desc.gif);
 }
-
-
-
-
 
 /* ==========================================================================
    Constraint UI
@@ -50,9 +61,9 @@ li.constraint_form_fields {
 	display: none;
 }
 
-.bigModal{
-	width:600px;
-	margin-left:-300px;
+.bigModal {
+	width: 600px;
+	margin-left: -300px;
 }
 
 /* Don't show bullets for the add constraint / add field list elements */
