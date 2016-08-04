@@ -5,14 +5,10 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.google.inject.name.Names;
-import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.types.Timebase;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
 import org.joda.time.Duration;
@@ -25,10 +21,8 @@ import java.io.File;
 import java.net.InetAddress;
 import java.net.URI;
 import java.net.URL;
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Set;
+import java.util.Collections;
+import java.util.HashMap;
 
 /**
  * Module that binds properties from {@link PropertyFile}s in the classpath (called <code>service.properties</code> by
@@ -40,21 +34,29 @@ import java.util.Set;
  */
 public class ServicePropertiesModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(ServicePropertiesModule.class);
+	protected final GuiceConfig configuration;
+
 
 	/**
-	 * A set of property names that are permitted to have a non-string value without a warning being triggered
+	 * For unit tests only!
+	 *
+	 * @param properties
 	 */
-	public static final Set<String> NO_WARN_NON_STRING_PROPERTIES = new HashSet<>(Arrays.asList(GuiceProperties.SCAN_PACKAGES));
+	public ServicePropertiesModule(PropertyFile properties)
+	{
+		this(new GuiceConfig(Collections.singletonList(properties.toMap()), new HashMap<String, String>(0)));
+	}
 
-	protected final CompositeConfiguration configuration;
-	protected final PropertiesConfiguration overrides;
 
-
-	public ServicePropertiesModule(CompositeConfiguration configuration, PropertiesConfiguration overrides)
+	public ServicePropertiesModule(GuiceConfig configuration)
 	{
 		this.configuration = configuration;
-		this.overrides = overrides;
+	}
+
+
+	private boolean isList(final ConfigRef ref)
+	{
+		return ref.getName().endsWith("[]");
 	}
 
 
@@ -62,23 +64,18 @@ public class ServicePropertiesModule extends AbstractModule
 	@SuppressWarnings("unchecked")
 	protected void configure()
 	{
-		Iterator<String> it = configuration.getKeys();
-
-		while (it.hasNext())
+		for (String key : configuration.names())
 		{
-			final String key = it.next();
-			final Object currentValue = configuration.getProperty(key);
-
-			ConfigRef prop = new ConfigRef(configuration, key);
+			final ConfigRef ref = new ConfigRef(configuration, key);
 
 			final Named name = Names.named(key);
 
-			bind(ConfigRef.class).annotatedWith(name).toInstance(prop);
+			bind(ConfigRef.class).annotatedWith(name).toInstance(ref);
 
 			// If the config value is a String then bind it to a variety of different conversion providers
-			if (currentValue instanceof String)
+			if (!isList(ref))
 			{
-				bind(String.class).annotatedWith(name).toProvider(prop);
+				bind(String.class).annotatedWith(name).toProvider(ref);
 
 				// Yuck, there has to be a better way...
 				for (Class clazz : new Class[]{Boolean.class,
@@ -106,17 +103,8 @@ public class ServicePropertiesModule extends AbstractModule
 				                               Duration.class,
 				                               Interval.class})
 				{
-					bind(clazz).annotatedWith(name).toProvider(prop.as(clazz));
+					bind(clazz).annotatedWith(name).toProvider(ref.as(clazz));
 				}
-			}
-			else
-			{
-				// Log about non-string properties (unless they're no warn properties)
-				if (!NO_WARN_NON_STRING_PROPERTIES.contains(key))
-					log.warn("Non-string property value for " +
-					         key +
-					         " will only be bound as named ConfigRef type with value: " +
-					         currentValue);
 			}
 		}
 	}
@@ -124,17 +112,8 @@ public class ServicePropertiesModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public Configuration getConfiguration()
+	public GuiceConfig getConfiguration()
 	{
 		return this.configuration;
-	}
-
-
-	@Provides
-	@Singleton
-	@Named("overrides")
-	public PropertiesConfiguration getOverrideConfiguration()
-	{
-		return overrides;
 	}
 }

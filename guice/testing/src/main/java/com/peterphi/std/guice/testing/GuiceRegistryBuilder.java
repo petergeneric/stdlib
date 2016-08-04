@@ -12,8 +12,6 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestConfig;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestModule;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.MapConfiguration;
 import org.junit.runners.model.FrameworkField;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -100,10 +98,8 @@ class GuiceRegistryBuilder
 
 			for (Object src : clazz.getAnnotatedMethodValues(null, TestConfig.class, Object.class))
 			{
-				if (src instanceof Configuration)
-					builder.withConfig((Configuration) src);
-				else if (src instanceof Properties)
-					builder.withConfig(new MapConfiguration((Properties) src));
+				if (src instanceof Properties)
+					builder.withConfig((Properties) src);
 				else if (src instanceof PropertyFile)
 					builder.withConfig((PropertyFile) src);
 			}
@@ -147,7 +143,7 @@ class GuiceRegistryBuilder
 
 	private static void validateGuiceTestConfigMethods(final TestClass clazz)
 	{
-		List<Class<?>> classes = Arrays.asList(Properties.class, Configuration.class, PropertyFile.class);
+		List<Class<?>> classes = Arrays.asList(Properties.class, PropertyFile.class);
 
 		// Add local method config sources:
 		for (FrameworkMethod method : clazz.getAnnotatedMethods(TestConfig.class))

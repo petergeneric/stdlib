@@ -7,13 +7,12 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.MapConfiguration;
 import org.apache.log4j.Logger;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Properties;
 
 /**
  * Build the specifications for a new guice framework environment
@@ -25,7 +24,7 @@ public class GuiceBuilder
 	private boolean autoLoadProperties = true;
 	private boolean autoLoadRoles = true;
 	private ClassScannerFactory scannerFactory = null;
-	private List<Configuration> configs = new ArrayList<>();
+	private List<PropertyFile> configs = new ArrayList<>();
 	private List<GuiceRole> roles = new ArrayList<>();
 	private GuiceSetup setup;
 	private ClassLoader classloader;
@@ -55,7 +54,7 @@ public class GuiceBuilder
 		return this;
 	}
 
-	
+
 	public GuiceBuilder withNoScannerFactory()
 	{
 		return withScannerFactory(new ClassScannerFactory());
@@ -82,7 +81,7 @@ public class GuiceBuilder
 	public GuiceBuilder withConfig(PropertyFile... props)
 	{
 		for (PropertyFile prop : props)
-			this.configs.add(new MapConfiguration(prop.toProperties()));
+			this.configs.add(prop);
 
 		return this;
 	}
@@ -94,7 +93,10 @@ public class GuiceBuilder
 		{
 			try
 			{
-				this.configs.addAll(GuiceFactory.loadConfig(classloader, filename));
+				for (PropertyFile props : GuiceFactory.loadConfig(classloader, filename))
+				{
+					withConfig(props);
+				}
 			}
 			catch (IOException e)
 			{
@@ -106,10 +108,10 @@ public class GuiceBuilder
 	}
 
 
-	public GuiceBuilder withConfig(Configuration... configs)
+	public GuiceBuilder withConfig(Properties... configs)
 	{
-		for (Configuration config : configs)
-			this.configs.add(config);
+		for (Properties config : configs)
+			withConfig(new PropertyFile(config));
 
 		return this;
 	}
@@ -168,8 +170,10 @@ public class GuiceBuilder
 	 */
 	public Injector build()
 	{
+		System.out.println(this.configs);
+
 		// Create copies of the configurations and roles
-		List<Configuration> configs = new ArrayList<>(this.configs);
+		List<PropertyFile> configs = new ArrayList<>(this.configs);
 		List<GuiceRole> roles = new ArrayList<>(this.roles);
 
 		return GuiceFactory.build(this.registry,

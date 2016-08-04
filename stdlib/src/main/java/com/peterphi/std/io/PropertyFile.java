@@ -45,93 +45,6 @@ public class PropertyFile
 	private static final String COMMENT_INST = "#-- ";
 	private static final char COMMENT_CHAR = '#';
 
-	protected abstract class Entry
-	{
-		public abstract void append(Writer w, PropertyFile p) throws IOException;
-	}
-
-	protected class BlankLine extends Entry
-	{
-		@Override
-		public void append(Writer w, PropertyFile p) throws IOException
-		{
-			w.append(NEWLINE);
-		}
-	}
-
-	protected class Comment extends Entry
-	{
-		public String data;
-
-
-		public Comment(String data)
-		{
-			this.data = data;
-		}
-
-
-		@Override
-		public void append(Writer w, PropertyFile p) throws IOException
-		{
-			w.append(COMMENT_CHAR);
-			w.append(data);
-			w.append(NEWLINE);
-		}
-	}
-
-	protected class NameValuePair extends Entry
-	{
-		private boolean unusualName;
-		public String name;
-		public String value;
-
-
-		private void checkName()
-		{
-			if (name.contains("="))
-			{
-				unusualName = true;
-			}
-			else
-			{
-				unusualName = false;
-			}
-		}
-
-
-		public NameValuePair(String name, String value)
-		{
-			this.name = name;
-			this.value = value;
-
-			checkName();
-		}
-
-
-		@Override
-		public void append(Writer w, PropertyFile p) throws IOException
-		{
-			if (!unusualName)
-			{
-				w.append(name);
-			}
-			else
-			{
-				// TODO - escape the name
-				log.warn("[NameValuePair] {append} name needs escapingbut this implementation doesn't escape");
-				w.append(name);
-			}
-
-			if (forceNameValueDelimiterWhitespace && !name.endsWith(" "))
-				w.append(" ");
-			w.append("=");
-			if (forceNameValueDelimiterWhitespace && !value.startsWith(" "))
-				w.append(" ");
-			w.append(value);
-			w.append(NEWLINE);
-		}
-	}
-
 	// The file to use for load() and save() methods
 	protected File f;
 	protected boolean readOnly = false;
@@ -378,6 +291,12 @@ public class PropertyFile
 	}
 
 
+	public PropertyFile(URL url) throws IOException
+	{
+		this(url.openStream());
+	}
+
+
 	public PropertyFile(InputStream is, boolean caseSensitive) throws IOException
 	{
 		this.caseSensitive = caseSensitive;
@@ -420,6 +339,12 @@ public class PropertyFile
 	}
 
 
+	public PropertyFile(final Map<String, String> map)
+	{
+		load(map);
+	}
+
+
 	/**
 	 * Converts the name/value pairs stored in this PropertyFile to the Java Properties propertyfile type
 	 *
@@ -435,6 +360,22 @@ public class PropertyFile
 		}
 
 		return p;
+	}
+
+
+	/**
+	 * Converts the name/value pairs stored in this PropertyFile to a Map of key/value pairs
+	 *
+	 * @return a Map representing the data (but not the comments, etc) in this file
+	 */
+	public Map<String, String> toMap()
+	{
+		Map<String, String> map = new HashMap<>(vars.size());
+
+		for (NameValuePair nvp : vars.values())
+			map.put(nvp.name, nvp.value);
+
+		return map;
 	}
 
 
@@ -477,6 +418,13 @@ public class PropertyFile
 		assert (f != null);
 
 		load(f);
+	}
+
+
+	public void load(Map<String, String> map)
+	{
+		for (Map.Entry<String, String> entry : map.entrySet())
+			set(entry.getKey(), entry.getValue());
 	}
 
 
@@ -664,8 +612,12 @@ public class PropertyFile
 	public String get(final String name, final String defaultValue)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {get} key=" + name + "; default=" + defaultValue + "; storedValue=" + _get_core(name,
-			                                                                                                          null));
+			log.trace("[PropertyFile] {get} key=" +
+			          name +
+			          "; default=" +
+			          defaultValue +
+			          "; storedValue=" +
+			          _get_core(name, null));
 
 		return _get(name, defaultValue);
 	}
@@ -987,15 +939,10 @@ public class PropertyFile
 
 	public void load(final Reader r) throws IOException
 	{
-		entries.clear();
-		vars.clear();
-
-		// Parse the file
-		BufferedReader in = null;
-
-		try
+		try (BufferedReader in = new BufferedReader(r))
 		{
-			in = new BufferedReader(r);
+			entries.clear();
+			vars.clear();
 
 			String line = in.readLine();
 			while (line != null)
@@ -1052,11 +999,6 @@ public class PropertyFile
 			}
 
 			hook_loaded();
-		}
-		finally
-		{
-			if (in != null)
-				in.close();
 		}
 	}
 
@@ -1268,5 +1210,98 @@ public class PropertyFile
 		props.readOnly = true;
 
 		return props;
+	}
+
+
+	////////////////////////////////////
+	// Property File entry types
+	////////////////////////////////////
+
+
+	protected abstract class Entry
+	{
+		public abstract void append(Writer w, PropertyFile p) throws IOException;
+	}
+
+	protected class BlankLine extends Entry
+	{
+		@Override
+		public void append(Writer w, PropertyFile p) throws IOException
+		{
+			w.append(NEWLINE);
+		}
+	}
+
+	protected class Comment extends Entry
+	{
+		public String data;
+
+
+		public Comment(String data)
+		{
+			this.data = data;
+		}
+
+
+		@Override
+		public void append(Writer w, PropertyFile p) throws IOException
+		{
+			w.append(COMMENT_CHAR);
+			w.append(data);
+			w.append(NEWLINE);
+		}
+	}
+
+	protected class NameValuePair extends Entry
+	{
+		private boolean unusualName;
+		public String name;
+		public String value;
+
+
+		private void checkName()
+		{
+			if (name.contains("="))
+			{
+				unusualName = true;
+			}
+			else
+			{
+				unusualName = false;
+			}
+		}
+
+
+		public NameValuePair(String name, String value)
+		{
+			this.name = name;
+			this.value = value;
+
+			checkName();
+		}
+
+
+		@Override
+		public void append(Writer w, PropertyFile p) throws IOException
+		{
+			if (!unusualName)
+			{
+				w.append(name);
+			}
+			else
+			{
+				// TODO - escape the name
+				log.warn("[NameValuePair] {append} name needs escapingbut this implementation doesn't escape");
+				w.append(name);
+			}
+
+			if (forceNameValueDelimiterWhitespace && !name.endsWith(" "))
+				w.append(" ");
+			w.append("=");
+			if (forceNameValueDelimiterWhitespace && !value.startsWith(" "))
+				w.append(" ");
+			w.append(value);
+			w.append(NEWLINE);
+		}
 	}
 }

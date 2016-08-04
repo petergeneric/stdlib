@@ -7,10 +7,11 @@ import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import org.aopalliance.intercept.MethodInterceptor;
-import org.apache.commons.configuration.CompositeConfiguration;
+
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -21,14 +22,14 @@ import java.util.stream.Collectors;
  */
 public class AuthConstraintInterceptorModule extends AbstractModule
 {
-	private final CompositeConfiguration config;
+	private final GuiceConfig config;
 	private final Meter calls;
 	private final Meter granted;
 	private final Meter denied;
 	private final Meter authenticatedDenied;
 
 
-	public AuthConstraintInterceptorModule(MetricRegistry metrics, final CompositeConfiguration config)
+	public AuthConstraintInterceptorModule(MetricRegistry metrics, final GuiceConfig config)
 	{
 		this.config = config;
 		this.calls = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_CALL_METER);

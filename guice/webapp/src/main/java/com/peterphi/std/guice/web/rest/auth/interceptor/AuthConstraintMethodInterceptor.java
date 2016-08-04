@@ -8,10 +8,10 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.configuration.CompositeConfiguration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -26,7 +26,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	public static final String SCOPE_DEFAULT = "default";
 
 	private final Provider<CurrentUser> userProvider;
-	private final CompositeConfiguration config;
+	private final GuiceConfig config;
 	private final Meter calls;
 	private final Meter granted;
 	private final Meter denied;
@@ -37,7 +37,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
-	                                       final CompositeConfiguration config,
+	                                       final GuiceConfig config,
 	                                       final Meter calls,
 	                                       final Meter granted,
 	                                       final Meter denied,
@@ -162,12 +162,12 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 			if (StringUtils.equals(SCOPE_DEFAULT, id))
 			{
-				role = config.getString(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
+				role = config.get(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
 				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
 			}
 			else
 			{
-				role = config.getString("framework.webauth.scope." + id + ".role", null);
+				role = config.get("framework.webauth.scope." + id + ".role", null);
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
 			}
 

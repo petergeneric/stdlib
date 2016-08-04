@@ -2,18 +2,18 @@ package com.peterphi.std.guice.common;
 
 import com.google.inject.AbstractModule;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
-import org.apache.commons.configuration.Configuration;
 
 /**
  * Exposes JAXBSerialiserFactory as a Singleton, optionally forcing the use of MOXy with the guice.jaxb.moxy config value
  */
 public class JAXBModule extends AbstractModule
 {
-	private final Configuration config;
+	private final GuiceConfig config;
 
 
-	public JAXBModule(Configuration config)
+	public JAXBModule(GuiceConfig config)
 	{
 		this.config = config;
 	}

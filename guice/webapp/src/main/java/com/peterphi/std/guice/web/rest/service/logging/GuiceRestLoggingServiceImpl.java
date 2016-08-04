@@ -61,11 +61,10 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 			return staticConfig;
 
 		final String src = config.get(GuiceProperties.LOG4J_PROPERTIES_FILE).getValue();
-		final String configStr = config.get(GuiceProperties.LOG4J_PROPERTIES_STRING).getValue();
 
-		if (configStr != null)
+		if (StringUtils.contains(src, '\n'))
 		{
-			return configStr;
+			return src;
 		}
 
 		if (StringUtils.equalsIgnoreCase("embedded", src))

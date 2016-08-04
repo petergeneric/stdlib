@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Injector;
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.AnnotatedElement;
@@ -25,14 +25,12 @@ public class ConfigurationPropertyRegistry
 	private final SortedMap<String, ConfigurationProperty> properties = new TreeMap<>();
 	private final Map<Class, WeakHashMap<Object, Void>> instances = new HashMap<>();
 
-	private final Configuration configuration;
-	private final Configuration overrides;
+	private final GuiceConfig configuration;
 
 
-	public ConfigurationPropertyRegistry(final Configuration configuration, final Configuration overrides)
+	public ConfigurationPropertyRegistry(final GuiceConfig configuration)
 	{
 		this.configuration = configuration;
-		this.overrides = overrides;
 	}
 
 
@@ -54,7 +52,7 @@ public class ConfigurationPropertyRegistry
 			{
 				log.debug("Discovered new property: " + site.getName());
 
-				properties.put(site.getName(), new ConfigurationProperty(this, configuration, overrides, site.getName()));
+				properties.put(site.getName(), new ConfigurationProperty(this, configuration, site.getName()));
 			}
 
 			log.trace("Discovered new binding for property " +
@@ -91,8 +89,8 @@ public class ConfigurationPropertyRegistry
 		// Sort application properties, then framework properties
 		// Within these groups, sort alphabetically
 
-		Comparator<ConfigurationProperty> sort = Comparator.comparing(ConfigurationProperty:: isFrameworkProperty)
-		                                                   .thenComparing(ConfigurationProperty:: getName);
+		Comparator<ConfigurationProperty> sort = Comparator.comparing(ConfigurationProperty:: isFrameworkProperty).thenComparing(
+				ConfigurationProperty:: getName);
 
 		synchronized (properties)
 		{
@@ -161,42 +159,6 @@ public class ConfigurationPropertyRegistry
 		else
 		{
 			return Collections.emptyList();
-		}
-	}
-
-
-	private static final class X
-	{
-		public boolean b;
-		public String name;
-
-
-		public X(final boolean b, final String name)
-		{
-			this.b = b;
-			this.name = name;
-		}
-
-
-		public boolean isB()
-		{
-			return b;
-		}
-
-
-		public String getName()
-		{
-			return name;
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return "X{" +
-			       "b=" + b +
-			       ", name='" + name + '\'' +
-			       '}';
 		}
 	}
 }

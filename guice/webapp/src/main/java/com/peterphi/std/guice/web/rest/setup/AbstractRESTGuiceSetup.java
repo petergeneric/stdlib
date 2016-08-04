@@ -3,7 +3,7 @@ package com.peterphi.std.guice.web.rest.setup;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.peterphi.std.guice.apploader.GuiceSetup;
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 
 import java.util.List;
 
@@ -16,13 +16,13 @@ import java.util.List;
 public abstract class AbstractRESTGuiceSetup implements GuiceSetup
 {
 	@Override
-	public void registerModules(List<Module> modules, Configuration config)
+	public void registerModules(List<Module> modules, GuiceConfig config)
 	{
 		addModules(modules, config);
 	}
 
 
-	public abstract void addModules(List<Module> modules, Configuration config);
+	public abstract void addModules(List<Module> modules, GuiceConfig config);
 
 
 	@Override

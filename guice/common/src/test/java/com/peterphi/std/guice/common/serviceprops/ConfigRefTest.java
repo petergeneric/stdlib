@@ -4,8 +4,7 @@ import com.google.inject.Guice;
 import com.google.inject.Inject;
 import com.google.inject.Injector;
 import com.google.inject.name.Named;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -23,19 +22,17 @@ public class ConfigRefTest
 	@Test
 	public void testChangingPropertyAtRuntimeAndReinjectingMembersWorks()
 	{
-		final CompositeConfiguration configuration = new CompositeConfiguration();
-		final PropertiesConfiguration overrides = new PropertiesConfiguration();
-		configuration.addConfiguration(overrides, true);
+		GuiceConfig configuration = new GuiceConfig();
 
-		configuration.setProperty("some-name", "initial value");
+		configuration.set("some-name", "initial value");
 
-		final Injector injector = Guice.createInjector(new ServicePropertiesModule(configuration, overrides));
+		final Injector injector = Guice.createInjector(new ServicePropertiesModule(configuration));
 
 		injector.injectMembers(this);
 
 		assertEquals("initial value", name);
 
-		configuration.setProperty("some-name", "changed value");
+		configuration.set("some-name", "changed value");
 
 		// Re-inject the change
 		injector.injectMembers(this);

@@ -8,11 +8,11 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.ListUtility;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,6 +20,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.Response.ResponseBuilder;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 
@@ -61,7 +62,6 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Named("rest.exception.html.enabled.only-for-logged-in.role")
 	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
 	protected String requireRole = null;
-	;
 
 	@Reconfigurable
 	@Inject(optional = true)
@@ -118,7 +118,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	protected String jiraEndpoint = "https://somecompany.atlassian.net";
 
 	@Inject
-	Configuration config;
+	GuiceConfig config;
 
 	@Inject
 	Provider<CurrentUser> currentUserProvider;
@@ -144,7 +144,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 			if (StringUtils.equals(highlightTerms, "scan-packages"))
 			{
 				// Read scan.packages and use this instead
-				writer.setHighlightTerms(Arrays.asList(config.getStringArray(GuiceProperties.SCAN_PACKAGES)));
+				writer.setHighlightTerms(config.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList()));
 			}
 			else
 			{

@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.common.serviceprops;
 
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -17,22 +17,17 @@ public class ConfigurationProperty
 	private static final Logger log = Logger.getLogger(ConfigurationProperty.class);
 
 	private final ConfigurationPropertyRegistry registry;
-	private final Configuration configuration;
-	private final Configuration writeConfiguration;
+	private final GuiceConfig configuration;
 
 	private final CopyOnWriteArrayList<ConfigurationPropertyBindingSite> bindings = new CopyOnWriteArrayList<>();
 
 	private final String name;
 
 
-	public ConfigurationProperty(final ConfigurationPropertyRegistry registry,
-	                             final Configuration configuration,
-	                             final Configuration writeConfiguration,
-	                             final String name)
+	public ConfigurationProperty(final ConfigurationPropertyRegistry registry, final GuiceConfig configuration, final String name)
 	{
 		this.registry = registry;
 		this.configuration = configuration;
-		this.writeConfiguration = writeConfiguration;
 		this.name = name;
 	}
 
@@ -135,7 +130,7 @@ public class ConfigurationProperty
 		log.info("Attempting to change config property " +
 		         name +
 		         " from current \"" +
-		         configuration.getString(name) +
+		         configuration.get(name) +
 		         "\" to \"" +
 		         value +
 		         "\".");
@@ -143,7 +138,7 @@ public class ConfigurationProperty
 		validate(value);
 
 		// Add a property override to the configuration
-		writeConfiguration.setProperty(name, value);
+		configuration.setOverride(name, value);
 
 		if (isReconfigurable())
 		{
@@ -183,6 +178,6 @@ public class ConfigurationProperty
 
 	public String getValue()
 	{
-		return configuration.getString(name);
+		return configuration.get(name);
 	}
 }

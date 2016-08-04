@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
 import com.peterphi.std.guice.liquibase.LiquibaseAction;
 import org.apache.log4j.Logger;
@@ -21,11 +22,11 @@ public class LiquibaseHibernateValidator implements HibernateConfigurationValida
 	@Override
 	public void validate(final Configuration hibernateConfiguration,
 	                     final Properties hibernateProperties,
-	                     final org.apache.commons.configuration.Configuration environmentConfiguration)
+	                     final GuiceConfig environmentConfiguration)
 	{
 		// Figure out which liquibase action we should perform
 		final String str = hibernateProperties.getProperty(GuiceProperties.LIQUIBASE_ACTION,
-		                                                   environmentConfiguration.getString(GuiceProperties.LIQUIBASE_ACTION,
+		                                                   environmentConfiguration.get(GuiceProperties.LIQUIBASE_ACTION,
 		                                                                                      "ASSERT_UPDATED"));
 
 		final LiquibaseAction action = LiquibaseAction.valueOf(str);

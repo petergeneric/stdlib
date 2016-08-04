@@ -4,9 +4,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.log4j.InstrumentedAppender;
 import com.google.inject.AbstractModule;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.commons.configuration.Configuration;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
@@ -23,32 +23,30 @@ public class Log4JModule extends AbstractModule
 {
 	private static Logger log = Logger.getLogger(Log4JModule.class);
 
-	private Configuration guiceConfig;
+	private GuiceConfig guiceConfig;
 	private String configFile;
 	private MetricRegistry registry;
-	private String configStr;
 
 
-	public Log4JModule(Configuration configuration, MetricRegistry registry)
+	public Log4JModule(GuiceConfig configuration, MetricRegistry registry)
 	{
 		this.registry = registry;
 		this.guiceConfig = configuration;
-		configFile = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
-		configStr = configuration.getString(GuiceProperties.LOG4J_PROPERTIES_STRING, null);
+		configFile = configuration.get(GuiceProperties.LOG4J_PROPERTIES_FILE, null);
 	}
 
 
 	@Override
 	protected void configure()
 	{
-		if (configStr != null || configFile != null)
+		if (configFile != null)
 		{
 			final Properties config;
 			{
-				if (configStr != null)
+				if (StringUtils.contains(configFile, '\n'))
 				{
-					log.debug("Using configuration defined log4j properties");
-					config = PropertyFile.fromString(configStr, "log4j.inline").toProperties();
+					log.debug("Assuming log4j.properties contains literal log4j.properties file, not a resource/file reference");
+					config = PropertyFile.fromString(configFile, "log4j.inline").toProperties();
 				}
 				else if (configFile != null)
 				{
@@ -57,13 +55,20 @@ public class Log4JModule extends AbstractModule
 					if (configFile.equals("embedded"))
 					{
 						// Load the log4j config from the guice configuration
-						config = ConfigurationConverter.toProperties(guiceConfig);
+						config = guiceConfig.toProperties(key -> StringUtils.startsWithIgnoreCase(key, "log4j."));
 					}
 					else
 					{
-						// Load the log4j config file directly
-						// TODO it'd be nice if we could use variables for interpolation here.
-						config = PropertyFile.find(configFile).toProperties();
+						// Load the log4j file directly
+						PropertyFile props = PropertyFile.find(configFile);
+
+						// Now resolve any ${} properties within the log4j file against the guice config
+						GuiceConfig temp = new GuiceConfig();
+						temp.setAll(guiceConfig);
+						temp.setAll(props);
+
+						// Finally, extract the original property values with their values resolved
+						config = temp.toProperties(key -> props.keySet().contains(key));
 					}
 				}
 				else
@@ -72,6 +77,7 @@ public class Log4JModule extends AbstractModule
 					throw new RuntimeException("Unexpected logging configuration");
 				}
 			}
+
 			//reset any existing log config
 			LogManager.resetConfiguration();
 

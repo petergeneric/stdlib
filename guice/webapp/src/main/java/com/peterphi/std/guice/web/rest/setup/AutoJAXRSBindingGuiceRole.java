@@ -10,13 +10,13 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.auth.interceptor.AuthConstraintInterceptorModule;
 import com.peterphi.std.guice.web.rest.auth.userprovider.WebappAuthenticationModule;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -26,7 +26,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 
 
 	@Override
-	public void adjustConfigurations(final List<Configuration> configs)
+	public void adjustConfigurations(final List<PropertyFile> configs)
 	{
 
 	}
@@ -35,8 +35,7 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scannerFactory,
-	                     final CompositeConfiguration config,
-	                     final PropertiesConfiguration overrides,
+	                     final GuiceConfig config,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef,
@@ -61,12 +60,12 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 				// Set up authentication
 				{
 					// Set up provider for CurrentUser
-					String[] authProviderNames = config.getStringArray(GuiceProperties.AUTH_PROVIDER_NAMES);
+					List<String> authProviderNames = config.getList(GuiceProperties.AUTH_PROVIDER_NAMES, null);
 
 					// If no providers set, use the default (JWT, or the Servlet's preferred auth scheme)
-					if (authProviderNames == null || authProviderNames.length == 0)
-						authProviderNames = new String[]{GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER,
-						                                 GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER,};
+					if (authProviderNames == null || authProviderNames.size() == 0)
+						authProviderNames = Arrays.asList(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER,
+						                                  GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER);
 
 					modules.add(new WebappAuthenticationModule(metrics, authProviderNames, config));
 				}
@@ -82,8 +81,8 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 	@Override
 	public void injectorCreated(final Stage stage,
 	                            final ClassScannerFactory scanner,
-	                            final CompositeConfiguration config,
-	                            final PropertiesConfiguration overrides,
+	                            final GuiceConfig config,
+
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
 	                            final AtomicReference<Injector> injectorRef,

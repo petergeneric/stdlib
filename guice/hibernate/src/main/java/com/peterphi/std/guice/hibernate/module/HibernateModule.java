@@ -7,7 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.matcher.Matchers;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.serviceprops.ConfigurationConverter;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
@@ -65,14 +65,14 @@ public abstract class HibernateModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public Configuration getHibernateConfiguration(org.apache.commons.configuration.Configuration configuration,
+	public Configuration getHibernateConfiguration(GuiceConfig guiceConfig,
 	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
 	{
 		final Properties properties;
 
 		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
 		{
-			properties = ConfigurationConverter.toProperties(configuration);
+			properties = guiceConfig.toProperties();
 		}
 		else
 		{
@@ -84,14 +84,24 @@ public abstract class HibernateModule extends AbstractModule
 			}
 			else
 			{
-				// Merge all the values and interpret them via commons-configuration to allow for interpolation
-				properties = ConfigurationConverter.toProperties(ConfigurationConverter.union(files));
+				// Merge all hibernate property files into a single file
+				PropertyFile file = PropertyFile.readOnlyUnion(files);
+
+				// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
+				GuiceConfig temp = new GuiceConfig();
+
+				temp.setAll(guiceConfig);
+				temp.setAll(file);
+
+				// Now extract the hibernate properties again with any variables
+				properties = temp.toProperties(key -> file.containsKey(key));
 			}
 		}
 
-		validateHibernateProperties(configuration, properties);
+		validateHibernateProperties(guiceConfig, properties);
 
-		org.hibernate.cfg.Configuration config = new org.hibernate.cfg.Configuration();
+		// Set up the hibernate Configuration
+		Configuration config = new Configuration();
 		config.addProperties(properties);
 
 		configure(config);
@@ -114,7 +124,7 @@ public abstract class HibernateModule extends AbstractModule
 					log.trace("Validating hibernate configuration with " + validator);
 
 				// Have the validator check the hibernate/database configuration
-				validator.validate(config, properties, configuration);
+				validator.validate(config, properties, guiceConfig);
 			}
 		}
 
@@ -133,8 +143,7 @@ public abstract class HibernateModule extends AbstractModule
 	 * @throws IllegalArgumentException
 	 * 		if the hibernate.hbm2ddl.auto property is set to a prohibited value
 	 */
-	private void validateHibernateProperties(final org.apache.commons.configuration.Configuration configuration,
-	                                         final Properties hibernateProperties)
+	private void validateHibernateProperties(final GuiceConfig configuration, final Properties hibernateProperties)
 	{
 		final boolean allowCreateSchema = configuration.getBoolean(GuiceProperties.HIBERNATE_ALLOW_HBM2DDL_CREATE, false);
 

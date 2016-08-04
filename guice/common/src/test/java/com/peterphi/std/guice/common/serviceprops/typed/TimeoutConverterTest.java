@@ -7,9 +7,6 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.threading.Timeout;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.MapConfiguration;
-import org.apache.commons.configuration.PropertiesConfiguration;
 import org.junit.Test;
 
 import java.util.concurrent.TimeUnit;
@@ -55,10 +52,7 @@ public class TimeoutConverterTest
 		props.set("timeout60m", "60m");
 		props.set("timeout50h", "50h");
 
-		CompositeConfiguration composite = new CompositeConfiguration();
-		composite.addConfiguration(new MapConfiguration(props.toProperties()));
-
-		final Injector injector = Guice.createInjector(new ServicePropertiesModule(composite, new PropertiesConfiguration()));
+		final Injector injector = Guice.createInjector(new ServicePropertiesModule(props));
 
 		injector.injectMembers(this);
 

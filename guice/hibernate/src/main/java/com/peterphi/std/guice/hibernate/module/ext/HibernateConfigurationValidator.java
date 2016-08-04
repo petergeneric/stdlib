@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.module.ext;
 
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.hibernate.cfg.Configuration;
 
 import java.util.Properties;
@@ -11,5 +12,5 @@ public interface HibernateConfigurationValidator
 {
 	void validate(Configuration hibernateConfiguration,
 	              Properties hibernateProperties,
-	              org.apache.commons.configuration.Configuration environmentConfiguration);
+	              GuiceConfig environmentConfiguration);
 }

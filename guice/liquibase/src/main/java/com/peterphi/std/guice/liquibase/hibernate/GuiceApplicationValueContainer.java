@@ -1,8 +1,8 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import liquibase.configuration.ConfigurationProperty;
 import liquibase.configuration.ConfigurationValueProvider;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.AvailableSettings;
@@ -21,12 +21,12 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 	private static final String HIBERNATE_DATASOURCE = AvailableSettings.DATASOURCE;
 
 
-	private final Configuration applicationConfiguration;
+	private final GuiceConfig applicationConfiguration;
 	private final InitialContext initialContext;
 	private final Properties hibernateConfiguration;
 
 
-	public GuiceApplicationValueContainer(final Configuration applicationConfiguration,
+	public GuiceApplicationValueContainer(final GuiceConfig applicationConfiguration,
 	                                      final InitialContext initialContext,
 	                                      final Properties hibernateConfiguration)
 	{
@@ -39,11 +39,7 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 	@Override
 	public String describeValueLookupLogic(ConfigurationProperty property)
 	{
-		return "JNDI/application/hibernate/system property '" +
-		       property.getNamespace() +
-		       "." +
-		       property.getName() +
-		       "'";
+		return "JNDI/application/hibernate/system property '" + property.getNamespace() + "." + property.getName() + "'";
 	}
 
 
@@ -76,7 +72,7 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 		// Load from the guice environment configuration
 		if (applicationConfiguration.containsKey(key))
 		{
-			return applicationConfiguration.getString(key);
+			return applicationConfiguration.get(key);
 		}
 
 		// Fall back on hibernate configuration

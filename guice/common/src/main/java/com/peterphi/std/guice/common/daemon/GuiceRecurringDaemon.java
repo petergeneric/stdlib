@@ -5,9 +5,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
 import com.peterphi.std.threading.Timeout;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -71,9 +71,9 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 
 	@Inject
-	public void setSleepTimeFromConfigIfSet(Configuration config)
+	public void setSleepTimeFromConfigIfSet(GuiceConfig config)
 	{
-		final String str = config.getString("daemon." + getName() + ".interval", null);
+		final String str = config.get("daemon." + getName() + ".interval", null);
 
 		if (StringUtils.isNotEmpty(str))
 		{

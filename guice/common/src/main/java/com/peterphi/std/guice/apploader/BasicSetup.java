@@ -2,7 +2,7 @@ package com.peterphi.std.guice.apploader;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -29,7 +29,7 @@ public class BasicSetup implements GuiceSetup
 
 
 	@Override
-	public void registerModules(List<Module> modules, Configuration config)
+	public void registerModules(List<Module> modules, GuiceConfig config)
 	{
 		modules.addAll(this.modules);
 	}

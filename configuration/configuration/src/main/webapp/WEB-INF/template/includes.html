@@ -14,6 +14,47 @@
 </head>
 <body>
 
+<!--@thymesVar id="page" type="java.lang.String"-->
+
+<div th:fragment="navbar" class="navbar navbar-inverse navbar-fixed-top">
+	<div class="navbar-inner">
+		<div class="container">
+			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+				<span class="icon-bar"></span>
+			</a>
+			<a class="brand" th:href="@{/}">Service Manager</a>
+			<div class="nav-collapse collapse">
+				<ul class="nav">
+					<li th:class="(${page} == 'home') ? 'active':null"><a th:href="@{/}">Home</a></li>
+					<li th:class="(${page} == 'config') ? 'active':null"><a th:href="@{/config}">Config</a></li>
+				</ul>
+			</div><!--/.nav-collapse -->
+
+			<div th:if="${session.login.loggedIn}" class="btn-group navbar-text pull-right" id="whoamidropdown">
+				<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-user icon-white"></i> <span th:text="${session.login.name}">user</span> <span class="caret"></span></a>
+				<ul class="dropdown-menu">
+					<li><a th:href="@{'/user/'+${session.login.user.id}}"><i class="icon-edit"></i> Edit Profile</a></li>
+					<li><a th:href="@{/users}"><i class="icon-search"></i> All Users</a></li>
+					<li><a th:href="@{/jobs/watched}"><i class="icon-list"></i> Watched Jobs</a></li>
+					<li><a th:href="@{/jobs(state='PROCESSING',state='READY', _order='updated desc', creator=${session.login.creator})}"><i class="icon-list"></i> My Jobs</a></li>
+					<li th:if="${session.login.admin}"><a th:href="@{/register}"><i class="icon-plus"></i> Create user</a></li>
+					<li th:if="${session.login.admin}"><a th:href="@{/job-manager-info}"><i class="icon-info-sign"></i> Job Manager Info</a></li>
+					<li class="divider"></li>
+					<li><a th:href="@{/logout}"><i class="i"></i> Logout</a></li>
+				</ul>
+			</div>
+			<form th:if="${session.login.loggedIn == false and page != 'login' and page != 'register'}" class="navbar-form pull-right" method="POST" th:action="@{/login}">
+				<input type="hidden" name="returnTo" th:value="${#httpServletRequest.requestURL + ((#httpServletRequest.queryString) ? ('?' + #httpServletRequest.queryString) : '')}" />
+				<input class="span2" type="text" name="email" placeholder="Email" />
+				<input class="span2" type="password" name="password" placeholder="Password" />
+				<button type="submit" class="btn">Login</button>
+			</form>
+		</div>
+	</div>
+</div>
+
 
 <div class="container">
 	<p>content goes here</p>

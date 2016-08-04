@@ -15,9 +15,8 @@ import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistryModule;
 import com.peterphi.std.guice.common.serviceprops.ServicePropertiesModule;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -29,7 +28,7 @@ class CoreGuiceRole implements GuiceRole
 
 
 	@Override
-	public void adjustConfigurations(final List<Configuration> configs)
+	public void adjustConfigurations(final List<PropertyFile> configs)
 	{
 
 	}
@@ -38,15 +37,14 @@ class CoreGuiceRole implements GuiceRole
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scanner,
-	                     final CompositeConfiguration config,
-	                     final PropertiesConfiguration overrides,
+	                     final GuiceConfig config,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef,
 	                     final MetricRegistry metrics)
 	{
-		modules.add(new ServicePropertiesModule(config, overrides));
-		modules.add(new ConfigurationPropertyRegistryModule(config, overrides, injectorRef));
+		modules.add(new ServicePropertiesModule(config));
+		modules.add(new ConfigurationPropertyRegistryModule(config, injectorRef));
 		modules.add(new GuiceLifecycleModule());
 		modules.add(new CoreMetricsModule(metrics));
 		modules.add(new CacheModule(metrics));
@@ -59,12 +57,11 @@ class CoreGuiceRole implements GuiceRole
 	@Override
 	public void injectorCreated(final Stage stage,
 	                            final ClassScannerFactory scanner,
-	                            final CompositeConfiguration config,
-	                            final PropertiesConfiguration overrides,
+	                            final GuiceConfig config,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
 	                            final AtomicReference<Injector> injectorRef,
-	                            MetricRegistry metrics)
+	                            final MetricRegistry metrics)
 	{
 
 	}
