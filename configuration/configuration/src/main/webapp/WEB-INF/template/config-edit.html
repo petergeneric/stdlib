@@ -62,7 +62,7 @@
 			<tr th:each="kvp: ${definedProperties}">
 				<td class="span3" th:text="${kvp.name}">name</td>
 				<td class="span8">
-					<textarea class="span12" th:name="${kvp.path}+'|'+${kvp.name}" rows="2" th:text="${kvp.value}"
+					<textarea class="span12" th:name="'property.'+${kvp.name}" rows="2" th:text="${kvp.value}"
 					          onchange="propertyChanged(this)"></textarea>
 				</td>
 				<td class="span1"><a class="remove-link" href="#" onclick="removeProperty(this)">×</a></td>
@@ -133,7 +133,7 @@
 
 				var path = $('#add-property').data('path');
 				var name = $('#add-property input').val();
-				var textareaName = path + '|' + name;
+				var textareaName = "property." + name;
 				var value = $('#add-property textarea').val();
 
 				var existing = $('textarea[name="' + textareaName + '"]');

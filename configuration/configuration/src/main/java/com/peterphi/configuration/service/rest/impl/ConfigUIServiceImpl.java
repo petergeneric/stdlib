@@ -11,6 +11,7 @@ import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 
 public class ConfigUIServiceImpl implements ConfigUIService
 {
+	private static final Logger log = Logger.getLogger(ConfigUIServiceImpl.class);
+
 	@Inject
 	Templater templater;
 
@@ -140,7 +143,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	{
 		final String name = StringUtils.defaultIfBlank(fields.getFirst("_name"), "Unknown UI User");
 		final String email = StringUtils.defaultIfBlank(fields.getFirst("_email"), "nobody@localhost");
-		final String path = fields.getFirst("_path");
+		final String path = RepoHelper.normalisePath(fields.getFirst("_path"));
 		final String message = StringUtils.defaultIfBlank(fields.getFirst("_message"), "No message");
 
 		Map<String, Map<String, ConfigPropertyValue>> data = parseFields(path, fields);
@@ -160,7 +163,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	}
 
 
-	private Map<String, Map<String, ConfigPropertyValue>> parseFields(final String defaultPath,
+	private Map<String, Map<String, ConfigPropertyValue>> parseFields(final String path,
 	                                                                  final MultivaluedMap<String, String> fields)
 	{
 		ConfigDataBuilder builder = new ConfigDataBuilder();
@@ -172,19 +175,16 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 			if (name.startsWith("_"))
 				continue; // Skip form param names that start with _ (they carry commit data, not property data)
-
-			if (name.indexOf('|') != -1)
+			else if (name.startsWith("property."))
 			{
-				final String[] nameParts = StringUtils.split(name, '|');
+				final String[] nameParts = StringUtils.split(name, ".", 2);
+				final String propertyName = nameParts[1];
 
-				if (nameParts.length == 1)
-					builder.set("", nameParts[0], value);
-				else
-					builder.set(nameParts[0], nameParts[1], value);
+				builder.set(path,propertyName, value);
 			}
 			else
 			{
-				builder.set(defaultPath, name, value);
+				log.warn("Unknown property in property update form:" + name);
 			}
 		}
 
