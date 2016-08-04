@@ -63,7 +63,8 @@ public class GuiceConfig
 	public void setAll(Map<String, String> properties)
 	{
 		if (properties != null)
-			this.properties.putAll(properties);
+			for (Map.Entry<String, String> entry : properties.entrySet())
+				set(entry.getKey(), entry.getValue());
 	}
 
 
@@ -81,7 +82,16 @@ public class GuiceConfig
 
 	public void set(String name, final String value)
 	{
-		properties.put(name, value);
+		if (name == null)
+			throw new IllegalArgumentException("Property name cannot be null!");
+		else if (value == null)
+			throw new IllegalArgumentException("Property '" + name + "' cannot be null!");
+
+		final String oldValue = properties.get(name);
+
+		// Only replace the old value if it's different (so we don't change pointers unless needed)
+		if (!StringUtils.equals(oldValue, value))
+			properties.put(name, value);
 	}
 
 
