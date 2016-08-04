@@ -17,7 +17,9 @@ import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -166,7 +168,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	private Map<String, Map<String, ConfigPropertyValue>> parseFields(final String path,
 	                                                                  final MultivaluedMap<String, String> fields)
 	{
-		ConfigDataBuilder builder = new ConfigDataBuilder();
+		Map<String, ConfigPropertyValue> properties = new HashMap<>();
 
 		for (Map.Entry<String, List<String>> entry : fields.entrySet())
 		{
@@ -180,7 +182,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 				final String[] nameParts = StringUtils.split(name, ".", 2);
 				final String propertyName = nameParts[1];
 
-				builder.set(path,propertyName, value);
+				properties.put(propertyName, new ConfigPropertyValue(path, propertyName, value));
 			}
 			else
 			{
@@ -188,6 +190,6 @@ public class ConfigUIServiceImpl implements ConfigUIService
 			}
 		}
 
-		return builder.build();
+		return Collections.singletonMap(path, properties);
 	}
 }
