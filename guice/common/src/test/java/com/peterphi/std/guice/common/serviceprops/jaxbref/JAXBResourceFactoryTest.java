@@ -1,12 +1,8 @@
 package com.peterphi.std.guice.common.serviceprops.jaxbref;
 
-import com.google.common.base.Objects;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.junit.Test;
-
-import javax.xml.bind.annotation.XmlAttribute;
-import javax.xml.bind.annotation.XmlRootElement;
 
 import static org.junit.Assert.assertEquals;
 
@@ -14,57 +10,11 @@ public class JAXBResourceFactoryTest
 {
 	JAXBSerialiserFactory SERIALISER_FACTORY = new JAXBSerialiserFactory(false);
 
-	@XmlRootElement(name = "MyType")
-	public static final class MyType
-	{
-		@XmlAttribute
-		public String name;
-
-
-		public MyType()
-		{
-		}
-
-
-		public MyType(final String name)
-		{
-			this.name = name;
-		}
-
-
-		@Override
-		public boolean equals(final Object o)
-		{
-			if (this == o)
-				return true;
-			if (o == null || getClass() != o.getClass())
-				return false;
-
-			MyType myType = (MyType) o;
-
-			return name != null ? name.equals(myType.name) : myType.name == null;
-		}
-
-
-		@Override
-		public int hashCode()
-		{
-			return name != null ? name.hashCode() : 0;
-		}
-
-
-		@Override
-		public String toString()
-		{
-			return Objects.toStringHelper(this).add("name", name).toString();
-		}
-	}
-
 
 	@Test
 	public void testLiteralProperty() throws Exception
 	{
-		MyType expected = new MyType("test");
+		MyType expected = new MyType("test", true);
 
 		GuiceConfig config = new GuiceConfig();
 		config.set("some.xml", "<MyType name=\"test\"/>");
@@ -84,7 +34,7 @@ public class JAXBResourceFactoryTest
 	@Test
 	public void testLiteralPropertyWithInternalVariables() throws Exception
 	{
-		MyType expected = new MyType("${some.custom.ognl}");
+		MyType expected = new MyType("${some.custom.ognl}", true);
 
 		GuiceConfig config = new GuiceConfig();
 		config.set("some.xml", "<MyType name=\"${some.custom.ognl}\"/>");
@@ -104,7 +54,7 @@ public class JAXBResourceFactoryTest
 	@Test
 	public void testVariableReferencingLiteralDocument() throws Exception
 	{
-		MyType expected = new MyType("test");
+		MyType expected = new MyType("test", true);
 
 		GuiceConfig config = new GuiceConfig();
 		config.set("some.xml", "${some.xml.incl}");
@@ -124,7 +74,7 @@ public class JAXBResourceFactoryTest
 	@Test
 	public void testResourceFromClasspathReference() throws Exception
 	{
-		MyType expected = new MyType("from-disk");
+		MyType expected = new MyType("from-disk", true);
 
 		GuiceConfig config = new GuiceConfig();
 		config.set("some.xml", "/jaxb-resource-factory/mytype.xml");
