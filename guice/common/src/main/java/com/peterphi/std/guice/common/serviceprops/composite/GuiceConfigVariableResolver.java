@@ -33,56 +33,58 @@ class GuiceConfigVariableResolver extends StrLookup
 	@Override
 	public String lookup(final String key)
 	{
-		if (StringUtils.startsWith(key, "env:"))
+		if (StringUtils.contains(key, ':'))
 		{
-			final String[] parts = key.split(":", 2);
-
-			final String name = parts[1];
-
-			final String resolution = System.getenv(name);
-			if (resolution == null)
-				return "";
-			else
-				return resolution;
-		}
-		else if (StringUtils.startsWith(key, "resource:"))
-		{
-			final String[] parts = key.split(":", 2);
-			final String resource = parts[1];
-
-			try (final InputStream is = getClass().getResourceAsStream(resource))
+			if (StringUtils.startsWith(key, "env:"))
 			{
-				return IOUtils.toString(is);
-			}
-			catch (IOException e)
-			{
-				throw new RuntimeException("Error reading classpath resource " + resource, e);
-			}
-		}
-		else if (StringUtils.startsWithIgnoreCase(key, "file:"))
-		{
-			final String[] parts = key.split(":", 2);
-			final String file = parts[1];
+				final String[] parts = key.split(":", 2);
 
-			try (final FileReader fr = new FileReader(file))
-			{
-				return IOUtils.toString(fr);
-			}
-			catch (IOException e)
-			{
-				throw new RuntimeException("Error reading File " + file, e);
-			}
-		}
-		else if (StringUtils.startsWith(key, "ognl:"))
-		{
-			final String[] parts = key.split(":", 2);
+				final String name = parts[1];
 
-			return lookupOGNL(parts[1]);
+				final String resolution = System.getenv(name);
+				if (resolution == null)
+					return "";
+				else
+					return resolution;
+			}
+			else if (StringUtils.startsWith(key, "resource:"))
+			{
+				final String[] parts = key.split(":", 2);
+				final String resource = parts[1];
+
+				try (final InputStream is = getClass().getResourceAsStream(resource))
+				{
+					return IOUtils.toString(is);
+				}
+				catch (IOException e)
+				{
+					throw new RuntimeException("Error reading classpath resource " + resource, e);
+				}
+			}
+			else if (StringUtils.startsWithIgnoreCase(key, "file:"))
+			{
+				final String[] parts = key.split(":", 2);
+				final String file = parts[1];
+
+				try (final FileReader fr = new FileReader(file))
+				{
+					return IOUtils.toString(fr);
+				}
+				catch (IOException e)
+				{
+					throw new RuntimeException("Error reading File " + file, e);
+				}
+			}
+			else if (StringUtils.startsWith(key, "ognl:"))
+			{
+				final String[] parts = key.split(":", 2);
+
+				return lookupOGNL(parts[1]);
+			}
 		}
-		else
-		{
-			return properties.get(key, "");
-		}
+
+		// Fall back to resolving the property
+		return properties.get(key, "");
 	}
 
 
