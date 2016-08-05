@@ -23,13 +23,6 @@ public interface GuiceRestLoggingService
 	@Produces("text/html")
 	String getIndex();
 
-
-	@POST
-	@Path("/load-config-file")
-	@Produces("text/html")
-	@Doc("Called to load a log4j.properties resource")
-	Response loadConfigFile(@FormParam("resource") String resource);
-
 	@POST
 	@Path("/load-config-string")
 	@Produces("text/html")
