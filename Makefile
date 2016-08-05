@@ -27,7 +27,7 @@ pwsample: sample
 sample: clean
 	$(MVN) package -DskipTests=true -am --projects guice/sample-rest-service
 
-config-service-full: clean
+config-service-full:
 	$(MVN) package -DskipTests=true -am --projects configuration/configuration
 	rsync -avzr --progress configuration/configuration/target/*.war /opt/tomcat/webapps/config.war
 
