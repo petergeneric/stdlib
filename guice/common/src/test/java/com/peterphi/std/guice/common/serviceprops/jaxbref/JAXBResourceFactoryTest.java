@@ -5,6 +5,7 @@ import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertSame;
 
 public class JAXBResourceFactoryTest
 {
@@ -22,6 +23,43 @@ public class JAXBResourceFactoryTest
 		JAXBResourceFactory factory = new JAXBResourceFactory(config, SERIALISER_FACTORY);
 
 		assertEquals(expected, factory.get(MyType.class, "some.xml"));
+	}
+
+
+	@Test
+	public void testLiteralPropertyCaching() throws Exception
+	{
+		MyType expected = new MyType("test", true);
+
+		GuiceConfig config = new GuiceConfig();
+		config.set("some.xml", "<MyType name=\"test\"/>");
+
+		JAXBResourceFactory factory = new JAXBResourceFactory(config, SERIALISER_FACTORY);
+
+		final MyType a = factory.get(MyType.class, "some.xml");
+		final MyType b = factory.get(MyType.class, "some.xml");
+
+		assertEquals(expected, a);
+		assertSame("cache should return same JAXB object ref when XML has not changed", a, b);
+	}
+
+
+	@Test
+	public void testChangingLiteralProperty() throws Exception
+	{
+		MyType first = new MyType("test1", true);
+		MyType second = new MyType("test2", true);
+
+		GuiceConfig config = new GuiceConfig();
+		config.set("some.xml", "<MyType name=\"test1\"/>");
+
+		JAXBResourceFactory factory = new JAXBResourceFactory(config, SERIALISER_FACTORY);
+
+		assertEquals(first, factory.get(MyType.class, "some.xml"));
+
+		config.set("some.xml", "<MyType name=\"test2\"/>");
+
+		assertEquals(second, factory.get(MyType.class, "some.xml"));
 	}
 
 
