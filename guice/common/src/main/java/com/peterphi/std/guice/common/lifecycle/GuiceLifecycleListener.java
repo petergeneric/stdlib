@@ -3,7 +3,7 @@ package com.peterphi.std.guice.common.lifecycle;
 public interface GuiceLifecycleListener
 {
 	/**
-	 * Called after Guice has fully and successfully constructed this object
+	 * Called after this object has been fully and successfully constructed
 	 */
-	public void postConstruct();
+	void postConstruct();
 }
