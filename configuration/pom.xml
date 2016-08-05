@@ -1,0 +1,20 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.peterphi.std.config</groupId>
+	<artifactId>config-parent</artifactId>
+	<packaging>pom</packaging>
+	
+	<name>configuration</name>
+	<description>Configuration (Parent Package)</description>
+
+	<parent>
+		<groupId>com.peterphi.std</groupId>
+		<artifactId>stdlib-parent</artifactId>
+		<version>8.7.3-SNAPSHOT</version>
+	</parent>
+
+	<modules>
+		<module>configuration</module>
+	</modules>
+</project>

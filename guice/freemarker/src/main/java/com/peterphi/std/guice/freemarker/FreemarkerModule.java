@@ -5,6 +5,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import freemarker.template.Configuration;
 import freemarker.template.DefaultObjectWrapper;
 import freemarker.template.Version;
@@ -29,7 +30,7 @@ public class FreemarkerModule extends AbstractModule
 	@Singleton
 	public FreemarkerTemplater createFreemarker(ServletContext context,
 	                                            FreemarkerURLHelper urlHelper,
-	                                            org.apache.commons.configuration.Configuration configuration)
+	                                            GuiceConfig configuration)
 	{
 		Configuration freemarker = new Configuration(FREEMARKER_COMPATIBILITY_VERSION);
 
@@ -50,7 +51,7 @@ public class FreemarkerModule extends AbstractModule
 	public FreemarkerURLHelper createURLHelper(@Named("local.restservices.endpoint") URI restEndpoint,
 	                                           @Named("local.webapp.endpoint") URI webappEndpoint,
 	                                           @Named("local.restservices.prefix") String restPrefix,
-	                                           org.apache.commons.configuration.Configuration configuration)
+	                                           GuiceConfig configuration)
 	{
 		final boolean usePerRequestBuilder = configuration.getBoolean(GuiceProperties.USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER,
 		                                                              false);

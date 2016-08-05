@@ -20,7 +20,7 @@ public class GuiceProperties
 	@Doc("The mode to use, can either be DEVELOPMENT or PRODUCTION (defaults to DEVELOPMENT). See Guice Stage documentation.")
 	public static final String STAGE_PROPERTY = "mode";
 
-	@Doc("If set, log4j.properties will be loaded from the named file. If set to embedded then the log4j.properties will be loaded from the current in-memory configuration properties (default null)")
+	@Doc("If set, log4j.properties will be loaded from the named file. If set to embedded then the log4j.properties will be loaded from the current in-memory configuration properties. Can also contain a literal log4j configuration if it has multiple lines (default null)")
 	public static final String LOG4J_PROPERTIES_FILE = "log4j.properties";
 
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
@@ -30,8 +30,27 @@ public class GuiceProperties
 	public static final String UNIT_TEST = "unit-test";
 
 	//
+	// Configuration Service Properties
+	//
+	public static final String CONFIG_ENDPOINT = "service.config.endpoint";
+	@Doc("The config path to read. Defaults to: ${servlet.context-name}")
+	public static final String CONFIG_PATH = "service.config.path";
+	public static final String CONFIG_INSTANCE_ID = "service.config.instance-id";
+
+	//
 	// Guice Webapp Properties
 	//
+	@Doc("If true, then a restart of the guice environment without involving the servlet container may be attempted (default false). Should be disabled for live systems.")
+	public static final String ALLOW_RESTART = "restutils.allow-restart";
+
+	@Doc("If true, then the configuration data for the application will be available for remote inspection (default false). Should be disabled for live systems because this may leak password data.")
+	public static final String ALLOW_PROPERTIES_VIEW = "restutils.show-serviceprops";
+
+	@Doc("If true, allow reconfiguration of service properties at runtime without authentication (default false). Should be disabled for live systems because this may leak password data.")
+	public static final String ALLOW_PROPERTIES_RECONFIGURE = "restutils.allow-reconfigure";
+
+	@Doc("If true, the service configuration page will show the currently bound values of config fields across all Field binding sites if possible (default false)")
+	public static final String ALLOW_PROPERTIES_SHOWBOUNDVALUES = "restutils.show-bound-values";
 
 	@Doc("The endpoint to the local RESTful services root (N.B. includes any JAX-RS prefix path. Auto-generated from local.webapp.endpoint and local.restservices.prefix)")
 	public static final String LOCAL_REST_SERVICES_ENDPOINT = "local.restservices.endpoint";
@@ -40,7 +59,7 @@ public class GuiceProperties
 	public static final String REST_SERVICES_PREFIX = "local.restservices.prefix";
 
 	@Doc("The name of the local context; this is only present within a webapp environment, as such if it is required directly it should be read from Configuration (so null is permitted)")
-	public static final String SERVLET_CONTEXT_NAME = "servlet:context-name";
+	public static final String SERVLET_CONTEXT_NAME = "servlet.context-name";
 
 	@Doc("The servlet context name without slashes")
 	public static final String CONTEXT_NAME = "context-name";
@@ -144,5 +163,5 @@ public class GuiceProperties
 	public static final String LIQUIBASE_LABELS = "liquibase.labels";
 
 	@Doc("The prefix property name for all liquibase parameters (this is not a real configurable property)")
-	public static final String LIQUIBASE_PARAMETER = "liquibase.parameter";
+	public static final String LIQUIBASE_PARAMETER = "liquibase.parameter.";
 }

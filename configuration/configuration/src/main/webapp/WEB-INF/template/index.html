@@ -1,0 +1,58 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta th:substituteby="includes :: htmlhead"/>
+	<title>Config Service</title>
+
+	<style th:fragment="htmlhead">
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body id="top">
+<!--/*@thymesVar id="commits" type="java.util.List<com.peterphi.configuration.service.git.ConfigCommit>"*/-->
+<!--/*@thymesVar id="paths" type="java.util.List<java.lang.String>"*/-->
+<div class="container">
+	<h1>Config Service</h1>
+
+	Paths:
+	<select id="path-nav">
+		<option th:each="pathopt: ${paths}" th:value="@{'/edit/' + ${pathopt}}" th:selected="${path} == ${pathopt}"
+		        th:text="${pathopt}"></option>
+	</select>
+
+	<h2>Recent Changes</h2>
+	<ul>
+		<li th:each="commit: ${commits}">
+			<span th:text="${commit.timestamp}"></span> - <span th:text="${commit.email}"></span> - <code
+				th:text="${commit.message}"></code>
+		</li>
+	</ul>
+
+	<h1>Actions</h1>
+	<form th:action="@{/pull-remote}" method="POST">
+		<input type="submit" value="Pull From Remote"/>
+	</form>
+
+	<form th:action="@{/edit}" method="GET">
+		<input type="submit" value="Edit Config"/>
+	</form>
+
+	<p th:substituteby="includes :: footer"/>
+</div>
+
+<p th:substituteby="includes :: htmlfoot"/>
+</body>
+</html>

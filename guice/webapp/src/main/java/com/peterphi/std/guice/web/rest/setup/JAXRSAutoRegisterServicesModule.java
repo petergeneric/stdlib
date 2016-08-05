@@ -6,9 +6,9 @@ import com.google.inject.TypeLiteral;
 import com.google.inject.spi.Message;
 import com.google.inject.util.Types;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
-import org.apache.commons.configuration.Configuration;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.Path;
@@ -31,11 +31,11 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 {
 	private static final Logger log = Logger.getLogger(JAXRSAutoRegisterServicesModule.class);
 
-	private final Configuration config;
+	private final GuiceConfig config;
 	private final ClassScannerFactory scannerFactory;
 
 
-	public JAXRSAutoRegisterServicesModule(final Configuration config, final ClassScannerFactory scannerFactory)
+	public JAXRSAutoRegisterServicesModule(final GuiceConfig config, final ClassScannerFactory scannerFactory)
 	{
 		this.config = config;
 		this.scannerFactory = scannerFactory;
@@ -83,11 +83,13 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 			{
 				if (ResteasyProxyClientFactoryImpl.getConfiguredBoundServiceName(config, clazz) != null)
 				{
-					log.debug("Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: " +
-					          clazz);
+					log.debug(
+							"Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: " +
+							clazz);
 
-					TypeLiteral typeLiteral = TypeLiteral.<JAXRSClientProvider<T>>get(Types.newParameterizedType(JAXRSClientProvider.class,
-					                                                                                             clazz));
+					TypeLiteral typeLiteral = TypeLiteral.<JAXRSClientProvider<T>>get(Types.newParameterizedType(
+							JAXRSClientProvider.class,
+							clazz));
 					bind(clazz).toProvider(typeLiteral);
 				}
 				else
@@ -102,7 +104,8 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 				throw new IllegalArgumentException("Expected 0 or 1 implementation for auto-discovered REST interface " +
 				                                   clazz +
 				                                   " but found " +
-				                                   implementations + ". Auto-binding REST interfaces is not possible.");
+				                                   implementations +
+				                                   ". Auto-binding REST interfaces is not possible.");
 			}
 		}
 	}

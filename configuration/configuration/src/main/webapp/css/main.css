@@ -1,0 +1,77 @@
+pre {
+	font-size: 11px;
+}
+
+body {
+	/*	padding-top: 60px; */
+	padding-bottom: 40px;
+}
+
+/* display empty dd elements in a dl */
+.dl-horizontal > dd:after {
+	display: table;
+	content: "";
+	clear: both;
+}
+
+/* ==========================================================================
+   Properties UI
+   ========================================================================== */
+tr.changed-property {
+	background-color: #ecffdc;
+}
+
+tr.deleted-property {
+	background-color: #ffa2b3;
+}
+
+.properties-table textarea {
+	margin-right: 10px;
+}
+
+/* ==========================================================================
+   Table Sorter
+   ========================================================================== */
+
+table.tablesorter thead tr .header {
+	background-image: url(../img/bg.gif);
+	background-repeat: no-repeat;
+	background-position: center right;
+	cursor: pointer;
+}
+
+table.tablesorter thead tr .headerSortUp {
+	background-image: url(../img/asc.gif);
+}
+
+table.tablesorter thead tr .headerSortDown {
+	background-image: url(../img/desc.gif);
+}
+
+/* ==========================================================================
+   Constraint UI
+   ========================================================================== */
+
+li.constraint_ui_prototype {
+	display: none;
+}
+
+/* Hide the element containing form fields */
+li.constraint_form_fields {
+	display: none;
+}
+
+.bigModal {
+	width: 600px;
+	margin-left: -300px;
+}
+
+/* Don't show bullets for the add constraint / add field list elements */
+li.constraint_add, li.constraint_value_add {
+	list-style-type: none;
+}
+
+/* When constraint_add is in the modal-footer make sure there's no bottom margin (otherwise valign will look wrong) */
+select.constraint_add {
+	margin-bottom: 0px;
+}

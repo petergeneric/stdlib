@@ -6,9 +6,9 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceConstants;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -28,7 +28,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	ResteasyClientFactoryImpl clientFactory;
 
 	@Inject
-	Configuration config;
+	GuiceConfig config;
 
 	@Inject(optional = true)
 	@Named("jaxrs.cookie-store")
@@ -36,7 +36,19 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	public boolean defaultStoreCookies = false;
 
 
-	public static String getConfiguredBoundServiceName(final Configuration config, Class<?> iface, String... names)
+	public ResteasyProxyClientFactoryImpl()
+	{
+	}
+
+
+	public ResteasyProxyClientFactoryImpl(ResteasyClientFactoryImpl clientFactory, GuiceConfig config)
+	{
+		this.clientFactory = clientFactory;
+		this.config = config;
+	}
+
+
+	public static String getConfiguredBoundServiceName(final GuiceConfig config, Class<?> iface, String... names)
 	{
 		if (names == null || names.length == 0)
 		{
@@ -83,16 +95,16 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " +
 			                                   Arrays.asList(names));
 
-		final String endpoint = config.getString("service." + name + ".endpoint", null);
+		final String endpoint = config.get("service." + name + ".endpoint", null);
 		final URI uri = URI.create(endpoint);
 
 		// TODO allow other per-service configuration?
-		final String username = config.getString("service." + name + ".username", getUsername(uri));
-		final String password = config.getString("service." + name + ".password", getPassword(uri));
+		final String username = config.get("service." + name + ".username", getUsername(uri));
+		final String password = config.get("service." + name + ".password", getPassword(uri));
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
-		final String authType = config.getString("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
+		final String authType = config.get("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store", defaultStoreCookies);
-		final String bearerToken = config.getString("service." + name + ".bearer", null);
+		final String bearerToken = config.get("service." + name + ".bearer", null);
 		final Supplier<String> bearerSupplier = (bearerToken != null) ? () -> bearerToken : null; // Supply fixed token
 
 		final boolean preemptiveAuth;

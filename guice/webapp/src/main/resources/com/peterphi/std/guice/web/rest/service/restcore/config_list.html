@@ -7,7 +7,7 @@
 </head>
 
 <!--@thymesVar id="configRegistry" type="com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry"-->
-<!--@thymesVar id="config" type="org.apache.commons.configuration.Configuration"-->
+<!--@thymesVar id="config" type="com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig"-->
 <!--@thymesVar id="showProperties" type="java.lang.Boolean"-->
 <!--@thymesVar id="showBoundValues" type="java.lang.Boolean"-->
 <!--@thymesVar id="allowReconfigure" type="java.lang.Boolean"-->
@@ -64,7 +64,7 @@
 			<form th:action="@{|${coreRestPrefix}/guice/config/reconfigure|}" method="POST">
 				<input type="hidden" name="key" th:value="${prop.name}"/>
 
-				<input th:if="${showProperties}" type="text" name="value" th:value="${config.getString(prop.name,'')}"/>
+				<input th:if="${showProperties}" type="text" name="value" th:value="${config.get(prop.name,'')}"/>
 				<input th:unless="${showProperties}" type="text" name="value" th:value=""/>
 
 				<input type="submit" value="Change"/>
@@ -78,7 +78,7 @@
 			<tr th:if="${showProperties}">
 				<th class="span3">Configured Value</th>
 				<td data-content-meaning="liveValue"
-				    th:text="${config.getString(prop.name, 'Not configured - using internal default')}">prop value
+				    th:text="${config.get(prop.name, 'Not configured - using internal default')}">prop value
 				</td>
 			</tr>
 			<tr>

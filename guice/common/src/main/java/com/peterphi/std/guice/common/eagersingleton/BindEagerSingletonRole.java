@@ -10,9 +10,8 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
 import java.util.Iterator;
@@ -25,7 +24,7 @@ public class BindEagerSingletonRole implements GuiceRole
 
 
 	@Override
-	public void adjustConfigurations(final List<Configuration> configs)
+	public void adjustConfigurations(final List<PropertyFile> configs)
 	{
 	}
 
@@ -33,15 +32,14 @@ public class BindEagerSingletonRole implements GuiceRole
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scannerFactory,
-	                     final CompositeConfiguration config,
-	                     final PropertiesConfiguration overrides,
+	                     final GuiceConfig config,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef,
 	                     final MetricRegistry metrics)
 	{
 		final ClassScanner scanner = scannerFactory.getInstance();
-		
+
 		if (scanner != null)
 		{
 			final List<Class<?>> classes = scanner.getAnnotatedClasses(EagerSingleton.class);
@@ -79,8 +77,7 @@ public class BindEagerSingletonRole implements GuiceRole
 	@Override
 	public void injectorCreated(final Stage stage,
 	                            final ClassScannerFactory scanner,
-	                            final CompositeConfiguration config,
-	                            final PropertiesConfiguration overrides,
+	                            final GuiceConfig config,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
 	                            final AtomicReference<Injector> injectorRef,

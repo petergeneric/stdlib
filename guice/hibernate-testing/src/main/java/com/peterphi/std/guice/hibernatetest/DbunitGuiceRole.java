@@ -8,9 +8,8 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.io.PropertyFile;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -18,7 +17,7 @@ import java.util.concurrent.atomic.AtomicReference;
 public class DbunitGuiceRole implements GuiceRole
 {
 	@Override
-	public void adjustConfigurations(final List<Configuration> configs)
+	public void adjustConfigurations(final List<PropertyFile> configs)
 	{
 
 	}
@@ -27,8 +26,7 @@ public class DbunitGuiceRole implements GuiceRole
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scanner,
-	                     final CompositeConfiguration config,
-	                     final PropertiesConfiguration overrides,
+	                     final GuiceConfig config,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef,
@@ -44,8 +42,7 @@ public class DbunitGuiceRole implements GuiceRole
 	@Override
 	public void injectorCreated(final Stage stage,
 	                            final ClassScannerFactory scanner,
-	                            final CompositeConfiguration config,
-	                            final PropertiesConfiguration overrides,
+	                            final GuiceConfig config,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
 	                            final AtomicReference<Injector> injectorRef,

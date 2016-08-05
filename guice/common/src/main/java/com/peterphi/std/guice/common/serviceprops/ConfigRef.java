@@ -1,46 +1,46 @@
 package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Provider;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.typed.TypedConfigRef;
-import org.apache.commons.configuration.Configuration;
 
 import java.util.List;
 
 public class ConfigRef implements Provider<String>
 {
-	private final Configuration configuration;
+	private final GuiceConfig configuration;
 	private final String name;
 
 
-	public ConfigRef(final Configuration configuration, final String name)
+	public ConfigRef(final GuiceConfig configuration, final String name)
 	{
 		this.configuration = configuration;
 		this.name = name;
 	}
 
 
+	public String getName()
+	{
+		return name;
+	}
+
+
 	@Override
 	public String get()
 	{
-		return configuration.getString(name);
+		return configuration.get(name);
 	}
 
 
-	public String[] getStringArray()
+	public String getRaw()
 	{
-		return configuration.getStringArray(name);
+		return configuration.getRaw(name, null);
 	}
 
 
-	public List<Object> getList()
+	public List<String> getList()
 	{
-		return configuration.getList(name);
-	}
-
-
-	public Object getObject()
-	{
-		return configuration.getProperty(name);
+		return configuration.getList(name, null);
 	}
 
 

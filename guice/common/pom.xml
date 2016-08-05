@@ -3,9 +3,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-common</artifactId>
-	<version>8.7.3-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice common</name>
@@ -18,7 +16,13 @@
 	</parent>
 
 	<dependencies>
-		
+
+		<dependency>
+			<groupId>ognl</groupId>
+			<artifactId>ognl</artifactId>
+			<version>3.1.10</version>
+		</dependency>
+
 		<!-- Override the HTTP Client version that's pulled in from resteasy -->
 		<dependency>
 			<groupId>org.apache.httpcomponents</groupId>
@@ -81,12 +85,6 @@
 			<groupId>commons-logging</groupId>
 			<artifactId>commons-logging</artifactId>
 			<version>1.2</version>
-		</dependency>
-
-		<dependency>
-			<groupId>commons-configuration</groupId>
-			<artifactId>commons-configuration</artifactId>
-			<version>1.10</version>
 		</dependency>
 
 		<dependency>

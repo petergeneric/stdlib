@@ -91,15 +91,18 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
+
 		// Register the exception processor
-		resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
+		if (remoteExceptionClientResponseFilter != null)
+			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
 
 		// Set up the Connection Manager
 		this.connectionManager = new PoolingHttpClientConnectionManager();
 		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
 		connectionManager.setMaxTotal(maxConnectionsTotal);
 
-		manager.register(this);
+		if (manager != null)
+			manager.register(this);
 	}
 
 
@@ -153,7 +156,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// Customise timeouts if fast fail mode is enabled
 		if (fastFail)
 		{
-			customiser = concat(customiser, b -> {
+			customiser = concat(customiser, b ->
+			{
 				RequestConfig.Builder requestBuilder = RequestConfig.custom();
 
 				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
@@ -176,7 +180,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			// Set up bearer auth scheme provider if we're using bearer credentials
 			if (credentials instanceof BearerCredentials)
 			{
-				customiser = concat(customiser, b -> {
+				customiser = concat(customiser, b ->
+				{
 					Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create().register(
 							"Bearer",
 							new BearerAuthSchemeProvider()).build();
@@ -207,11 +212,13 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		{
 			// Recursively call self to create a shared client for other non-customised consumers
 			if (client == null)
-				client = getOrCreateClient(b -> {
-					// nothing to customise, supplied so we don't take this code path again
-				}, b -> {
-					// nothing to customise, supplied so we don't take this code path again
-				});
+				client = getOrCreateClient(b ->
+				                           {
+					                           // nothing to customise, supplied so we don't take this code path again
+				                           }, b ->
+				                           {
+					                           // nothing to customise, supplied so we don't take this code path again
+				                           });
 
 			return client; // use shared client
 		}

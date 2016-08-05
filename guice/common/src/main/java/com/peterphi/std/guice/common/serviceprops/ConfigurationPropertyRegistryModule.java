@@ -11,7 +11,7 @@ import com.google.inject.spi.InjectionListener;
 import com.google.inject.spi.TypeEncounter;
 import com.google.inject.spi.TypeListener;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Constructor;
@@ -27,11 +27,10 @@ public class ConfigurationPropertyRegistryModule extends AbstractModule
 	private final AtomicReference<Injector> injectorRef;
 
 
-	public ConfigurationPropertyRegistryModule(final Configuration configuration,
-	                                           final Configuration overrides,
+	public ConfigurationPropertyRegistryModule(final GuiceConfig configuration,
 	                                           final AtomicReference<Injector> injectorRef)
 	{
-		this.registry = new ConfigurationPropertyRegistry(configuration, overrides);
+		this.registry = new ConfigurationPropertyRegistry(configuration);
 		this.injectorRef = injectorRef;
 	}
 

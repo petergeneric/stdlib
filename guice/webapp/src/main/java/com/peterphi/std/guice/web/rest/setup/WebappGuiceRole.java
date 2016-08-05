@@ -8,20 +8,17 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
 import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.PropertiesConfiguration;
-import org.apache.commons.configuration.web.ServletConfiguration;
-import org.apache.commons.configuration.web.ServletContextConfiguration;
-import org.apache.commons.configuration.web.ServletFilterConfiguration;
+import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
 import javax.servlet.ServletContext;
+import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -29,46 +26,95 @@ public class WebappGuiceRole implements GuiceRole
 {
 	private static final Logger log = Logger.getLogger(WebappGuiceRole.class);
 
-	private final Configuration servletOrFilterConfig;
-	private final ServletContextModule contextModule;
+	private final ServletConfig servlet;
+	private final FilterConfig filter;
 	private final ServletContext context;
+
+	private final ServletContextModule contextModule;
 
 
 	public WebappGuiceRole(final ServletConfig config)
 	{
+		this.servlet = config;
+		this.filter = null;
 		this.context = config.getServletContext();
-		this.servletOrFilterConfig = new ServletConfiguration(config);
+
 		this.contextModule = new ServletContextModule(config);
 	}
 
 
 	public WebappGuiceRole(final FilterConfig config)
 	{
-		this.context = config.getServletContext();
-		this.servletOrFilterConfig = new ServletFilterConfiguration(config);
+		this.servlet = null;
+		this.filter = config;
+		this.context = filter.getServletContext();
+
 		this.contextModule = new ServletContextModule(config);
 	}
 
 
-	@Override
-	public void adjustConfigurations(final List<Configuration> configs)
+	private static PropertyFile getConfig(ServletConfig servlet, FilterConfig filter, ServletContext context)
 	{
-		PropertiesConfiguration props = new PropertiesConfiguration();
+		PropertyFile props = new PropertyFile();
 
-		props.setProperty(GuiceProperties.SERVLET_CONTEXT_NAME, context.getContextPath());
-		props.setProperty(GuiceProperties.CONTEXT_NAME, context.getContextPath().replaceAll("/", ""));
+		if (context != null)
+		{
+			final Enumeration<String> names = context.getInitParameterNames();
 
-		configs.add(0, new ServletContextConfiguration(context));
-		configs.add(0, this.servletOrFilterConfig);
-		configs.add(0, props);
+			while (names.hasMoreElements())
+			{
+				final String name = names.nextElement();
+				props.set(name, context.getInitParameter(name));
+			}
+		}
+
+		if (servlet != null)
+		{
+			final Enumeration<String> names = servlet.getInitParameterNames();
+
+			while (names.hasMoreElements())
+			{
+				final String name = names.nextElement();
+				props.set(name, servlet.getInitParameter(name));
+			}
+		}
+
+		if (filter != null)
+		{
+			final Enumeration<String> names = filter.getInitParameterNames();
+
+			while (names.hasMoreElements())
+			{
+				final String name = names.nextElement();
+				props.set(name, filter.getInitParameter(name));
+			}
+		}
+
+		return props;
+	}
+
+
+	@Override
+	public void adjustConfigurations(final List<PropertyFile> configs)
+	{
+		// First, add the context and servlet/filter config properties
+		configs.add(0, getConfig(servlet, filter, context));
+
+		// Finally, add simple properties for the context name
+		{
+			PropertyFile props = new PropertyFile();
+			props.set(GuiceProperties.SERVLET_CONTEXT_NAME, context.getContextPath());
+			props.set(GuiceProperties.CONTEXT_NAME, context.getContextPath().replaceAll("/", ""));
+
+			configs.add(0, props);
+		}
 	}
 
 
 	@Override
 	public void register(final Stage stage,
 	                     final ClassScannerFactory scanner,
-	                     final CompositeConfiguration config,
-	                     final PropertiesConfiguration overrides,
+	                     final GuiceConfig config,
 	                     final GuiceSetup setup,
 	                     final List<Module> modules,
 	                     final AtomicReference<Injector> injectorRef,
@@ -93,8 +139,7 @@ public class WebappGuiceRole implements GuiceRole
 	@Override
 	public void injectorCreated(final Stage stage,
 	                            final ClassScannerFactory scanner,
-	                            final CompositeConfiguration config,
-	                            final PropertiesConfiguration overrides,
+	                            final GuiceConfig config,
 	                            final GuiceSetup setup,
 	                            final List<Module> modules,
 	                            final AtomicReference<Injector> injectorRef,

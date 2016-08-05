@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 import org.thymeleaf.TemplateEngine;
@@ -22,7 +23,7 @@ import java.net.URI;
 public class GuiceCoreTemplater
 {
 	@Inject
-	org.apache.commons.configuration.Configuration configuration;
+	GuiceConfig configuration;
 	@Inject
 	MetricRegistry metrics;
 	@Inject

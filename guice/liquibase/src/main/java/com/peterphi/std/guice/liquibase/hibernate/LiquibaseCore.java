@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.liquibase.LiquibaseAction;
 import com.peterphi.std.guice.liquibase.exception.LiquibaseChangesetsPending;
 import liquibase.Contexts;
@@ -16,7 +17,6 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
-import org.apache.commons.configuration.Configuration;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.AvailableSettings;
@@ -45,7 +45,7 @@ class LiquibaseCore
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
 
 
-	public static void execute(final Configuration applicationConfiguration,
+	public static void execute(final GuiceConfig applicationConfiguration,
 	                           final Properties hibernateConfiguration,
 	                           final LiquibaseAction action)
 	{
@@ -98,13 +98,13 @@ class LiquibaseCore
 	}
 
 
-	private static Map<String, String> extractLiquibaseParameters(final Configuration cfg, final Properties hibernate)
+	private static Map<String, String> extractLiquibaseParameters(final GuiceConfig cfg, final Properties hibernate)
 	{
 		Map<String, String> map = new HashMap<>();
 
 		// Bind all liquibase.parameter. application properties to liquibase parameters
-		cfg.getKeys(GuiceProperties.LIQUIBASE_PARAMETER)
-		   .forEachRemaining(key -> map.put(key.substring(GuiceProperties.LIQUIBASE_PARAMETER.length()), cfg.getString(key)));
+		for (Map.Entry<String, String> entry : map.entrySet())
+			entry.setValue(entry.getValue().substring(GuiceProperties.LIQUIBASE_PARAMETER.length()));
 
 		// Bind all liquibase.parameter. hibernate properties to liquibase parameters
 		for (String key : hibernate.stringPropertyNames())

@@ -2,7 +2,7 @@ package com.peterphi.std.guice.apploader;
 
 import com.google.inject.Injector;
 import com.google.inject.Module;
-import org.apache.commons.configuration.Configuration;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 
 import java.util.List;
 
@@ -24,7 +24,7 @@ public interface GuiceSetup
 	 * @param config
 	 * 		the service.properties configuration data
 	 */
-	public void registerModules(List<Module> modules, Configuration config);
+	public void registerModules(List<Module> modules, GuiceConfig config);
 
 	/**
 	 * Allows any post-creation actions to be taken

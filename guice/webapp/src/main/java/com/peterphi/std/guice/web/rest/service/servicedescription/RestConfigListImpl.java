@@ -2,18 +2,19 @@ package com.peterphi.std.guice.web.rest.service.servicedescription;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
-import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationProperty;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.io.PropertyFile;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.Map;
 
 @AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class RestConfigListImpl implements RestConfigList
@@ -27,33 +28,29 @@ public class RestConfigListImpl implements RestConfigList
 	GuiceCoreTemplater templater;
 
 	@Inject
-	Configuration serviceConfig;
+	GuiceConfig serviceConfig;
 
 	@Inject
 	ConfigurationPropertyRegistry configRegistry;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("restutils.show-serviceprops")
-	@Doc("If true, then the configuration data for the application will be available for remote inspection (default false). Should be disabled for live systems because this may leak password data.")
+	@Named(GuiceProperties.ALLOW_PROPERTIES_VIEW)
 	boolean showProperties = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("restutils.allow-reconfigure")
-	@Doc("If true, allow reconfiguration of service properties at runtime without authentication (default false). Should be disabled for live systems because this may leak password data.")
+	@Named(GuiceProperties.ALLOW_PROPERTIES_RECONFIGURE)
 	boolean allowReconfigure = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("restutils.show-bound-values")
-	@Doc("If true, the service configuration page will show the currently bound values of config fields across all Field binding sites if possible (default false)")
+	@Named(GuiceProperties.ALLOW_PROPERTIES_SHOWBOUNDVALUES)
 	boolean showBoundValues = false;
 
-	@Inject
-	@Named("overrides")
-	@Doc("The internal property for the override config data")
-	PropertiesConfiguration overrides;
+	@Inject(optional = true)
+	@Named(GuiceProperties.OVERRIDE_FILE_PROPERTY)
+	public String overridesFile;
 
 
 	@Override
@@ -105,15 +102,18 @@ public class RestConfigListImpl implements RestConfigList
 	@Override
 	public String save() throws IOException
 	{
-		try
+		if (overridesFile == null)
 		{
-			overrides.save();
+			return "No overrides file present, not saved to disk!";
+		}
+		else
+		{
+			final Map<String, String> overrides = serviceConfig.getOverrides();
+
+			PropertyFile propertyFile = new PropertyFile(overrides);
+			propertyFile.save(new File(overridesFile), null);
 
 			return "Save successful.";
-		}
-		catch (ConfigurationException e)
-		{
-			throw new IOException(e);
 		}
 	}
 }

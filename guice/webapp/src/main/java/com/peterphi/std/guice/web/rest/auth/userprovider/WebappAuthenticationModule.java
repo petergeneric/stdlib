@@ -10,10 +10,11 @@ import com.google.inject.name.Names;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
-import org.apache.commons.configuration.CompositeConfiguration;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 public class WebappAuthenticationModule extends AbstractModule
 {
@@ -23,7 +24,7 @@ public class WebappAuthenticationModule extends AbstractModule
 	public static final String ROLE_SPECIAL_AUTHENTICATED = "authenticated";
 
 	private final MetricRegistry metrics;
-	private final String[] providerNames;
+	private final List<String> providerNames;
 
 	private final String jwtHeader;
 	private final String jwtCookie;
@@ -33,16 +34,16 @@ public class WebappAuthenticationModule extends AbstractModule
 	private final boolean jwtRequireSecure;
 
 
-	public WebappAuthenticationModule(final MetricRegistry metrics, final String[] providerNames, CompositeConfiguration config)
+	public WebappAuthenticationModule(final MetricRegistry metrics, final List<String> providerNames, GuiceConfig config)
 	{
 		this.metrics = metrics;
 		this.providerNames = providerNames;
 
-		this.jwtSecret = config.getString(GuiceProperties.AUTH_JWT_SECRET, null);
-		this.jwtHeader = config.getString(GuiceProperties.AUTH_JWT_HTTP_HEADER, "X-JWT");
-		this.jwtCookie = config.getString(GuiceProperties.AUTH_JWT_HTTP_COOKIE, "X-JWT");
-		this.jwtIssuer = config.getString(GuiceProperties.AUTH_JWT_ISSUER, null);
-		this.jwtAudience = config.getString(GuiceProperties.AUTH_JWT_AUDIENCE, null);
+		this.jwtSecret = config.get(GuiceProperties.AUTH_JWT_SECRET, null);
+		this.jwtHeader = config.get(GuiceProperties.AUTH_JWT_HTTP_HEADER, "X-JWT");
+		this.jwtCookie = config.get(GuiceProperties.AUTH_JWT_HTTP_COOKIE, "X-JWT");
+		this.jwtIssuer = config.get(GuiceProperties.AUTH_JWT_ISSUER, null);
+		this.jwtAudience = config.get(GuiceProperties.AUTH_JWT_AUDIENCE, null);
 		this.jwtRequireSecure = config.getBoolean(GuiceProperties.AUTH_JWT_AUDIENCE, false);
 	}
 

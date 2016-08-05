@@ -11,11 +11,17 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
-import org.apache.commons.configuration.CompositeConfiguration;
-import org.apache.commons.configuration.Configuration;
-import org.apache.commons.configuration.ConfigurationException;
-import org.apache.commons.configuration.PropertiesConfiguration;
+import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
+import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
+import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
+import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import com.peterphi.std.io.PropertyFile;
+import com.peterphi.std.types.SimpleId;
+import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -37,7 +43,7 @@ class GuiceFactory
 
 	static Injector build(final GuiceRegistry registry,
 	                      ClassScannerFactory scannerFactory,
-	                      final List<Configuration> configs,
+	                      final List<PropertyFile> configs,
 	                      final List<GuiceRole> roles,
 	                      final GuiceSetup staticSetup,
 	                      final boolean autoLoadProperties,
@@ -68,38 +74,33 @@ class GuiceFactory
 			role.adjustConfigurations(configs);
 		}
 
+		GuiceConfig properties = new GuiceConfig();
+
+		for (PropertyFile config : configs)
+			properties.setAll(config);
+
 		// Load all the core property files?
 		if (autoLoadProperties)
 		{
-			// Create a temporary config (without any overrides) to use for loading other config files
-			CompositeConfiguration tempConfig = combine(null, configs);
-
-			configs.addAll(loadConfigs(classloader, tempConfig));
+			applyConfigs(classloader, properties);
 		}
-
-		// Combine all configurations together (assuming no overrides)
-		CompositeConfiguration config = combine(null, configs);
 
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
-		PropertiesConfiguration overrideFile = load(config.getString(GuiceProperties.OVERRIDE_FILE_PROPERTY));
+		PropertyFile overrideFile = load(properties.get(GuiceProperties.OVERRIDE_FILE_PROPERTY));
 
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
 			log.debug("Applying overrides: " + overrideFile.getFile());
-			config = combine(overrideFile, configs);
-		}
-		else
-		{
-			overrideFile = new PropertiesConfiguration();
+			properties.setOverrides(overrideFile.toMap());
 		}
 
 
 		// Set up the class scanner factory (if the scanner property is set and one has not been provided)
 		if (scannerFactory == null)
 		{
-			List<Object> packages = config.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList());
+			List<String> packages = properties.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList());
 
 			if (packages != null && !packages.isEmpty())
 				scannerFactory = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
@@ -111,7 +112,7 @@ class GuiceFactory
 		if (staticSetup == null)
 		{
 			// Load the Setup property and load the Setup class
-			final Class<? extends GuiceSetup> setupClass = getClass(config, GuiceSetup.class, GuiceProperties.SETUP_PROPERTY);
+			final Class<? extends GuiceSetup> setupClass = getClass(properties, GuiceSetup.class, GuiceProperties.SETUP_PROPERTY);
 
 			try
 			{
@@ -133,14 +134,13 @@ class GuiceFactory
 			setup = staticSetup;
 		}
 
-		return createInjector(registry, scannerFactory, config, overrideFile, setup, roles);
+		return createInjector(registry, scannerFactory, properties, setup, roles);
 	}
 
 
 	private static Injector createInjector(GuiceRegistry registry,
 	                                       ClassScannerFactory scannerFactory,
-	                                       CompositeConfiguration config,
-	                                       PropertiesConfiguration override,
+	                                       GuiceConfig config,
 	                                       GuiceSetup setup,
 	                                       List<GuiceRole> roles)
 	{
@@ -149,7 +149,7 @@ class GuiceFactory
 		AtomicReference<Injector> injectorRef = new AtomicReference<>();
 		List<Module> modules = new ArrayList<>();
 
-		final Stage stage = Stage.valueOf(config.getString(GuiceProperties.STAGE_PROPERTY, Stage.DEVELOPMENT.name()));
+		final Stage stage = Stage.valueOf(config.get(GuiceProperties.STAGE_PROPERTY, Stage.DEVELOPMENT.name()));
 
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
@@ -169,7 +169,7 @@ class GuiceFactory
 
 			// Initialise all the roles
 			for (GuiceRole role : roles)
-				role.register(stage, scannerFactory, config, override, setup, modules, injectorRef, metricRegistry);
+				role.register(stage, scannerFactory, config, setup, modules, injectorRef, metricRegistry);
 
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
@@ -180,19 +180,16 @@ class GuiceFactory
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
 			for (GuiceRole role : roles)
-				role.injectorCreated(stage, scannerFactory, config, override, setup, modules, injectorRef, metricRegistry);
+				role.injectorCreated(stage, scannerFactory, config, setup, modules, injectorRef, metricRegistry);
 
 			setup.injectorCreated(injector);
 
 			if (scannerFactory != null)
 			{
 				final long finished = System.currentTimeMillis();
-				final String contextName = config.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
+				final String contextName = config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
-				log.debug("Injector for " +
-				          contextName +
-				          " created in " +
-				          (finished - started) + " ms");
+				log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
 
 				if (scanner != null)
 					log.debug("Class scanner stats: insts=" +
@@ -216,16 +213,15 @@ class GuiceFactory
 	}
 
 
-	private static List<Configuration> loadConfigs(final ClassLoader classloader, final CompositeConfiguration tempConfig)
+	private static void applyConfigs(final ClassLoader classloader, final GuiceConfig config)
 	{
-		List<Configuration> configs = new ArrayList<>();
-
-		// Load all the configs
-		for (String configFile : getPropertyFiles(tempConfig))
+		// Load all the local configs
+		for (String configFile : getPropertyFiles(config))
 		{
 			try
 			{
-				configs.addAll(loadConfig(classloader, configFile));
+				for (PropertyFile properties : loadConfig(classloader, configFile))
+					config.setAll(properties);
 			}
 			catch (IOException e)
 			{
@@ -233,18 +229,65 @@ class GuiceFactory
 			}
 		}
 
-		return configs;
+		// Load the network config (if enabled)
+		try
+		{
+			applyNetworkConfiguration(config);
+		}
+		catch (Throwable t)
+		{
+			throw new RuntimeException("Failed to retrieve configuration from network!", t);
+		}
 	}
 
 
-	private static List<String> getPropertyFiles(final CompositeConfiguration tempConfig)
+	private static void applyNetworkConfiguration(final GuiceConfig config)
+	{
+		final String instanceId = SimpleId.alphanumeric(32);
+
+		if (config.get(GuiceProperties.CONFIG_ENDPOINT, null) != null)
+		{
+			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
+			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, jaxb);
+
+			try
+			{
+				final ResteasyProxyClientFactoryImpl proxyFactory = new ResteasyProxyClientFactoryImpl(clientFactory, config);
+
+				final ConfigRestService client = proxyFactory.getClient(ConfigRestService.class);
+
+				// Get the config path to read
+				final String path = config.get(GuiceProperties.CONFIG_PATH,
+				                               config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
+
+				final ConfigPropertyData data = client.read(path, instanceId, null);
+
+				for (ConfigPropertyValue property : data.properties)
+				{
+					config.set(property.name, property.value);
+				}
+
+				// Make the randomly generated instance id available
+				config.set(GuiceProperties.CONFIG_INSTANCE_ID, SimpleId.alphanumeric(32));
+			}
+			finally
+			{
+				clientFactory.shutdown();
+			}
+		}
+	}
+
+
+	private static List<String> getPropertyFiles(final GuiceConfig tempConfig)
 	{
 		final List<String> configFiles = new ArrayList<>();
 
 		configFiles.add("environment.properties");
 		configFiles.add("service.properties");
 
-		final String contextName = tempConfig.getString(GuiceProperties.SERVLET_CONTEXT_NAME, "").replaceAll("/", "");
+		final String contextName = tempConfig.get(GuiceProperties.SERVLET_CONTEXT_NAME, "").replaceAll("/", "");
+
 		if (!StringUtils.isEmpty(contextName))
 			configFiles.add("services/" + contextName + ".properties");
 
@@ -252,10 +295,10 @@ class GuiceFactory
 	}
 
 
-	static List<Configuration> loadConfig(final ClassLoader loader, String name) throws IOException
+	static List<PropertyFile> loadConfig(final ClassLoader loader, String name) throws IOException
 	{
 		log.trace("Search for config files with name: " + name);
-		final List<Configuration> configs = new ArrayList<>();
+		final List<PropertyFile> configs = new ArrayList<>();
 		final Enumeration<URL> urls = loader.getResources(name);
 
 		while (urls.hasMoreElements())
@@ -264,14 +307,7 @@ class GuiceFactory
 
 			log.debug("Loading property file: " + url);
 
-			try
-			{
-				configs.add(new PropertiesConfiguration(url));
-			}
-			catch (ConfigurationException e)
-			{
-				throw new IOException("Error loading config from " + url, e);
-			}
+			configs.add(new PropertyFile(url));
 		}
 
 		return configs;
@@ -279,9 +315,9 @@ class GuiceFactory
 
 
 	@SuppressWarnings("unchecked")
-	private static <T> Class<? extends T> getClass(final Configuration configuration, Class<T> base, final String property)
+	private static <T> Class<? extends T> getClass(final GuiceConfig configuration, Class<T> base, final String property)
 	{
-		final String prop = configuration.getString(property);
+		final String prop = configuration.get(property);
 
 		if (StringUtils.isEmpty(prop))
 			return null;
@@ -302,7 +338,7 @@ class GuiceFactory
 	}
 
 
-	private static PropertiesConfiguration load(String propertyFile)
+	private static PropertyFile load(String propertyFile)
 	{
 		if (propertyFile == null)
 			return null;
@@ -312,34 +348,18 @@ class GuiceFactory
 			final File file = new File(propertyFile);
 
 			if (file.exists())
-				return new PropertiesConfiguration(file);
+				return new PropertyFile(file);
 			else
 			{
-				// Empty configuration, allow it to be written again
-				PropertiesConfiguration prop = new PropertiesConfiguration();
+				PropertyFile props = new PropertyFile();
+				props.setFile(file);
 
-				prop.setFile(file);
-
-				return prop;
+				return props;
 			}
 		}
-		catch (ConfigurationException e)
+		catch (IOException e)
 		{
 			throw new IllegalArgumentException("Failed to load property file: " + propertyFile, e);
 		}
-	}
-
-
-	private static CompositeConfiguration combine(Configuration overrides, List<Configuration> configs)
-	{
-		final CompositeConfiguration config = new CompositeConfiguration();
-
-		if (overrides != null)
-			config.addConfiguration(overrides, true);
-
-		for (int i = configs.size() - 1; i >= 0; i--)
-			config.addConfiguration(configs.get(i));
-
-		return config;
 	}
 }

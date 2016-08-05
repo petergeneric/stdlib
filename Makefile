@@ -24,8 +24,12 @@ pwsample: sample
 	rm -rf /opt/tomcat/webapps/test{,.war}
 	rsync --partial guice/sample-rest-service/target/*.war /opt/tomcat/webapps/test.war
 
-sample:
-	$(MVN) clean package -DskipTests=true -am --projects guice/sample-rest-service
+sample: clean
+	$(MVN) package -DskipTests=true -am --projects guice/sample-rest-service
+
+config-service-full:
+	$(MVN) package -DskipTests=true -am --projects configuration/configuration
+	rsync -avzr --progress configuration/configuration/target/*.war /opt/tomcat/webapps/config.war
 
 #
 #
