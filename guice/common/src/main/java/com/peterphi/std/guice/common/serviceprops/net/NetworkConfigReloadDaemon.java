@@ -7,6 +7,7 @@ import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
@@ -27,6 +28,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 
 	@Inject
 	@Named(GuiceProperties.CONFIG_PATH)
+	@Reconfigurable
 	public String configPath;
 
 	@Inject(optional = true)
