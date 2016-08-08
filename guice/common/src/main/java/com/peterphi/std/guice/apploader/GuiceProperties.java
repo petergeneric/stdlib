@@ -32,10 +32,14 @@ public class GuiceProperties
 	//
 	// Configuration Service Properties
 	//
+	@Doc("The path to the network configuration service (default null)")
 	public static final String CONFIG_ENDPOINT = "service.config.endpoint";
 	@Doc("The config path to read. Defaults to: ${servlet.context-name}")
 	public static final String CONFIG_PATH = "service.config.path";
+	@Doc("The instance id assigned to this execution of the service (internal property, should not be set by user)")
 	public static final String CONFIG_INSTANCE_ID = "service.config.instance-id";
+	@Doc("The last config revision read from the network provider during the execution of this execution of the service (internal property, should not be set by user)")
+	public static final String CONFIG_REVISION = "service.config.last-revision";
 
 	//
 	// Guice Webapp Properties

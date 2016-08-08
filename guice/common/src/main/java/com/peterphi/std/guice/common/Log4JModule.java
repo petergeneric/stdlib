@@ -19,7 +19,9 @@ import org.apache.log4j.PropertyConfigurator;
  */
 public class Log4JModule extends AbstractModule
 {
-	private static Logger log = Logger.getLogger(Log4JModule.class);
+	private static final Logger log = Logger.getLogger(Log4JModule.class);
+
+	private static boolean allowAutoReconfigure = true;
 
 	private GuiceConfig guiceConfig;
 	private MetricRegistry registry;
@@ -44,7 +46,34 @@ public class Log4JModule extends AbstractModule
 	}
 
 
-	public static void reconfigure(final GuiceConfig guice)
+	public static void manualReconfigure(final GuiceConfig guice)
+	{
+		log.info("Manual reconfiguration of log4j.properties - disabling automatic reload!");
+		allowAutoReconfigure = false;
+		reconfigure(guice);
+	}
+
+
+	public static void autoReconfigure(final GuiceConfig guice)
+	{
+		if (allowAutoReconfigure)
+			reconfigure(guice);
+	}
+
+
+	public static void setAllowAutoReconfigure(final boolean value)
+	{
+		allowAutoReconfigure = value;
+	}
+
+
+	public static boolean getAllowAutoReconfigure()
+	{
+		return allowAutoReconfigure;
+	}
+
+
+	private static void reconfigure(final GuiceConfig guice)
 	{
 		final PropertyFile config = getProperties(guice);
 
@@ -100,8 +129,8 @@ public class Log4JModule extends AbstractModule
 		}
 		else
 		{
-			//wont actually happen but to guarrente there is a value for config later on
-			throw new RuntimeException("Unexpected logging configuration");
+			// Won't actually happen but to guarantee there is a value for config later on
+			throw new RuntimeException("log4j configuration is null!");
 		}
 	}
 }

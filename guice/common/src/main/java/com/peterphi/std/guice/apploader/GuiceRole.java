@@ -35,7 +35,7 @@ public interface GuiceRole
 	 * @param config
 	 * @param setup
 	 * @param modules
-	 * @param injectorRef
+	 * @param injectorRef a reference which will be updated to contain the Injector once the guice environment has been set up
 	 * @param metrics
 	 * 		the MetricsRegistry for environment-wide metrics
 	 */

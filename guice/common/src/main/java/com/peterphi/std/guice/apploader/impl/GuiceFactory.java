@@ -12,6 +12,7 @@ import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
 import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
@@ -85,6 +86,14 @@ class GuiceFactory
 			applyConfigs(classloader, properties);
 		}
 
+		// This is a bit of a hack really, but let's insert the GuiceRole for network config if network config is enabled
+		if (hasNetworkConfiguration(properties))
+		{
+			final NetworkConfigGuiceRole role = new NetworkConfigGuiceRole();
+
+			roles.add(role);
+		}
+
 		// Read the override configuration property to find the override config file
 		// Load the override config file and pass that along too.
 		PropertyFile overrideFile = load(properties.get(GuiceProperties.OVERRIDE_FILE_PROPERTY));
@@ -135,6 +144,12 @@ class GuiceFactory
 		}
 
 		return createInjector(registry, scannerFactory, properties, setup, roles);
+	}
+
+
+	private static boolean hasNetworkConfiguration(final GuiceConfig properties)
+	{
+		return properties.containsKey(GuiceProperties.CONFIG_INSTANCE_ID);
 	}
 
 
@@ -270,6 +285,9 @@ class GuiceFactory
 
 				// Make the randomly generated instance id available
 				config.set(GuiceProperties.CONFIG_INSTANCE_ID, SimpleId.alphanumeric(32));
+
+				if (data.revision != null)
+					config.set(GuiceProperties.CONFIG_REVISION, data.revision);
 			}
 			finally
 			{

@@ -79,7 +79,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 		// Modify the in-memory config to point at the user-specified properties file
 		config.set(GuiceProperties.LOG4J_PROPERTIES_FILE, properties);
 
-		Log4JModule.reconfigure(config);
+		Log4JModule.manualReconfigure(config);
 
 		// Now redirect back to the main logging page
 		return Response.seeOther(URI.create(restEndpoint.toString() + "/guice/logging")).build();

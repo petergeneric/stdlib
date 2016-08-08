@@ -80,7 +80,7 @@ public class GuiceConfig
 	}
 
 
-	public void set(String name, final String value)
+	public boolean set(String name, final String value)
 	{
 		if (name == null)
 			throw new IllegalArgumentException("Property name cannot be null!");
@@ -91,7 +91,15 @@ public class GuiceConfig
 
 		// Only replace the old value if it's different (so we don't change pointers unless needed)
 		if (!StringUtils.equals(oldValue, value))
+		{
 			properties.put(name, value);
+
+			return true; // value updated
+		}
+		else
+		{
+			return false; // not updated
+		}
 	}
 
 
