@@ -347,9 +347,14 @@ class GuiceFactory
 
 				final ConfigRestService client = proxyFactory.getClient(ConfigRestService.class);
 
+				// Set up the config path if it's not already defined
+				// We set it in the config because otherwise the NetworkConfigReloadDaemon won't be able to load the config
+				if (config.get(GuiceProperties.CONFIG_PATH) == null) {
+					config.set(GuiceProperties.CONFIG_PATH, config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
+				}
+
 				// Get the config path to read
-				final String path = config.get(GuiceProperties.CONFIG_PATH,
-				                               config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
+				final String path = config.get(GuiceProperties.CONFIG_PATH);
 
 				final ConfigPropertyData data = client.read(path, instanceId, null);
 
