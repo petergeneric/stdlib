@@ -34,6 +34,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -53,7 +54,8 @@ class GuiceFactory
 	 * <li>Load the override configuration file (if present)</li>
 	 * <li>Set up the classpath scanner (using property {@link GuiceProperties#SCAN_PACKAGES})</li>
 	 * <li>Instantiate the {@link GuiceSetup} class specified in {@link GuiceProperties#SETUP_PROPERTY}</li>
-	 * <li>Hand over the GuiceSetup, Roles, Configuration and Classpath Scanner to {@link #createInjector(GuiceRegistry, ClassScannerFactory, GuiceConfig, GuiceSetup, List)}</li>
+	 * <li>Hand over the GuiceSetup, Roles, Configuration and Classpath Scanner to {@link #createInjector(GuiceRegistry, *
+	 * ClassScannerFactory, GuiceConfig, GuiceSetup, List)}</li>
 	 * </ol>
 	 *
 	 * @param registry
@@ -84,7 +86,6 @@ class GuiceFactory
 	                      final boolean autoLoadRoles,
 	                      final ClassLoader classloader)
 	{
-
 		final ServiceLoader<GuiceRole> loader = ServiceLoader.load(GuiceRole.class);
 
 		// Find additional guice roles from jar files using the Service Provider Interface
@@ -100,6 +101,9 @@ class GuiceFactory
 				roles.add(role);
 			}
 		}
+
+		//  Make sure that the first most basic level of properties is the system environment variables
+		configs.add(0, getAllEnvironmentVariables());
 
 		// Allow all GuiceRole implementations to add/remove/reorder configuration sources
 		for (GuiceRole role : roles)
@@ -180,6 +184,19 @@ class GuiceFactory
 	}
 
 
+	private static PropertyFile getAllEnvironmentVariables()
+	{
+		PropertyFile props = new PropertyFile();
+
+		for (Map.Entry<String, String> entry : System.getenv().entrySet())
+		{
+			props.set(entry.getKey().toLowerCase(), entry.getValue());
+		}
+
+		return props;
+	}
+
+
 	private static boolean hasNetworkConfiguration(final GuiceConfig properties)
 	{
 		return properties.containsKey(GuiceProperties.CONFIG_INSTANCE_ID);
@@ -191,11 +208,11 @@ class GuiceFactory
 	 * <ol>
 	 * <li>Set up the Shutdown Manager</li>
 	 * <li>Set up the Metrics Registry</li>
-	 * <li>Call {@link GuiceRole#register(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference,
+	 * <li>Call {@link GuiceRole#register(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference, *
 	 * MetricRegistry)} on all GuiceRoles - this allows modules supporting core plugin functionality to be set up </li>
 	 * <li>Call {@link GuiceSetup#registerModules(List, GuiceConfig)} on GuiceSetup to get the application's guice modules - this
 	 * allows the application to set up helper modules</li>
-	 * <li>Call {@link GuiceRole#injectorCreated(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference,
+	 * <li>Call {@link GuiceRole#injectorCreated(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference, *
 	 * MetricRegistry)} on all GuiceRoles with the newly-created {@link Injector} - this allows plugins to do one-time
 	 * post-construction work that requires an Injector</li>
 	 * <li>Call {@link GuiceSetup#injectorCreated(Injector)} with the newly-created {@link Injector} - this allows the
@@ -349,7 +366,8 @@ class GuiceFactory
 
 				// Set up the config path if it's not already defined
 				// We set it in the config because otherwise the NetworkConfigReloadDaemon won't be able to load the config
-				if (config.get(GuiceProperties.CONFIG_PATH) == null) {
+				if (config.get(GuiceProperties.CONFIG_PATH) == null)
+				{
 					config.set(GuiceProperties.CONFIG_PATH, config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
 				}
 
