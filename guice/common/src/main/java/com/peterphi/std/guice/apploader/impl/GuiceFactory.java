@@ -42,6 +42,39 @@ class GuiceFactory
 	private static final Logger log = Logger.getLogger(GuiceFactory.class);
 
 
+	/**
+	 * Build a guice environment; this is achieved in the following stages:
+	 * <ol>
+	 * <li>Load GuiceRole implementations using {@link ServiceLoader} Service Provider Interface</li>
+	 * <li>Allow all GuiceRole instances to add/remove/change base configuration</li>
+	 * <li>Load configuration file resources (e.g. environment.properties)</li>
+	 * <li>Load network configuration (if enabled)</li>
+	 * <li>Add special GuiceRole for network configuration auto-reload (if network configuration enabled)</li>
+	 * <li>Load the override configuration file (if present)</li>
+	 * <li>Set up the classpath scanner (using property {@link GuiceProperties#SCAN_PACKAGES})</li>
+	 * <li>Instantiate the {@link GuiceSetup} class specified in {@link GuiceProperties#SETUP_PROPERTY}</li>
+	 * <li>Hand over the GuiceSetup, Roles, Configuration and Classpath Scanner to {@link #createInjector(GuiceRegistry, ClassScannerFactory, GuiceConfig, GuiceSetup, List)}</li>
+	 * </ol>
+	 *
+	 * @param registry
+	 * 		(optional) the GuiceRegistry to expose to the Guice environment
+	 * @param scannerFactory
+	 * 		(optional) classpath scanner to use
+	 * @param configs
+	 * 		base configurations to use
+	 * @param roles
+	 * 		base roles to use
+	 * @param staticSetup
+	 * 		(optional) a {@link GuiceSetup} implementation to use instead of loading the class name from a property
+	 * @param autoLoadProperties
+	 * 		if true, environment.properties etc. and network configuration will be loaded from disk
+	 * @param autoLoadRoles
+	 * 		if true, roles will be loaded using the Service Provider Interface
+	 * @param classloader
+	 * 		the classloader to use when loading environment.properties etc.
+	 *
+	 * @return
+	 */
 	static Injector build(final GuiceRegistry registry,
 	                      ClassScannerFactory scannerFactory,
 	                      final List<PropertyFile> configs,
@@ -153,6 +186,36 @@ class GuiceFactory
 	}
 
 
+	/**
+	 * Sets up a Guice Injector; this is achieved in the following stages:
+	 * <ol>
+	 * <li>Set up the Shutdown Manager</li>
+	 * <li>Set up the Metrics Registry</li>
+	 * <li>Call {@link GuiceRole#register(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference,
+	 * MetricRegistry)} on all GuiceRoles - this allows modules supporting core plugin functionality to be set up </li>
+	 * <li>Call {@link GuiceSetup#registerModules(List, GuiceConfig)} on GuiceSetup to get the application's guice modules - this
+	 * allows the application to set up helper modules</li>
+	 * <li>Call {@link GuiceRole#injectorCreated(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference,
+	 * MetricRegistry)} on all GuiceRoles with the newly-created {@link Injector} - this allows plugins to do one-time
+	 * post-construction work that requires an Injector</li>
+	 * <li>Call {@link GuiceSetup#injectorCreated(Injector)} with the newly-created {@link Injector} - this allows the
+	 * application
+	 * to do one-time post-construction work that requires an Injector</li>
+	 * </ol>
+	 *
+	 * @param registry
+	 * 		(optional) the {@link GuiceRegistry} to expose to the guice environment
+	 * @param scannerFactory
+	 * 		the classpath scanner
+	 * @param config
+	 * 		the system configuration
+	 * @param setup
+	 * 		the setup class
+	 * @param roles
+	 * 		guice roles to use
+	 *
+	 * @return
+	 */
 	private static Injector createInjector(GuiceRegistry registry,
 	                                       ClassScannerFactory scannerFactory,
 	                                       GuiceConfig config,
@@ -228,6 +291,12 @@ class GuiceFactory
 	}
 
 
+	/**
+	 * Discover and add to the configuration any properties on disk and on the network
+	 *
+	 * @param classloader
+	 * @param config
+	 */
 	private static void applyConfigs(final ClassLoader classloader, final GuiceConfig config)
 	{
 		// Load all the local configs
@@ -256,6 +325,12 @@ class GuiceFactory
 	}
 
 
+	/**
+	 * Add to the configuration any properties defined by the network configuration endpoint (if network config is enabled in a
+	 * previous property)
+	 *
+	 * @param config
+	 */
 	private static void applyNetworkConfiguration(final GuiceConfig config)
 	{
 		final String instanceId = SimpleId.alphanumeric(32);

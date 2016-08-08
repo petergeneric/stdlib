@@ -6,6 +6,7 @@ import com.peterphi.std.guice.apploader.BasicSetup;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
@@ -164,14 +165,14 @@ public class GuiceBuilder
 
 
 	/**
-	 * Instantiate the guice environment
+	 * Instantiate the guice environment. For information on what's involved in this process see {@link
+	 * GuiceFactory#build(GuiceRegistry, ClassScannerFactory, List, List, GuiceSetup, boolean, boolean, ClassLoader)} and {@link
+	 * GuiceFactory#createInjector(GuiceRegistry, ClassScannerFactory, GuiceConfig, GuiceSetup, List)}
 	 *
 	 * @return
 	 */
 	public Injector build()
 	{
-		System.out.println(this.configs);
-
 		// Create copies of the configurations and roles
 		List<PropertyFile> configs = new ArrayList<>(this.configs);
 		List<GuiceRole> roles = new ArrayList<>(this.roles);
