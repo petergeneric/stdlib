@@ -28,9 +28,7 @@ public class FreemarkerModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public FreemarkerTemplater createFreemarker(ServletContext context,
-	                                            FreemarkerURLHelper urlHelper,
-	                                            GuiceConfig configuration)
+	public FreemarkerTemplater createFreemarker(ServletContext context, FreemarkerURLHelper urlHelper, GuiceConfig configuration)
 	{
 		Configuration freemarker = new Configuration(FREEMARKER_COMPATIBILITY_VERSION);
 
@@ -48,9 +46,9 @@ public class FreemarkerModule extends AbstractModule
 
 	@Provides
 	@Singleton
-	public FreemarkerURLHelper createURLHelper(@Named("local.restservices.endpoint") URI restEndpoint,
-	                                           @Named("local.webapp.endpoint") URI webappEndpoint,
-	                                           @Named("local.restservices.prefix") String restPrefix,
+	public FreemarkerURLHelper createURLHelper(@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT) URI restEndpoint,
+	                                           @Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME) URI webappEndpoint,
+	                                           @Named(GuiceProperties.REST_SERVICES_PREFIX) String restPrefix,
 	                                           GuiceConfig configuration)
 	{
 		final boolean usePerRequestBuilder = configuration.getBoolean(GuiceProperties.USE_REQUEST_URL_FOR_FREEMARKER_URL_BUILDER,
