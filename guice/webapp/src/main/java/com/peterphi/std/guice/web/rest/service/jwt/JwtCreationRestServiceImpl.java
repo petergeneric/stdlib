@@ -13,6 +13,7 @@ import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
+import java.net.URI;
 import java.util.Map;
 
 /**
@@ -32,6 +33,12 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 	@Inject(optional = true)
 	@Named(GuiceProperties.AUTH_JWT_HTTP_COOKIE)
 	public String cookieName = GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_COOKIE_NAME;
+
+	/**
+	 * The URI for the webapp (for setting the JWT cookie path)
+	 */
+	@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME)
+	URI webappEndpoint;
 
 
 	@Override
@@ -58,7 +65,6 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 
 			expireTime = (Long) claims.get("exp");
 
-
 			JWTSigner signer = new JWTSigner(secret);
 
 			token = signer.sign(claims);
@@ -74,8 +80,14 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 		// Optionally save as a cookie
 		if (save)
 		{
-
 			Cookie cookie = new Cookie(cookieName, token);
+
+			// Set the cookie path based on the webapp endpoint path
+			cookie.setPath(webappEndpoint.getPath());
+
+			// If the webapp has an https endpoint (or if we were accessed by HTTPS) then set the cookie as a secure cookie
+			cookie.setSecure(HttpCallContext.get().getRequest().isSecure() ||
+			                 StringUtils.equalsIgnoreCase("https", webappEndpoint.getScheme()));
 
 			// Expire the cookie 1 minute before the token expires
 			if (expireTime != null)
