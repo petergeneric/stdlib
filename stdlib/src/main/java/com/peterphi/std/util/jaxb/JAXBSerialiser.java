@@ -227,7 +227,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("Error creating marshaller", e);
+			throw new JAXBRuntimeException("create marshaller",e);
 		}
 	}
 
@@ -273,7 +273,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("Error creating unmarshaller", e);
+			throw new JAXBRuntimeException("create unmarshaller",e);
 		}
 	}
 
@@ -393,10 +393,9 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("Deserialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("deserialisation",e);
 		}
 	}
-
 
 	public Object deserialise(final InputSource source)
 	{
@@ -410,13 +409,13 @@ public class JAXBSerialiser
 			final Object obj = unmarshaller.unmarshal(source);
 
 			if (obj == null)
-				throw new RuntimeException("Malformed XML!");
+				throw new RuntimeException("Malformed XML! JAXB returned null");
 			else
 				return obj;
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("Deserialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("deserialisation",e);
 		}
 	}
 
@@ -446,7 +445,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("Deserialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("deserialisation",e);
 		}
 	}
 
@@ -487,7 +486,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("serialisation",e);
 		}
 	}
 
@@ -502,7 +501,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("serialisation",e);
 		}
 	}
 
@@ -517,7 +516,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("serialisation",e);
 		}
 	}
 
@@ -532,7 +531,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("serialisation",e);
 		}
 	}
 
@@ -558,7 +557,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation failed: " + e.getMessage(), e);
+			throw new JAXBRuntimeException("serialisation",e);
 		}
 	}
 

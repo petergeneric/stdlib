@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.serviceprops.jaxbref;
 
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
+import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
@@ -120,5 +121,22 @@ public class JAXBResourceFactoryTest
 		JAXBResourceFactory factory = new JAXBResourceFactory(config, SERIALISER_FACTORY);
 
 		assertEquals(expected, factory.get(MyType.class, "some.xml"));
+	}
+
+
+	/**
+	 * This will almost certainly be translated into a File resource
+	 *
+	 * @throws Exception
+	 */
+	@Test(expected = JAXBRuntimeException.class)
+	public void testCorruptResource() throws Exception
+	{
+		GuiceConfig config = new GuiceConfig();
+		config.set("some.xml", "/jaxb-resource-factory/invalid.xml");
+
+		JAXBResourceFactory factory = new JAXBResourceFactory(config, SERIALISER_FACTORY);
+
+		factory.get(MyType.class, "some.xml");
 	}
 }
