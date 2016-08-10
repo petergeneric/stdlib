@@ -1,0 +1,81 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<!--/*@thymesVar id="entity" type="com.peterphi.usermanager.db.entity.RoleEntity"*/-->
+<!--/*@thymesVar id="users" type="java.util.List<com.peterphi.usermanager.db.entity.UserEntity>"*/-->
+<head>
+	<title th:text="'User Manager: Service '+${entity.name}">User Manager: Service XYZ</title>
+	<link th:substituteby="includes :: htmlhead"/>
+	<link th:substituteby="includes :: htmlhead_chosen"/>
+</head>
+<body>
+<span th:substituteby="includes :: navbar"></span>
+<div class="container">
+	<h1 th:text="${entity.name}"></h1>
+
+	<ul class="nav nav-pills">
+		<li><a href="#delModal" data-toggle="modal">Delete</a></li>
+	</ul>
+
+	<!-- Delete modal -->
+	<form id="delModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+	      aria-labelledby="delModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+	      th:action="@{'/service/' + ${entity.id} + '/disable'}">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="delModalLabel">Disable Service?</h3>
+		</div>
+		<div class="modal-body">
+			<p>Are you absolutely sure you want to disable the service <span th:text="${entity.id}"/> (<span
+					th:text="${entity.name}"/>)?
+			</p>
+			<input type="hidden" name="alter" value="delete"/>
+			<input type="hidden" name="id" th:value="${entity.id}"/>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			<input class="btn btn-primary" type="submit" value="Delete"/>
+		</div>
+	</form>
+
+	<dl class="dl-horizontal" th:fragment="properties">
+		<dt>client_id</dt>
+		<dd th:text="${entity.id}">id</dd>
+		<dt>name</dt>
+		<dd th:text="${entity.name}">name</dd>
+		<dt>owner</dt>
+		<dd th:text="${entity.owner.email}">owner</dd>
+		<dt>enabled</dt>
+		<dd th:text="${entity.enabled}">enabled</dd>
+		<dt>Endpoint Prefixes</dt>
+		<dd>
+			<ul>
+				<li th:each="endpoint: ${entity.endpointsAsList()}" th:text="${endpoint}">endpoint</li>
+			</ul>
+		</dd>
+		<th:block th:if="${entity.owner.id} == ${session.login.id}">
+			<dt>Client Config</dt>
+			<dd>
+				<pre><th:block th:text="'service.oauth2.endpoint='+${localEndpoint}"></th:block>
+<th:block th:text="'service.oauth2.client_id='+${entity.id}"></th:block>
+<th:block th:text="'service.oauth2.client_secret='+${entity.clientSecret}"></th:block>
+				</pre>
+			</dd>
+		</th:block>
+	</dl>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

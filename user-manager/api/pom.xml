@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
-	
+
 	<artifactId>user-manager-api</artifactId>
 	<packaging>jar</packaging>
 
@@ -25,13 +25,11 @@
 			<artifactId>stdlib-guice-common</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
 		<dependency>
-			<groupId>com.peterphi.std.guice</groupId>
-			<artifactId>stdlib-guice-webapp</artifactId>
-			<version>${project.version}</version>
+			<groupId>org.jboss.resteasy</groupId>
+			<artifactId>resteasy-jaxrs</artifactId>
+			<version>${resteasy.version}</version>
 		</dependency>
-
 
 		<!-- JUnit -->
 		<dependency>

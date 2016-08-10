@@ -98,4 +98,112 @@
 			<column name="caption" value="Application Framework User (for service /guice pages)"/>
 		</insert>
 	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="create_oauth_tables">
+		<createTable tableName="oauth_service">
+			<column name="id" type="VARCHAR(36)">
+				<constraints primaryKey="true" primaryKeyName="PK__oauth_service"/>
+			</column>
+			<column name="owner_id" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="client_name" type="VARCHAR(1000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="client_endpoints" type="VARCHAR(2000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="client_secret" type="VARCHAR(36)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="is_enabled" type="BIT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<createTable tableName="oauth_session_context">
+			<column name="id" type="INT" autoIncrement="true">
+				<constraints primaryKey="true" primaryKeyName="PK__oauth_session_context"/>
+			</column>
+			<column name="user_id" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="service_id" type="VARCHAR(36)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="approved_scope" type="VARCHAR(1000)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="is_active" type="BIT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<createTable tableName="oauth_session">
+			<column name="id" type="VARCHAR(36)">
+				<constraints primaryKey="true" primaryKeyName="PK__oauth_session"/>
+			</column>
+			<column name="context_id" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="authorisation_code" type="VARCHAR(36)">
+				<constraints nullable="true"/>
+			</column>
+			<column name="current_token" type="VARCHAR(36)">
+				<constraints nullable="true"/>
+			</column>
+			<column name="initiator_detail" type="VARCHAR(8192)">
+				<constraints nullable="true"/>
+			</column>
+			<column name="is_active" type="BIT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="expires_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="create_oauth_constraints">
+		<!-- service.owner_id -->
+		<addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="oauth_service"
+		                         constraintName="FK__oauth_service__user_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="user_account"/>
+		<!-- session_context.service_id -->
+		<addForeignKeyConstraint baseColumnNames="service_id" baseTableName="oauth_session_context"
+		                         constraintName="FK__oauth_session_context__service_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="oauth_service"/>
+		<!-- session_context.user_id -->
+		<addForeignKeyConstraint baseColumnNames="user_id" baseTableName="oauth_session_context"
+		                         constraintName="FK__oauth_session_context__user_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="user_account"/>
+		<!-- session.context_id -->
+		<addForeignKeyConstraint baseColumnNames="context_id" baseTableName="oauth_session"
+		                         constraintName="FK__oauth_session__context_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="oauth_session_context"/>
+
+	</changeSet>
 </databaseChangeLog>

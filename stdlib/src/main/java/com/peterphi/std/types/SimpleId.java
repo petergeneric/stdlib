@@ -53,6 +53,7 @@ public final class SimpleId extends Id implements Serializable
 	                                      'y',
 	                                      'z'};
 
+
 	/**
 	 * @param id
 	 */
@@ -61,10 +62,12 @@ public final class SimpleId extends Id implements Serializable
 		super(id);
 	}
 
+
 	public SimpleId(final UUID id)
 	{
 		this(id.toString());
 	}
+
 
 	/**
 	 * Return an Id which uses 32 random alphanumeric characters as its value
@@ -75,6 +78,7 @@ public final class SimpleId extends Id implements Serializable
 	{
 		return new SimpleId(alphanumeric(32));
 	}
+
 
 	/**
 	 * Generates a random sequence of alphanumeric characters of length <code>length</code> using a new pseudorandom number
@@ -91,6 +95,30 @@ public final class SimpleId extends Id implements Serializable
 
 		return alphanumeric(random, length);
 	}
+
+
+	/**
+	 * Generates a random sequence of alphanumeric characters, prefixed by <code>prefix</code> such that the total string is of
+	 * length <code>totalLength</code> using a new pseudorandom number
+	 * generator (<code>new Random()</code>)
+	 *
+	 * @param totalLength
+	 * 		the length of the string to return (must be > the prefix length)
+	 *
+	 * @return a String of length <code>length</code>
+	 */
+	public final static String alphanumeric(final String prefix, final int totalLength)
+	{
+		if (prefix.length() >= totalLength)
+			throw new IllegalArgumentException("Cannot generate id of length " +
+			                                   totalLength +
+			                                   ", prefix " +
+			                                   prefix +
+			                                   " takes up that length!");
+
+		return prefix + alphanumeric(totalLength - prefix.length());
+	}
+
 
 	/**
 	 * Generates a random sequence of alphanumeric characters of length <code>length</code> using the provided random number

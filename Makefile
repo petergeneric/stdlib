@@ -31,6 +31,10 @@ config-service-full:
 	$(MVN) package -DskipTests=true -am --projects configuration/configuration
 	rsync -avzr --progress configuration/configuration/target/*.war /opt/tomcat/webapps/config.war
 
+uman:
+	$(MVN) package -DskipTests=true -am --projects user-manager/service
+	rsync -avzr --progress user-manager/service/target/*.war /opt/tomcat/webapps/user-manager.war
+
 #
 #
 # Standard Maven targets

@@ -1,0 +1,122 @@
+package com.peterphi.usermanager.db.entity;
+
+import org.joda.time.DateTime;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.FetchType;
+import javax.persistence.GeneratedValue;
+import javax.persistence.Id;
+import javax.persistence.JoinColumn;
+import javax.persistence.ManyToOne;
+import javax.persistence.Version;
+
+/**
+ * Indicates a user has used a Service with a given Scope (and allows a user to revoke access to a Service at any time)
+ */
+@Entity(name = "oauth_session_context")
+public class OAuthSessionContextEntity
+{
+	private Integer id;
+	private UserEntity user;
+	private OAuthServiceEntity service;
+	private String scope;
+	private boolean active = true;
+	private DateTime created = new DateTime();
+	private DateTime updated = new DateTime();
+
+
+	@Id
+	@GeneratedValue
+	public Integer getId()
+	{
+		return id;
+	}
+
+
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "user_id", nullable = false)
+	public UserEntity getUser()
+	{
+		return user;
+	}
+
+
+	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@JoinColumn(name = "service_id", nullable = false)
+	public OAuthServiceEntity getService()
+	{
+		return service;
+	}
+
+
+	@Column(name = "approved_scope", length = 1000, nullable = false)
+	public String getScope()
+	{
+		return scope;
+	}
+
+
+	@Column(name = "is_active", nullable = false)
+	public boolean isActive()
+	{
+		return active;
+	}
+
+
+	@Column(name = "created_ts", nullable = false)
+	public DateTime getCreated()
+	{
+		return created;
+	}
+
+
+	@Version
+	@Column(name = "updated_ts", nullable = false)
+	public DateTime getUpdated()
+	{
+		return updated;
+	}
+
+
+	public void setId(final Integer id)
+	{
+		this.id = id;
+	}
+
+
+	public void setUser(final UserEntity user)
+	{
+		this.user = user;
+	}
+
+
+	public void setService(final OAuthServiceEntity service)
+	{
+		this.service = service;
+	}
+
+
+	public void setScope(final String scope)
+	{
+		this.scope = scope;
+	}
+
+
+	public void setActive(final boolean active)
+	{
+		this.active = active;
+	}
+
+
+	public void setCreated(final DateTime created)
+	{
+		this.created = created;
+	}
+
+
+	public void setUpdated(final DateTime updated)
+	{
+		this.updated = updated;
+	}
+}

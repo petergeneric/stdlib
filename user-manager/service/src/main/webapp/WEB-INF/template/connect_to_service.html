@@ -1,0 +1,76 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+	<title>User Manager: Log in to remote service</title>
+	<link th:substituteby="includes :: htmlhead"/>
+</head>
+<body>
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+	<h2>An application would like to connect to your account</h2>
+
+	<div class="lead">
+		<p>The application <strong th:text="${client.name}"></strong> would like the ability to access your basic information</p>
+		<th:block th:if="${scopes}"> and the following additional data:
+			<ul>
+				<li th:each="scope: ${scopes}" th:text="${scope}"></li>
+			</ul>
+		</th:block>
+
+		<p>Allow the application access?</p>
+
+		<form method="POST">
+			<input type="hidden" name="nonce" th:value="${nonce}" />
+			<input type="hidden" name="response_type" th:value="${responseType}" />
+			<input type="hidden" name="scope" th:value="${scope}" />
+			<input type="hidden" name="client_id" th:value="${clientId}" />
+			<input type="hidden" name="redirect_uri" th:value="${redirectUri}" />
+
+			<a class="btn btn-large" th:href="@{/}">Deny</a> &nbsp; <input type="submit" class="btn btn-primary btn-large"
+			                                                               name="Allow">
+		</form>
+	</div>
+
+	<
+	<ul class="nav nav-pills">
+		<li><a th:href="@{/register}" data-toggle="modal">Add User</a></li>
+	</ul>
+
+	<table id="typeTable" class="table table-striped" th:fragment="table">
+		<thead>
+		<tr>
+			<th>Id</th>
+			<th>Name</th>
+			<th>E-Mail Address</th>
+			<th>Created</th>
+			<th>Last Login</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="user: ${users}">
+			<td><a th:href="@{'/user/' + ${user.id}}" th:text="${user.id}">Id</a></td>
+			<td th:text="${user.name}">Name</td>
+			<td th:text="${user.email}">email@domain.com</td>
+			<td th:text="${session.login.format(user.created)}">Created</td>
+			<td th:text="${session.login.format(user.lastLogin)}">Last login</td>
+		</tr>
+		</tbody>
+	</table>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>
