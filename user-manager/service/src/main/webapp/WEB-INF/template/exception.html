@@ -1,0 +1,34 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+    <title>User Manager - Failure</title>
+    <link th:substituteby="includes :: htmlhead" />
+</head>
+<body th:with="page='home'">
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+    <h1>Error</h1>
+    <span th:text="${failure.exception.detail}" />
+
+    <hr />
+
+    <h3>Technical Detail</h3>
+    <p>
+        The following technical information may be of help to diagnose the underlying issue:<br />
+        <code th:text="${failure.exception.className}" /> thrown on <code th:text="${failure.date}" /> with id <code th:text="${failure.id}" /> and error code <code th:text="${failure.errorCode}" /> returning HTTP Code <code th:text="${failure.httpCode}" />.
+    </p>
+
+
+    <footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

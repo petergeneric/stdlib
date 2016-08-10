@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	
+	<artifactId>user-manager-api</artifactId>
+	<packaging>jar</packaging>
+
+	<name>user manager rest api</name>
+	<description>user manager rest api</description>
+
+	<parent>
+		<groupId>com.peterphi.user-manager</groupId>
+		<artifactId>user-manager-parent</artifactId>
+		<version>9.0.2-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>com.peterphi.std</groupId>
+			<artifactId>stdlib</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-common</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+		<dependency>
+			<groupId>com.peterphi.std.guice</groupId>
+			<artifactId>stdlib-guice-webapp</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+
+
+		<!-- JUnit -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+</project>

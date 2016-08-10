@@ -1,0 +1,35 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+	<title>User Manager</title>
+	<link th:substituteby="includes :: htmlhead"/>
+</head>
+<body th:with="page='home'">
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+	<div class="hero-unit">
+		<h1>User Manager</h1>
+
+
+		<p>
+			<a class="btn btn-primary btn-large"
+			   th:href="@{/users}">User List &raquo;</a>
+		</p>
+	</div>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

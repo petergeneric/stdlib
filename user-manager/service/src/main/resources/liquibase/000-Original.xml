@@ -1,0 +1,101 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.3.xsd">
+	<!-- Add the hibernate_sequence on supported databases (for dbs where autoIncrement doesn't work) -->
+	<changeSet author="peter@peterphi.com" id="pk_sequence_on_supported_dbs">
+		<preConditions onFail="MARK_RAN">
+			<or>
+				<dbms type="postgresql"/>
+				<dbms type="oracle"/>
+				<dbms type="hsqldb"/>
+				<dbms type="h2"/>
+				<dbms type="db2"/>
+			</or>
+		</preConditions>
+		<createSequence sequenceName="hibernate_sequence"/>
+	</changeSet>
+
+	<!-- Set up all the core tables and foreign key constraints -->
+	<changeSet author="peter@peterphi.com" id="create_user_account">
+		<createTable tableName="user_account">
+			<column autoIncrement="true" name="id" type="INT">
+				<constraints primaryKey="true" primaryKeyName="PK__user_account"/>
+			</column>
+			<column name="email" type="VARCHAR(200)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="password" type="VARCHAR(60)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="name" type="VARCHAR(100)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="local_session_id" type="VARCHAR(36)"/>
+			<column name="date_format" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="date_timezone" type="VARCHAR(50)">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="last_login_ts" type="BIGINT"/>
+		</createTable>
+
+		<addUniqueConstraint tableName="user_account" columnNames="email" constraintName="UX_user_account__email"
+		                     deferrable="false" disabled="false" initiallyDeferred="false"/>
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_role_definition_table">
+		<!-- Defines a role -->
+		<createTable tableName="role_definition">
+			<column name="id" type="VARCHAR(255)">
+				<constraints primaryKey="true" primaryKeyName="PK__role_definition"/>
+			</column>
+			<column name="caption" type="VARCHAR(1024)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<!-- joins user and role -->
+		<createTable tableName="user_has_role">
+			<column name="user_id" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="role_id" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint baseColumnNames="user_id" baseTableName="user_has_role"
+		                         constraintName="FK__user_has_role__user_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="user_account"/>
+		<addForeignKeyConstraint baseColumnNames="role_id" baseTableName="user_has_role"
+		                         constraintName="FK__user_has_role__role_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="role_definition"/>
+
+		<addPrimaryKey tableName="user_has_role" columnNames="user_id, role_id"
+		               constraintName="PK__user_has_role"/>
+
+		<insert tableName="role_definition">
+			<column name="id" value="user-manager-admin"/>
+			<column name="caption" value="User Administrator"/>
+		</insert>
+		<insert tableName="role_definition">
+			<column name="id" value="admin"/>
+			<column name="caption" value="Administrator"/>
+		</insert>
+		<insert tableName="role_definition">
+			<column name="id" value="framework-admin"/>
+			<column name="caption" value="Application Framework Administrator (for service /guice pages)"/>
+		</insert>
+		<insert tableName="role_definition">
+			<column name="id" value="framework-info"/>
+			<column name="caption" value="Application Framework User (for service /guice pages)"/>
+		</insert>
+	</changeSet>
+</databaseChangeLog>

@@ -1,0 +1,199 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+	<title>User Manager: Edit User</title>
+	<link th:substituteby="includes :: htmlhead" />
+	<link th:substituteby="includes :: htmlhead_chosen"/>
+</head>
+<body>
+<span th:substituteby="includes :: navbar"></span>
+<!--/*@thymesVar id="user" type="com.peterphi.usermanager.db.entity.UserEntity"*/-->
+<!--/*@thymesVar id="timezones" type="java.util.List<java.lang.String>"*/-->
+<!--/*@thymesVar id="roles" type="java.util.List<com.peterphi.usermanager.db.entity.RoleEntity>"*/-->
+<div class="container">
+	<h1 th:text="${user.email}"></h1>
+
+	<ul class="nav nav-pills">
+		<li><a href="#chpassModal" data-toggle="modal">Change Password</a></li>
+		<li><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
+	</ul>
+
+	<!-- Change password modal -->
+	<form id="chpassModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="chpassModalLabel" aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/user/' + ${user.id} + '/change_password'}">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="chpassModalLabel">Change Password</h3>
+		</div>
+		<div class="modal-body">
+			<p>Please enter a new password</p>
+			<input type="hidden" name="alter" value="password" />
+			<input type="hidden" name="email" th:value="${user.email}" />
+
+			<!-- password -->
+			<div class="control-group">
+				<label class="control-label" for="input_password">New Password</label>
+
+				<div class="controls">
+					<input
+							type="password"
+							id="input_password"
+							name="password" value="" />
+				</div>
+			</div>
+			<!-- password (confirm) -->
+			<div class="control-group">
+				<label class="control-label" for="input_passwordConfirm">New Password (again)</label>
+
+				<div class="controls">
+					<input
+							type="password"
+							id="input_passwordConfirm"
+							name="passwordConfirm"
+							value=""/>
+
+					<!-- Help / Warning text -->
+					<span class="help-inline"></span>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			<input class="btn btn-primary" type="submit" value="Change" />
+		</div>
+	</form>
+
+	<!-- Delete user modal -->
+	<form id="deluserModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="deluserModalLabel" aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/user/' + ${user.id} + '/delete'}">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="deluserModalLabel">Delete User?</h3>
+		</div>
+		<div class="modal-body">
+			<p>Are you absolutely sure you want to delete user <span th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;?</p>
+			<input type="hidden" name="alter" value="delete" />
+			<input type="hidden" name="id" th:value="${user.id}" />
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			<input class="btn btn-primary" type="submit" value="Delete User" />
+		</div>
+	</form>
+
+	<form class="form-horizontal" method="POST">
+		<input type="hidden" name="alter" value="profile" />
+
+		<!-- id -->
+		<div class="control-group">
+			<label class="control-label" for="view_id">id</label>
+
+			<div class="controls">
+				<input type="text" disabled="disabled" id="view_id" th:value="${user.id}" />
+			</div>
+		</div>
+
+		<!-- lastLogin -->
+		<div class="control-group">
+			<label class="control-label" for="view_lastLogin">last login</label>
+
+			<div class="controls">
+				<input type="text" disabled="disabled" id="view_lastLogin" th:value="${session.login.format(user.lastLogin)}" />
+			</div>
+		</div>
+
+		<!-- name -->
+		<div class="control-group">
+			<label class="control-label" for="input_name">name</label>
+
+			<div class="controls">
+				<input
+						type="text"
+						id="input_name"
+						name="name"
+						placeholder=""
+						th:value="${user.name}"/>
+
+				<!-- Help / Warning text -->
+				<span class="help-inline"></span>
+			</div>
+		</div>
+
+		<!-- email -->
+		<div class="control-group">
+			<label class="control-label" for="input_email">email</label>
+
+			<div class="controls">
+				<input
+						type="text"
+						id="input_email"
+						name="email"
+						placeholder=""
+						th:value="${user.email}"/>
+
+				<!-- Help / Warning text -->
+				<span class="help-inline"></span>
+			</div>
+		</div>
+
+		<!-- dateFormat -->
+		<div class="control-group">
+			<label class="control-label" for="input_dateFormat">Date Format</label>
+
+			<div class="controls">
+				<select id="input_dateFormat" name="dateFormat" class="chosen-select">
+					<option th:each="aFormat: ${dateformats}"
+					        th:selected="${aFormat} == ${user.dateFormat}"
+					        th:value="${aFormat}"
+					        th:text="${aFormat}">Zone</option>
+				</select>
+
+
+				<!-- Help / Warning text -->
+				<span class="help-inline"></span>
+			</div>
+		</div>
+
+		<!-- timeZone -->
+		<div class="control-group">
+			<label class="control-label" for="input_timeZone">Time Zone</label>
+
+			<div class="controls">
+				<select id="input_timeZone" name="timeZone" class="chosen-select">
+					<option th:each="aZone: ${timezones}"
+					        th:selected="${aZone} == ${user.timeZone}"
+					        th:value="${aZone}"
+					        th:text="${aZone}">Zone</option>
+				</select>
+
+
+				<!-- Help / Warning text -->
+				<span class="help-inline"></span>
+			</div>
+		</div>
+
+		<script>
+			$(document).ready(function() {
+				$(".chosen-select").chosen({width:'auto'});
+			});
+		</script>
+
+		<div class="control-group">
+			<div class="controls">
+				<button type="submit" class="btn btn-primary">Update</button>
+				<button type="reset" class="btn">Reset</button>
+			</div>
+		</div>
+	</form>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

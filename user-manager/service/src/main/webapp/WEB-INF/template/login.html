@@ -1,0 +1,53 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+    <title>User Manager: Login</title>
+    <link th:substituteby="includes :: htmlhead"/>
+</head>
+<body th:with="page='login'">
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+    <h1>Login</h1>
+
+    <div class="alert alert-error" th:if="${errorText}">
+        <button type="button" class="close" data-dismiss="alert">&times;</button>
+        <h4>Warning</h4><span th:text="${errorText}"></span>
+    </div>
+
+    <form class="form-horizontal" method="POST" th:action="@{/login}">
+        <input th:if="${returnTo}" type="hidden" name="returnTo" th:value="${returnTo}"/>
+
+        <div class="control-group">
+            <label class="control-label">E-mail:</label>
+
+            <div class="controls">
+                <input type="text" name="email"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <label class="control-label">Password:</label>
+
+            <div class="controls">
+                <input type="password" name="password"/>
+            </div>
+        </div>
+        <div class="control-group">
+            <div class="controls">
+                <button type="submit" class="btn">Login</button>
+                <br/><br />
+                Don't have an account? <a th:href="@{/register}">Register</a>
+            </div>
+        </div>
+    </form>
+    <footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

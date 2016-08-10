@@ -10,17 +10,6 @@
 	<name>application framework guice modules parent</name>
 	<description>Application Framework Guice Modules (Parent Package)</description>
 
-	<properties>
-		<guice.version>3.2.6</guice.version>
-<!--		<guice.version>4.1.0</guice.version> -->
-		<metrics.version>3.0.2</metrics.version>
-		<resteasy.version>3.0.18.Final</resteasy.version>
-		<javassist.version>3.19.0-GA</javassist.version>
-		<hibernate.version>4.3.8.Final</hibernate.version>
-		<dbunit.version>2.5.1</dbunit.version>
-		<hsqldb.version>2.3.2</hsqldb.version>
-	</properties>
-
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>

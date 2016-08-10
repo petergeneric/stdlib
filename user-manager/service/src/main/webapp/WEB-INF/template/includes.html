@@ -1,0 +1,78 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd"> 
+<html xmlns:th="http://www.thymeleaf.org">
+    <head>
+		<meta th:fragment="htmlhead" charset="utf-8" />
+		<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
+		<meta th:fragment="htmlhead" name="description" content="" />
+		<meta th:fragment="htmlhead" name="viewport" content="width=device-width" />
+		<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" />
+		<style th:fragment="htmlhead" >
+            body {
+                padding-top: 60px;
+                padding-bottom: 40px;
+            }
+		</style>
+		<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap-responsive.min.css}" />
+		<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/css/main.css}" />
+		<script th:fragment="htmlhead" th:src="@{/vendor/modernizr/modernizr-2.6.1-respond-1.1.0.min.js}"></script>
+	    <script th:fragment="htmlhead" th:src="@{/vendor/jquery/jquery-1.8.2.min.js}"></script>
+
+	    <link th:fragment="htmlhead_chosen" rel="stylesheet" th:href="@{/vendor/chosen-1.6.2/chosen.min.css}" />
+	    <script th:fragment="htmlhead_chosen" th:src="@{/vendor/chosen-1.6.2/chosen.jquery.min.js}"></script>
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an old browser. <a href="http://browsehappy.com/">Upgrade your browser today</a> or <a href="http://www.google.com/chromeframe/?redirect=true">install Google Chrome Frame</a> to better experience this site.</p>
+        <![endif]-->
+
+        <!--@thymesVar id="page" type="java.lang.String"-->
+
+        <div th:fragment="navbar" class="navbar navbar-inverse navbar-fixed-top">
+            <div class="navbar-inner">
+                <div class="container">
+                    <a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                        <span class="icon-bar"></span>
+                    </a>
+                    <a class="brand" th:href="@{/}">User Manager</a>
+                    <div class="nav-collapse collapse">
+                        <ul class="nav">
+                            <li th:class="(${page} == 'home') ? 'active'"><a th:href="@{/}">Home</a></li>
+	                        <li th:class="(${page} == 'users') ? 'active'"><a th:href="@{/users}">Users</a></li>
+	                        <li th:class="(${page} == 'users') ? 'active'"><a th:href="@{/roles}">Roles</a></li>
+                            <li th:class="(${page} == 'register') ? 'active'"><a th:href="@{/register}">New user</a></li>
+                        </ul>
+                    </div><!--/.nav-collapse -->
+
+					<div th:if="${session.login.isLoggedIn()}" class="btn-group navbar-text pull-right" id="whoamidropdown">
+					  <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-user icon-white"></i> <span th:text="${session.login.name}">user</span> <span class="caret"></span></a>
+					  <ul class="dropdown-menu">
+						<li><a th:href="@{'/user/'+${session.login.id}}"><i class="icon-edit"></i> Edit Profile</a></li>
+						<li class="divider"></li>
+						<li><a th:href="@{/logout}"><i class="i"></i> Logout</a></li>
+					  </ul>
+					</div>
+                    <form th:if="${session.login.isLoggedIn() == false and page != 'login' and page != 'register'}" class="navbar-form pull-right" method="POST" th:action="@{/login}">
+                        <input type="hidden" name="returnTo" th:value="${#httpServletRequest.requestURL + ((#httpServletRequest.queryString) ? ('?' + #httpServletRequest.queryString) : '')}" />
+                        <input class="span2" type="text" name="email" placeholder="Email" />
+                        <input class="span2" type="password" name="password" placeholder="Password" />
+                        <button type="submit" class="btn">Login</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <div class="container">
+        	<p>content goes here</p>
+        	
+            <hr th:fragment="footer" />
+            
+       	    <footer th:fragment="footer">
+            </footer>
+			
+        </div> <!-- /container -->
+		<script th:fragment="htmlfoot" th:src="@{/vendor/bootstrap/js/bootstrap.min.js}"></script>
+		<script th:fragment="htmlfoot" th:src="@{/js/main.js}"></script>
+    </body>
+</html>

@@ -1,0 +1,92 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+	<title>User Manager: User Accounts</title>
+	<link th:substituteby="includes :: htmlhead"/>
+</head>
+<body>
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+	<div th:fragment="users">
+		<h1>Roles</h1>
+	</div>
+
+	<ul class="nav nav-pills">
+		<li><a href="#addRoleModal" data-toggle="modal">Add Role</a></li>
+	</ul>
+
+	<!-- Change id modal -->
+	<form id="addRoleModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+	      aria-labelledby="addRoleModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+	      th:action="@{'/roles/create'}">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="addRoleModalLabel">Add Role</h3>
+		</div>
+		<div class="modal-body">
+			<!-- name -->
+			<div class="control-group">
+				<label class="control-label" for="input_id">Name</label>
+
+				<div class="controls">
+					<input
+							type="text"
+							id="input_id"
+							name="id" value="" placeholder="Alphanumeric/dashes/underscores"/>
+				</div>
+			</div>
+			<!-- caption -->
+			<div class="control-group">
+				<label class="control-label" for="input_caption">Caption</label>
+
+				<div class="controls">
+					<input
+							type="text"
+							id="input_caption"
+							name="caption"
+							placeholder="Description of role"
+							value=""/>
+
+					<!-- Help / Warning text -->
+					<span class="help-inline"></span>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			<input class="btn btn-primary" type="submit" value="Create"/>
+		</div>
+	</form>
+
+	<table class="table table-striped" th:fragment="table">
+		<thead>
+		<tr>
+			<th>Name</th>
+			<th>Description</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="role: ${roles}">
+			<td><a th:href="@{'/role/' + ${role.id}}" th:text="${role.id}">Id</a></td>
+			<td th:text="${role.caption}">Name</td>
+		</tr>
+		</tbody>
+	</table>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>

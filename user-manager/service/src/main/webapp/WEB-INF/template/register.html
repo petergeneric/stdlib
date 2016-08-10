@@ -1,0 +1,74 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
+      xmlns:th="http://www.thymeleaf.org">
+<!--<![endif]-->
+<head>
+	<title>User Manager: Create New User</title>
+	<link th:substituteby="includes :: htmlhead"/>
+</head>
+<body th:with="page='register'">
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+	<h1>New User</h1>
+
+	<form class="form-horizontal" method="POST" th:action="@{/register}" autocomplete="off">
+		<div class="control-group">
+			<label class="control-label">Full Name:</label>
+			<div class="controls">
+				<input type="text" name="name"/>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label">E-mail:</label>
+			<div class="controls">
+				<input type="text" name="email"/>
+			</div>
+		</div>
+
+		<div class="control-group">
+			<label class="control-label">Password:</label>
+			<div class="controls">
+				<input type="password" name="password"/>
+			</div>
+		</div>
+		<div class="control-group">
+			<label class="control-label">Password again:</label>
+			<div class="controls">
+				<input type="password" name="passwordConfirm"/>
+			</div>
+		</div>
+		<div class="control-group">
+			<div class="controls">
+				<input type="hidden" name="timeZone" value="Europe/London"/>
+				<input type="hidden" name="dateFormat" value="YYYY-MM-dd HH:mm:ss"/>
+				<button type="submit" class="btn">Create</button>
+			</div>
+		</div>
+	</form>
+
+	<script>
+		// If possible, extract the local timezone
+		$(document).ready(function () {
+			var intlUnsupported = (typeof Intl === "undefined");
+
+			if (!intlUnsupported) {
+				$("input[name=timeZone]").val(new Intl.DateTimeFormat().resolvedOptions().timeZone);
+			}
+		});
+	</script>
+
+	<footer th:substituteby="includes :: footer"></footer>
+</div>
+<!-- Include jquery etc -->
+<div th:substituteby="includes :: htmlfoot"></div>
+</body>
+</html>
