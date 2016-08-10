@@ -56,12 +56,6 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 		</dependency>
-		<dependency>
-			<groupId>AzureLogAppender</groupId>
-			<artifactId>AzureLogAppender</artifactId>
-			<version>1.0</version>
-		</dependency>
-
 
 		<!-- Testing -->
 		<dependency>
