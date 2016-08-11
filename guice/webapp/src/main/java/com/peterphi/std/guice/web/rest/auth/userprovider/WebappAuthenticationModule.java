@@ -39,8 +39,6 @@ public class WebappAuthenticationModule extends AbstractModule
 		this.metrics = metrics;
 		this.providerNames = providerNames;
 
-		System.out.println("Auth provider names: " + providerNames);
-
 		this.jwtSecret = config.get(GuiceProperties.AUTH_JWT_SECRET, null);
 		this.jwtHeader = config.get(GuiceProperties.AUTH_JWT_HTTP_HEADER, "X-JWT");
 		this.jwtCookie = config.get(GuiceProperties.AUTH_JWT_HTTP_COOKIE, "X-JWT");

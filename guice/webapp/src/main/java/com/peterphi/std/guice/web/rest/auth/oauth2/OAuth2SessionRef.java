@@ -56,8 +56,6 @@ public class OAuth2SessionRef
 		this.clientSecret = clientSecret;
 		this.localEndpoint = localEndpoint;
 
-		System.out.println("Local endpoint set to: " + localEndpoint);
-
 		if (response != null)
 			load(response);
 	}

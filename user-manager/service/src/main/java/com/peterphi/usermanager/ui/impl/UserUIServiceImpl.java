@@ -87,13 +87,6 @@ public class UserUIServiceImpl implements UserUIService
 		return call.process();
 	}
 
-
-	public static void main(String[] args) throws Exception
-	{
-		System.out.println(Arrays.asList(TimeZone.getAvailableIDs()));
-	}
-
-
 	@Override
 	@Transactional
 	@Retry

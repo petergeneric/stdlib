@@ -19,8 +19,6 @@ public class OAuth2ClientModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		System.out.println("OAuth2 client module configure called!");
-
 		// Register the callback service
 		bind(OAuth2ClientCallbackRestService.class).to(OAuth2ClientCallbackRestServiceImpl.class);
 		RestResourceRegistry.register(OAuth2ClientCallbackRestService.class);
