@@ -77,7 +77,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		<tr th:each="service: ${services}">
+		<tr th:each="service: ${entities}">
 			<td><a th:href="@{'/service/' + ${service.id}}" th:text="${service.name}">Name</a></td>
 			<td th:text="${service.enabled}">Enabled</td>
 		</tr>
