@@ -77,6 +77,7 @@
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-hibernate-testing</artifactId>
 			<version>${project.version}</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 </project>
