@@ -10,7 +10,7 @@
 	<parent>
 		<groupId>com.peterphi.user-manager</groupId>
 		<artifactId>user-manager-parent</artifactId>
-		<version>9.0.2-SNAPSHOT</version>
+		<version>9.1.0</version>
 	</parent>
 
 	<dependencies>
