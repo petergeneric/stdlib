@@ -6,6 +6,7 @@ import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -19,7 +20,7 @@ public class OAuthSessionContextDaoImpl extends HibernateDao<OAuthSessionContext
 
 		criteria.add(Restrictions.eq("user.id", userId));
 		criteria.add(Restrictions.eq("service.id", serviceId));
-		criteria.add(Restrictions.eq("scope", scope));
+		criteria.add(Restrictions.eq("scope", StringUtils.trimToEmpty(scope)));
 		criteria.add(Restrictions.eq("active", true));
 
 		return uniqueResult(criteria);
@@ -50,7 +51,7 @@ public class OAuthSessionContextDaoImpl extends HibernateDao<OAuthSessionContext
 			entity = new OAuthSessionContextEntity();
 
 			entity.setUser(user);
-			entity.setScope(scope);
+			entity.setScope(StringUtils.trimToEmpty(scope));
 			entity.setService(service);
 			entity.setActive(true);
 

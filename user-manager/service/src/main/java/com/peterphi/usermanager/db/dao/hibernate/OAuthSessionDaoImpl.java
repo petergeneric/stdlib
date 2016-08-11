@@ -39,11 +39,11 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	{
 		Criteria criteria = createCriteria();
 
-		criteria.createAlias("session.context", "session_context");
+		criteria.createAlias("context.service", "service");
 		criteria.add(Restrictions.eq("id", refreshToken));
 		criteria.add(Restrictions.isNotNull("token"));
 		criteria.add(Restrictions.eq("alive", true));
-		criteria.add(Restrictions.eq("session_context.id", service.getId()));
+		criteria.add(Restrictions.eq("service.id", service.getId()));
 
 		final OAuthSessionEntity session = uniqueResult(criteria);
 
@@ -64,11 +64,11 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	{
 		Criteria criteria = createCriteria();
 
-		criteria.createAlias("session.context", "session_context");
+		criteria.createAlias("context.service", "service");
 		criteria.add(Restrictions.eq("authorisationCode", authorisationCode));
 		criteria.add(Restrictions.isNull("token"));
 		criteria.add(Restrictions.eq("alive", true));
-		criteria.add(Restrictions.eq("session_context.id", service.getId()));
+		criteria.add(Restrictions.eq("service.id", service.getId()));
 
 		final OAuthSessionEntity session = uniqueResult(criteria);
 

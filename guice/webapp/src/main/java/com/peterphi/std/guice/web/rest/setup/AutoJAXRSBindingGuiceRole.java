@@ -12,11 +12,12 @@ import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.auth.interceptor.AuthConstraintInterceptorModule;
+import com.peterphi.std.guice.web.rest.auth.oauth2.OAuth2ClientModule;
 import com.peterphi.std.guice.web.rest.auth.userprovider.WebappAuthenticationModule;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
-import java.util.Arrays;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
@@ -62,10 +63,32 @@ public class AutoJAXRSBindingGuiceRole implements GuiceRole
 					// Set up provider for CurrentUser
 					List<String> authProviderNames = config.getList(GuiceProperties.AUTH_PROVIDER_NAMES, null);
 
-					// If no providers set, use the default (JWT, or the Servlet's preferred auth scheme)
+					// If no providers set, pick up the defaults based on what's configured
 					if (authProviderNames == null || authProviderNames.size() == 0)
-						authProviderNames = Arrays.asList(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER,
-						                                  GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER);
+					{
+						authProviderNames = new ArrayList<>();
+
+						// Set up JWT if a jwt secret is set
+						if (config.containsKey(GuiceProperties.AUTH_JWT_SECRET))
+							authProviderNames.add(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER);
+
+						// Set up OAuth2 if an OAuth2 endpoint is set
+						if (config.containsKey(GuiceProperties.OAUTH2_CLIENT_ENDPOINT))
+						{
+							// OAuth2 present, anonymous CurrentUser can be claimed by oauth2 provider
+							authProviderNames.add(GuiceConstants.JAXRS_SERVER_WEBAUTH_OAUTH2_PROVIDER);
+						}
+						else
+						{
+							// OAuth2 not present, anonymous CurrentUser can be claimed by servlet provider
+							authProviderNames.add(GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER);
+						}
+					}
+
+					// Register the OAuth2 client module if the OAuth2 auth provider is enabled
+					// N.B. WebappAuthenticationModule handles JWT and Servlet providers
+					if (authProviderNames.contains(GuiceConstants.JAXRS_SERVER_WEBAUTH_OAUTH2_PROVIDER))
+						modules.add(new OAuth2ClientModule());
 
 					modules.add(new WebappAuthenticationModule(metrics, authProviderNames, config));
 				}

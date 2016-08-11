@@ -39,6 +39,8 @@ public class WebappAuthenticationModule extends AbstractModule
 		this.metrics = metrics;
 		this.providerNames = providerNames;
 
+		System.out.println("Auth provider names: " + providerNames);
+
 		this.jwtSecret = config.get(GuiceProperties.AUTH_JWT_SECRET, null);
 		this.jwtHeader = config.get(GuiceProperties.AUTH_JWT_HTTP_HEADER, "X-JWT");
 		this.jwtCookie = config.get(GuiceProperties.AUTH_JWT_HTTP_COOKIE, "X-JWT");
@@ -52,17 +54,19 @@ public class WebappAuthenticationModule extends AbstractModule
 	protected void configure()
 	{
 		// Bind a @Named("servlet") CurrentUser provider that people may use
-		bind(Key.get(CurrentUser.class,
-		             Names.named(GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER))).toProvider(new HttpServletUserProvider());
+		if (providerNames.contains(GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER))
+			bind(Key.get(CurrentUser.class,
+			             Names.named(GuiceConstants.JAXRS_SERVER_WEBAUTH_SERVLET_PROVIDER))).toProvider(new HttpServletUserProvider());
 
 		// Bind a @Named("jwt") CurrentUser provider that people may use
-		bind(Key.get(CurrentUser.class,
-		             Names.named(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER))).toProvider(new JWTUserProvider(jwtHeader,
-		                                                                                                            jwtCookie,
-		                                                                                                            jwtSecret,
-		                                                                                                            jwtIssuer,
-		                                                                                                            jwtAudience,
-		                                                                                                            jwtRequireSecure));
+		if (providerNames.contains(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER))
+			bind(Key.get(CurrentUser.class,
+			             Names.named(GuiceConstants.JAXRS_SERVER_WEBAUTH_JWT_PROVIDER))).toProvider(new JWTUserProvider(jwtHeader,
+			                                                                                                            jwtCookie,
+			                                                                                                            jwtSecret,
+			                                                                                                            jwtIssuer,
+			                                                                                                            jwtAudience,
+			                                                                                                            jwtRequireSecure));
 	}
 
 

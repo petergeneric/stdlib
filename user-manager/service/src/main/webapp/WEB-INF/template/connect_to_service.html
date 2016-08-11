@@ -20,52 +20,31 @@
 	<h2>An application would like to connect to your account</h2>
 
 	<div class="lead">
-		<p>The application <strong th:text="${client.name}"></strong> would like the ability to access your basic information</p>
-		<th:block th:if="${scopes}"> and the following additional data:
-			<ul>
-				<li th:each="scope: ${scopes}" th:text="${scope}"></li>
-			</ul>
-		</th:block>
+		<p>The application <strong th:text="${client.name}"></strong> would like the ability to access your basic information for
+			<span th:text="${session.login.email}"></span>
+			<th:block th:unless="${scopes.isEmpty()}"> and the following additional data:
+				<ul>
+					<li th:each="scope: ${scopes}" th:text="${scope}"></li>
+				</ul>
+			</th:block>
+		</p>
 
 		<p>Allow the application access?</p>
 
-		<form method="POST">
-			<input type="hidden" name="nonce" th:value="${nonce}" />
-			<input type="hidden" name="response_type" th:value="${responseType}" />
-			<input type="hidden" name="scope" th:value="${scope}" />
-			<input type="hidden" name="client_id" th:value="${clientId}" />
-			<input type="hidden" name="redirect_uri" th:value="${redirectUri}" />
+		<form method="POST" th:action="@{/oauth2/authorize}">
+			<input type="hidden" name="nonce" th:value="${nonce}"/>
+			<input type="hidden" name="response_type" th:value="${responseType}"/>
+			<input type="hidden" name="scope" th:value="${scope}"/>
+			<input type="hidden" name="client_id" th:value="${clientId}"/>
+			<input type="hidden" name="redirect_uri" th:value="${redirectUri}"/>
+			<input type="hidden" name="state" th:value="${state}"/>
 
-			<a class="btn btn-large" th:href="@{/}">Deny</a> &nbsp; <input type="submit" class="btn btn-primary btn-large"
-			                                                               name="Allow">
+			<input type="submit" class="btn btn-large"
+			       name="decision" value="Deny"/>
+			<input type="submit" class="btn btn-primary btn-large"
+			       name="decision" value="Allow"/>
 		</form>
 	</div>
-
-	<
-	<ul class="nav nav-pills">
-		<li><a th:href="@{/register}" data-toggle="modal">Add User</a></li>
-	</ul>
-
-	<table id="typeTable" class="table table-striped" th:fragment="table">
-		<thead>
-		<tr>
-			<th>Id</th>
-			<th>Name</th>
-			<th>E-Mail Address</th>
-			<th>Created</th>
-			<th>Last Login</th>
-		</tr>
-		</thead>
-		<tbody>
-		<tr th:each="user: ${users}">
-			<td><a th:href="@{'/user/' + ${user.id}}" th:text="${user.id}">Id</a></td>
-			<td th:text="${user.name}">Name</td>
-			<td th:text="${user.email}">email@domain.com</td>
-			<td th:text="${session.login.format(user.created)}">Created</td>
-			<td th:text="${session.login.format(user.lastLogin)}">Last login</td>
-		</tr>
-		</tbody>
-	</table>
 
 	<footer th:substituteby="includes :: footer"></footer>
 </div>

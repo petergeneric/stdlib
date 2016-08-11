@@ -15,6 +15,10 @@ import java.util.Set;
 public interface CurrentUser
 {
 	DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss zzz").withZoneUTC();
+	/**
+	 * Special role string indicating that the user is logged in
+	 */
+	String ROLE_AUTHENTICATED = "authenticated";
 
 
 	/**

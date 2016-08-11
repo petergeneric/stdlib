@@ -39,7 +39,7 @@ import java.util.Collections;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
-	private static final String NO_CACHE = "no-cache, no-transform, no-store, max-age=0, private";
+	private static final String NO_CACHE = "no-cache";
 
 	@Inject(optional = true)
 	@Named("auth.approve-all")
@@ -79,11 +79,20 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@Override
 	@AuthConstraint(id = "oauth2server_auth", role = "authenticated", comment = "Must be logged in to the User Manager to initiate a service login")
 	@Retry
-	public Response getAuth(final String responseType, final String clientId, final String redirectUri, final String scope)
+	public Response getAuth(final String responseType,
+	                        final String clientId,
+	                        final String redirectUri,
+	                        final String state,
+	                        final String scope)
 	{
 		// Has the current user approved this client+scope before? If so just redirect straight back
 		// Otherwise, bring up the authorisation UI
-		final Response response = createSessionAndRedirect(responseType, clientId, redirectUri, scope, autoApproveAll);
+		final Response response = createSessionAndRedirect(responseType,
+		                                                   clientId,
+		                                                   redirectUri,
+		                                                   state,
+		                                                   scope,
+		                                                   autoApproveAll);
 
 		if (response != null)
 		{
@@ -118,27 +127,39 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			call.set("responseType", responseType);
 			call.set("redirectUri", redirectUri);
 			call.set("scope", scope);
+			call.set("state", state);
 
-
-			return call.process(Response.ok().cacheControl(CacheControl.valueOf(NO_CACHE)).type(MediaType.APPLICATION_JSON));
+			return call.process(Response.ok().type(MediaType.APPLICATION_XML).cacheControl(CacheControl.valueOf(NO_CACHE)));
 		}
 	}
 
 
 	@Override
-	public Response authApproved(final String responseType,
-	                             final String clientId,
-	                             final String redirectUri,
-	                             final String scope,
-	                             final String nonce)
+	public Response userMadeAuthDecision(final String responseType,
+	                                     final String clientId,
+	                                     final String redirectUri,
+	                                     final String state,
+	                                     final String scope,
+	                                     final String nonce,
+	                                     final String decision)
 	{
 		final SessionNonceStore nonceStore = nonceStoreProvider.get();
 
 		// Make sure the nonce is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
 		nonceStore.validate(nonce);
 
-		// Create a new Session (creating an approval record for this client+scope) and redirect the user back to the calling site
-		return createSessionAndRedirect(responseType, clientId, redirectUri, scope, false);
+		if (StringUtils.equalsIgnoreCase(decision, "allow"))
+		{
+			// Create a new Session (creating an approval record for this client+scope) and redirect the user back to the calling site
+			return createSessionAndRedirect(responseType, clientId, redirectUri, state, scope, true);
+		}
+		else
+		{
+			return redirectError(redirectUri,
+			                     state,
+			                     "access_denied",
+			                     "The Deny button was clicked, denying authorisation to the user account for this service");
+		}
 	}
 
 
@@ -147,6 +168,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	public Response createSessionAndRedirect(final String responseType,
 	                                         final String clientId,
 	                                         final String redirectUri,
+	                                         final String state,
 	                                         final String scope,
 	                                         final boolean allowCreateApproval)
 	{
@@ -156,13 +178,52 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		                                                 scope,
 		                                                 allowCreateApproval);
 
-		// Figure out where to redirect the user back to
-		final URI redirectTo;
+		if (session != null)
+		{
 
+			// Figure out where to redirect the user back to
+			return redirectSuccess(responseType, redirectUri, state, session);
+		}
+		else
+		{
+			return null; // No session was created
+		}
+	}
+
+
+	private Response redirectSuccess(final String responseType,
+	                                 final String redirectUri,
+	                                 final String state,
+	                                 final OAuthSessionEntity session)
+	{
+		final URI redirectTo;
 		{
 			final UriBuilder builder = UriBuilder.fromUri(URI.create(redirectUri));
 
 			builder.replaceQueryParam(responseType, session.getAuthorisationCode());
+
+			if (state != null)
+				builder.replaceQueryParam("state", state);
+
+			redirectTo = builder.build();
+		}
+
+		// Redirect the user
+		return Response.seeOther(redirectTo).build();
+	}
+
+
+	private Response redirectError(final String redirectUri, final String state, final String error, final String errorText)
+	{
+		final URI redirectTo;
+		{
+			final UriBuilder builder = UriBuilder.fromUri(URI.create(redirectUri));
+
+			builder.replaceQueryParam("error", error);
+			builder.replaceQueryParam("error_description", errorText);
+
+			if (state != null)
+				builder.replaceQueryParam("state", state);
 
 			redirectTo = builder.build();
 		}
@@ -219,14 +280,14 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@Transactional
 	@Retry
 	@AuthConstraint(id = "oauth2server_token", skip = true)
-	public OAuth2TokenResponse getToken(final String grantType,
-	                                    final String code,
-	                                    final String redirectUri,
-	                                    final String clientId,
-	                                    final String secret,
-	                                    final String refreshToken,
-	                                    final String username,
-	                                    final String password)
+	public String getToken(final String grantType,
+	                       final String code,
+	                       final String redirectUri,
+	                       final String clientId,
+	                       final String secret,
+	                       final String refreshToken,
+	                       final String username,
+	                       final String password)
 	{
 		final OAuthSessionEntity session;
 
@@ -270,7 +331,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 		}
 
-		return new OAuth2TokenResponse(session.getToken(), session.getId(), session.getExpires().toDate());
+		return new OAuth2TokenResponse(session.getToken(), session.getId(), session.getExpires().toDate()).encode();
 	}
 
 

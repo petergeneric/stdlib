@@ -37,7 +37,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	Provider<UserLogin> userProvider;
 
 	@Inject
-	@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME)
+	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
 	URI localEndpoint;
 
 

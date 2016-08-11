@@ -2,6 +2,7 @@ package com.peterphi.usermanager.db.dao.hibernate;
 
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
 
@@ -37,13 +38,24 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 
 			final String[] endpoints = entity.getEndpoints().split("\n");
 
+			// Now check if the redirectUri matches any of the registered endpoints
+			// N.B. don't allow arbitrary startsWith (security issue if the redirectUri can be pointed at a resource in the app that redirects elsewhere)
 			for (String endpoint : endpoints)
 			{
-				if (redirectUri.startsWith(endpoint))
-					return entity;
+				if (StringUtils.equals(endpoint, redirectUri))
+					return entity; // exact match
+				else
+				{
+					// Allow database to hold a base service endpoint and for the client to supply the oauth2 callback resource of that service
+					final String withCallbackEndpointAdded = endpoint + (endpoint.endsWith("/") ? "" : "/") + "oauth2/client/cb";
+
+					if (StringUtils.equals(withCallbackEndpointAdded, redirectUri))
+						return entity;
+				}
 			}
 		}
 
+		// Default: no match found
 		return null;
 	}
 

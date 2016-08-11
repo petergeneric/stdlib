@@ -17,4 +17,7 @@ public class GuiceConstants
 
 	@Doc("Cookie name to use for JWT")
 	public static final String JAXRS_SERVER_WEBAUTH_JWT_COOKIE_NAME = "X-JWT";
+
+	@Doc("CurrentUser retrieved from OAuth2 (delegates to remote OAuth2 provider)")
+	public static final String JAXRS_SERVER_WEBAUTH_OAUTH2_PROVIDER = "oauth2";
 }

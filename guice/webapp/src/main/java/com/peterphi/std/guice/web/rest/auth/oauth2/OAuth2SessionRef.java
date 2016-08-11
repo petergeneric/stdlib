@@ -2,11 +2,17 @@ package com.peterphi.std.guice.web.rest.auth.oauth2;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
+import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import javax.ws.rs.core.UriBuilder;
+import java.net.URI;
 
 /**
  * Holds the OAuth2 callback information for this session; will start unpopulated (see {@link #isValid()}) and then be populated
@@ -19,7 +25,17 @@ import org.apache.commons.lang.StringUtils;
 @SessionScoped
 public class OAuth2SessionRef
 {
+	private static final Logger log = Logger.getLogger(OAuth2SessionRef.class);
+
 	public final UserManagerOAuthService authService;
+	public final String oauthServiceEndpoint;
+	private final URI localEndpoint;
+
+	/**
+	 * A nonce value used to make sure that authorisation flows originated from this session ref
+	 */
+	private final String callbackNonce = SimpleId.alphanumeric(20);
+
 	public final String clientId;
 	private final String clientSecret;
 
@@ -29,12 +45,18 @@ public class OAuth2SessionRef
 
 	@Inject
 	public OAuth2SessionRef(final UserManagerOAuthService authService,
+	                        @Named("service.oauth2.endpoint") final String oauthServiceEndpoint,
 	                        @Named("service.oauth2.client_id") final String clientId,
-	                        @Named("service.oauth2.client_secret") final String clientSecret)
+	                        @Named("service.oauth2.client_secret") final String clientSecret,
+	                        @Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT) URI localEndpoint)
 	{
 		this.authService = authService;
+		this.oauthServiceEndpoint = oauthServiceEndpoint;
 		this.clientId = clientId;
 		this.clientSecret = clientSecret;
+		this.localEndpoint = localEndpoint;
+
+		System.out.println("Local endpoint set to: " + localEndpoint);
 
 		if (response != null)
 			load(response);
@@ -43,18 +65,97 @@ public class OAuth2SessionRef
 
 	public boolean isValid()
 	{
+		try
+		{
+			getToken();
+		}
+		catch (Throwable e)
+		{
+			// ignore
+		}
+
 		return response != null;
+	}
+
+
+	/**
+	 * Return the URI for this service's callback resource
+	 *
+	 * @return
+	 */
+	public URI getOwnCallbackUri()
+	{
+		String localEndpointStr = localEndpoint.toString();
+
+		if (!localEndpointStr.endsWith("/"))
+			localEndpointStr += "/";
+
+		return URI.create(localEndpointStr + "oauth2/client/cb");
+	}
+
+
+	/**
+	 * Get the endpoint to redirect a client to in order to start an OAuth2 Authorisation Flow
+	 *
+	 * @param returnTo
+	 * 		The URI to redirect the user back to once the authorisation flow completes successfully. If not specified then the user
+	 * 		will be directed to the root of this webapp.
+	 *
+	 * @return
+	 */
+	public URI getAuthFlowStartEndpoint(final String returnTo, final String scope)
+	{
+		final String endpoint = oauthServiceEndpoint + "/oauth2/authorize";
+
+		UriBuilder builder = UriBuilder.fromUri(endpoint);
+
+		builder.replaceQueryParam("response_type", "code");
+		builder.replaceQueryParam("client_id", clientId);
+		builder.replaceQueryParam("redirect_uri", getOwnCallbackUri());
+
+		if (scope != null)
+			builder.replaceQueryParam("scope", scope);
+
+		if (returnTo != null)
+			builder.replaceQueryParam("state", callbackNonce + " " + returnTo);
+
+		return builder.build();
+	}
+
+
+	/**
+	 * Decode the state to retrieve the redirectTo value
+	 *
+	 * @param state
+	 *
+	 * @return
+	 */
+	public URI getRedirectToFromState(final String state)
+	{
+		final String[] pieces = state.split(" ", 2);
+
+		if (!StringUtils.equals(callbackNonce, pieces[0]))
+			throw new IllegalArgumentException("WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
+
+		if (pieces.length == 2)
+			return URI.create(pieces[1]);
+		else
+			return null;
 	}
 
 
 	public synchronized String getToken()
 	{
-		if (!isValid())
+		if (response == null)
 			throw new IllegalArgumentException("Not loaded yet!");
 
 		// If the token has expired then we must use the refresh token to refresh it
-		if (System.currentTimeMillis() > response.expires.getTime())
+		if (response.expires != null && System.currentTimeMillis() > response.expires.getTime())
 		{
+			log.debug("OAuth token has expired for " +
+			          ((cachedInfo != null) ? cachedInfo.email : "OAuth session " + response.refresh_token) +
+			          " and must be refreshed");
+
 			// Will throw an exception if the token acquisition fails
 			refreshToken();
 		}
@@ -76,14 +177,16 @@ public class OAuth2SessionRef
 		this.response = null;
 		this.cachedInfo = null;
 
-		final OAuth2TokenResponse response = authService.getToken("refresh_token",
-		                                                          null,
-		                                                          null,
-		                                                          clientId,
-		                                                          clientSecret,
-		                                                          refreshToken,
-		                                                          null,
-		                                                          null);
+		final String responseStr = authService.getToken("refresh_token",
+		                                                null,
+		                                                null,
+		                                                clientId,
+		                                                clientSecret,
+		                                                refreshToken,
+		                                                null,
+		                                                null);
+
+		final OAuth2TokenResponse response = OAuth2TokenResponse.decode(responseStr);
 
 		load(response);
 	}

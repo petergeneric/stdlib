@@ -113,6 +113,12 @@ public class GuiceProperties
 	@Doc("The HTTP Cookie to read JWTs from (default X-JWT)")
 	public static final String AUTH_JWT_HTTP_COOKIE = "framework.webauth.jwt.cookie-name";
 
+	@Doc("The endpoint to a remote OAuth2 authorisation provider")
+	public static final String OAUTH2_CLIENT_ENDPOINT = "service.oauth2.endpoint";
+	@Doc("The client_id value for the remote OAuth2 provider")
+	public static final String OAUTH2_CLIENT_ID = "service.oauth2.client_id";
+	@Doc("The client_secret value for the remote OAuth2 provider")
+	public static final String OAUTH2_CLIENT_SECRET = "service.oauth2.client_secret";
 
 	@Doc("If true then the CharacterEncoding for HttpServletRequest (and InputParts for multipart/form-data resources) with no charset provided by the client will default to UTF-8 (default true)")
 	public static final java.lang.String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";

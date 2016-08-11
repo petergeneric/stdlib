@@ -1,7 +1,6 @@
 package com.peterphi.usermanager.rest.iface.oauth2server;
 
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 
 import javax.ws.rs.Consumes;
@@ -19,20 +18,23 @@ import javax.ws.rs.core.Response;
 public interface UserManagerOAuthService
 {
 	@GET
-	@Path("/auth")
-	Response getAuth(@QueryParam("response_type") String responseType,
-	                 @QueryParam("client_id") final String clientId,
-	                 @QueryParam("redirect_uri") String redirectUri,
-	                 @QueryParam("scope") String scope);
+	@Path("/authorize")
+	Response getAuth(@QueryParam("response_type") @Doc("The response type - N.B. only code supported") String responseType,
+	                 @QueryParam("client_id") @Doc("Client identifier") final String clientId,
+	                 @QueryParam("redirect_uri") @Doc("client endpoint to return to") String redirectUri,
+	                 @QueryParam("state") @Doc("optional state to return to client at end of flow") String state,
+	                 @QueryParam("scope") @Doc("optional scope") String scope);
 
 
 	@POST
-	@Path("/auth")
-	Response authApproved(@FormParam("response_type") String responseType,
-	                      @FormParam("client_id") final String clientId,
-	                      @FormParam("redirect_uri") String redirectUri,
-	                      @FormParam("scope") String scope,
-	                      @FormParam("nonce") String nonce);
+	@Path("/authorize")
+	Response userMadeAuthDecision(@FormParam("response_type") @Doc("Original response_type") String responseType,
+	                              @FormParam("client_id") @Doc("Original client_id") final String clientId,
+	                              @FormParam("redirect_uri") @Doc("Original redirect_uri") String redirectUri,
+	                              @FormParam("state") @Doc("Original state") String state,
+	                              @FormParam("scope") @Doc("Original scope") String scope,
+	                              @FormParam("nonce") @Doc("For CSRF prevention") String nonce,
+	                              @FormParam("decision") @Doc("decision (Allow/Deny)") String decision);
 
 	/**
 	 * Exchange an access code, a refresh token or a username/password for a Token to be POSTed back
@@ -52,7 +54,7 @@ public interface UserManagerOAuthService
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({MediaType.APPLICATION_JSON})
-	public OAuth2TokenResponse getToken(@FormParam("grant_type")
+	public String getToken(@FormParam("grant_type")
 	                                    @Doc("One of: authorization_code,refresh_token,password,client_credentials (HTTP BASIC)")
 			                                    String grantType, @FormParam("code")
 	                                    @Doc("The authorization code from the auth callback (where grant_type is authorization_code)")

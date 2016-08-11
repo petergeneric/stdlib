@@ -1,5 +1,9 @@
 package com.peterphi.usermanager.rest.type;
 
+import org.joda.time.DateTimeZone;
+import org.joda.time.format.DateTimeFormat;
+import org.joda.time.format.DateTimeFormatter;
+
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
@@ -45,4 +49,15 @@ public class UserManagerUser
 
 	@XmlElement
 	public Date created;
+
+
+	/**
+	 * Convert the dateFormat and timeZone to a DateTimeFormatter
+	 *
+	 * @return
+	 */
+	public DateTimeFormatter toDateTimeFormatter()
+	{
+		return DateTimeFormat.forPattern(dateFormat).withZone(DateTimeZone.forID(timeZone));
+	}
 }
