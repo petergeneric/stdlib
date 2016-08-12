@@ -280,7 +280,7 @@ class HttpCallJWTUser implements CurrentUser
 		final Map<String, Object> data = get();
 
 		// Special case the "authenticated" role - need only have a valid token, no role is required
-		if (StringUtils.equals(WebappAuthenticationModule.ROLE_SPECIAL_AUTHENTICATED, role))
+		if (StringUtils.equals(CurrentUser.ROLE_AUTHENTICATED, role))
 		{
 			return data != null;
 		}

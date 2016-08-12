@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.web.rest.service;
+package com.peterphi.std.guice.web.rest.templating.thymeleaf;
 
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
@@ -8,8 +8,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafCall;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
+import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
@@ -73,6 +72,7 @@ public class GuiceCoreTemplater
 			templater.set("coreRestPrefix", coreRestPrefix);
 			templater.set("coreRestEndpoint", coreRestEndpoint.toString());
 			templater.set("coreServices", services);
+			templater.set("currentUser", new ThymeleafCurrentUserUtils(userProvider));
 
 			this.templater = new WeakReference<>(templater);
 		}

@@ -8,7 +8,7 @@ import com.peterphi.std.guice.common.serviceprops.ConfigurationProperty;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.io.PropertyFile;
 

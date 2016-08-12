@@ -62,7 +62,7 @@ class HttpCallUser implements CurrentUser
 	{
 		HttpServletRequest request = HttpCallContext.get().getRequest();
 
-		if (StringUtils.equals(WebappAuthenticationModule.ROLE_SPECIAL_AUTHENTICATED, role))
+		if (StringUtils.equals(CurrentUser.ROLE_AUTHENTICATED, role))
 		{
 			return request.getUserPrincipal() != null;
 		}

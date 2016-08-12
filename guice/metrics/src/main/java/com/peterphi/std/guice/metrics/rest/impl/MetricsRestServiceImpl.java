@@ -13,7 +13,7 @@ import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
 import com.peterphi.std.guice.metrics.rest.types.MetricsGauge;
 import com.peterphi.std.guice.metrics.rest.types.MetricsHistogram;
 import com.peterphi.std.guice.metrics.rest.types.MetricsMeter;
-import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 
 import java.util.SortedMap;

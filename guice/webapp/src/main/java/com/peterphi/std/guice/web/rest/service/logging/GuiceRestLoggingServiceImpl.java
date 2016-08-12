@@ -7,7 +7,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.io.PropertyFile;
 

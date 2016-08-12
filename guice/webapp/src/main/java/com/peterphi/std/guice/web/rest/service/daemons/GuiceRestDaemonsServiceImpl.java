@@ -8,7 +8,7 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
-import com.peterphi.std.guice.web.rest.service.GuiceCoreTemplater;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
