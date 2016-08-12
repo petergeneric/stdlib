@@ -20,12 +20,6 @@ all: install
 # PW Targets
 #
 #
-pwsample: sample
-	rm -rf /opt/tomcat/webapps/test{,.war}
-	rsync --partial guice/sample-rest-service/target/*.war /opt/tomcat/webapps/test.war
-
-sample: clean
-	$(MVN) package -DskipTests=true -am --projects guice/sample-rest-service
 
 config-service-full:
 	$(MVN) package -DskipTests=true -am --projects configuration/configuration
