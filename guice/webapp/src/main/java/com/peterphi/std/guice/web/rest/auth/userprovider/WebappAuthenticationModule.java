@@ -11,19 +11,17 @@ import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
+import org.apache.log4j.Logger;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public class WebappAuthenticationModule extends AbstractModule
 {
-	/**
-	 * Special role indicating that the user has been authenticated in some manner
-	 */
-	public static final String ROLE_SPECIAL_AUTHENTICATED = "authenticated";
+	private static final Logger log = Logger.getLogger(WebappAuthenticationModule.class);
 
-	private final MetricRegistry metrics;
 	private final List<String> providerNames;
 
 	private final String jwtHeader;
@@ -36,7 +34,6 @@ public class WebappAuthenticationModule extends AbstractModule
 
 	public WebappAuthenticationModule(final MetricRegistry metrics, final List<String> providerNames, GuiceConfig config)
 	{
-		this.metrics = metrics;
 		this.providerNames = providerNames;
 
 		this.jwtSecret = config.get(GuiceProperties.AUTH_JWT_SECRET, null);
@@ -79,9 +76,23 @@ public class WebappAuthenticationModule extends AbstractModule
 			final CurrentUser user = provider.get();
 
 			if (user != null)
+			{
+				applyUserToCurrentSession(user);
 				return user;
+			}
 		}
 
 		throw new IllegalArgumentException("No provider could determine a user for HTTP request!");
+	}
+
+
+	private void applyUserToCurrentSession(final CurrentUser user)
+	{
+		final HttpCallContext ctx = HttpCallContext.peek();
+
+		if (ctx != null)
+			ctx.getRequest().getSession().setAttribute("login", user);
+		else
+			log.warn("applyUserToCurrentSession called without an HttpCallContext in place!");
 	}
 }
