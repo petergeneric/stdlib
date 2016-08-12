@@ -174,7 +174,7 @@ public class UserEntity
 	}
 
 
-	@ManyToMany(fetch = FetchType.EAGER, mappedBy = "members")
+	@ManyToMany(fetch = FetchType.LAZY, mappedBy = "members")
 	public List<RoleEntity> getRoles()
 	{
 		return roles;
