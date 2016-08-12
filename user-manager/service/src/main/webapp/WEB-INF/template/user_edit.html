@@ -34,6 +34,7 @@
 			<p>Please enter a new password</p>
 			<input type="hidden" name="alter" value="password" />
 			<input type="hidden" name="email" th:value="${user.email}" />
+			<input type="hidden" name="nonce" th:value="${nonce}" />
 
 			<!-- password -->
 			<div class="control-group">
@@ -78,6 +79,7 @@
 			<p>Are you absolutely sure you want to delete user <span th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;?</p>
 			<input type="hidden" name="alter" value="delete" />
 			<input type="hidden" name="id" th:value="${user.id}" />
+			<input type="hidden" name="nonce" th:value="${nonce}" />
 		</div>
 		<div class="modal-footer">
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -87,6 +89,7 @@
 
 	<form class="form-horizontal" method="POST">
 		<input type="hidden" name="alter" value="profile" />
+		<input type="hidden" name="nonce" th:value="${nonce}" />
 
 		<!-- id -->
 		<div class="control-group">
@@ -145,7 +148,7 @@
 			<label class="control-label" for="input_dateFormat">Date Format</label>
 
 			<div class="controls">
-				<select id="input_dateFormat" name="dateFormat" class="chosen-select">
+				<select data-placeholder="Choose your timezone" id="input_dateFormat" name="dateFormat" class="chosen-select">
 					<option th:each="aFormat: ${dateformats}"
 					        th:selected="${aFormat} == ${user.dateFormat}"
 					        th:value="${aFormat}"

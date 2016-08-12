@@ -12,6 +12,7 @@
 <head>
 	<title>User Manager: Create New User</title>
 	<link th:substituteby="includes :: htmlhead"/>
+	<link th:substituteby="includes :: htmlhead_chosen"/>
 </head>
 <body th:with="page='register'">
 <span th:substituteby="includes :: navbar"></span>
@@ -46,10 +47,28 @@
 				<input type="password" name="passwordConfirm"/>
 			</div>
 		</div>
+		<div class="control-group" th:if="${session.login.isAdmin()}">
+			<label class="control-label" for="input_roles">Roles</label>
+
+			<div class="controls">
+				<select multiple="multiple" id="input_roles" name="roles" class="chosen-select span10">
+					<option data-placeholder="Choose some roles (optional)" th:each="role: ${roles}" th:value="${role.id}"
+					        th:text="${role.id} +' ('+${role.caption}+')'"></option>
+				</select>
+			</div>
+
+			<script>
+				$(document).ready(function () {
+					$(".chosen-select").chosen({});
+				});
+			</script>
+		</div>
+
 		<div class="control-group">
 			<div class="controls">
 				<input type="hidden" name="timeZone" value="Europe/London"/>
 				<input type="hidden" name="dateFormat" value="YYYY-MM-dd HH:mm:ss"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
 				<button type="submit" class="btn">Create</button>
 			</div>
 		</div>

@@ -52,6 +52,7 @@
 			</div>
 		</div>
 		<div class="modal-footer">
+			<input type="hidden" name="nonce" th:value="${nonce}" />
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 			<input class="btn btn-primary" type="submit" value="Change"/>
 		</div>
@@ -74,13 +75,14 @@
 				<label class="control-label" for="input_members">Edit Members</label>
 
 				<div class="controls" style="padding-bottom: 100px;">
-					<select multiple="multiple" id="input_members" name="members" class="chosen-select span10">
+					<select data-placeholder="Choose members" multiple="multiple" id="input_members" name="members" class="chosen-select span10">
 						<option th:each="user: ${allUsers}" th:selected="${users.contains(user)}" th:value="${user.id}" th:text="${user.email}"></option>
 					</select>
 				</div>
 			</div>
 		</div>
 		<div class="modal-footer">
+			<input type="hidden" name="nonce" th:value="${nonce}" />
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 			<input class="btn btn-primary" type="submit" value="Save"/>
 		</div>
@@ -107,6 +109,7 @@
 			<input type="hidden" name="id" th:value="${entity.id}"/>
 		</div>
 		<div class="modal-footer">
+			<input type="hidden" name="nonce" th:value="${nonce}" />
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 			<input class="btn btn-primary" type="submit" value="Delete"/>
 		</div>

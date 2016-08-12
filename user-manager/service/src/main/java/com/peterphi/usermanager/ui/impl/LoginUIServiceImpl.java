@@ -1,15 +1,16 @@
 package com.peterphi.usermanager.ui.impl;
 
-import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
-import com.peterphi.usermanager.db.entity.UserEntity;
-import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
-import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.ui.api.LoginUIService;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
+import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
+import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
+import com.peterphi.usermanager.guice.authentication.UserLogin;
+import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.ui.api.LoginUIService;
 import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpSession;
@@ -36,6 +37,9 @@ public class LoginUIServiceImpl implements LoginUIService
 	@Inject
 	UserAuthenticationService authenticationService;
 
+	@Inject
+	SessionNonceStore nonceStore;
+
 
 	@Override
 	@AuthConstraint(skip = true, comment = "login page")
@@ -51,6 +55,7 @@ public class LoginUIServiceImpl implements LoginUIService
 
 			call.set("returnTo", returnTo);
 			call.set("errorText", errorText);
+			call.set("nonce", nonceStore.allocate());
 
 			return call.process();
 		}
@@ -59,8 +64,10 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@AuthConstraint(skip = true, comment = "login page")
 	@Override
-	public Response doLogin(String returnTo, String user, String password)
+	public Response doLogin(String nonce, String returnTo, String user, String password)
 	{
+		nonceStore.validate(nonce, true);
+
 		if (login.isLoggedIn())
 		{
 			throw new IllegalArgumentException("You are already logged in!");

@@ -23,7 +23,8 @@ public interface LoginUIService
 	@POST
 	@Path("/login")
 	@Produces(MediaType.TEXT_HTML)
-	Response doLogin(@FormParam("returnTo") @DefaultValue("/") String returnTo,
+	Response doLogin(@FormParam("nonce") String nonce,
+	                 @FormParam("returnTo") @DefaultValue("/") String returnTo,
 	                 @FormParam("email") String user,
 	                 @FormParam("password") String password);
 
@@ -32,5 +33,4 @@ public interface LoginUIService
 	@Path("/logout")
 	@Produces(MediaType.TEXT_HTML)
 	Response doLogout(@QueryParam("returnTo") @DefaultValue("") String returnTo);
-
 }

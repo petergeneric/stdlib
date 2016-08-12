@@ -27,10 +27,19 @@ public interface ServiceUIService
 	@POST
 	@Path("/services/create")
 	@Produces(MediaType.TEXT_HTML)
-	Response create(@FormParam("name") final String name, @FormParam("endpoints") final String endpoints);
+	Response create(@FormParam("nonce") final String nonce,
+	                @FormParam("name") final String name,
+	                @FormParam("endpoints") final String endpoints);
 
 	@POST
 	@Path("/service/{id}/disable")
 	@Produces(MediaType.TEXT_HTML)
-	Response disable(@PathParam("id") String roleId);
+	Response disable(@PathParam("id") String id, @FormParam("nonce") final String nonce);
+
+	@POST
+	@Path("/service/{id}/edit-endpoints")
+	@Produces(MediaType.TEXT_HTML)
+	Response setEndpoints(@FormParam("nonce") final String nonce,
+	                      @PathParam("id") String id,
+	                      @FormParam("endpoints") final String endpoints);
 }

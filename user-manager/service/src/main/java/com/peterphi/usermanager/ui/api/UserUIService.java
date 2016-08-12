@@ -36,6 +36,7 @@ public interface UserUIService
 	@Path("/user/{user_id}")
 	@Produces(MediaType.TEXT_HTML)
 	Response editUserProfile(@PathParam("user_id") int userId,
+	                         @FormParam("nonce") String nonce,
 	                         @FormParam("dateFormat") String dateFormat,
 	                         @FormParam("timeZone") String timeZone,
 	                         @FormParam("name") String name,
@@ -44,12 +45,13 @@ public interface UserUIService
 	@POST
 	@Path("/user/{user_id}/delete")
 	@Produces(MediaType.TEXT_HTML)
-	Response deleteUser(@PathParam("user_id") int userId);
+	Response deleteUser(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
 
 	@POST
 	@Path("/user/{user_id}/change_password")
 	@Produces(MediaType.TEXT_HTML)
 	Response changePassword(@PathParam("user_id") int userId,
+	                        @FormParam("nonce") String nonce,
 	                        @FormParam("password") final String newPassword,
 	                        @FormParam("passwordConfirm") final String newPasswordConfirm);
 }

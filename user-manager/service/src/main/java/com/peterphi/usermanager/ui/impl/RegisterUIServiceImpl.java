@@ -1,25 +1,26 @@
 package com.peterphi.usermanager.ui.impl;
 
+import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
+import com.peterphi.std.guice.database.annotation.Transactional;
+import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
+import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
-import com.google.inject.Inject;
-import com.google.inject.name.Named;
-import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.retry.annotation.Retry;
-import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
-import com.peterphi.std.guice.database.annotation.Transactional;
-import com.peterphi.std.guice.web.rest.templating.TemplateCall;
-import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class RegisterUIServiceImpl implements RegisterUIService
@@ -46,26 +47,38 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	@Inject(optional = true)
 	@Named("authentication.allowAnonymousRegistration")
 	@Reconfigurable
-	protected boolean allowAnonymousRegistration = false;
+	boolean allowAnonymousRegistration = false;
+
+	@Inject
+	SessionNonceStore nonceStore;
 
 
-	@AuthConstraint(skip = true, comment = "register page handles own constraints")
+	@AuthConstraint(id = "register_service", skip = true, comment = "register page handles own constraints")
+	@Transactional(readOnly = true)
 	@Override
 	public String getRegister()
 	{
 		if (!allowAnonymousRegistration && !login.isAdmin())
 			throw new AuthenticationFailureException("Anonymous registration is not enabled. Please log in to create other users");
 
+
 		TemplateCall call = templater.template("register");
+		call.set("nonce", nonceStore.allocate());
+
+		if (login.isAdmin())
+			call.set("roles", roleDao.getAll()); // Admin user, role picker will be available
+		else
+			call.set("roles", Collections.emptyList()); // Anonymous registration, no role select
+
 		return call.process();
 	}
 
 
-	@AuthConstraint(skip = true, comment = "register page handles own constraints")
+	@AuthConstraint(id = "register_service", skip = true, comment = "register page handles own constraints")
 	@Override
 	@Transactional
-	@Retry
-	public Response doRegister(String email,
+	public Response doRegister(String nonce,
+	                           String email,
 	                           String name,
 	                           String dateFormat,
 	                           String timeZone,
@@ -73,6 +86,8 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	                           String passwordConfirm,
 	                           List<String> roles)
 	{
+		nonceStore.validate(nonce, true);
+
 		if (!allowAnonymousRegistration && !login.isAdmin())
 			throw new AuthenticationFailureException("Anonymous registration is not enabled. Please log in as an admin to register users");
 
@@ -103,12 +118,6 @@ public class RegisterUIServiceImpl implements RegisterUIService
 		         ") with roles " +
 		         roles);
 
-		// Convert role ids to role entities
-		List<RoleEntity> roleEntities = roleDao.getByIds(roles);
-
-		if (roleEntities.size() != roles.size())
-			throw new IllegalArgumentException("One or more roles specified did not exist! " + roles);
-
 		// Create a user
 		final int newUser = accountDao.register(name, email, password, dateFormat, timeZone);
 
@@ -116,9 +125,13 @@ public class RegisterUIServiceImpl implements RegisterUIService
 
 		for (String role : roles)
 		{
-			final RoleEntity roleEntity = roleDao.getById(UserLogin.ROLE_ADMIN);
+			final RoleEntity roleEntity = roleDao.getById(role);
+
+			if (roleEntity == null)
+				throw new IllegalArgumentException("Role does not exist: " + role);
 
 			roleEntity.getMembers().add(entity);
+
 			roleDao.update(roleEntity);
 		}
 

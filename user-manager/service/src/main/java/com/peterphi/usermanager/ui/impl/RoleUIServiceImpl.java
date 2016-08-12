@@ -1,11 +1,5 @@
 package com.peterphi.usermanager.ui.impl;
 
-import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
-import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
-import com.peterphi.usermanager.db.entity.RoleEntity;
-import com.peterphi.usermanager.db.entity.UserEntity;
-import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.ui.api.RoleUIService;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
@@ -15,6 +9,13 @@ import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
+import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
+import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
+import com.peterphi.usermanager.db.entity.RoleEntity;
+import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.guice.authentication.UserLogin;
+import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.ui.api.RoleUIService;
 import org.apache.commons.lang.StringUtils;
 
 import javax.ws.rs.core.Response;
@@ -36,6 +37,9 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Inject
 	UserDaoImpl userDao;
 
+	@Inject
+	LowSecuritySessionNonceStore nonceStore;
+
 
 	@Override
 	@Transactional(readOnly = true)
@@ -48,6 +52,7 @@ public class RoleUIServiceImpl implements RoleUIService
 
 		call.set("resultset", resultset);
 		call.set("roles", resultset.getList());
+		call.set("nonce", nonceStore.getValue());
 
 		return call.process();
 	}
@@ -68,6 +73,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		call.set("entity", entity);
 		call.set("allUsers", userDao.getAll());
 		call.set("users", userDao.findByUriQuery(new WebQuery().eq("roles.id", id)).getList());
+		call.set("nonce", nonceStore.getValue());
 
 		return call.process();
 	}
@@ -76,8 +82,10 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Override
 	@Transactional
 	@Retry
-	public Response create(final String id, final String caption)
+	public Response create(final String id, final String nonce, final String caption)
 	{
+		nonceStore.validate(nonce);
+
 		if (dao.getById(id) != null)
 			throw new IllegalArgumentException("Role with name already exists: " + id);
 
@@ -95,8 +103,10 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Override
 	@Transactional
 	@Retry
-	public Response delete(final String id)
+	public Response delete(final String id, final String nonce)
 	{
+		nonceStore.validate(nonce);
+
 		if (StringUtils.equalsIgnoreCase(id, UserLogin.ROLE_ADMIN))
 			throw new IllegalArgumentException("Cannot delete the user manager admin role!");
 
@@ -114,8 +124,10 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Override
 	@Transactional
 	@Retry
-	public Response changeCaption(final String id, final String caption)
+	public Response changeCaption(final String id, final String nonce, final String caption)
 	{
+		nonceStore.validate(nonce);
+
 		final RoleEntity entity = dao.getById(id);
 
 		if (entity == null)
@@ -132,8 +144,10 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Override
 	@Transactional
 	@Retry
-	public Response changeMembers(final String id, final List<Integer> members)
+	public Response changeMembers(final String id, final String nonce, final List<Integer> members)
 	{
+		nonceStore.validate(nonce);
+
 		final RoleEntity entity = dao.getById(id);
 
 		if (entity == null)
@@ -151,7 +165,8 @@ public class RoleUIServiceImpl implements RoleUIService
 			final List<Integer> removed = members.stream().filter(i -> existing.contains(i)).collect(Collectors.toList());
 		}
 
-		entity.getMembers().clear();;
+		entity.getMembers().clear();
+		;
 		entity.getMembers().addAll(users);
 
 		dao.update(entity);

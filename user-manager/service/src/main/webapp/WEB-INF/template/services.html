@@ -51,7 +51,7 @@
 				<label class="control-label" for="input_endpoints">Endpoints</label>
 
 				<div class="controls">
-					<textarea class="span6" cols="5"
+					<textarea style="width: 95%" cols="5"
 							type="text"
 							id="input_endpoints"
 							name="endpoints"
@@ -64,6 +64,7 @@
 			</div>
 		</div>
 		<div class="modal-footer">
+			<input type="hidden" name="nonce" th:value="${nonce}"/>
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 			<input class="btn btn-primary" type="submit" value="Create"/>
 		</div>

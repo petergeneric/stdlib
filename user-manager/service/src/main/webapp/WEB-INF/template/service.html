@@ -21,30 +21,66 @@
 <div class="container">
 	<h1 th:text="${entity.name}"></h1>
 
-	<ul class="nav nav-pills">
-		<li><a href="#delModal" data-toggle="modal">Delete</a></li>
-	</ul>
+	<th:block th:if="${(entity.owner.id == session.login.id) || session.login.isAdmin()}">
+		<ul class="nav nav-pills">
+			<li><a href="#delModal" data-toggle="modal">Disable Service</a></li>
+			<li><a href="#editEndpointsModal" data-toggle="modal">Edit Endpoints</a>
+			</li>
+		</ul>
 
-	<!-- Delete modal -->
-	<form id="delModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
-	      aria-labelledby="delModalLabel" aria-hidden="true" method="POST" autocomplete="off"
-	      th:action="@{'/service/' + ${entity.id} + '/disable'}">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-			<h3 id="delModalLabel">Disable Service?</h3>
-		</div>
-		<div class="modal-body">
-			<p>Are you absolutely sure you want to disable the service <span th:text="${entity.id}"/> (<span
-					th:text="${entity.name}"/>)?
-			</p>
-			<input type="hidden" name="alter" value="delete"/>
-			<input type="hidden" name="id" th:value="${entity.id}"/>
-		</div>
-		<div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Delete"/>
-		</div>
-	</form>
+		<!-- Delete modal -->
+		<form id="delModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="delModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/service/' + ${entity.id} + '/disable'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="delModalLabel">Disable Service?</h3>
+			</div>
+			<div class="modal-body">
+				<p>Are you absolutely sure you want to disable the service <span th:text="${entity.id}"/> (<span
+						th:text="${entity.name}"/>)?
+				</p>
+				<input type="hidden" name="alter" value="delete"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="id" th:value="${entity.id}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Delete"/>
+			</div>
+		</form>
+
+		<!-- Edit endpoints modal -->
+		<form id="editEndpointsModal"
+		      class="modal hide fade form-horizontal"
+		      tabindex="-1" role="dialog"
+		      aria-labelledby="editEndpointsModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/service/'+${entity.id}+'/edit-endpoints'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="editEndpointsModalLabel">Change Endpoints</h3>
+			</div>
+			<div class="modal-body">
+				<!-- endpoints -->
+				<div class="control-group">
+					<textarea style="width: 95%" cols="5"
+					          type="text"
+					          id="input_endpoints"
+					          name="endpoints"
+					          placeholder="Endpoint prefixes (one per line)"
+					          th:text="${entity.endpoints}"/>
+
+					<!-- Help / Warning text -->
+					<span class="help-inline"></span>
+				</div>
+				<div class="modal-footer">
+					<input type="hidden" name="nonce" th:value="${nonce}"/>
+					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+					<input class="btn btn-primary" type="submit" value="Save"/>
+				</div>
+			</div>
+		</form>
+	</th:block>
 
 	<dl class="dl-horizontal" th:fragment="properties">
 		<dt>client_id</dt>
@@ -66,8 +102,7 @@
 			<dd>
 				<pre><th:block th:text="'service.oauth2.endpoint='+${localEndpoint}"></th:block>
 <th:block th:text="'service.oauth2.client_id='+${entity.id}"></th:block>
-<th:block th:text="'service.oauth2.client_secret='+${entity.clientSecret}"></th:block>
-				</pre>
+<th:block th:text="'service.oauth2.client_secret='+${entity.clientSecret}"></th:block></pre>
 			</dd>
 		</th:block>
 	</dl>

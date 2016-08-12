@@ -39,6 +39,7 @@
         </div>
         <div class="control-group">
             <div class="controls">
+                <input type="hidden" name="nonce" th:value="${nonce}" />
                 <button type="submit" class="btn">Login</button>
                 <br/><br />
                 Don't have an account? <a th:href="@{/register}">Register</a>

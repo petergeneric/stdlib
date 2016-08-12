@@ -14,6 +14,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
+import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
 import com.peterphi.usermanager.ui.api.UserUIService;
 
 import javax.ws.rs.core.Response;
@@ -38,6 +39,9 @@ public class UserUIServiceImpl implements UserUIService
 	@Inject
 	UserLogin login;
 
+	@Inject
+	LowSecuritySessionNonceStore nonceStore;
+
 
 	@Override
 	public String getIndex()
@@ -59,6 +63,7 @@ public class UserUIServiceImpl implements UserUIService
 
 		call.set("resultset", resultset);
 		call.set("users", resultset.getList());
+		call.set("nonce", nonceStore.getValue());
 
 		return call.process();
 	}
@@ -83,19 +88,24 @@ public class UserUIServiceImpl implements UserUIService
 		call.set("timezones", Arrays.asList(TimeZone.getAvailableIDs()));
 		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
 		call.set("roles", roleDao.getAll());
+		call.set("nonce", nonceStore.getValue());
 
 		return call.process();
 	}
+
 
 	@Override
 	@Transactional
 	@Retry
 	public Response editUserProfile(final int userId,
+	                                final String nonce,
 	                                final String dateFormat,
 	                                final String timeZone,
 	                                final String name,
 	                                final String email)
 	{
+		nonceStore.validate(nonce);
+
 		final int localUser = login.getId();
 
 		if (localUser != userId && !login.isAdmin())
@@ -113,8 +123,10 @@ public class UserUIServiceImpl implements UserUIService
 	@Transactional
 	@Retry
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
-	public Response deleteUser(final int userId)
+	public Response deleteUser(final int userId, final String nonce)
 	{
+		nonceStore.validate(nonce);
+
 		final int localUser = login.getId();
 
 		accountDao.deleteById(userId);
@@ -137,8 +149,13 @@ public class UserUIServiceImpl implements UserUIService
 	@Override
 	@Transactional
 	@Retry
-	public Response changePassword(final int userId, final String newPassword, final String newPasswordConfirm)
+	public Response changePassword(final int userId,
+	                               final String nonce,
+	                               final String newPassword,
+	                               final String newPasswordConfirm)
 	{
+		nonceStore.validate(nonce);
+
 		final int localUser = login.getId();
 
 		if (localUser != userId && !login.isAdmin())
