@@ -16,6 +16,7 @@ import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
 import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
@@ -68,35 +69,7 @@ public abstract class HibernateModule extends AbstractModule
 	public Configuration getHibernateConfiguration(GuiceConfig guiceConfig,
 	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
 	{
-		final Properties properties;
-
-		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
-		{
-			properties = guiceConfig.toProperties();
-		}
-		else
-		{
-			PropertyFile[] files = PropertyFile.findAll(propertyFileName);
-
-			if (files == null || files.length == 0)
-			{
-				throw new IllegalArgumentException("Cannot find any property files called: " + propertyFileName);
-			}
-			else
-			{
-				// Merge all hibernate property files into a single file
-				PropertyFile file = PropertyFile.readOnlyUnion(files);
-
-				// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
-				GuiceConfig temp = new GuiceConfig();
-
-				temp.setAll(guiceConfig);
-				temp.setAll(file);
-
-				// Now extract the hibernate properties again with any variables
-				properties = temp.toProperties(key -> file.containsKey(key));
-			}
-		}
+		final Properties properties = extractHibernateProperties(guiceConfig, propertyFileName);
 
 		validateHibernateProperties(guiceConfig, properties);
 
@@ -129,6 +102,52 @@ public abstract class HibernateModule extends AbstractModule
 		}
 
 		return config;
+	}
+
+
+	private Properties extractHibernateProperties(final GuiceConfig guiceConfig,
+	                                              final @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
+	{
+		final Properties properties;
+
+		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
+		{
+			// Extract all properties starting with "hibernate." and "liquibase."
+			properties = guiceConfig.toProperties(k -> k.startsWith("hibernate.") || k.startsWith("liquibase."));
+		}
+		else
+		{
+			if (StringUtils.contains(propertyFileName, '\n'))
+			{
+				log.debug(
+						"Assuming hibernate.properties contains literal hibernate.properties file, not a resource/file reference");
+				properties = PropertyFile.fromString(propertyFileName).toProperties();
+			}
+			else
+			{
+				PropertyFile[] files = PropertyFile.findAll(propertyFileName);
+
+				if (files == null || files.length == 0)
+				{
+					throw new IllegalArgumentException("Cannot find any property files called: " + propertyFileName);
+				}
+				else
+				{
+					// Merge all hibernate property files into a single file
+					PropertyFile file = PropertyFile.readOnlyUnion(files);
+
+					// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
+					GuiceConfig temp = new GuiceConfig();
+
+					temp.setAll(guiceConfig);
+					temp.setAll(file);
+
+					// Now extract the hibernate properties again with any variables
+					properties = temp.toProperties(key -> file.containsKey(key));
+				}
+			}
+		}
+		return properties;
 	}
 
 
