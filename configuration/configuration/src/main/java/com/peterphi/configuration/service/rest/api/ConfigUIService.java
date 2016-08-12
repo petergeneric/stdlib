@@ -1,6 +1,7 @@
 package com.peterphi.configuration.service.rest.api;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -32,7 +33,20 @@ public interface ConfigUIService
 	@POST
 	@Path("/create-path")
 	@Produces(MediaType.TEXT_HTML)
-	Response getConfigPage(@FormParam("parent_path") String path, @FormParam("child_path") String child);
+	Response getConfigPage(@FormParam("nonce") String nonce,
+	                       @FormParam("parent_path") String path,
+	                       @FormParam("child_path") String child);
+
+	@POST
+	@Path("/import-properties")
+	@Produces(MediaType.TEXT_HTML)
+	Response importPropertyFile(@FormParam("_nonce") String nonce,
+	                            @FormParam("_path") String path,
+	                            @FormParam("_merge") @DefaultValue("false") boolean merge,
+	                            @FormParam("properties") String properties,
+	                            @FormParam("_name") String name,
+	                            @FormParam("_email") String email,
+	                            @FormParam("_message") String message);
 
 	@POST
 	@Path("/update")

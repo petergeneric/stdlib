@@ -20,6 +20,7 @@
 	<ul class="nav nav-pills">
 		<li th:if="${parent}"><a th:href="@{'/edit/'+${parent}}">Parent</a></li>
 		<li><a shape="rect" href="#createChildModal" data-toggle="modal">Add Child</a></li>
+		<li><a shape="rect" href="#importPropertiesModal" data-toggle="modal">Import Property File</a></li>
 	</ul>
 
 	<!-- Create child -->
@@ -36,6 +37,76 @@
 			<p><input name="child_path" value=""/></p>
 		</div>
 		<div class="modal-footer">
+			<input type="hidden" name="_nonce" th:value="${nonce}" />
+			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+			<input class="btn btn-primary" type="submit" value="Create"/>
+		</div>
+	</form>
+
+	<!-- Import properties -->
+	<form id="importPropertiesModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+	      aria-labelledby="importPropertiesModalLabel" aria-hidden="true" method="POST"
+	      enctype="application/x-www-form-urlencoded"
+	      autocomplete="off" th:action="@{/import-properties}">
+		<div class="modal-header">
+			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+			<h3 id="importPropertiesModalLabel">Create new path</h3>
+		</div>
+		<div class="modal-body">
+			<p>Import property file into <span th:text="${path}">this path</span></p>
+
+			<!-- properties -->
+			<div class="control-group">
+				<label class="control-label" for="input_properties">properties</label>
+
+				<div class="controls">
+					<textarea style="width: 95%" rows="5"
+					          type="text"
+					          id="input_properties"
+					          name="properties"
+					          placeholder="Property file (key=value pairs, one per line)"
+					          value=""/>
+
+					<!-- Help / Warning text -->
+					<span class="help-inline"></span>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<label class="control-label" for="input_merge">Merge Properties:</label>
+
+				<div class="controls">
+					<input type="checkbox" id="input_merge" name="_merge" value="true" checked="checked"/>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<label class="control-label">Name:</label>
+
+				<div class="controls">
+					<input type="text" name="_name" placeholder="Unknown UI User"/>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<label class="control-label">E-mail:</label>
+
+				<div class="controls">
+					<input type="text" name="_email" placeholder="nobody@localhost"/>
+				</div>
+			</div>
+
+			<div class="control-group">
+				<label class="control-label">Commit Message:</label>
+
+				<div class="controls">
+					<textarea name="_message" rows="2" style="width: 95%;" placeholder="Reason for / description of change"/>
+				</div>
+			</div>
+		</div>
+		<div class="modal-footer">
+			<input type="hidden" name="_path" th:value="${path}"/>
+			<input type="hidden" name="_nonce" th:value="${nonce}" />
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 			<input class="btn btn-primary" type="submit" value="Create"/>
 		</div>
@@ -122,6 +193,7 @@
 
 			<div class="control-group">
 				<div class="controls">
+					<input type="hidden" name="_nonce" th:value="${nonce}" />
 					<button type="submit" class="btn">Commit</button>
 				</div>
 			</div>
@@ -207,6 +279,12 @@
 					else {
 						return null;
 					}
+				});
+
+				$('#importPropertiesModal').submit(function() {
+					// Allow the form submit to continue without any warnings about unsaved changes
+					propertySaveFormSubmitted = true;
+
 				});
 
 				$('#property-update-form').submit(function () {

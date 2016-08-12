@@ -5,14 +5,17 @@ import com.google.inject.name.Named;
 import com.peterphi.configuration.service.git.ConfigChangeMode;
 import com.peterphi.configuration.service.git.ConfigRepository;
 import com.peterphi.configuration.service.git.RepoHelper;
+import com.peterphi.configuration.service.guice.LowSecuritySessionNonceStore;
 import com.peterphi.configuration.service.rest.api.ConfigUIService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
+import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -34,6 +37,9 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Inject
 	@Named("config")
 	ConfigRepository repo;
+
+	@Inject
+	LowSecuritySessionNonceStore nonceStore;
 
 	private static final String REF = "HEAD";
 
@@ -70,14 +76,14 @@ public class ConfigUIServiceImpl implements ConfigUIService
 			// Sort alphabetically for the UI
 			config.properties.sort(Comparator.comparing(ConfigPropertyValue:: getName));
 
-			inheritedProperties = config.properties.stream().filter(p -> p.path.length() < config.path.length()).collect(
-					Collectors.toList());
-			definedProperties = config.properties.stream().filter(p -> p.path.equals(config.path)).collect(Collectors.toList());
+			inheritedProperties = computeInheritedProperties(config);
+			definedProperties = computeDefinedProperties(config);
 		}
 
 
 		final TemplateCall call = templater.template("config-edit");
 
+		call.set("nonce", nonceStore.getValue());
 		call.set("repo", repo);
 		call.set("config", config);
 		call.set("inheritedProperties", inheritedProperties);
@@ -91,12 +97,75 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	}
 
 
-	@Override
-	public Response getConfigPage(final String path, final String child)
+	private List<ConfigPropertyValue> computeInheritedProperties(final ConfigPropertyData config)
 	{
+		return config.properties.stream().filter(p -> p.path.length() < config.path.length()).collect(Collectors.toList());
+	}
+
+
+	private List<ConfigPropertyValue> computeDefinedProperties(final ConfigPropertyData config)
+	{
+		return config.properties.stream().filter(p -> p.path.equals(config.path)).collect(Collectors.toList());
+	}
+
+
+	@Override
+	public Response getConfigPage(final String nonce, final String path, final String child)
+	{
+		nonceStore.validate(nonce);
+
 		final String newPath = RepoHelper.normalisePath(path + "/" + child);
 
 		return Response.seeOther(URI.create("/edit/" + newPath)).build();
+	}
+
+
+	@Override
+	public Response importPropertyFile(final String nonce,
+	                                   final String path,
+	                                   final boolean merge,
+	                                   final String properties,
+	                                   final String name,
+	                                   final String email,
+	                                   final String message)
+	{
+		nonceStore.validate(nonce);
+
+		MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
+
+		map.putSingle("_path", path);
+
+		if (name != null)
+			map.putSingle("_name", name);
+		if (email != null)
+			map.putSingle("_email", email);
+		if (message != null)
+			map.putSingle("_message", message);
+		if (nonce != null)
+			map.putSingle("_nonce", nonce);
+
+		// If merge is enabled then merge the properties on top of the existing properties at this path
+		if (merge)
+		{
+			final ConfigPropertyData existing = repo.get(REF, path);
+
+			for (ConfigPropertyValue defined : computeDefinedProperties(existing))
+			{
+				map.putSingle("property." + defined.getName(), defined.getValue());
+			}
+		}
+
+		// Now put all the Property File values into the map
+		{
+			PropertyFile props = PropertyFile.fromString(properties);
+			for (String key : props.keySet())
+			{
+				map.putSingle("property." + key, props.get(key));
+			}
+		}
+
+		// Finally, pass over to apply changes
+		return applyChanges(map);
 	}
 
 
