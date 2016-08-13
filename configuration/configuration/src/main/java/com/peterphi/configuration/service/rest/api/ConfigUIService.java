@@ -44,8 +44,6 @@ public interface ConfigUIService
 	                            @FormParam("_path") String path,
 	                            @FormParam("_merge") @DefaultValue("false") boolean merge,
 	                            @FormParam("properties") String properties,
-	                            @FormParam("_name") String name,
-	                            @FormParam("_email") String email,
 	                            @FormParam("_message") String message);
 
 	@POST

@@ -1,12 +1,14 @@
 package com.peterphi.configuration.service.rest.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.configuration.service.git.ConfigChangeMode;
 import com.peterphi.configuration.service.git.ConfigRepository;
 import com.peterphi.configuration.service.git.RepoHelper;
 import com.peterphi.configuration.service.guice.LowSecuritySessionNonceStore;
 import com.peterphi.configuration.service.rest.api.ConfigUIService;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
@@ -37,6 +39,9 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Inject
 	@Named("config")
 	ConfigRepository repo;
+
+	@Inject
+	Provider<CurrentUser> userProvider;
 
 	@Inject
 	LowSecuritySessionNonceStore nonceStore;
@@ -125,8 +130,6 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	                                   final String path,
 	                                   final boolean merge,
 	                                   final String properties,
-	                                   final String name,
-	                                   final String email,
 	                                   final String message)
 	{
 		nonceStore.validate(nonce);
@@ -135,10 +138,6 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 		map.putSingle("_path", path);
 
-		if (name != null)
-			map.putSingle("_name", name);
-		if (email != null)
-			map.putSingle("_email", email);
 		if (message != null)
 			map.putSingle("_message", message);
 		if (nonce != null)
@@ -212,8 +211,9 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public Response applyChanges(final MultivaluedMap<String, String> fields)
 	{
-		final String name = StringUtils.defaultIfBlank(fields.getFirst("_name"), "Unknown UI User");
-		final String email = StringUtils.defaultIfBlank(fields.getFirst("_email"), "nobody@localhost");
+		final String name = userProvider.get().getName();
+		final String email = userProvider.get().getUsername();
+
 		final String path = RepoHelper.normalisePath(fields.getFirst("_path"));
 		final String message = StringUtils.defaultIfBlank(fields.getFirst("_message"), "No message");
 
