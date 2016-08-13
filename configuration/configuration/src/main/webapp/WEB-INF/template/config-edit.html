@@ -315,8 +315,9 @@
 					<tr th:each="kvp: ${definedProperties}">
 						<td class="span3" th:text="${kvp.name}">name</td>
 						<td class="span8">
-					<textarea class="span12" th:name="'property.'+${kvp.name}" rows="2" th:text="${kvp.value}"
-					          onchange="propertyChanged(this)"></textarea>
+							<textarea class="span10" th:attr="data-property-name=${kvp.name}" th:name="'property.'+${kvp.name}"
+							          rows="2" th:text="${kvp.value}"
+							          onchange="propertyChanged(this)"></textarea>
 						</td>
 						<td class="span1"><a class="remove-link" href="#" onclick="removeProperty(this)">×</a></td>
 					</tr>
@@ -327,7 +328,7 @@
 							<span>New Property Name</span>
 						</td>
 						<td class="span8">
-							<textarea class="span12" rows="2"/>
+							<textarea class="span10" rows="2"/>
 						</td>
 						<td class="span1"><a class="remove-link" href="#" onclick="removeProperty(this)">×</a></td>
 					</tr>
@@ -338,9 +339,10 @@
 							<input type="text" placeholder="New property name"/>
 						</td>
 						<td class="span9">
-							<textarea class="span12" placeholder="Property value"/><br/>
+							<textarea class="span10" placeholder="Property value"/><br/>
 							<button type="button">Add</button>
 						</td>
+						<td class="span1"></td>
 					</tr>
 					</tbody>
 				</table>
@@ -406,7 +408,7 @@
 			var name = $('#add-property input').val();
 			var value = $('#add-property textarea').val();
 
-			setProp(name, value);
+			set(name, value);
 
 			// Clear values
 			$('#add-property input').val('');
