@@ -84,10 +84,10 @@ final class InvocationRetryable implements Retryable<Object>
 
 		// Don't retry if a RestExeption/WebApplicationException's Response HTTP Code is in noHttpCodes
 		// Also don't retry if a 303 redirect with a cause with an HTTP Code in noHttpCodes
-		if (e instanceof WebApplicationException)
+		if (e instanceof RestException || e instanceof WebApplicationException)
 		{
 			final int[] httpCodes = getHttpCodesForException(e);
-
+			
 			if (httpCodes != null)
 			{
 				final int httpCode = httpCodes[0];
