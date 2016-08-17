@@ -192,8 +192,6 @@ public class UserUIServiceImpl implements UserUIService
 		// It also means when they hit the "logout" button as the impersonated user they will be logged back in as their own user
 		impersonationService.impersonate(userId);
 
-		Response.ResponseBuilder builder = Response.seeOther(URI.create("/"));
-
-		return builder.build();
+		return Response.seeOther(URI.create("/")).build();
 	}
 }
