@@ -87,7 +87,7 @@ final class InvocationRetryable implements Retryable<Object>
 		if (e instanceof RestException || e instanceof WebApplicationException)
 		{
 			final int[] httpCodes = getHttpCodesForException(e);
-			
+
 			if (httpCodes != null)
 			{
 				final int httpCode = httpCodes[0];
