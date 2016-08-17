@@ -227,8 +227,7 @@
 				</th:block>
 				<th:block th:unless="${session.login.isAdmin()}">
 					<ul>
-						<li th:each="role: ${user.roles}"><a th:href="@{'/role/' + ${role.id}}" th:text="${role.caption}"></a>
-						</li>
+						<li th:each="role: ${user.roles}" th:text="${role.caption}"></li>
 					</ul>
 				</th:block>
 			</div>
