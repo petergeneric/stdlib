@@ -70,7 +70,8 @@ public @interface Retry
 
 	/**
 	 * If a {@link com.peterphi.std.guice.restclient.exception.RestException} is thrown then if the HTTP Code is one of these
-	 * values we don't retry
+	 * values we don't retry. N.B. server-side we also consider an HTTP 303 redirection with a cause RestException having one of
+	 * these codes
 	 *
 	 * @return
 	 */

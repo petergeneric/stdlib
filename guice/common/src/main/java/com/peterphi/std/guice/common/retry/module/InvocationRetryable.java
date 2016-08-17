@@ -6,6 +6,8 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
+import javax.ws.rs.WebApplicationException;
+
 final class InvocationRetryable implements Retryable<Object>
 {
 	private static final Logger log = Logger.getLogger(InvocationRetryable.class);
@@ -80,17 +82,55 @@ final class InvocationRetryable implements Retryable<Object>
 				return false;
 		}
 
-		// Don't retry if a RestExeption HTTP Code is in noHttpCodes
-		if (e instanceof RestException)
+		// Don't retry if a RestExeption/WebApplicationException's Response HTTP Code is in noHttpCodes
+		// Also don't retry if a 303 redirect with a cause with an HTTP Code in noHttpCodes
+		if (e instanceof WebApplicationException)
 		{
-			final int httpCode = ((RestException) e).getHttpCode();
+			final int[] httpCodes = getHttpCodesForException(e);
 
-			if (ArrayUtils.contains(this.noHttpCodes, httpCode))
-				return false;
+			if (httpCodes != null)
+			{
+				final int httpCode = httpCodes[0];
+
+				if (ArrayUtils.contains(this.noHttpCodes, httpCode))
+					return false;
+
+				// See Other (used for login redirects)
+				if (httpCode == 303)
+				{
+					final int causeHttpCode = httpCodes[1];
+
+					if (ArrayUtils.contains(this.noHttpCodes, causeHttpCode))
+						return false;
+				}
+			}
 		}
 
 		// By default, retry
 		return true;
+	}
+
+
+	private int[] getHttpCodesForException(final Throwable e)
+	{
+		final int httpCode;
+		if (e instanceof RestException)
+			httpCode = ((RestException) e).getHttpCode();
+		else if (e instanceof WebApplicationException && ((WebApplicationException) e).getResponse() != null)
+			httpCode = ((WebApplicationException) e).getResponse().getStatus();
+		else
+			return null;
+
+		final int causeHttpCode;
+		final Throwable cause = e.getCause();
+		if (cause == null)
+			causeHttpCode = Integer.MIN_VALUE;
+		else if (cause instanceof RestException)
+			causeHttpCode = ((RestException) cause).getHttpCode();
+		else
+			causeHttpCode = Integer.MIN_VALUE;
+
+		return new int[]{httpCode, causeHttpCode};
 	}
 
 
