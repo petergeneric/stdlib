@@ -23,7 +23,8 @@
 	<h1 th:text="${user.email}"></h1>
 
 	<ul class="nav nav-pills">
-		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#chpassModal" data-toggle="modal">Change Password</a></li>
+		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#chpassModal" data-toggle="modal">Change
+			Password</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#impersonateModal" data-toggle="modal">Impersonate</a></li>
 	</ul>
@@ -211,6 +212,34 @@
 				<span class="help-inline"></span>
 			</div>
 		</div>
+
+		<div class="control-group" th:if="${session.login.isAdmin() or session.login.id == user.id}">
+			<label class="control-label" for="input_roles">Roles</label>
+
+			<div class="controls">
+				<th:block th:if="${session.login.isAdmin()}">
+					<select th:readonly="${!session.login.isAdmin()}" multiple="multiple" id="input_roles" name="roles"
+					        class="chosen-select span10">
+						<option data-placeholder="Choose some roles (optional)" th:each="role: ${roles}" th:value="${role.id}"
+						        th:text="${role.id} +' ('+${role.caption}+')'"
+						        th:selected="${entityRoleIds.contains(role.id)}"></option>
+					</select>
+				</th:block>
+				<th:block th:unless="${session.login.isAdmin()}">
+					<ul>
+						<li th:each="role: ${user.roles}"><a th:href="@{'/role/' + ${role.id}}" th:text="${role.caption}"></a>
+						</li>
+					</ul>
+				</th:block>
+			</div>
+
+			<script>
+				$(document).ready(function () {
+					$(".chosen-select").chosen({});
+				});
+			</script>
+		</div>
+
 
 		<script>
 			$(document).ready(function () {

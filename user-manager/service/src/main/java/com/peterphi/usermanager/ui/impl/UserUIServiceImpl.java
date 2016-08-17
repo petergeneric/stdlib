@@ -11,6 +11,7 @@ import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
+import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.ImpersonationService;
@@ -22,7 +23,11 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.Arrays;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.TimeZone;
+import java.util.stream.Collectors;
 
 @SessionScoped
 @AuthConstraint(role = "authenticated", comment = "login required")
@@ -89,14 +94,22 @@ public class UserUIServiceImpl implements UserUIService
 
 		final UserEntity user = accountDao.getById(userId);
 
+		call.set("entity", user);
 		call.set("user", user);
 
 		call.set("timezones", Arrays.asList(TimeZone.getAvailableIDs()));
 		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
+		call.set("entityRoleIds", getRoles(user));
 		call.set("roles", roleDao.getAll());
 		call.set("nonce", nonceStore.getValue(NONCE_USE));
 
 		return call.process();
+	}
+
+
+	private Set<String> getRoles(UserEntity entity)
+	{
+		return entity.getRoles().stream().map(RoleEntity:: getId).collect(Collectors.toSet());
 	}
 
 
@@ -108,7 +121,8 @@ public class UserUIServiceImpl implements UserUIService
 	                                final String dateFormat,
 	                                final String timeZone,
 	                                final String name,
-	                                final String email)
+	                                final String email,
+	                                final List<String> roles)
 	{
 		nonceStore.validate(NONCE_USE, nonce);
 
@@ -118,7 +132,45 @@ public class UserUIServiceImpl implements UserUIService
 			throw new AuthenticationFailureException("Only a User Admin can edit the profile of another user!");
 
 		// Change regular account settings
-		accountDao.changeProfile(userId, name, email, dateFormat, timeZone);
+		final UserEntity user = accountDao.changeProfile(userId, name, email, dateFormat, timeZone);
+
+		// Change roles (if admin user)
+		if (login.isAdmin())
+		{
+			final Set<String> currentRoles = getRoles(user);
+
+			// Roles to add to user
+			final Set<String> addRoles = new HashSet<>(roles);
+			addRoles.removeAll(currentRoles);
+			// Roles to remove from user
+			final Set<String> delRoles = new HashSet<>(currentRoles);
+			delRoles.removeAll(roles);
+
+			// Add roles as necessary
+			if (addRoles.size() > 0)
+			{
+				for (String role : addRoles)
+				{
+					RoleEntity entity = roleDao.getById(role);
+					entity.getMembers().add(user);
+
+					roleDao.update(entity);
+				}
+			}
+
+			// Remove roles as necessary
+			if (delRoles.size() > 0)
+			{
+				for (String role : delRoles)
+				{
+					RoleEntity entity = roleDao.getById(role);
+
+					entity.getMembers().removeIf(u -> u.getId() == user.getId());
+
+					roleDao.update(entity);
+				}
+			}
+		}
 
 		// Redirect back to the user page
 		return Response.seeOther(URI.create("/user/" + userId)).build();

@@ -12,6 +12,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
 
 @Doc("User Manager user interface")
 @Path("/")
@@ -40,7 +41,8 @@ public interface UserUIService
 	                         @FormParam("dateFormat") String dateFormat,
 	                         @FormParam("timeZone") String timeZone,
 	                         @FormParam("name") String name,
-	                         @FormParam("email") String email);
+	                         @FormParam("email") String email,
+	                         @FormParam("roles") List<String> roles);
 
 	@POST
 	@Path("/user/{user_id}/delete")

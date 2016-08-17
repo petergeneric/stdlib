@@ -151,7 +151,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 
 	@Transactional
-	public void changeProfile(final int id, final String name, final String email, final String dateFormat, final String timeZone)
+	public UserEntity changeProfile(final int id, final String name, final String email, final String dateFormat, final String timeZone)
 	{
 		final UserEntity account = getById(id);
 
@@ -166,6 +166,8 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 			account.setTimeZone(timeZone);
 
 			update(account);
+
+			return account;
 		}
 		else
 		{
