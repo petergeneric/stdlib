@@ -1,7 +1,7 @@
 package com.peterphi.usermanager.guice.authentication;
 
-import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.usermanager.db.entity.UserEntity;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.DateTimeZone;
@@ -40,7 +40,6 @@ class UserLoginImpl implements UserLogin
 	{
 		if (account == null)
 		{
-
 			id = null;
 			name = "Anonymous";
 			email = "anonymous@localhost";

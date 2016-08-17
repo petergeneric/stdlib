@@ -1,10 +1,10 @@
 package com.peterphi.usermanager.guice.authentication;
 
-import com.peterphi.usermanager.db.entity.UserEntity;
-import com.peterphi.usermanager.guice.async.AsynchronousActionService;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.guice.async.AsynchronousActionService;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
@@ -45,38 +45,42 @@ public class UserLoginProvider implements Provider<UserLogin>
 	@Override
 	public UserLogin get()
 	{
-		HttpServletRequest request = requestProvider.get();
-		HttpSession session = sessionProvider.get();
+		final HttpServletRequest request = requestProvider.get();
+		final HttpSession session = sessionProvider.get();
 
 		// this is a new session, we should make an attempt to reconnect to a previous session;
 		// this is particularly important in dev where containers are restarted & sessions lost frequently
-		UserLogin login = null;
+		final UserLogin login;
+
+		if (session.getAttribute(LOGIN_SESSION_ATTRIBUTE) != null && session.getAttribute(LOGIN_SESSION_ATTRIBUTE) instanceof UserLogin)
+		{
+			login = (UserLogin) session.getAttribute(LOGIN_SESSION_ATTRIBUTE);
+		}
+		else
+		{
+			login = new UserLoginImpl(null);
+
+			session.setAttribute(LOGIN_SESSION_ATTRIBUTE, login);
+		}
 
 		// Try cookie reconnect
+		if (login.isAnonymous())
 		{
 			final Cookie[] cookies = request.getCookies();
 
 			if (cookies != null)
-				login = tryRelogin(authService.get(), cookies);
+				tryRelogin(login, authService.get(), cookies);
 		}
 
 		// Try basic auth
-		if (login == null)
-		{
-			login = tryBasicAuthLogin(authService.get(), request);
-		}
-
-		// Fall back on setting up anonymous user on the session
-		if (login == null)
-			login = ensureLoginOnSession(session);
-		else
-			session.setAttribute(LOGIN_SESSION_ATTRIBUTE, login);
+		if (login.isAnonymous())
+			tryBasicAuthLogin(login, authService.get(), request);
 
 		return login;
 	}
 
 
-	private UserLogin tryRelogin(UserAuthenticationService auth, Cookie[] cookies)
+	private UserLogin tryRelogin(final UserLogin login, UserAuthenticationService auth, Cookie[] cookies)
 	{
 		for (Cookie cookie : cookies)
 		{
@@ -84,11 +88,13 @@ public class UserLoginProvider implements Provider<UserLogin>
 			{
 				final String key = cookie.getValue();
 
-				final Future<UserLogin> future = asynchService.get().submit(() -> trySessionReconnectLogin(auth, key));
+				final Future<UserEntity> future = asynchService.get().submit(() -> trySessionReconnectLogin(auth, key));
 
 				try
 				{
-					return LOGIN_TIMEOUT.start().resolveFuture(future, true);
+					UserEntity user = LOGIN_TIMEOUT.start().resolveFuture(future, true);
+
+					login.reload(user);
 				}
 				catch (Exception e)
 				{
@@ -112,7 +118,7 @@ public class UserLoginProvider implements Provider<UserLogin>
 	 *
 	 * @return a UserLogin for the appropriate user if valid credentials were presented, otherwise null
 	 */
-	private UserLogin tryBasicAuthLogin(UserAuthenticationService authService, HttpServletRequest request)
+	private UserLogin tryBasicAuthLogin(UserLogin login, UserAuthenticationService authService, HttpServletRequest request)
 	{
 		final String header = request.getHeader(HttpHeaderNames.AUTHORIZATION);
 
@@ -125,14 +131,16 @@ public class UserLoginProvider implements Provider<UserLogin>
 				final String username = credentials[0];
 				final String password = credentials[1];
 
-				final Future<UserLogin> future = asynchService.get().submit(() -> tryLogin(authService,
-				                                                                           username,
-				                                                                           password,
-				                                                                           true));
+				final Future<UserEntity> future = asynchService.get().submit(() -> tryLogin(authService,
+				                                                                            username,
+				                                                                            password,
+				                                                                            true));
 
 				try
 				{
-					return LOGIN_TIMEOUT.start().resolveFuture(future, true);
+					UserEntity user = LOGIN_TIMEOUT.start().resolveFuture(future, true);
+
+					login.reload(user);
 				}
 				catch (Exception e)
 				{
@@ -146,25 +154,15 @@ public class UserLoginProvider implements Provider<UserLogin>
 	}
 
 
-	UserLogin tryLogin(final UserAuthenticationService auth, String username, String password, final boolean basicAuth)
+	UserEntity tryLogin(final UserAuthenticationService auth, String username, String password, final boolean basicAuth)
 	{
-		final UserEntity account = auth.authenticate(username, password, basicAuth);
-
-		if (account != null)
-			return new UserLoginImpl(account);
-		else
-			return null;
+		return auth.authenticate(username, password, basicAuth);
 	}
 
 
-	UserLogin trySessionReconnectLogin(final UserAuthenticationService auth, final String key)
+	UserEntity trySessionReconnectLogin(final UserAuthenticationService auth, final String key)
 	{
-		final UserEntity account = auth.authenticate(key);
-
-		if (account != null)
-			return new UserLoginImpl(account);
-		else
-			return null;
+		return auth.authenticate(key);
 	}
 
 
