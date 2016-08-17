@@ -28,6 +28,8 @@ import java.util.stream.Collectors;
 @AuthConstraint(role = UserLogin.ROLE_ADMIN, comment = "Must be user manager admin to view/modify roles")
 public class RoleUIServiceImpl implements RoleUIService
 {
+	private static final String NONCE_USE = "configui";
+
 	@Inject
 	Templater templater;
 
@@ -52,7 +54,7 @@ public class RoleUIServiceImpl implements RoleUIService
 
 		call.set("resultset", resultset);
 		call.set("roles", resultset.getList());
-		call.set("nonce", nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -73,7 +75,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		call.set("entity", entity);
 		call.set("allUsers", userDao.getAll());
 		call.set("users", userDao.findByUriQuery(new WebQuery().eq("roles.id", id)).getList());
-		call.set("nonce", nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -84,7 +86,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Retry
 	public Response create(final String id, final String nonce, final String caption)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		if (dao.getById(id) != null)
 			throw new IllegalArgumentException("Role with name already exists: " + id);
@@ -105,7 +107,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Retry
 	public Response delete(final String id, final String nonce)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		if (StringUtils.equalsIgnoreCase(id, UserLogin.ROLE_ADMIN))
 			throw new IllegalArgumentException("Cannot delete the user manager admin role!");
@@ -126,7 +128,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Retry
 	public Response changeCaption(final String id, final String nonce, final String caption)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final RoleEntity entity = dao.getById(id);
 
@@ -146,7 +148,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Retry
 	public Response changeMembers(final String id, final String nonce, final List<Integer> members)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final RoleEntity entity = dao.getById(id);
 

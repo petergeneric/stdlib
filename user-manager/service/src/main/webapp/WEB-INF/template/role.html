@@ -21,99 +21,103 @@
 <div class="container">
 	<h1 th:text="${entity.id}"></h1>
 
-	<ul class="nav nav-pills">
-		<li><a href="#chcaptionModal" data-toggle="modal">Change Caption</a></li>
-		<li><a href="#editmembersModal" data-toggle="modal">Edit Members</a></li>
-		<li><a href="#delroleModal" data-toggle="modal">Delete</a></li>
-	</ul>
+	<th:block th:if="${session.login.isAdmin()}">
+		<ul class="nav nav-pills">
+			<li><a href="#chcaptionModal" data-toggle="modal">Change Caption</a></li>
+			<li><a href="#editmembersModal" data-toggle="modal">Edit Members</a></li>
+			<li><a href="#delroleModal" data-toggle="modal">Delete</a></li>
+		</ul>
 
-	<!-- Change caption modal -->
-	<form id="chcaptionModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
-	      aria-labelledby="chcaptionModalLabel"
-	      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/role/' + ${entity.id} + '/change-caption'}">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-			<h3 id="chcaptionModalLabel">Change Caption</h3>
-		</div>
-		<div class="modal-body">
-			<p>Please enter a new caption</p>
-			<input type="hidden" name="alter" value="caption"/>
+		<!-- Change caption modal -->
+		<form id="chcaptionModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="chcaptionModalLabel"
+		      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/role/' + ${entity.id} + '/change-caption'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="chcaptionModalLabel">Change Caption</h3>
+			</div>
+			<div class="modal-body">
+				<p>Please enter a new caption</p>
+				<input type="hidden" name="alter" value="caption"/>
 
-			<!-- Caption -->
-			<div class="control-group">
-				<label class="control-label" for="input_caption">New Caption</label>
+				<!-- Caption -->
+				<div class="control-group">
+					<label class="control-label" for="input_caption">New Caption</label>
 
-				<div class="controls">
-					<input
-							type="caption"
-							id="input_caption"
-							name="caption" value=""/>
+					<div class="controls">
+						<input
+								type="caption"
+								id="input_caption"
+								name="caption" value=""/>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="modal-footer">
-			<input type="hidden" name="nonce" th:value="${nonce}" />
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Change"/>
-		</div>
-	</form>
+			<div class="modal-footer">
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Change"/>
+			</div>
+		</form>
 
-	<!-- Edit members modal -->
-	<form id="editmembersModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
-	      aria-labelledby="editmembersModalLabel"
-	      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/role/' + ${entity.id} + '/change-members'}">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-			<h3 id="editmembersModalLabel">Edit Members</h3>
-		</div>
-		<div class="modal-body">
-			<p>Please select the new membership list</p>
-			<input type="hidden" name="alter" value="members"/>
+		<!-- Edit members modal -->
+		<form id="editmembersModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="editmembersModalLabel"
+		      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/role/' + ${entity.id} + '/change-members'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="editmembersModalLabel">Edit Members</h3>
+			</div>
+			<div class="modal-body">
+				<p>Please select the new membership list</p>
+				<input type="hidden" name="alter" value="members"/>
 
-			<!-- Caption -->
-			<div class="control-group">
-				<label class="control-label" for="input_members">Edit Members</label>
+				<!-- Caption -->
+				<div class="control-group">
+					<label class="control-label" for="input_members">Edit Members</label>
 
-				<div class="controls" style="padding-bottom: 100px;">
-					<select data-placeholder="Choose members" multiple="multiple" id="input_members" name="members" class="chosen-select span10">
-						<option th:each="user: ${allUsers}" th:selected="${users.contains(user)}" th:value="${user.id}" th:text="${user.email}"></option>
-					</select>
+					<div class="controls" style="padding-bottom: 100px;">
+						<select data-placeholder="Choose members" multiple="multiple" id="input_members" name="members"
+						        class="chosen-select span10">
+							<option th:each="user: ${allUsers}" th:selected="${users.contains(user)}" th:value="${user.id}"
+							        th:text="${user.email}"></option>
+						</select>
+					</div>
 				</div>
 			</div>
-		</div>
-		<div class="modal-footer">
-			<input type="hidden" name="nonce" th:value="${nonce}" />
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Save"/>
-		</div>
-	</form>
+			<div class="modal-footer">
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Save"/>
+			</div>
+		</form>
 
-	<script>
-		$(document).ready(function() {
-			$(".chosen-select").chosen({width:'100%'});
-		});
-	</script>
+		<script>
+			$(document).ready(function () {
+				$(".chosen-select").chosen({width: '100%'});
+			});
+		</script>
 
-	<!-- Delete modal -->
-	<form id="delroleModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
-	      aria-labelledby="delroleModalLabel" aria-hidden="true" method="POST" autocomplete="off"
-	      th:action="@{'/role/' + ${entity.id} + '/delete'}">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-			<h3 id="delroleModalLabel">Delete Role?</h3>
-		</div>
-		<div class="modal-body">
-			<p>Are you absolutely sure you want to delete the role <span th:text="${entity.id}"/>?
-			</p>
-			<input type="hidden" name="alter" value="delete"/>
-			<input type="hidden" name="id" th:value="${entity.id}"/>
-		</div>
-		<div class="modal-footer">
-			<input type="hidden" name="nonce" th:value="${nonce}" />
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Delete"/>
-		</div>
-	</form>
+		<!-- Delete modal -->
+		<form id="delroleModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="delroleModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/role/' + ${entity.id} + '/delete'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="delroleModalLabel">Delete Role?</h3>
+			</div>
+			<div class="modal-body">
+				<p>Are you absolutely sure you want to delete the role <span th:text="${entity.id}"/>?
+				</p>
+				<input type="hidden" name="alter" value="delete"/>
+				<input type="hidden" name="id" th:value="${entity.id}"/>
+			</div>
+			<div class="modal-footer">
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Delete"/>
+			</div>
+		</form>
+	</th:block>
 
 	<dl class="dl-horizontal" th:fragment="properties">
 		<dt>name</dt>

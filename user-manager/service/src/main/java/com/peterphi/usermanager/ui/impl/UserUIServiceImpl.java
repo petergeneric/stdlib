@@ -13,6 +13,7 @@ import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
+import com.peterphi.usermanager.guice.authentication.ImpersonationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
 import com.peterphi.usermanager.ui.api.UserUIService;
@@ -27,6 +28,8 @@ import java.util.TimeZone;
 @AuthConstraint(role = "authenticated", comment = "login required")
 public class UserUIServiceImpl implements UserUIService
 {
+	private static final String NONCE_USE = "configui";
+
 	@Inject
 	Templater templater;
 
@@ -38,6 +41,9 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Inject
 	UserLogin login;
+
+	@Inject
+	ImpersonationService impersonationService;
 
 	@Inject
 	LowSecuritySessionNonceStore nonceStore;
@@ -63,7 +69,7 @@ public class UserUIServiceImpl implements UserUIService
 
 		call.set("resultset", resultset);
 		call.set("users", resultset.getList());
-		call.set("nonce", nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -88,7 +94,7 @@ public class UserUIServiceImpl implements UserUIService
 		call.set("timezones", Arrays.asList(TimeZone.getAvailableIDs()));
 		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
 		call.set("roles", roleDao.getAll());
-		call.set("nonce", nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -104,7 +110,7 @@ public class UserUIServiceImpl implements UserUIService
 	                                final String name,
 	                                final String email)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final int localUser = login.getId();
 
@@ -125,7 +131,7 @@ public class UserUIServiceImpl implements UserUIService
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public Response deleteUser(final int userId, final String nonce)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final int localUser = login.getId();
 
@@ -154,7 +160,7 @@ public class UserUIServiceImpl implements UserUIService
 	                               final String newPassword,
 	                               final String newPasswordConfirm)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final int localUser = login.getId();
 
@@ -172,5 +178,22 @@ public class UserUIServiceImpl implements UserUIService
 
 		// Redirect back to the user page
 		return Response.seeOther(URI.create("/user/" + userId)).build();
+	}
+
+
+	@Override
+	@AuthConstraint(id = "impersonation", role = UserLogin.ROLE_ADMIN, comment = "only admins can impersonate other users")
+	public Response impersonate(final int userId, final String nonce)
+	{
+		nonceStore.validate(NONCE_USE, nonce);
+
+		// N.B. because we do not wish to impersonate the user for a long time we aren't changing the session reconnect cookie
+		// This means when the servlet session ends (inactivity, browser closing, etc.) the user will be logged back in as themselves
+		// It also means when they hit the "logout" button as the impersonated user they will be logged back in as their own user
+		impersonationService.impersonate(userId);
+
+		Response.ResponseBuilder builder = Response.seeOther(URI.create("/"));
+
+		return builder.build();
 	}
 }

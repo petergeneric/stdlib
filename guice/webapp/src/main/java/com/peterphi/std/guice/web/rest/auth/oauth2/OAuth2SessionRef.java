@@ -193,7 +193,7 @@ public class OAuth2SessionRef
 	public synchronized void refreshUserInfo()
 	{
 		this.cachedInfo = null;
-		this.cachedInfo = authService.get(getToken());
+		this.cachedInfo = authService.get(getToken(), clientId);
 	}
 
 

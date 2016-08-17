@@ -54,4 +54,9 @@ public interface UserUIService
 	                        @FormParam("nonce") String nonce,
 	                        @FormParam("password") final String newPassword,
 	                        @FormParam("passwordConfirm") final String newPasswordConfirm);
+
+	@POST
+	@Path("/user/{user_id}/impersonate")
+	@Produces(MediaType.TEXT_HTML)
+	Response impersonate(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
 }

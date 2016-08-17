@@ -9,7 +9,7 @@
 <html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <!--<![endif]-->
-<!--/*@thymesVar id="entity" type="com.peterphi.usermanager.db.entity.RoleEntity"*/-->
+<!--/*@thymesVar id="entity" type="com.peterphi.usermanager.db.entity.OAuthServiceEntity"*/-->
 <!--/*@thymesVar id="users" type="java.util.List<com.peterphi.usermanager.db.entity.UserEntity>"*/-->
 <head>
 	<title th:text="'User Manager: Service '+${entity.name}">User Manager: Service XYZ</title>
@@ -21,7 +21,7 @@
 <div class="container">
 	<h1 th:text="${entity.name}"></h1>
 
-	<th:block th:if="${(entity.owner.id == session.login.id) || session.login.isAdmin()}">
+	<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
 		<ul class="nav nav-pills">
 			<li><a href="#delModal" data-toggle="modal">Disable Service</a></li>
 			<li><a href="#editEndpointsModal" data-toggle="modal">Edit Endpoints</a>
@@ -97,7 +97,7 @@
 				<li th:each="endpoint: ${entity.endpointsAsList()}" th:text="${endpoint}">endpoint</li>
 			</ul>
 		</dd>
-		<th:block th:if="${entity.owner.id} == ${session.login.id}">
+		<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
 			<dt>Client Config</dt>
 			<dd>
 				<pre><th:block th:text="'service.oauth2.endpoint='+${localEndpoint}"></th:block>

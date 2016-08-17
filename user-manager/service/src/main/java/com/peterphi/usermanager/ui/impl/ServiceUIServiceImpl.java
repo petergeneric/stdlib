@@ -25,6 +25,8 @@ import java.net.URI;
 
 public class ServiceUIServiceImpl implements ServiceUIService
 {
+	private static final String NONCE_USE = "configui";
+
 	@Inject
 	Templater templater;
 
@@ -54,7 +56,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final TemplateCall call = templater.template("services");
 
-		call.set("nonce",nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 		call.set("resultset", resultset);
 		call.set("entities", resultset.getList());
 
@@ -74,7 +76,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final TemplateCall call = templater.template("service");
 
-		call.set("nonce",nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 		call.set("entity", entity);
 		call.set("localEndpoint", localEndpoint);
 
@@ -87,7 +89,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Retry
 	public Response create(final String nonce, final String name, final String endpoints)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE,nonce);
 
 		final int userId = userProvider.get().getId();
 
@@ -110,7 +112,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Retry
 	public Response disable(final String id, final String nonce)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE,nonce);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -134,7 +136,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Retry
 	public Response setEndpoints(final String nonce, final String id, final String endpoints)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE,nonce);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 

@@ -25,6 +25,7 @@ import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenRespons
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -39,6 +40,8 @@ import java.util.Collections;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
+	private static final Logger log = Logger.getLogger(UserManagerOAuthServiceImpl.class);
+
 	private static final String NO_CACHE = "no-cache";
 
 	@Inject(optional = true)
@@ -87,12 +90,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	{
 		// Has the current user approved this client+scope before? If so just redirect straight back
 		// Otherwise, bring up the authorisation UI
-		final Response response = createSessionAndRedirect(responseType,
-		                                                   clientId,
-		                                                   redirectUri,
-		                                                   state,
-		                                                   scope,
-		                                                   autoApproveAll);
+		final Response response = createSessionAndRedirect(responseType, clientId, redirectUri, state, scope, autoApproveAll);
 
 		if (response != null)
 		{
@@ -338,12 +336,31 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@Override
 	@Transactional(readOnly = true)
 	@Retry
-	public UserManagerUser get(final String token)
+	public UserManagerUser get(final String token, final String clientId)
 	{
 		OAuthSessionEntity session = sessionDao.getByToken(token);
 
 		if (session == null)
 			throw new IllegalArgumentException("No such user with token " + token);
+
+		// Check the clientId matches (if provided)
+		if (clientId != null)
+		{
+			final OAuthServiceEntity service = session.getContext().getService();
+
+			if (!StringUtils.equals(service.getId(), clientId))
+			{
+				log.warn("Service " +
+				         clientId +
+				         " tried to swap token in context " +
+				         session.getContext().getId() +
+				         " for user info but token was generated for " +
+				         session.getContext().getService().getId() +
+				         " instead! User may be under attack.");
+
+				throw new IllegalArgumentException("This token was not generated for client " + clientId + "!");
+			}
+		}
 
 		return marshaller.marshal(session.getContext().getUser());
 	}

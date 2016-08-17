@@ -1,14 +1,17 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
 <!--[if gt IE 8]><!-->
 <html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
       xmlns:th="http://www.thymeleaf.org">
 <!--<![endif]-->
 <head>
 	<title>User Manager: Edit User</title>
-	<link th:substituteby="includes :: htmlhead" />
+	<link th:substituteby="includes :: htmlhead"/>
 	<link th:substituteby="includes :: htmlhead_chosen"/>
 </head>
 <body>
@@ -20,21 +23,23 @@
 	<h1 th:text="${user.email}"></h1>
 
 	<ul class="nav nav-pills">
-		<li><a href="#chpassModal" data-toggle="modal">Change Password</a></li>
-		<li><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
+		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#chpassModal" data-toggle="modal">Change Password</a></li>
+		<li th:if="${session.login.isAdmin()}"><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
+		<li th:if="${session.login.isAdmin()}"><a href="#impersonateModal" data-toggle="modal">Impersonate</a></li>
 	</ul>
 
 	<!-- Change password modal -->
-	<form id="chpassModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="chpassModalLabel" aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/user/' + ${user.id} + '/change_password'}">
+	<form id="chpassModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="chpassModalLabel"
+	      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/user/' + ${user.id} + '/change_password'}">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
 			<h3 id="chpassModalLabel">Change Password</h3>
 		</div>
 		<div class="modal-body">
 			<p>Please enter a new password</p>
-			<input type="hidden" name="alter" value="password" />
-			<input type="hidden" name="email" th:value="${user.email}" />
-			<input type="hidden" name="nonce" th:value="${nonce}" />
+			<input type="hidden" name="alter" value="password"/>
+			<input type="hidden" name="email" th:value="${user.email}"/>
+			<input type="hidden" name="nonce" th:value="${nonce}"/>
 
 			<!-- password -->
 			<div class="control-group">
@@ -44,7 +49,7 @@
 					<input
 							type="password"
 							id="input_password"
-							name="password" value="" />
+							name="password" value=""/>
 				</div>
 			</div>
 			<!-- password (confirm) -->
@@ -65,38 +70,64 @@
 		</div>
 		<div class="modal-footer">
 			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Change" />
+			<input class="btn btn-primary" type="submit" value="Change"/>
 		</div>
 	</form>
 
-	<!-- Delete user modal -->
-	<form id="deluserModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="deluserModalLabel" aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/user/' + ${user.id} + '/delete'}">
-		<div class="modal-header">
-			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-			<h3 id="deluserModalLabel">Delete User?</h3>
-		</div>
-		<div class="modal-body">
-			<p>Are you absolutely sure you want to delete user <span th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;?</p>
-			<input type="hidden" name="alter" value="delete" />
-			<input type="hidden" name="id" th:value="${user.id}" />
-			<input type="hidden" name="nonce" th:value="${nonce}" />
-		</div>
-		<div class="modal-footer">
-			<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
-			<input class="btn btn-primary" type="submit" value="Delete User" />
-		</div>
-	</form>
+	<th:block th:if="${session.login.isAdmin()}">
+		<!-- Delete user modal -->
+		<form id="deluserModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="deluserModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/user/' + ${user.id} + '/delete'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="deluserModalLabel">Delete User?</h3>
+			</div>
+			<div class="modal-body">
+				<p>Are you absolutely sure you want to delete user <span th:text="${user.name}"/> &lt;<span
+						th:text="${user.email}"/>&gt;?</p>
+				<input type="hidden" name="alter" value="delete"/>
+				<input type="hidden" name="id" th:value="${user.id}"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Delete User"/>
+			</div>
+		</form>
+
+		<!-- Impersonate user modal -->
+		<form id="impersonateModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="impersonateModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/user/' + ${user.id} + '/impersonate'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="impersonateModalLabel">Impersonate</h3>
+			</div>
+			<div class="modal-body">
+				<p>Impersonating this user will change the login user associated with your current session to be <span
+						th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;. Are you sure?</p>
+				<input type="hidden" name="alter" value="impersonate"/>
+				<input type="hidden" name="id" th:value="${user.id}"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Impersonate"/>
+			</div>
+		</form>
+	</th:block>
 
 	<form class="form-horizontal" method="POST">
-		<input type="hidden" name="alter" value="profile" />
-		<input type="hidden" name="nonce" th:value="${nonce}" />
+		<input type="hidden" name="alter" value="profile"/>
+		<input type="hidden" name="nonce" th:value="${nonce}"/>
 
 		<!-- id -->
 		<div class="control-group">
 			<label class="control-label" for="view_id">id</label>
 
 			<div class="controls">
-				<input type="text" disabled="disabled" id="view_id" th:value="${user.id}" />
+				<input type="text" disabled="disabled" id="view_id" th:value="${user.id}"/>
 			</div>
 		</div>
 
@@ -105,7 +136,7 @@
 			<label class="control-label" for="view_lastLogin">last login</label>
 
 			<div class="controls">
-				<input type="text" disabled="disabled" id="view_lastLogin" th:value="${session.login.format(user.lastLogin)}" />
+				<input type="text" disabled="disabled" id="view_lastLogin" th:value="${session.login.format(user.lastLogin)}"/>
 			</div>
 		</div>
 
@@ -152,7 +183,8 @@
 					<option th:each="aFormat: ${dateformats}"
 					        th:selected="${aFormat} == ${user.dateFormat}"
 					        th:value="${aFormat}"
-					        th:text="${aFormat}">Zone</option>
+					        th:text="${aFormat}">Zone
+					</option>
 				</select>
 
 
@@ -170,7 +202,8 @@
 					<option th:each="aZone: ${timezones}"
 					        th:selected="${aZone} == ${user.timeZone}"
 					        th:value="${aZone}"
-					        th:text="${aZone}">Zone</option>
+					        th:text="${aZone}">Zone
+					</option>
 				</select>
 
 
@@ -180,8 +213,8 @@
 		</div>
 
 		<script>
-			$(document).ready(function() {
-				$(".chosen-select").chosen({width:'auto'});
+			$(document).ready(function () {
+				$(".chosen-select").chosen({width: 'auto'});
 			});
 		</script>
 

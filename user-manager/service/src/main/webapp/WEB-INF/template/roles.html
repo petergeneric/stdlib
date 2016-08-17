@@ -22,7 +22,7 @@
 	</div>
 
 	<ul class="nav nav-pills">
-		<li><a href="#addRoleModal" data-toggle="modal">Add Role</a></li>
+		<li th:if="${session.login.isAdmin()}"><a href="#addRoleModal" data-toggle="modal">Add Role</a></li>
 	</ul>
 
 	<!-- Change id modal -->

@@ -55,30 +55,29 @@ public interface UserManagerOAuthService
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({MediaType.APPLICATION_JSON})
 	public String getToken(@FormParam("grant_type")
-	                                    @Doc("One of: authorization_code,refresh_token,password,client_credentials (HTTP BASIC)")
-			                                    String grantType, @FormParam("code")
-	                                    @Doc("The authorization code from the auth callback (where grant_type is authorization_code)")
-			                                    String code,
-	                                    @FormParam("redirect_uri") @Doc("") String redirectUri,
-	                                    @FormParam("client_id") String clientId,
-	                                    @FormParam("client_secret") String secret,
-	                                    @FormParam("refresh_token") @Doc("The refresh token (where grant_type is refresh_token)")
-			                                    String refreshToken,
-	                                    @FormParam("username") @Doc("The username (where grant_type is password)")
-			                                    String username,
-	                                    @FormParam("password") @Doc("The password (where grant_type is password)")
-			                                    String password);
+	                       @Doc("One of: authorization_code,refresh_token,password,client_credentials (HTTP BASIC)")
+			                       String grantType, @FormParam("code")
+	                       @Doc("The authorization code from the auth callback (where grant_type is authorization_code)")
+			                       String code,
+	                       @FormParam("redirect_uri") @Doc("") String redirectUri,
+	                       @FormParam("client_id") String clientId,
+	                       @FormParam("client_secret") String secret,
+	                       @FormParam("refresh_token") @Doc("The refresh token (where grant_type is refresh_token)")
+			                       String refreshToken,
+	                       @FormParam("username") @Doc("The username (where grant_type is password)") String username,
+	                       @FormParam("password") @Doc("The password (where grant_type is password)") String password);
 
 
 	/**
 	 * User Manager extension: given user info, return user record
 	 *
 	 * @param token
+	 * @param clientId if specified, checks that the token is associated with this client (may be required in the future)
 	 *
 	 * @return
 	 */
 	@POST
 	@Path("/token-to-user-info")
 	@Produces(MediaType.APPLICATION_XML)
-	UserManagerUser get(@FormParam("token") String token);
+	UserManagerUser get(@FormParam("token") String token, @FormParam("client_id") String clientId);
 }
