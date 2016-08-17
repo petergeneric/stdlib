@@ -1,7 +1,9 @@
 package com.peterphi.std.guice.common.retry.module;
 
 import com.peterphi.std.guice.common.retry.retry.Retryable;
+import com.peterphi.std.guice.restclient.exception.RestException;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
 final class InvocationRetryable implements Retryable<Object>
@@ -12,16 +14,20 @@ final class InvocationRetryable implements Retryable<Object>
 	final Class<? extends Throwable>[] alwaysRetry;
 	final Class<? extends Throwable>[] noRetry;
 	final Class<? extends Throwable>[] noRetryCore;
+	final int[] noHttpCodes;
+
 
 	public InvocationRetryable(MethodInvocation invocation,
 	                           final Class<? extends Throwable>[] alwaysRetry,
 	                           final Class<? extends Throwable>[] noRetry,
-	                           final Class<? extends Throwable>[] noRetryCore)
+	                           final Class<? extends Throwable>[] noRetryCore,
+	                           final int[] noHttpCodes)
 	{
 		this.invocation = invocation;
 		this.alwaysRetry = alwaysRetry;
 		this.noRetry = noRetry;
 		this.noRetryCore = noRetryCore;
+		this.noHttpCodes = noHttpCodes;
 	}
 
 
@@ -49,6 +55,7 @@ final class InvocationRetryable implements Retryable<Object>
 		}
 	}
 
+
 	@Override
 	public boolean shouldRetry(final int attempt, final Throwable e)
 	{
@@ -58,7 +65,6 @@ final class InvocationRetryable implements Retryable<Object>
 			if (type.isInstance(e))
 				return true;
 		}
-
 
 		// Don't throw if the type is in noRetry
 		for (Class<? extends Throwable> type : noRetry)
@@ -74,9 +80,19 @@ final class InvocationRetryable implements Retryable<Object>
 				return false;
 		}
 
+		// Don't retry if a RestExeption HTTP Code is in noHttpCodes
+		if (e instanceof RestException)
+		{
+			final int httpCode = ((RestException) e).getHttpCode();
+
+			if (ArrayUtils.contains(this.noHttpCodes, httpCode))
+				return false;
+		}
+
 		// By default, retry
 		return true;
 	}
+
 
 	@Override
 	public String toString()

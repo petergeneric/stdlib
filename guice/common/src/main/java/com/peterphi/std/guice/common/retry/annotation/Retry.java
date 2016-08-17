@@ -67,4 +67,12 @@ public @interface Retry
 	 * @return
 	 */
 	Class<? extends Throwable>[] exceptOnCore() default {Error.class, IllegalArgumentException.class, NullPointerException.class};
+
+	/**
+	 * If a {@link com.peterphi.std.guice.restclient.exception.RestException} is thrown then if the HTTP Code is one of these
+	 * values we don't retry
+	 *
+	 * @return
+	 */
+	int[] exceptOnRestExceptionCodes() default {403, 401};
 }

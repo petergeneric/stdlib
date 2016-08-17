@@ -5,9 +5,9 @@ import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
-import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.guice.common.retry.retry.RetryManager;
 import com.peterphi.std.guice.common.retry.retry.backoff.ExponentialBackoff;
+import com.peterphi.std.threading.Timeout;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
@@ -47,10 +47,16 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			if (log.isTraceEnabled())
 				log.trace("Attempting retryable invoke of " +
 				          invocation.getMethod().toGenericString() +
-				          " on " + invocation.getThis() + " with " +
+				          " on " +
+				          invocation.getThis() +
+				          " with " +
 				          Arrays.asList(invocation.getArguments()));
 
-			return mgr.run(new InvocationRetryable(invocation, options.on(), options.exceptOn(), options.exceptOnCore()));
+			return mgr.run(new InvocationRetryable(invocation,
+			                                       options.on(),
+			                                       options.exceptOn(),
+			                                       options.exceptOnCore(),
+			                                       options.exceptOnRestExceptionCodes()));
 		}
 		catch (Throwable t)
 		{
@@ -59,8 +65,11 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			if (log.isTraceEnabled())
 				log.trace("Retrying invoke of " +
 				          invocation.getMethod().toGenericString() +
-				          " on " + invocation.getThis() + " with " +
-				          Arrays.asList(invocation.getArguments()) + " failed.", t);
+				          " on " +
+				          invocation.getThis() +
+				          " with " +
+				          Arrays.asList(invocation.getArguments()) +
+				          " failed.", t);
 
 			throw t;
 		}
