@@ -32,6 +32,7 @@ import java.util.stream.Collectors;
 public class ConfigUIServiceImpl implements ConfigUIService
 {
 	private static final Logger log = Logger.getLogger(ConfigUIServiceImpl.class);
+	private static final String NONCE_USE = "configui";
 
 	@Inject
 	Templater templater;
@@ -88,7 +89,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 		final TemplateCall call = templater.template("config-edit");
 
-		call.set("nonce", nonceStore.getValue());
+		call.set("nonce", nonceStore.getValue(NONCE_USE));
 		call.set("repo", repo);
 		call.set("config", config);
 		call.set("inheritedProperties", inheritedProperties);
@@ -117,7 +118,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public Response getConfigPage(final String nonce, final String path, final String child)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final String newPath = RepoHelper.normalisePath(path + "/" + child);
 
@@ -132,7 +133,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	                                   final String properties,
 	                                   final String message)
 	{
-		nonceStore.validate(nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
 
