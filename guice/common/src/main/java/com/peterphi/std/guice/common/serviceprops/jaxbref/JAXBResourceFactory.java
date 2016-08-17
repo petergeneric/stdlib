@@ -29,7 +29,9 @@ public class JAXBResourceFactory
 	 * Resolve the JAXB resource, permitting caching behind the scenes
 	 *
 	 * @param clazz
+	 * 		the jaxb resource to read
 	 * @param name
+	 * 		the name of the property
 	 * @param <T>
 	 *
 	 * @return
@@ -45,6 +47,33 @@ public class JAXBResourceFactory
 		}
 
 		return cached.get();
+	}
+
+
+	/**
+	 * Resolve the JAXB resource, permitting caching behind the scenes
+	 *
+	 * @param clazz
+	 * 		the jaxb resource to read
+	 * @param name
+	 * 		the name of the property
+	 * @param defaultValue
+	 * 		the default value to return if the property is missing
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	public <T> T get(Class<T> clazz, final String name, T defaultValue)
+	{
+		JAXBNamedResourceFactory<T> cached = cachedReferences.get(name);
+
+		if (cached == null)
+		{
+			cached = new JAXBNamedResourceFactory<T>(this.config, this.factory, name, clazz);
+			cachedReferences.put(name, cached);
+		}
+
+		return cached.get(defaultValue);
 	}
 
 

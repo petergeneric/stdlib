@@ -65,17 +65,12 @@ class JAXBNamedResourceFactory<T>
 	}
 
 
-	/**
-	 * Resolve this property reference to a deserialised JAXB value
-	 *
-	 * @return
-	 */
-	public T get()
+	public T get(T defaultValue)
 	{
 		String value = config.getRaw(name, null);
 
 		if (value == null)
-			throw new RuntimeException("Missing property for JAXB resource: " + name);
+			return defaultValue;
 
 		if (isLiteralXML(value))
 		{
@@ -105,6 +100,22 @@ class JAXBNamedResourceFactory<T>
 				return cached;
 			}
 		}
+	}
+
+
+	/**
+	 * Resolve this property reference to a deserialised JAXB value
+	 *
+	 * @return
+	 */
+	public T get()
+	{
+		T value = get(null);
+
+		if (value == null)
+			throw new RuntimeException("Missing property for JAXB resource: " + name);
+		else
+			return value;
 	}
 
 
