@@ -37,6 +37,7 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 	/**
 	 * The URI for the webapp (for setting the JWT cookie path)
 	 */
+	@Inject
 	@Named(GuiceProperties.STATIC_ENDPOINT_CONFIG_NAME)
 	URI webappEndpoint;
 
