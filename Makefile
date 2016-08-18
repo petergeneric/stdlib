@@ -66,8 +66,6 @@ release:
 # azure deployments
 #
 
-#add cloud deployment specific properties
-az-config = cat $(WEBAPP_PATH)/src/main/resources/cloud.properties >> $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION)/WEB-INF/classes/service.properties
 #put context.xml information under META-INF
 az-context = $(shell cp $(WEBAPP_PATH)/src/main/resources/cloud-context.xml $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION)/META-INF/context.xml)
 #clone the deployment repo
@@ -81,7 +79,6 @@ az-cleanup = rm -rf $(TEMP_LOC)
 
 
 define az-deploy =
-	$(call az-config)
 	$(call az-context)
 	$(call az-clone,$(giturl))
 	$(call az-sync)
