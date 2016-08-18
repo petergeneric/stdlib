@@ -212,6 +212,8 @@ public class ConfigUIServiceImpl implements ConfigUIService
 	@Override
 	public Response applyChanges(final MultivaluedMap<String, String> fields)
 	{
+		nonceStore.validate(NONCE_USE, fields.getFirst("_nonce"));
+
 		final String name = userProvider.get().getName();
 		final String email = userProvider.get().getUsername();
 
