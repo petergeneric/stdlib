@@ -33,7 +33,7 @@ public interface ConfigUIService
 	@POST
 	@Path("/create-path")
 	@Produces(MediaType.TEXT_HTML)
-	Response getConfigPage(@FormParam("nonce") String nonce,
+	Response getConfigPage(@FormParam("_nonce") String nonce,
 	                       @FormParam("parent_path") String path,
 	                       @FormParam("child_path") String child);
 
