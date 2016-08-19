@@ -83,7 +83,9 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 
 
 	@Override
-	public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException
+	public void doFilter(final ServletRequest request,
+	                     final ServletResponse response,
+	                     final FilterChain chain) throws IOException, ServletException
 	{
 		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse resp = (HttpServletResponse) response;
@@ -204,18 +206,6 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 		public boolean isSecure()
 		{
 			return true;
-		}
-
-
-		@Override
-		public Object getAttribute(final String name)
-		{
-			if (StringUtils.equals(name, "Scheme"))
-				return getScheme(); // The delegated request would return the original value
-			else if (StringUtils.equals(name, "RequestURL"))
-				return getRequestURL().toString(); // The delegated request would return the original value
-			else
-				return super.getAttribute(name);
 		}
 	}
 }
