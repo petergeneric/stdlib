@@ -8,8 +8,8 @@ import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
-import java.lang.reflect.Method;
 import java.net.URI;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
@@ -313,29 +313,43 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	}
 
 
-	private void appendAllSimpleGetters(StringBuilder sb, Object o)
+	private void appendAllSimpleGetters(StringBuilder sb, HttpServletRequest req)
 	{
 		try
 		{
-			for (Method method : o.getClass().getMethods())
-			{
-				if (method.getParameterTypes().length == 0 &&
-				    (method.getName().startsWith("get") || method.getName().startsWith("is")) &&
-				    (method.getReturnType().isPrimitive() ||
-				     method.getReturnType() == String.class ||
-				     method.getReturnType() == URI.class ||
-				     method.getReturnType() == StringBuffer.class))
-				{
-					final String name = method.getName().substring(3);
-					final Object result = method.invoke(o);
+			Arrays.stream(HttpServletRequest.class.getMethods())
+			      .filter(m -> m.getParameterCount() == 0)
+			      .filter(m -> m.getName()
+			                    .startsWith("get") ||
+			                   m.getName()
+			                    .startsWith("is"))
+			      .filter(m -> m.getReturnType().isPrimitive() ||
+			                   m.getReturnType() == String.class ||
+			                   m.getReturnType() == URI.class ||
+			                   m.getReturnType() == StringBuffer.class)
+			      .forEachOrdered(m ->
+			                      {
+				                      final String name = m.getName().startsWith("get") ?
+				                                          m.getName().substring(3) :
+				                                          m.getName().substring(2);
 
-					appendKeyValueListElement(sb, name, result);
-				}
-			}
+				                      Object result;
+				                      try
+				                      {
+					                      result = m.invoke(req);
+				                      }
+				                      catch (Throwable t)
+				                      {
+					                      result = "(error fetching: " + t.getMessage() + ")";
+				                      }
+
+				                      appendKeyValueListElement(sb, name, result);
+			                      });
 		}
 		catch (Exception e)
 		{
-			// Take no action
+			appendKeyValueListElement(sb, "reflection error", "unable to retrieve properties");
+			// Take no action, reflection error
 		}
 	}
 
