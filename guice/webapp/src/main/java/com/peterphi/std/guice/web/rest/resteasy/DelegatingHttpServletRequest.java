@@ -12,6 +12,7 @@ import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpUpgradeHandler;
 import javax.servlet.http.Part;
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -181,6 +182,13 @@ class DelegatingHttpServletRequest implements HttpServletRequest
 
 
 	@Override
+	public String changeSessionId()
+	{
+		return delegate.changeSessionId();
+	}
+
+
+	@Override
 	public boolean isRequestedSessionIdValid()
 	{
 		return delegate.isRequestedSessionIdValid();
@@ -244,6 +252,13 @@ class DelegatingHttpServletRequest implements HttpServletRequest
 
 
 	@Override
+	public <T extends HttpUpgradeHandler> T upgrade(final Class<T> handlerClass) throws IOException, ServletException
+	{
+		return delegate.upgrade(handlerClass);
+	}
+
+
+	@Override
 	public Object getAttribute(final String name)
 	{
 		return delegate.getAttribute(name);
@@ -275,6 +290,13 @@ class DelegatingHttpServletRequest implements HttpServletRequest
 	public int getContentLength()
 	{
 		return delegate.getContentLength();
+	}
+
+
+	@Override
+	public long getContentLengthLong()
+	{
+		return delegate.getContentLengthLong();
 	}
 
 
