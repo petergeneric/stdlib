@@ -243,8 +243,6 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 
 					appendKeyValueListElement(sb, name, r.getAttribute(name));
 				}
-
-				appendKeyValueListElement(sb, "Secure", r.isSecure());
 			}
 			sb.append("</dl>\n");
 		}
@@ -322,7 +320,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 			for (Method method : o.getClass().getMethods())
 			{
 				if (method.getParameterTypes().length == 0 &&
-				    method.getName().startsWith("get") &&
+				    (method.getName().startsWith("get") || method.getName().startsWith("is")) &&
 				    (method.getReturnType().isPrimitive() ||
 				     method.getReturnType() == String.class ||
 				     method.getReturnType() == URI.class ||
