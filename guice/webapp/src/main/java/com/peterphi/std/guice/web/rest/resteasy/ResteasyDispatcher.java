@@ -7,7 +7,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.SystemUtils;
 import org.jboss.resteasy.plugins.server.servlet.FilterBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletBootstrap;
-import org.jboss.resteasy.util.HttpServletRequestDelegate;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -186,7 +185,7 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 	/**
 	 * HttpServletRequest to expose
 	 */
-	private static final class AzureAppServiceHttpsServletRequest extends HttpServletRequestDelegate
+	private static final class AzureAppServiceHttpsServletRequest extends DelegatingHttpServletRequest
 	{
 		public AzureAppServiceHttpsServletRequest(final HttpServletRequest delegate)
 		{
