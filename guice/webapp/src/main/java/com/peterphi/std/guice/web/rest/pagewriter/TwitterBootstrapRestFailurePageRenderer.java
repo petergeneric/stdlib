@@ -29,6 +29,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private boolean renderRequestInfo = false;
 	private boolean renderRequestAttributes = false;
 	private boolean renderEnvironmentVariables = true;
+	private boolean suppressPasswordFields = true;
 
 
 	public TwitterBootstrapRestFailurePageRenderer(RestFailure failure)
@@ -343,7 +344,50 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 
 	private void appendKeyValueListElement(StringBuilder sb, String key, Object value)
 	{
-		sb.append("<dt>").append(escape(key)).append("</dt><dd>").append(escape(String.valueOf(value))).append("</dd>\n");
+		String val = String.valueOf(value);
+
+		if (suppressPasswordFields && isPasswordField(key) || isPasswordField(val))
+			val = "(value containing sensitive information omitted)"; // Just blank out properties that look like passwords
+		else if (suppressPasswordFields && isUrlfieldWithUserInfo(val))
+			val = suppressUrlPassword(val); // Try ro remove passwords from properties that are URLs
+
+		sb.append("<dt>").append(escape(key)).append("</dt><dd>").append(escape(val)).append("</dd>\n");
+	}
+
+
+	private String suppressUrlPassword(final String val)
+	{
+		try
+		{
+			final URI uri = URI.create(val);
+
+			if (uri.getUserInfo() != null && uri.getUserInfo().contains(":"))
+			{
+				final String password = uri.getUserInfo().split(":", 2)[1];
+
+				return StringUtils.replaceOnce(val, password, "(password)");
+			}
+			else
+			{
+				return val; // No user info / user info doesn't contain a password
+			}
+		}
+		catch (Throwable t)
+		{
+			return val; // Error parsing, just return the value
+		}
+	}
+
+
+	private boolean isUrlfieldWithUserInfo(final String val)
+	{
+		return (val.contains("://") && val.indexOf('@') != -1);
+	}
+
+
+	private boolean isPasswordField(final String key)
+	{
+		return StringUtils.containsIgnoreCase(key, "secret") || StringUtils.containsIgnoreCase(key, "passw");
 	}
 
 
@@ -443,5 +487,14 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	public void enableRequestInfo()
 	{
 		this.renderRequestInfo = true;
+	}
+
+
+	/**
+	 * When called, allows fields that appear to contain passwords
+	 */
+	public void enablePasswordFields()
+	{
+		this.suppressPasswordFields = false;
 	}
 }
