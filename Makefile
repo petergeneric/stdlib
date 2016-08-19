@@ -14,6 +14,10 @@ else
 	MVN=mvn3 -T$(MAVEN_PARALLELISM)
 endif
 
+ifeq ($(env), azure)
+	MVN=mvn3 -T$(MAVEN_PARALLELISM) -P azure
+endif
+
 all: install
 
 
@@ -66,20 +70,17 @@ release:
 # azure deployments
 #
 
-#put context.xml information under META-INF
-az-context = $(shell cp $(WEBAPP_PATH)/src/main/resources/cloud-context.xml $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION)/META-INF/context.xml)
 #clone the deployment repo
 az-clone = git clone --branch master $(1) $(TEMP_LOC)
 #copy files to the deployment repo
-az-sync = rsync -a --delete $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION)/* $(TEMP_LOC)/webapps/$(WEBAPP_TARGET_NAME)
+az-sync = rsync -a --delete $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION).war $(TEMP_LOC)/webapps/$(WEBAPP_TARGET_NAME).war
 #commit and push the deployment repo
-az-commit = cd $(TEMP_LOC) ; git add . ; git commit -a -m "deployment of $(CURRENT_VERSION)" ; git push ; cd $(ORI_LOC) ;
+az-commit = cd $(TEMP_LOC) ; git rm -r webapps/$(WEBAPP_TARGET_NAME) ; git add webapps/$(WEBAPP_TARGET_NAME).war ; git commit -a -m "deployment of $(CURRENT_VERSION)" ; git push ; cd $(ORI_LOC) ;
 #delete temp checkout
 az-cleanup = rm -rf $(TEMP_LOC)
 
 
 define az-deploy =
-	$(call az-context)
 	$(call az-clone,$(giturl))
 	$(call az-sync)
 	$(call az-commit)
