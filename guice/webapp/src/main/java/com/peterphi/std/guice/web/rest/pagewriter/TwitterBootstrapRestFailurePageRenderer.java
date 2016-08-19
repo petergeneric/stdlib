@@ -242,6 +242,8 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 
 					appendKeyValueListElement(sb, name, r.getAttribute(name));
 				}
+
+				appendKeyValueListElement(sb, "Secure", r.isSecure());
 			}
 			sb.append("</dl>\n");
 		}
