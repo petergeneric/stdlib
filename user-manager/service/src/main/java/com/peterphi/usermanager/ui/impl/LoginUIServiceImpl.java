@@ -91,8 +91,8 @@ public class LoginUIServiceImpl implements LoginUIService
 				// If this account has a Session Reconnect Key we should give it to the browser
 				if (account.getSessionReconnectKey() != null)
 				{
-					// Mark the cookie as secure if the request arrived on a secure channel OR if the requestURL is https (the latter can happen with Azure App Service which has poor tomcat integration)
-					final boolean secure = (HttpCallContext.get().getRequest().isSecure() || HttpCallContext.get().getRequest().getRequestURL().indexOf("https://") == 0);
+					// Mark the cookie as secure if the request arrived on a secure channel
+					final boolean secure = HttpCallContext.get().getRequest().isSecure();
 
 					NewCookie cookie = new NewCookie(UserLogin.SESSION_RECONNECT_COOKIE,
 					                                 account.getSessionReconnectKey(),

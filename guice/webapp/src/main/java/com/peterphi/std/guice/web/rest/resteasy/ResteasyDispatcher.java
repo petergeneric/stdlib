@@ -3,8 +3,11 @@ package com.peterphi.std.guice.web.rest.resteasy;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.SystemUtils;
 import org.jboss.resteasy.plugins.server.servlet.FilterBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletBootstrap;
+import org.jboss.resteasy.util.HttpServletRequestDelegate;
 
 import javax.servlet.Filter;
 import javax.servlet.FilterChain;
@@ -27,6 +30,7 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 	private static final long serialVersionUID = -3L;
 	private GuiceRegistry registry;
 	private GuicedResteasy dispatcher;
+	private Boolean _isAzureAppService;
 
 
 	@Override
@@ -80,11 +84,16 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 
 
 	@Override
-	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException
+	public void doFilter(final ServletRequest request, final ServletResponse response, final FilterChain chain) throws IOException, ServletException
 	{
+		HttpServletRequest req = (HttpServletRequest) request;
+		HttpServletResponse resp = (HttpServletResponse) response;
+
 		try
 		{
-			dispatcher.call((HttpServletRequest) request, (HttpServletResponse) response);
+			req = fixupRequest(req);
+
+			dispatcher.call(req, resp);
 		}
 		catch (NotFoundException e)
 		{
@@ -96,7 +105,71 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 	@Override
 	protected void service(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException
 	{
+		req = fixupRequest(req);
+
 		dispatcher.call(req, resp);
+	}
+
+
+	/**
+	 * Determines whether this code is running in Azure App Service; this controls whether we will enable Azure App Service
+	 * specific hacks to fix some ugly Azure/Tomcat issues.
+	 *
+	 * @param request
+	 *
+	 * @return
+	 */
+	protected boolean isAzureAppService(HttpServletRequest request)
+	{
+		if (_isAzureAppService != null)
+			return _isAzureAppService.booleanValue();
+
+		_isAzureAppService = (SystemUtils.IS_OS_WINDOWS && System.getenv("WEBSITE_SITE_NAME") != null);
+
+		return _isAzureAppService.booleanValue();
+	}
+
+
+	/**
+	 * Hack for Microsoft Azure App Service: receives https calls but tomcat reports http:// as the RequestURL<br />
+	 * This means that any redirects sent from within the JAX-RS environment are to http:// pages which is undesirable<br />
+	 * This hack works by recognising an http:// RequestURL with an x-forwarded-proto set of HTTPS.<br />
+	 * In addition if the request is not marked as Secure in this case it will mark it as secure by returning a new
+	 * HttpServletRequest instance to use
+	 *
+	 * @param request
+	 * 		implementation that also changes isSecure in this case? We'd need a way to guarantee that we were definitely behind the
+	 * 		Azure HTTP server and not just setting this
+	 */
+	private HttpServletRequest fixupRequest(HttpServletRequest request)
+	{
+		if (isAzureAppService(request))
+		{
+			final StringBuffer requestUrl = request.getRequestURL();
+
+			if (requestUrl.indexOf("http://") == 0)
+			{
+				final String forwardedProto = request.getHeader("x-forwarded-proto");
+
+				if (StringUtils.equals("https", forwardedProto))
+				{
+					// Modify the RequestURL in-place to convert http:// to https://
+					// N.B. this modifies the underlying value so in the future request.getRequestURL will continue to return this value
+					requestUrl.insert(4, 's');
+
+					assert (requestUrl.indexOf("https://") == 0);
+
+					return new AzureAppServiceHttpsServletRequest(request);
+				}
+			}
+
+			return request;
+		}
+		else
+		{
+			// Don't modify the request whatsoever
+			return request;
+		}
 	}
 
 
@@ -107,5 +180,43 @@ public class ResteasyDispatcher extends HttpServlet implements Filter
 
 		if (dispatcher != null)
 			dispatcher.stop();
+	}
+
+
+	/**
+	 * HttpServletRequest to expose
+	 */
+	private static final class AzureAppServiceHttpsServletRequest extends HttpServletRequestDelegate
+	{
+		public AzureAppServiceHttpsServletRequest(final HttpServletRequest delegate)
+		{
+			super(delegate);
+		}
+
+
+		@Override
+		public String getScheme()
+		{
+			return "https";
+		}
+
+
+		@Override
+		public boolean isSecure()
+		{
+			return true;
+		}
+
+
+		@Override
+		public Object getAttribute(final String name)
+		{
+			if (StringUtils.equals(name, "Scheme"))
+				return getScheme(); // The delegated request would return the original value
+			else if (StringUtils.equals(name, "RequestURL"))
+				return getRequestURL().toString(); // The delegated request would return the original value
+			else
+				return super.getAttribute(name);
+		}
 	}
 }
