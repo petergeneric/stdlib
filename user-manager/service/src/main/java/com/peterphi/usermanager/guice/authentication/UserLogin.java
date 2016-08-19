@@ -10,7 +10,7 @@ import java.util.Map;
 
 public interface UserLogin extends CurrentUser
 {
-	String SESSION_RECONNECT_COOKIE = "SessionReconnectKey";
+	String SESSION_RECONNECT_COOKIE = "CROSSSESSIONID";
 
 	/**
 	 * The special role name used for logged in users. The empty string is also permitted
