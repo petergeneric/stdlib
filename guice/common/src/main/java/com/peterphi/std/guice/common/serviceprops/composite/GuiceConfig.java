@@ -3,6 +3,7 @@ package com.peterphi.std.guice.common.serviceprops.composite;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
+import org.apache.log4j.Logger;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -16,11 +17,15 @@ import java.util.function.Predicate;
 
 public class GuiceConfig
 {
+	private static final Logger log = Logger.getLogger(GuiceConfig.class);
+
 	private final Map<String, String> properties = new HashMap<>();
 
 	private final Map<String, String> overrides = new HashMap<>(0);
 
 	private final StrSubstitutor substitutor = new StrSubstitutor(new GuiceConfigVariableResolver(this));
+
+	private Set<GuiceConfigChangeObserver> propertyChangeObservers = new HashSet<>();
 
 
 	public GuiceConfig()
@@ -45,6 +50,41 @@ public class GuiceConfig
 		keys.addAll(overrides.keySet());
 
 		return keys;
+	}
+
+
+	public void registerChangeObserver(GuiceConfigChangeObserver observer)
+	{
+		synchronized (this.propertyChangeObservers)
+		{
+			this.propertyChangeObservers.add(observer);
+		}
+	}
+
+
+	void propertyChanged(final String name)
+	{
+		if (name == null)
+			return; // Ignore changes fired for a null property name
+
+		synchronized (this.propertyChangeObservers)
+		{
+			for (GuiceConfigChangeObserver observer : propertyChangeObservers)
+			{
+				try
+				{
+					observer.propertyChanged(name);
+				}
+				catch (Throwable t)
+				{
+					log.warn("Property Change Observer " +
+					         observer +
+					         " threw exception when notifying for " +
+					         name +
+					         " (ignoring)", t);
+				}
+			}
+		}
 	}
 
 
@@ -80,7 +120,7 @@ public class GuiceConfig
 	}
 
 
-	public boolean set(String name, final String value)
+	public void set(String name, final String value)
 	{
 		if (name == null)
 			throw new IllegalArgumentException("Property name cannot be null!");
@@ -88,17 +128,15 @@ public class GuiceConfig
 			throw new IllegalArgumentException("Property '" + name + "' cannot be null!");
 
 		final String oldValue = properties.get(name);
+		final boolean hasOverride = overrides.containsKey(name);
 
 		// Only replace the old value if it's different (so we don't change pointers unless needed)
 		if (!StringUtils.equals(oldValue, value))
 		{
 			properties.put(name, value);
 
-			return true; // value updated
-		}
-		else
-		{
-			return false; // not updated
+			if (!hasOverride)
+				propertyChanged(name); // value updated
 		}
 	}
 
@@ -111,7 +149,14 @@ public class GuiceConfig
 
 	public void setOverride(final String name, final String value)
 	{
-		overrides.put(name, value);
+		final String oldValue = overrides.get(name);
+
+		if (!StringUtils.equals(oldValue, value))
+		{
+			overrides.put(name, value);
+
+			propertyChanged(name);
+		}
 	}
 
 

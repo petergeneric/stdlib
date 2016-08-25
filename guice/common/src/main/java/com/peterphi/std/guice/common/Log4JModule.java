@@ -5,6 +5,7 @@ import com.codahale.metrics.log4j.InstrumentedAppender;
 import com.google.inject.AbstractModule;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfigChangeObserver;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
@@ -17,7 +18,7 @@ import org.apache.log4j.PropertyConfigurator;
  * If the log4j.properties property is not specified then the default behaviour is observed (log4j configures itself
  * automatically)
  */
-public class Log4JModule extends AbstractModule
+public class Log4JModule extends AbstractModule implements GuiceConfigChangeObserver
 {
 	private static final Logger log = Logger.getLogger(Log4JModule.class);
 
@@ -31,6 +32,8 @@ public class Log4JModule extends AbstractModule
 	{
 		this.registry = registry;
 		this.guiceConfig = configuration;
+
+		configuration.registerChangeObserver(this);
 	}
 
 
@@ -132,5 +135,13 @@ public class Log4JModule extends AbstractModule
 			// Won't actually happen but to guarantee there is a value for config later on
 			throw new RuntimeException("log4j configuration is null!");
 		}
+	}
+
+
+	@Override
+	public void propertyChanged(final String name)
+	{
+		if (StringUtils.equals(name, GuiceProperties.LOG4J_PROPERTIES_FILE))
+			Log4JModule.autoReconfigure(this.guiceConfig);
 	}
 }

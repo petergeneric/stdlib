@@ -5,54 +5,48 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.Log4JModule;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
-import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
-import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.threading.Timeout;
-import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Doc("Periodically requeries the network configuration service for updated config properties (these updates will only be visible for certain use-cases, such as JAXB files in properties)")
 @ServiceName("network-config-reload")
 public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 {
+	private static final Logger log = Logger.getLogger(NetworkConfigReloadDaemon.class);
+
 	@Inject
 	ConfigRestService configService;
 
+	/**
+	 * Uniquely identifies us to the configuration provider (e.g. for proactive updates)
+	 */
 	@Inject
 	@Named(GuiceProperties.CONFIG_INSTANCE_ID)
 	public String configInstanceId;
 
+	/**
+	 * The config path+properties for the core Guice environment
+	 */
 	@Inject
-	@Named(GuiceProperties.CONFIG_PATH)
-	@Reconfigurable
-	public String configPath;
+	NetworkConfig serviceConfig;
 
-	@Inject(optional = true)
-	@Named(GuiceProperties.CONFIG_REVISION)
-	public String initialRevision;
+	/**
+	 * Custom service-specific paths
+	 */
+	private List<NetworkConfig> additionalConfigs = new ArrayList<>();
+
 
 	@Inject
-	GuiceConfig config;
-
-	private String lastLoadedRevision;
-
-
 	protected NetworkConfigReloadDaemon()
 	{
 		super(Timeout.FIVE_MINUTES);
-	}
-
-
-	private String getLastRevision()
-	{
-		if (lastLoadedRevision != null)
-			return lastLoadedRevision;
-		else
-			return initialRevision;
 	}
 
 
@@ -68,26 +62,55 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	 */
 	public void reload()
 	{
-		final ConfigPropertyData read = configService.read(configPath, configInstanceId, getLastRevision());
+		// Load the primary configuration (i.e. for the guice environment)
+		reload(serviceConfig);
 
-		// Abort if the server returns no config - we have the latest revision
-		if (read == null || read.properties == null || read.properties.isEmpty())
-			return;
+		for (NetworkConfig config : additionalConfigs)
+			reload(config);
+	}
 
-		for (ConfigPropertyValue property : read.properties)
+
+	/**
+	 * Register an additional network config to keep up-to-date.
+	 * Attempts to synchronously eagerly load this config at register time
+	 *
+	 * @param config
+	 */
+	public void register(NetworkConfig config)
+	{
+		// Synchronously eagerly load the config
+		reload(config);
+
+		// Now keep it up-to-date in the future
+		this.additionalConfigs.add(config);
+	}
+
+
+	/**
+	 * Called to initiate an intelligent reload of a particular config
+	 *
+	 * @param config
+	 */
+	void reload(NetworkConfig config)
+	{
+		try
 		{
-			final boolean changed = config.set(property.getName(), property.getValue());
+			final ConfigPropertyData read = configService.read(config.path, configInstanceId, config.getLastRevision());
 
-			if (changed)
+			// Abort if the server returns no config - we have the latest revision
+			if (read == null || read.properties == null || read.properties.isEmpty())
+				return;
+
+			for (ConfigPropertyValue property : read.properties)
 			{
-				// Automatically reapply the log4j configuration once it's changed
-				if (StringUtils.equals(property.getName(), GuiceProperties.LOG4J_PROPERTIES_FILE))
-				{
-					Log4JModule.autoReconfigure(config);
-				}
+				config.properties.set(property.getName(), property.getValue());
 			}
-		}
 
-		lastLoadedRevision = read.revision;
+			config.setLastRevision(read.revision);
+		}
+		catch (Throwable t)
+		{
+			log.warn("Error loading config from path " + config.path, t);
+		}
 	}
 }
