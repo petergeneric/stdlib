@@ -40,6 +40,8 @@ public class GuiceProperties
 	public static final String CONFIG_INSTANCE_ID = "service.config.instance-id";
 	@Doc("The last config revision read from the network provider during the execution of this execution of the service (internal property, should not be set by user)")
 	public static final String CONFIG_REVISION = "service.config.last-revision";
+	@Doc("A flag to skip network configuration, even if an endpoint is configured (default false)")
+	public static final String CONFIG_SKIP = "service.config.skip";
 
 	//
 	// Guice Webapp Properties

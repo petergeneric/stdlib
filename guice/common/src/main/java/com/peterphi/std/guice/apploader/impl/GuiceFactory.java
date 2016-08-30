@@ -352,7 +352,11 @@ class GuiceFactory
 	{
 		final String instanceId = SimpleId.alphanumeric(32);
 
-		if (config.get(GuiceProperties.CONFIG_ENDPOINT, null) != null)
+		final String configEndpoint = config.get(GuiceProperties.CONFIG_ENDPOINT, null);
+
+		final Boolean configSkip = config.getBoolean(GuiceProperties.CONFIG_SKIP, false);
+
+		if ( configEndpoint != null && !configSkip)
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
