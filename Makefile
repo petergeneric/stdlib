@@ -74,8 +74,10 @@ release:
 az-clone = git clone --branch master $(1) $(TEMP_LOC)
 #copy files to the deployment repo
 az-sync = rsync -a --delete $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION).war $(TEMP_LOC)/webapps/$(WEBAPP_TARGET_NAME).war
+#add or remove files
+az-addrm = cd $(TEMP_LOC) ; git rm -r webapps/$(WEBAPP_TARGET_NAME) ; git add webapps/$(WEBAPP_TARGET_NAME).war ; cd $(ORI_LOC) ;
 #commit and push the deployment repo
-az-commit = cd $(TEMP_LOC) ; git rm -r webapps/$(WEBAPP_TARGET_NAME) ; git add webapps/$(WEBAPP_TARGET_NAME).war ; git commit -a -m "deployment of $(CURRENT_VERSION)" ; git push ; cd $(ORI_LOC) ;
+az-commit = cd $(TEMP_LOC) ; git commit -a -m "deployment of $(CURRENT_VERSION)" ; git push  ; cd $(ORI_LOC) ;
 #delete temp checkout
 az-cleanup = rm -rf $(TEMP_LOC)
 
@@ -83,6 +85,7 @@ az-cleanup = rm -rf $(TEMP_LOC)
 define az-deploy =
 	$(call az-clone,$(giturl))
 	$(call az-sync)
+	$(call az-addrm)
 	$(call az-commit)
 	$(call az-cleanup)
 endef
@@ -102,5 +105,24 @@ configservce-az: azurls azlocs package
 	$(eval WEBAPP_BUILD_NAME := configuration)
 	$(eval WEBAPP_TARGET_NAME := configuration)
 	$(call az-deploy)
+
+sm-az: azurls azlocs package
+	$(call az-clone,$(giturl))
+	$(eval WEBAPP_PATH := configuration/configuration)
+	$(eval WEBAPP_BUILD_NAME := configuration)
+	$(eval WEBAPP_TARGET_NAME := configuration)
+	$(call az-sync)
+	$(call az-addrm)
+	$(eval WEBAPP_PATH := user-manager/service)
+	$(eval WEBAPP_BUILD_NAME := user-manager)
+	$(eval WEBAPP_TARGET_NAME := user-manager)
+	$(call az-sync)
+	$(call az-addrm)
+	$(call az-commit)
+	$(call az-cleanup)
+
+
+
+
 
 
