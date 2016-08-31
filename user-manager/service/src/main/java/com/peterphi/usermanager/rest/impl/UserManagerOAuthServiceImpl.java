@@ -336,6 +336,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@Override
 	@Transactional(readOnly = true)
 	@Retry
+	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
 	public UserManagerUser get(final String token, final String clientId)
 	{
 		OAuthSessionEntity session = sessionDao.getByToken(token);
