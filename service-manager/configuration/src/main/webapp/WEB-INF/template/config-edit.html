@@ -53,7 +53,7 @@
 			<h3 id="importPropertiesModalLabel">Create new path</h3>
 		</div>
 		<div class="modal-body">
-			<p>Import property file into <span th:text="${path}">this path</span></p>
+			<p>Import property file into <span th:text="${path}">this path</span>. Any existing properties with the same name will be overwritten.</p>
 
 			<!-- properties -->
 			<div class="control-group">
@@ -69,14 +69,6 @@
 
 					<!-- Help / Warning text -->
 					<span class="help-inline"></span>
-				</div>
-			</div>
-
-			<div class="control-group">
-				<label class="control-label" for="input_merge">Merge Properties:</label>
-
-				<div class="controls">
-					<input type="checkbox" id="input_merge" name="_merge" value="true" checked="checked"/>
 				</div>
 			</div>
 

@@ -127,11 +127,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 
 
 	@Override
-	public Response importPropertyFile(final String nonce,
-	                                   final String path,
-	                                   final boolean merge,
-	                                   final String properties,
-	                                   final String message)
+	public Response importPropertyFile(final String nonce, final String path, final String properties, final String message)
 	{
 		nonceStore.validate(NONCE_USE, nonce);
 
@@ -144,8 +140,7 @@ public class ConfigUIServiceImpl implements ConfigUIService
 		if (nonce != null)
 			map.putSingle("_nonce", nonce);
 
-		// If merge is enabled then merge the properties on top of the existing properties at this path
-		if (merge)
+		// Add all the existing properties at this path (so the import will merge rather than replace)
 		{
 			final ConfigPropertyData existing = repo.get(REF, path);
 

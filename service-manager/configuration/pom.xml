@@ -9,7 +9,7 @@
 
 	<parent>
 		<groupId>com.peterphi.std.config</groupId>
-		<artifactId>config-parent</artifactId>
+		<artifactId>service-manager-parent</artifactId>
 		<version>9.1.5-SNAPSHOT</version>
 	</parent>
 

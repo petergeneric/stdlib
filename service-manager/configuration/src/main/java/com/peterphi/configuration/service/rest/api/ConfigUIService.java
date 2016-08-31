@@ -1,7 +1,6 @@
 package com.peterphi.configuration.service.rest.api;
 
 import javax.ws.rs.Consumes;
-import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -42,7 +41,6 @@ public interface ConfigUIService
 	@Produces(MediaType.TEXT_HTML)
 	Response importPropertyFile(@FormParam("_nonce") String nonce,
 	                            @FormParam("_path") String path,
-	                            @FormParam("_merge") @DefaultValue("false") boolean merge,
 	                            @FormParam("properties") String properties,
 	                            @FormParam("_message") String message);
 
