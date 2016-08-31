@@ -41,19 +41,21 @@ public class ConfigGuiceModule extends AbstractModule
 	                                      @Named("repo.config.remote")
 	                                      final String remote) throws IOException, URISyntaxException, GitAPIException
 	{
-		if (reclone)
+		if (reclone && workingDirectory.exists())
 		{
 			File[] files = workingDirectory.listFiles();
 
-			for (File file : files)
-			{
-				FileUtils.deleteQuietly(file);
-
-				if (!file.exists())
+			if (files != null)
+				for (File file : files)
 				{
-					throw new RuntimeException("Tried to delete local checkout contents but did not succeed. File was: " + file);
+					FileUtils.deleteQuietly(file);
+
+					if (!file.exists())
+					{
+						throw new RuntimeException("Tried to delete local checkout contents but did not succeed. File was: " +
+						                           file);
+					}
 				}
-			}
 		}
 
 		final File gitDir = new File(workingDirectory, ".git");
