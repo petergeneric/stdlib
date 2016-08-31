@@ -183,7 +183,17 @@
 		</createTable>
 	</changeSet>
 
-	<changeSet author="peter@peterphi.com" id="create_oauth_constraints">
+	<changeSet author="peter@peterphi.com" id="create_oauth_constraints__cascade">
+		<preConditions onFail="MARK_RAN">
+			<or>
+				<dbms type="postgresql"/>
+				<dbms type="oracle"/>
+				<dbms type="hsqldb"/>
+				<dbms type="h2"/>
+				<dbms type="db2"/>
+			</or>
+		</preConditions>
+
 		<!-- service.owner_id -->
 		<addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="oauth_service"
 		                         constraintName="FK__oauth_service__user_id" deferrable="false"
@@ -198,6 +208,36 @@
 		<addForeignKeyConstraint baseColumnNames="user_id" baseTableName="oauth_session_context"
 		                         constraintName="FK__oauth_session_context__user_id" deferrable="false"
 		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="user_account"/>
+		<!-- session.context_id -->
+		<addForeignKeyConstraint baseColumnNames="context_id" baseTableName="oauth_session"
+		                         constraintName="FK__oauth_session__context_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="oauth_session_context"/>
+
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="create_oauth_constraints__sqlserver">
+		<preConditions onFail="MARK_RAN">
+			<or>
+				<dbms type="mssql"/>
+			</or>
+		</preConditions>
+
+		<!-- service.owner_id -->
+		<addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="oauth_service"
+		                         constraintName="FK__oauth_service__user_id" deferrable="false"
+		                         initiallyDeferred="false"  onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="user_account"/>
+		<!-- session_context.service_id -->
+		<addForeignKeyConstraint baseColumnNames="service_id" baseTableName="oauth_session_context"
+		                         constraintName="FK__oauth_session_context__service_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="oauth_service"/>
+		<!-- session_context.user_id -->
+		<addForeignKeyConstraint baseColumnNames="user_id" baseTableName="oauth_session_context"
+		                         constraintName="FK__oauth_session_context__user_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="NO ACTION" onUpdate="NO ACTION" referencedColumnNames="id"
 		                         referencedTableName="user_account"/>
 		<!-- session.context_id -->
 		<addForeignKeyConstraint baseColumnNames="context_id" baseTableName="oauth_session"
