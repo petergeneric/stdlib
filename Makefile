@@ -106,6 +106,12 @@ configservce-az: azurls azlocs package
 	$(eval WEBAPP_TARGET_NAME := configuration)
 	$(call az-deploy)
 
+usermanager-az: azurls azlocs package
+	$(eval WEBAPP_PATH := user-manager/service)
+	$(eval WEBAPP_BUILD_NAME := user-manager)
+	$(eval WEBAPP_TARGET_NAME := user-manager)
+	$(call az-deploy)
+
 sm-az: azurls azlocs package
 	$(call az-clone,$(giturl))
 	$(eval WEBAPP_PATH := configuration/configuration)
