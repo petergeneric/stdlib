@@ -120,6 +120,7 @@ public class LoginUIServiceImpl implements LoginUIService
 
 
 	@Override
+	@AuthConstraint(skip = true, comment = "Logout page")
 	public Response doLogout(String returnTo)
 	{
 		// Change the session reconnect key (if one is used)
