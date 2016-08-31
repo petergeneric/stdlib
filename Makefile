@@ -117,7 +117,7 @@ azlocs:
 	$(eval ORI_LOC := $(shell pwd))
 
 configservce-az: azurls azlocs package
-	$(eval WEBAPP_PATH := configuration/configuration)
+	$(eval WEBAPP_PATH := service-manager/configuration)
 	$(eval WEBAPP_BUILD_NAME := configuration)
 	$(eval WEBAPP_TARGET_NAME := configuration)
 	$(call az-deploy)
