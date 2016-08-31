@@ -37,9 +37,25 @@ public class ConfigGuiceModule extends AbstractModule
 	@Singleton
 	@Named("config")
 	public ConfigRepository getRepository(@Named("repo.config.path") final File workingDirectory,
+	                                      @Named("repo.config.force-reclone-on-startup") final boolean reclone,
 	                                      @Named("repo.config.remote")
 	                                      final String remote) throws IOException, URISyntaxException, GitAPIException
 	{
+		if (reclone)
+		{
+			File[] files = workingDirectory.listFiles();
+
+			for (File file : files)
+			{
+				FileUtils.deleteQuietly(file);
+
+				if (!file.exists())
+				{
+					throw new RuntimeException("Tried to delete local checkout contents but did not succeed. File was: " + file);
+				}
+			}
+		}
+
 		final File gitDir = new File(workingDirectory, ".git");
 
 		final boolean newlyCreated;
