@@ -1,0 +1,47 @@
+<rules xmlns="http://ns.peterphi.com/stdlib/rules" xmlns:ns1="http://ns.peterphi.com/stdlib/rules/test">
+	<variables>
+		<localObject name='mylocalparam' source-name='some.named.param' class='java.lang.String'></localObject>
+		<localObject name='verifier1' source-name='verifier1' class='com.peterphi.rules.VerifierObject'></localObject>
+		<localObject name='verifier2' source-name='verifier2' class='com.peterphi.rules.VerifierObject'></localObject>
+		<localObject name='verifier3' source-name='verifier3' class='com.peterphi.rules.VerifierObject'></localObject>
+		<jaxbObject name='jaxbobj' class='com.peterphi.rules.SomeJaxbType'>
+			<ns1:sometype>
+				<ns1:field>text</ns1:field>
+			</ns1:sometype>
+		</jaxbObject>
+		<restService name="rs" endpoint="http://0.0.0.0/foo" iface="com.peterphi.rules.SomeRestService"/>
+	</variables>
+	<ruleset name='local-object-value-match'>
+		<input>
+			<command>mylocalparam.substring(0,4)</command>
+			<filter>input.substring(0,1)</filter>
+		</input>
+		<rule condition='input.equals("o")'>
+			<!-- wont match -->
+			<command>verifier1.fail(1)</command>
+			<command>verifier1.fail(2)</command>
+		</rule>
+		<rule condition='input.equals("n")'>
+			<!-- will match -->
+			<command>verifier1.pass(1)</command>
+			<command>verifier1.pass(2)</command>
+		</rule>
+	</ruleset>
+	<ruleset name='jaxb-value-match'>
+		<input>
+			<command>jaxbobj.field</command>
+		</input>
+		<rule condition='input.equals("text")'>
+			<!-- will match -->
+			<command>verifier2.pass(1)</command>
+		</rule>
+	</ruleset>
+	<ruleset name='rest-service-call'>
+		<input>
+			<command>rs.get()</command>
+		</input>
+		<rule condition='input == "proceed"'>
+			<command>verifier3.pass(1)</command>
+		</rule>
+	</ruleset>
+</rules>
