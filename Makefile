@@ -28,12 +28,27 @@ all: install
 #
 
 config-service-full:
-	$(MVN) package -DskipTests=true -am --projects configuration/configuration
-	rsync -avzr --progress configuration/configuration/target/*.war /opt/tomcat/webapps/config.war
+	$(MVN) package -DskipTests=true -am --projects service-manager/configuration
+	rsync -avzr --progress service-manager/configuration/target/*.war /opt/tomcat/webapps/config.war
 
 uman:
 	$(MVN) package -DskipTests=true -am --projects user-manager/service
 	rsync -avzr --progress user-manager/service/target/*.war /opt/tomcat/webapps/user-manager.war
+
+sman:
+	$(MVN) package -DskipTests=true -am --projects service-manager/service-manager
+	rsync -avzr --progress service-manager/service-manager/target/*.war /opt/tomcat/webapps/service-manager.war	
+smtail:
+	rsync -avzr --progress service-manager/service-manager/src/main/webapp/WEB-INF/template/* /opt/tomcat/webapps/service-manager/WEB-INF/template/
+
+#
+#
+# Code Generation
+#
+#
+colf:
+	-rm guice/common/src/main/java/com/peterphi/std/guice/common/logging/logreport/*.java
+	colf -b guice/common/src/main/java/ -p com/peterphi/std/guice/common/logging java guice/common/src/main/colfer/logreport.colf
 
 #
 #
