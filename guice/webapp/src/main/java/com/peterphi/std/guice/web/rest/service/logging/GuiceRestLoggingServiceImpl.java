@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.Log4JModule;
+import com.peterphi.std.guice.common.logging.Log4JModule;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;

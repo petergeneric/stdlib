@@ -54,6 +54,12 @@ public interface Dao<T, ID extends Serializable>
 	public T getById(ID id);
 
 	/**
+	 * @see #getListById(Collection)
+	 * @deprecated use {@link #getListById(Collection)} instead
+	 */
+	public List<T> getByIds(final Collection<ID> ids);
+
+	/**
 	 * Query the database for all items with the given primary keys (convenience method for an ORred id query)
 	 *
 	 * @param ids
@@ -62,7 +68,7 @@ public interface Dao<T, ID extends Serializable>
 	 * @return any items whose id are contained within <code>ids</code>. May be empty if no matches were found. May be smaller
 	 * than <code>ids</code>. May be ordered differently from <code>ids</code>
 	 */
-	public List<T> getByIds(final Collection<ID> ids);
+	public List<T> getListById(final Collection<ID> ids);
 
 	/**
 	 * Delete an item by its primary key

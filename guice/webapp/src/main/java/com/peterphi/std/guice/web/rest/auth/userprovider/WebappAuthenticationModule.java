@@ -10,8 +10,10 @@ import com.google.inject.name.Names;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
+import org.apache.log4j.MDC;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -72,7 +74,12 @@ public class WebappAuthenticationModule extends AbstractModule
 			final CurrentUser user = provider.get();
 
 			if (user != null)
+			{
+				// Store the user info for logging
+				MDC.put(LoggingMDCConstants.USER_ID, user.getUsername());
+
 				return user;
+			}
 		}
 
 		throw new IllegalArgumentException("No provider could determine a user for HTTP request!");

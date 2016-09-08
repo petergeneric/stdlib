@@ -20,4 +20,8 @@ public class GuiceConstants
 
 	@Doc("CurrentUser retrieved from OAuth2 (delegates to remote OAuth2 provider)")
 	public static final String JAXRS_SERVER_WEBAUTH_OAUTH2_PROVIDER = "oauth2";
+
+
+	public static final String CONFIG_SOURCE_NETWORK = "network";
+	public static final String CONFIG_SOURCE_LOCAL = "local";
 }

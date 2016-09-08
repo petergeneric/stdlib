@@ -4,12 +4,14 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
 import com.peterphi.std.threading.Timeout;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.apache.log4j.MDC;
 
 import java.time.Instant;
 
@@ -127,6 +129,9 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 			try
 			{
+				// Assign a trace id for operations performed by this run of this thread
+				MDC.put(LoggingMDCConstants.TRACE_ID, getThreadName() + "@" + lastRan.toString());
+
 				userCodeRunning = true;
 				execute();
 			}
@@ -140,6 +145,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			finally
 			{
 				userCodeRunning = false;
+				MDC.clear();
 
 				if (timer != null)
 					timer.stop();

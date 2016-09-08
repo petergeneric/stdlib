@@ -1,0 +1,10 @@
+<?xml version='1.0' encoding='utf-8'?>
+<Context antiResourceLocking="true">
+	<JarScanner>
+		<JarScanFilter
+				pluggabilitySkip="*.jar"
+				defaultPluggabilityScan="false"
+				defaultTldScan="false"
+				tldSkip="*.jar" />
+	</JarScanner>
+</Context>

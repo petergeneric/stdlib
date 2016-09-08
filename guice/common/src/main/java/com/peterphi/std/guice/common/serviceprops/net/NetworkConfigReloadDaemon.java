@@ -28,7 +28,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	 * Uniquely identifies us to the configuration provider (e.g. for proactive updates)
 	 */
 	@Inject
-	@Named(GuiceProperties.CONFIG_INSTANCE_ID)
+	@Named(GuiceProperties.INSTANCE_ID)
 	public String configInstanceId;
 
 	/**

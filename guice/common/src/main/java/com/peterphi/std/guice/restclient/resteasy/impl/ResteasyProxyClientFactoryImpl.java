@@ -214,20 +214,28 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final AuthScope scope;
 		final Credentials credentials;
 
+		int port = endpoint.getPort();
+
+		// Default ports for HTTP and HTTPS
+		if (port == -1 && endpoint.getScheme().equalsIgnoreCase("http"))
+			port = 80;
+		else if (port == -1 && endpoint.getScheme().equalsIgnoreCase("https"))
+			port = 443;
+
 		if (bearerToken != null)
 		{
-			scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT, AuthScope.ANY_REALM, "Bearer");
+			scope = new AuthScope(endpoint.getHost(), port, AuthScope.ANY_REALM, "Bearer");
 
 			credentials = new BearerCredentials(bearerToken);
 		}
-		else if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getAuthority()))
+		else if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getUserInfo()))
 		{
-			scope = new AuthScope(endpoint.getHost(), AuthScope.ANY_PORT);
+			scope = new AuthScope(endpoint.getHost(), port);
 
 			if (username != null || password != null)
 				credentials = new UsernamePasswordCredentials(username, password);
 			else
-				credentials = new UsernamePasswordCredentials(endpoint.getAuthority());
+				credentials = new UsernamePasswordCredentials(getUsername(endpoint), getPassword(endpoint));
 		}
 		else
 		{

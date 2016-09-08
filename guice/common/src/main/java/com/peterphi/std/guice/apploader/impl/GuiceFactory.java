@@ -5,11 +5,14 @@ import com.google.inject.Guice;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.logging.ServiceManagerGuiceModule;
+import com.peterphi.std.guice.common.logging.appender.ServiceManagerAppender;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
@@ -114,6 +117,13 @@ class GuiceFactory
 
 		GuiceConfig properties = new GuiceConfig();
 
+		// Generate a random instance ID for this instance of the guice environment
+		final String instanceId = SimpleId.alphanumeric(32);
+
+		// Make the randomly generated instance id available to others
+		properties.set(GuiceProperties.INSTANCE_ID, instanceId);
+
+
 		for (PropertyFile config : configs)
 			properties.setAll(config);
 
@@ -199,7 +209,7 @@ class GuiceFactory
 
 	private static boolean hasNetworkConfiguration(final GuiceConfig properties)
 	{
-		return properties.containsKey(GuiceProperties.CONFIG_INSTANCE_ID);
+		return StringUtils.equals(properties.get(GuiceProperties.CONFIG_SOURCE, null), GuiceConstants.CONFIG_SOURCE_NETWORK);
 	}
 
 
@@ -208,14 +218,14 @@ class GuiceFactory
 	 * <ol>
 	 * <li>Set up the Shutdown Manager</li>
 	 * <li>Set up the Metrics Registry</li>
-	 * <li>Call {@link GuiceRole#register(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference, *
-	 * MetricRegistry)} on all GuiceRoles - this allows modules supporting core plugin functionality to be set up </li>
-	 * <li>Call {@link GuiceSetup#registerModules(List, GuiceConfig)} on GuiceSetup to get the application's guice modules - this
+	 * <li>Call {@link GuiceRole#register} on all GuiceRoles - this allows modules supporting core plugin functionality to be set
+	 * up </li>
+	 * <li>Call {@link GuiceSetup#registerModules} on GuiceSetup to get the application's guice modules - this
 	 * allows the application to set up helper modules</li>
-	 * <li>Call {@link GuiceRole#injectorCreated(Stage, ClassScannerFactory, GuiceConfig, GuiceSetup, List, AtomicReference, *
-	 * MetricRegistry)} on all GuiceRoles with the newly-created {@link Injector} - this allows plugins to do one-time
+	 * <li>Call {@link GuiceRole#injectorCreated} on all GuiceRoles with the newly-created {@link Injector} - this allows plugins
+	 * to do one-time
 	 * post-construction work that requires an Injector</li>
-	 * <li>Call {@link GuiceSetup#injectorCreated(Injector)} with the newly-created {@link Injector} - this allows the
+	 * <li>Call {@link GuiceSetup#injectorCreated} with the newly-created {@link Injector} - this allows the
 	 * application
 	 * to do one-time post-construction work that requires an Injector</li>
 	 * </ol>
@@ -248,6 +258,17 @@ class GuiceFactory
 
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
+
+		// If a service manager endpoint is specified (and skip isn't set) then set up the service manager client
+		if (config.get("service.service-manager.endpoint") != null && !config.getBoolean(GuiceProperties.SERVICE_MANAGER_SKIP,
+		                                                                                 false))
+		{
+			modules.add(new ServiceManagerGuiceModule(config, shutdown.getShutdownManager()));
+		}
+		else
+		{
+			ServiceManagerAppender.shutdown(); // Don't store logs in memory waiting for the service manager, they will never be picked up
+		}
 
 		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
 
@@ -350,13 +371,11 @@ class GuiceFactory
 	 */
 	private static void applyNetworkConfiguration(final GuiceConfig config)
 	{
-		final String instanceId = SimpleId.alphanumeric(32);
-
 		final String configEndpoint = config.get(GuiceProperties.CONFIG_ENDPOINT, null);
 
 		final Boolean configSkip = config.getBoolean(GuiceProperties.CONFIG_SKIP, false);
 
-		if ( configEndpoint != null && !configSkip)
+		if (configEndpoint != null && !configSkip)
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
@@ -372,21 +391,22 @@ class GuiceFactory
 				// We set it in the config because otherwise the NetworkConfigReloadDaemon won't be able to load the config
 				if (config.get(GuiceProperties.CONFIG_PATH) == null)
 				{
-					config.set(GuiceProperties.CONFIG_PATH, config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
+					config.set(GuiceProperties.CONFIG_PATH,
+					           "services/" + config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "unknown-service"));
 				}
 
 				// Get the config path to read
 				final String path = config.get(GuiceProperties.CONFIG_PATH);
 
-				final ConfigPropertyData data = client.read(path, instanceId, null);
+				final ConfigPropertyData data = client.read(path, config.get(GuiceProperties.INSTANCE_ID), null);
 
 				for (ConfigPropertyValue property : data.properties)
 				{
 					config.set(property.name, property.value);
 				}
 
-				// Make the randomly generated instance id available
-				config.set(GuiceProperties.CONFIG_INSTANCE_ID, SimpleId.alphanumeric(32));
+				// Let others know that the configuration data is coming from a network source
+				config.set(GuiceProperties.CONFIG_SOURCE, GuiceConstants.CONFIG_SOURCE_NETWORK);
 
 				if (data.revision != null)
 					config.set(GuiceProperties.CONFIG_REVISION, data.revision);
@@ -395,6 +415,11 @@ class GuiceFactory
 			{
 				clientFactory.shutdown();
 			}
+		}
+		else
+		{
+			// Config is not coming from the network
+			config.set(GuiceProperties.CONFIG_SOURCE, GuiceConstants.CONFIG_SOURCE_LOCAL);
 		}
 	}
 

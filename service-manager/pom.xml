@@ -16,5 +16,6 @@
 
 	<modules>
 		<module>configuration</module>
+		<module>service-manager</module>
 	</modules>
 </project>

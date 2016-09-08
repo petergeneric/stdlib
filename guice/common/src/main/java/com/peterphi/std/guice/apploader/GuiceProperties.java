@@ -29,6 +29,12 @@ public class GuiceProperties
 	@Doc("Set to true when a guice environment is constructed as part of a GuiceUnit test; this allows roles and modules to respond appropriately to a test environment")
 	public static final String UNIT_TEST = "unit-test";
 
+	@Doc("The instance id assigned to this execution of the service (internal property, should not be set by user)")
+	public static final String INSTANCE_ID = "service.instance-id";
+
+	@Doc("If true, any connection to the service manager will be skipped - messages directed to the service manager log appender will be ignored rather than forwarded on (default false)")
+	public static final String SERVICE_MANAGER_SKIP = "service-manager.skip";
+
 	//
 	// Configuration Service Properties
 	//
@@ -36,8 +42,8 @@ public class GuiceProperties
 	public static final String CONFIG_ENDPOINT = "service.config.endpoint";
 	@Doc("The config path to read. Defaults to: ${servlet.context-name}")
 	public static final String CONFIG_PATH = "service.config.path";
-	@Doc("The instance id assigned to this execution of the service (internal property, should not be set by user)")
-	public static final String CONFIG_INSTANCE_ID = "service.config.instance-id";
+	@Doc("The instance id assigned to this execution of the service - has the value of 'network' if using the network config service, otherwise 'local' (internal property, should not be set by user)")
+	public static final String CONFIG_SOURCE = "service.config.source";
 	@Doc("The last config revision read from the network provider during the execution of this execution of the service (internal property, should not be set by user)")
 	public static final String CONFIG_REVISION = "service.config.last-revision";
 	@Doc("A flag to skip network configuration, even if an endpoint is configured (default false)")

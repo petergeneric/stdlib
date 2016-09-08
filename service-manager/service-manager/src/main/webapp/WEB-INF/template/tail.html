@@ -1,0 +1,331 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta th:substituteby="includes :: htmlhead"/>
+	<title>Config Service</title>
+
+	<style th:fragment="htmlhead">
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body id="top">
+<div class="container">
+	<h1>Log Tail</h1>
+
+	<div class="btn-toolbar">
+		<div class="btn-group">
+			<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Filter Endpoints<span
+					id="filterEndpointsSummary"></span>
+				<span class="caret"></span></button>
+			<ul class="dropdown-menu" id="filterEndpointsOptions" style="padding-left: 10px; padding-right: 10px;">
+				<li><em>No endpoints observed yet</em></li>
+			</ul>
+		</div>
+
+		<div class="btn-group">
+			<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Level<span
+					id="filterLevelSummary"></span>
+				<span class="caret"></span></button>
+			<ul class="dropdown-menu" id="filterLevelOptions" style="padding-left: 10px;">
+				<li><label class="radio control-label"><input type="radio" name="level" value="0" checked="checked"/> All</label>
+				</li>
+				<li><label class="radio control-label"><input type="radio" name="level" value="3"/> DEBUG</label></li>
+				<li><label class="radio control-label"><input type="radio" name="level" value="4"/> INFO</label></li>
+				<li><label class="radio control-label"><input type="radio" name="level" value="5"/> WARN</label></li>
+				<li><label class="radio control-label"><input type="radio" name="level" value="6"/> ERROR</label></li>
+				<li style="padding-bottom: 5px;"><label class="radio control-label"><input type="radio" name="level" value="7"/>
+					FATAL</label></li>
+			</ul>
+		</div>
+	</div>
+
+	Your log tail subscription id is: <code th:text="${subscriptionId}"></code>
+
+	<table class="table">
+		<thead>
+		<tr>
+			<th class="span2 log_endpoint">Endpoint</th>
+			<th class="span1 log_when">When</th>
+			<th class="span1 log_level">Level</th>
+			<th class="span7 log_message">Message</th>
+		</tr>
+		</thead>
+		<tbody id="loglines" style="text-overflow: ellipsis;">
+		<tr id="latest">
+			<td colspan="4"><em>Monitoring for new lines...</em></td>
+		</tr>
+		</tbody>
+	</table>
+
+	<script th:inline="javascript">/*<![CDATA[*/
+	var tailURL = /*[[@{/logs/tail.do}]]*/ '';
+	var subscriptionId = /*[[${subscriptionId}]]*/ '';
+	var nonce = /*[[${nonce}]]*/ '';
+
+	$(document).ready(function () {
+		getRecentLines();
+
+		$("#filterLevelOptions input[type=radio]").change(refilter);
+		$("#filterLevelOptions li").click(function () {
+			// When the user clicks on a line, make it the same as clicking on the radio button
+			$(this).find("input[type=radio]").prop('checked', true);
+
+			refilter();
+		});
+	});
+
+	function getRecentLines() {
+		$.ajax({
+			type: "POST",
+			dataType: 'json',
+			url: tailURL,
+			data: {
+				'id': subscriptionId,
+				'nonce': nonce
+			},
+			complete: function (data, textStatus) {
+				if (textStatus == 'success') {
+					addLines($.parseJSON(data.responseText));
+
+					setTimeout(getRecentLines, 500);
+				}
+				else {
+					var failureXML = response.responseXML;
+
+					var errorDetail = $($(failureXML).find("detail")[0]).text();
+
+					alert("Error tailing logs, may need to refresh page: " + errorDetail);
+				}
+			}
+		});
+	}
+
+	var LEVEL_NAMES = ['0', '1', 'TRACE', 'DEBUG', 'INFO', 'WARN', 'ERROR', 'FATAL', '8', '9']
+	var END_OF_LOG_TABLE = $("#latest");
+	var MAX_SCROLLBACK_SIZE = 10000;
+	var logLinesInMemory = 0;
+	var ALL_ENDPOINTS = {};
+	var EVENT_FILTER = function () {
+		return true;
+	};
+
+	var TIMESTAMP_FORMAT = 'HH:mm:ss.SS'; // N.B. we ignore date component in the tail page
+
+	function addLines(events) {
+		if (events.length > 0) {
+			// Allows us to keep track of whether the user was at the bottom of the page
+			// If they were at the bottom of the page at the start of this method we should ensure they are at the end
+			var isAtBottomOfPage = isElementInViewport(END_OF_LOG_TABLE);
+
+			for (var i = 0; i < events.length; i++) {
+				addLine(events[i]);
+			}
+
+			logLinesInMemory += events.length;
+
+			// Keep within the scrollback buffer limit
+			while (logLinesInMemory > MAX_SCROLLBACK_SIZE) {
+				// Remove an additional 500 lines (so we aren't having to delete lines every time)
+				var linesToRemove = (MAX_SCROLLBACK_SIZE - logLinesInMemory) + 500;
+				$("#loglines tr").slice(0, linesToRemove).remove();
+
+				logLinesInMemory -= linesToRemove;
+			}
+
+			// Make sure to keep the last log line in view (if we were at the bottom of the page at the start of the method)
+			if (isAtBottomOfPage) {
+				END_OF_LOG_TABLE[0].scrollIntoView({
+					behavior: "instant",
+					block: "end"
+				});
+			}
+		}
+	}
+
+	function addLine(event) {
+		if (EVENT_FILTER(event)) {
+			var tr = $('<tr/>').addClass('logline');
+
+			var when = moment(event.when);
+
+			tr.append($('<td/>').addClass('log_endpoint').text(event.endpoint));
+			tr.append($('<td/>').addClass('log_when').text(when.format(TIMESTAMP_FORMAT)));
+			tr.append($('<td/>').addClass('log_level').text(LEVEL_NAMES[event.level]));
+			tr.append($('<td/>').addClass('log_message').text(event.message));
+
+			tr.data('e', event);
+
+			tr.click(expandEvent);
+
+			tr.insertBefore(END_OF_LOG_TABLE);
+
+			// If this is a new endpoint make sure we keep track of it
+			if (!(event.endpoint in ALL_ENDPOINTS)) {
+				addEndpoint(event.endpoint);
+			}
+		}
+	}
+
+	function expandEvent() {
+		var tr = $(this).closest('tr');
+		var event = tr.data('e');
+		var expanded = tr.data('expanded');
+
+		if (expanded == true) {
+			tr.data('expanded', null);
+
+			tr.find('td.log_message').text(event.message);
+		}
+		else {
+			tr.data('expanded', true);
+
+			var td = tr.find('td.log_message');
+			td.empty();
+
+			var msg = $('<pre />');
+			msg.text(event.message);
+			td.append(msg);
+
+			td.append($('<br />'));
+
+			td.append($('<div/>').text('Logger: ' + event.category));
+			td.append($('<div/>').text('Trace ID: ' + event.traceId));
+			td.append($('<div/>').text('User ID: ' + event.userId));
+			td.append($('<div/>').text('Thread ID: ' + event.threadId));
+
+			if (event.exceptionId != null && event.exceptionId.length > 0) {
+				var exceptionId = $('<div/>').text('Exception ID: ' + event.exceptionId);
+
+				// TODO make exceptionId a link to search logs for similar exceptions?
+
+				td.append(exceptionId);
+
+				var ex = $('<pre/>')
+				ex.text(event.exception);
+
+				td.append(ex);
+			}
+
+		}
+	}
+
+	function addEndpoint(endpoint) {
+		ALL_ENDPOINTS[endpoint] = true;
+
+		var previouslyChecked = getFilteredEndpoints();
+
+		var options = $('#filterEndpointsOptions');
+		options.empty();
+
+		var keys = Object.keys(ALL_ENDPOINTS).sort();
+
+		for (var i = 0; i < keys.length; i++) {
+			var li = $('<li/>');
+			var label = $('<label class="checkbox control-label"/>');
+
+
+			var checkbox = $('<input type="checkbox"/>').data('endpoint', keys[i]).attr('checked', previouslyChecked.includes(keys[i]))
+			label.append(checkbox);
+			label.append(" " + keys[i]);
+			li.append(label);
+
+			// Stop the dropdown closing when clicking on a checkbox
+			li.click(function (e) {
+				var i = $(this).find("input[type=checkbox]");
+
+				// Flip the checkbox state
+				i.prop('checked', !i.prop('checked'));
+				i.val(!i.val());
+
+				refilter();
+
+				e.stopPropagation();
+			});
+
+			// Refilter the log lines when a selection is made
+			checkbox.change(function () {
+				refilter();
+			});
+
+			options.append(li);
+		}
+	}
+
+	function refilter() {
+		var permittedEndpoints = getFilteredEndpoints();
+		var minLevel = $("#filterLevelOptions input[type=radio]:checked").val();
+
+		// Update the UI to reflect the number of endpoint filters
+		if (permittedEndpoints.length == 0)
+			$("#filterEndpointsSummary").text("");
+		else
+			$("#filterEndpointsSummary").text(" (" + permittedEndpoints.length + ")");
+
+		if (minLevel > 2)
+			$("#filterLevelSummary").text(" (" + LEVEL_NAMES[minLevel] + ")");
+		else
+			$("#filterLevelSummary").text("");
+
+		if (permittedEndpoints.length == 1) {
+			$('.log_endpoint').hide();
+		}
+		else {
+			$('.log_endpoint').show();
+		}
+
+		if (permittedEndpoints.length == 0 && minLevel <= 2)
+			setEventFilter(function () {
+				return true;
+			});
+		else
+			setEventFilter(function (event) {
+				return (permittedEndpoints.length == 0 || permittedEndpoints.includes(event.endpoint)) && event.level >= minLevel;
+			});
+	}
+
+	function setEventFilter(newFilterFunction) {
+		EVENT_FILTER = newFilterFunction;
+
+		var rows = $('#loglines tr').slice(0, -1);
+
+		rows.show();
+
+		rows.each(function () {
+			var row = $(this);
+			var event = row.data('e');
+
+			if (!EVENT_FILTER(event))
+				row.hide();
+		});
+	}
+
+	function getFilteredEndpoints() {
+		var checked = [];
+		$('#filterEndpointsOptions :checkbox:checked').each(function () {
+			checked.push($(this).data('endpoint'));
+		});
+
+		return checked;
+	}
+	/*]]>*/
+	</script>
+
+	<p th:substituteby="includes :: footer"/>
+</div>
+
+<p th:substituteby="includes :: htmlfoot"/>
+</body>
+</html>

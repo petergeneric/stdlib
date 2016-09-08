@@ -269,7 +269,7 @@ class HttpCallJWTUser implements CurrentUser
 		if (data.containsKey("sub"))
 			return String.valueOf(data.get("sub"));
 		else
-			return getName();
+			return "jwt-user-nosubject";
 	}
 
 

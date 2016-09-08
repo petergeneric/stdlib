@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.common;
+package com.peterphi.std.guice.common.logging;
 
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.log4j.InstrumentedAppender;
