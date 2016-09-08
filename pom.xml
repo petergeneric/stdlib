@@ -79,6 +79,7 @@
 		<module>user-manager</module>
 		<module>rules</module>
 		<module>azure</module>
+		<module>rules</module>
 	</modules>
 
 	<dependencyManagement>
