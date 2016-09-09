@@ -62,9 +62,6 @@ public class ServiceManagerUIServiceImpl implements ServiceManagerUIService
 	@Override
 	public String getTail()
 	{
-		if (logStore.isSearchSupported())
-			throw new IllegalArgumentException("The underlying log store does not support web-based searching!");
-
 		final TemplateCall call = templater.template("tail");
 
 		// Create a new subscription to the log stream
@@ -96,7 +93,7 @@ public class ServiceManagerUIServiceImpl implements ServiceManagerUIService
 	@Override
 	public String getSearchLogs(String from, String to, final int minLevel)
 	{
-		if (logStore.isSearchSupported())
+		if (!logStore.isSearchSupported())
 			throw new IllegalArgumentException("The underlying log store does not support web-based searching!");
 
 		final TemplateCall call = templater.template("search");
