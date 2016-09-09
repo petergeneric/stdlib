@@ -130,9 +130,9 @@ usermanager-az: azurls azlocs package
 
 servicemanager-az: azurls azlocs package
 	$(eval WEBAPP_PATH := service-manager/service-manager)
-    $(eval WEBAPP_BUILD_NAME := service-manager)
-    $(eval WEBAPP_TARGET_NAME := service-manager)
-    $(call az-deploy)
+	$(eval WEBAPP_BUILD_NAME := service-manager)
+	$(eval WEBAPP_TARGET_NAME := service-manager)
+	$(call az-deploy)
 
 sm-az: azurls azlocs package
 	$(call az-clone,$(giturl))
@@ -147,10 +147,10 @@ sm-az: azurls azlocs package
 	$(call az-sync)
 	$(call az-addrm)
 	$(eval WEBAPP_PATH := service-manager/service-manager)
-    $(eval WEBAPP_BUILD_NAME := service-manager)
-    $(eval WEBAPP_TARGET_NAME := service-manager)
-    $(call az-sync)
-    $(call az-addrm)
+	$(eval WEBAPP_BUILD_NAME := service-manager)
+	$(eval WEBAPP_TARGET_NAME := service-manager)
+	$(call az-sync)
+	$(call az-addrm)
 	$(call az-commit)
 	$(call az-cleanup)
 
