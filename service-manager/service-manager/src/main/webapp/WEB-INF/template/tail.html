@@ -50,6 +50,24 @@
 					FATAL</label></li>
 			</ul>
 		</div>
+
+
+		<div class="btn-group">
+			<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Endpoint Display<span
+					id="renderEndpointSummary"> (short)</span>
+				<span class="caret"></span></button>
+			<ul class="dropdown-menu" id="renderEndpointOptions" style="padding-left: 10px;">
+				<li><label class="radio control-label"><input type="radio" name="endpointRender" value="short" checked="checked"/>
+					Short</label>
+				</li>
+				<li style="padding-bottom: 5px;"><label class="radio control-label"><input type="radio" name="endpointRender"
+				                                                                           value="full"/> Full</label></li>
+			</ul>
+		</div>
+
+		<div class="btn-group">
+			<button class="btn" type="button" onclick="clearLines()">Clear</button>
+		</div>
 	</div>
 
 	Your log tail subscription id is: <code th:text="${subscriptionId}"></code>
@@ -85,6 +103,14 @@
 
 			refilter();
 		});
+
+		$("#renderEndpointOptions input[type=radio]").change(rerender);
+		$("#renderEndpointOptions li").click(function () {
+			// When the user clicks on a line, make it the same as clicking on the radio button
+			$(this).find("input[type=radio]").prop('checked', true);
+
+			rerender();
+		});
 	});
 
 	function getRecentLines() {
@@ -118,9 +144,35 @@
 	var MAX_SCROLLBACK_SIZE = 10000;
 	var logLinesInMemory = 0;
 	var ALL_ENDPOINTS = {};
+	var ENDPOINT_RENDERER = endpointRenderShort;
+	var MESSAGE_RENDERER = messageRendererDefault;
 	var EVENT_FILTER = function () {
 		return true;
 	};
+
+	function messageRendererDefault(event, td) {
+
+		if (event.exceptionId.length > 0)
+			td.text("!!" + event.exceptionId.substring(0, 4) + " " + event.message);
+		else
+			td.text(event.message);
+
+		return td;
+	}
+
+	function endpointRenderShort(event) {
+		var endpoint = event.endpoint;
+
+		var lastSlash = event.endpoint.lastIndexOf('/');
+
+		if (lastSlash != -1)
+			return event.endpoint.substring(lastSlash + 1);
+		else return event.endpoint;
+	}
+
+	function endpointRenderFull(event) {
+		return event.endpoint;
+	}
 
 	var TIMESTAMP_FORMAT = 'HH:mm:ss.SS'; // N.B. we ignore date component in the tail page
 
@@ -137,12 +189,11 @@
 			logLinesInMemory += events.length;
 
 			// Keep within the scrollback buffer limit
-			while (logLinesInMemory > MAX_SCROLLBACK_SIZE) {
+			if (logLinesInMemory > MAX_SCROLLBACK_SIZE) {
 				// Remove an additional 500 lines (so we aren't having to delete lines every time)
 				var linesToRemove = (MAX_SCROLLBACK_SIZE - logLinesInMemory) + 500;
-				$("#loglines tr").slice(0, linesToRemove).remove();
 
-				logLinesInMemory -= linesToRemove;
+				clearLines(linesToRemove);
 			}
 
 			// Make sure to keep the last log line in view (if we were at the bottom of the page at the start of the method)
@@ -155,16 +206,29 @@
 		}
 	}
 
+	// Remove a set number of lines from the start of the buffer
+	// If no number of lines is supplied then remove all lines
+	function clearLines(linesToRemove) {
+		if (linesToRemove === undefined || linesToRemove > logLinesInMemory) {
+			linesToRemove = logLinesInMemory;
+		}
+
+		// Remove an additional 500 lines (so we aren't having to delete lines every time)
+		$("#loglines tr").slice(0, linesToRemove).remove();
+
+		logLinesInMemory -= linesToRemove;
+	}
+
 	function addLine(event) {
 		if (EVENT_FILTER(event)) {
 			var tr = $('<tr/>').addClass('logline');
 
 			var when = moment(event.when);
 
-			tr.append($('<td/>').addClass('log_endpoint').text(event.endpoint));
+			tr.append($('<td/>').addClass('log_endpoint').text(ENDPOINT_RENDERER(event)));
 			tr.append($('<td/>').addClass('log_when').text(when.format(TIMESTAMP_FORMAT)));
 			tr.append($('<td/>').addClass('log_level').text(LEVEL_NAMES[event.level]));
-			tr.append($('<td/>').addClass('log_message').text(event.message));
+			tr.append(MESSAGE_RENDERER(event, $('<td/>').addClass('log_message')));
 
 			tr.data('e', event);
 
@@ -187,7 +251,7 @@
 		if (expanded == true) {
 			tr.data('expanded', null);
 
-			tr.find('td.log_message').text(event.message);
+			MESSAGE_RENDERER(event, tr.find('td.log_message'));
 		}
 		else {
 			tr.data('expanded', true);
@@ -201,6 +265,8 @@
 
 			td.append($('<br />'));
 
+			td.append($('<div/>').text('Endpoint: ' + event.endpoint));
+			td.append($('<div/>').text('Instance ID: ' + event.instanceId));
 			td.append($('<div/>').text('Logger: ' + event.category));
 			td.append($('<div/>').text('Trace ID: ' + event.traceId));
 			td.append($('<div/>').text('User ID: ' + event.userId));
@@ -262,6 +328,27 @@
 
 			options.append(li);
 		}
+	}
+
+	function rerender() {
+		var endpointRenderMode = $("#renderEndpointOptions input[type=radio]:checked").val();
+
+		if (endpointRenderMode == "full")
+			ENDPOINT_RENDERER = endpointRenderFull;
+		else
+			ENDPOINT_RENDERER = endpointRenderShort;
+
+		$("#renderEndpointSummary").text(" (" + endpointRenderMode + ")");
+
+		// Now rerender all the endpoint values
+		// TODO in the future we may want this to rerender the whole line but currently only the endpoint needs to change
+		$("td.log_endpoint").each(function () {
+			var td = $(this);
+			var tr = td.parent("tr");
+			var event = tr.data('e');
+
+			td.text(ENDPOINT_RENDERER(event));
+		});
 	}
 
 	function refilter() {
