@@ -1,5 +1,7 @@
 package com.peterphi.servicemanager.service.rest.ui.api;
 
+import org.jboss.resteasy.annotations.GZIP;
+
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
@@ -33,6 +35,7 @@ public interface ServiceManagerUIService
 	@Path("/logs/tail.do")
 	public Response doTail(@FormParam("id") final String subscriptionId) throws Exception;
 
+	@GZIP
 	@POST
 	@Path("/logs/search.do")
 	public Response doSearchLogs(String fromStr, String toStr, String filter);
