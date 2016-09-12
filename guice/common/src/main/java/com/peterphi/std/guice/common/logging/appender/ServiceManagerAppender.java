@@ -24,13 +24,13 @@ public class ServiceManagerAppender extends AppenderSkeleton
 	 */
 	public static boolean LOG_REQUEST_URI_AT_ALL_LEVELS = false;
 
-	private static final int LEVEL_TRACE = 2;
-	private static final int LEVEL_DEBUG = 3;
-	private static final int LEVEL_INFO = 4;
-	private static final int LEVEL_WARN = 5;
-	private static final int LEVEL_ERROR = 6;
-	private static final int LEVEL_FATAL = 7;
-	private static final int LEVEL_UNKNOWN = 9;
+	public static final int LEVEL_TRACE = 2;
+	public static final int LEVEL_DEBUG = 3;
+	public static final int LEVEL_INFO = 4;
+	public static final int LEVEL_WARN = 5;
+	public static final int LEVEL_ERROR = 6;
+	public static final int LEVEL_FATAL = 7;
+	public static final int LEVEL_UNKNOWN = 9;
 
 
 	/**

@@ -10,6 +10,8 @@ import com.peterphi.std.guice.common.logging.logreport.LogReport;
 import com.peterphi.std.guice.common.logging.rest.iface.ServiceManagerLoggingRestService;
 import com.peterphi.std.guice.common.logging.rest.iface.ServiceManagerRegistryRestService;
 import com.peterphi.std.threading.Timeout;
+import org.apache.log4j.Logger;
+import org.joda.time.DateTime;
 
 import java.net.URI;
 import java.util.Arrays;
@@ -22,21 +24,36 @@ import java.util.List;
 @Doc("Registers with and forwards log4j messages to the Service Manager Logging API")
 public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 {
+	private static final Logger log = Logger.getLogger(ServiceManagerLogForwardDaemon.class);
+
 	/**
 	 * The largest number of lines to forward in a single call
 	 */
-	private static final int PAGE_SIZE = 1000;
+	private static final int DEFAULT_PAGE_SIZE = 1000;
+	/**
+	 * The maximum number of unsent lines
+	 */
+	private static final int DEFAULT_MAX_BACKLOG = 5000;
 
 	@Inject
 	public ServiceManagerLoggingRestService logService;
 	@Inject
 	public ServiceManagerRegistryRestService registryService;
+
 	@Inject
 	@Named(GuiceProperties.INSTANCE_ID)
 	public String instanceId;
+
 	@Inject
 	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
 	public URI localEndpoint;
+
+	@Inject(optional = true)
+	@Named(GuiceProperties.SERVICE_MANAGER_LOGGING_MAX_BACKLOG)
+	public int maxBacklog = DEFAULT_MAX_BACKLOG;
+
+	public int pageSize = DEFAULT_PAGE_SIZE;
+
 
 	private final LinkedList<LogLine> incoming;
 
@@ -140,14 +157,28 @@ public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 	@Override
 	public void execute()
 	{
+		// If we exceed the maximum backlog then delete some messages
+		synchronized (incoming)
+		{
+			if (incoming.size() > maxBacklog)
+				deleteMessageBacklog();
+		}
+
 		if (!registered)
 		{
 			// Make sure we are registered
 			// TODO create a management token (if JWT enabled)?
 			// TODO figure out how to get the (right) code rev - presumably to be set up by GuiceFactory
-			registryService.register(instanceId, localEndpoint.toString(), null, "unknown");
+			try
+			{
+				registryService.register(instanceId, localEndpoint.toString(), null, "unknown");
 
-			registered = true;
+				registered = true;
+			}
+			catch (Throwable t)
+			{
+				log.warn("Failed to register with Service Manager for logging", t);
+			}
 		}
 
 		// Keep forwarding log pages until an idle period, at which point we'll
@@ -159,6 +190,52 @@ public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 			if (processed <= 0)
 				break;
 		}
+	}
+
+
+	/**
+	 *
+	 */
+	private void deleteMessageBacklog()
+	{
+		synchronized (incoming)
+		{
+			// Keep track of the first and last log message deleted
+			final LogLine first = incoming.poll();
+			LogLine last = first;
+
+			int linesDeleted = 1;
+			// Cut the backlog down to a third of the max backlog
+			while (incoming.size() >= (maxBacklog / 3))
+			{
+				last = incoming.poll();
+				linesDeleted++;
+			}
+
+			// Insert the "lines were deleted" log message in their place
+			incoming.add(0, linesDeletedMessage(first, last, linesDeleted));
+		}
+	}
+
+
+	private LogLine linesDeletedMessage(LogLine first, LogLine last, int linesDeleted)
+	{
+		LogLine line = new LogLine();
+
+		line.setCategory("SYSTEM");
+		line.setLevel(ServiceManagerAppender.LEVEL_FATAL);
+		line.setWhen(first.getWhen()); // Backdate this log message
+		line.setMessage("Messages are missing - logging system hit transmission queue limit (" +
+		                maxBacklog +
+		                ") at " +
+		                new DateTime() +
+		                " so deleted " +
+		                linesDeleted +
+		                " lines covering " +
+		                new DateTime(first.getWhen()) +
+		                " to " +
+		                new DateTime(last.getWhen()));
+		return line;
 	}
 
 
@@ -191,23 +268,20 @@ public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 
 			if (copy != null)
 			{
-				int forwarded = 0;
-
 				// Keep forwarding logs until we encounter an error (or run out of logs to forward)
 				while (!copy.isEmpty() && (forwardLogs(copy) > 0))
 					;
 
 				if (!copy.isEmpty())
-					System.err.println(
-							"shutdown called but failed to transfer all pending logs at time of shutdown to Service Manager: there are " +
+					log.warn(
+							"Shutdown called but failed to transfer all pending logs at time of shutdown to Service Manager: there are " +
 							copy.size() +
 							" remaining");
 			}
 		}
 		catch (Throwable t)
 		{
-			System.err.println("Logging system encountered a problem during shutdown: " + t.getMessage());
-			t.printStackTrace(System.err);
+			log.warn("Logging system encountered a problem during shutdown", t);
 		}
 
 		super.shutdown();
@@ -223,7 +297,7 @@ public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 		final LogLine[] array;
 		synchronized (source)
 		{
-			array = new LogLine[Math.min(PAGE_SIZE, source.size())];
+			array = new LogLine[Math.min(pageSize, source.size())];
 
 			for (int i = 0; i < array.length; i++)
 				array[i] = source.poll();
@@ -249,8 +323,7 @@ public class ServiceManagerLogForwardDaemon extends GuiceRecurringDaemon
 			}
 
 			// N.B. we don't use log4j here because the logs will just grow the backlog of messages if there's a permanent problem
-			System.err.println("Error sending logs to network receiver: " + t.getMessage());
-			t.printStackTrace(System.err);
+			log.warn("Service Manager Logging failed to send logs to the network receiver", t);
 
 			return 0; // 0 lines forwarded
 		}
