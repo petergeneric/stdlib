@@ -163,18 +163,26 @@
 	function endpointRenderShort(event) {
 		var endpoint = event.endpoint;
 
-		var lastSlash = event.endpoint.lastIndexOf('/');
+		if (endpoint == "http://unknown") {
+			return "";
+		}
+		else {
+			// If the endpoint ends with /rest or /rest/ then we should remove that from it
+			if (endpoint.endsWith("/rest") || endpoint.endsWith("/rest/"))
+				endpoint = endpoint.substring(0, endpoint.lastIndexOf('/', endpoint.length - 1) - 1);
 
-		if (lastSlash != -1)
-			return event.endpoint.substring(lastSlash + 1);
-		else return event.endpoint;
+			var lastSlash = endpoint.lastIndexOf('/', endpoint.length - 1);
+
+			if (lastSlash != -1)
+				return endpoint.substring(lastSlash + 1);
+			else
+				return endpoint;
+		}
 	}
 
 	function endpointRenderFull(event) {
 		return event.endpoint;
 	}
-
-	var TIMESTAMP_FORMAT = 'HH:mm:ss.SS'; // N.B. we ignore date component in the tail page
 
 	function addLines(events) {
 		if (events.length > 0) {
@@ -219,6 +227,20 @@
 		logLinesInMemory -= linesToRemove;
 	}
 
+
+	var SHORT_TIMESTAMP_FORMAT = 'HH:mm:ss.SS';
+	var LONG_TIMESTAMP_FORMAT = 'D MMM HH:mm:ss.SS';
+
+	// Formats a timestamp string in the local timezone
+	// N.B. ignores the day if it's today
+	// This is useful for the tail page + searches within a single day
+	function formatTimestamp(when) {
+		if (when.isSame(new Date(), 'day'))
+			return when.format(SHORT_TIMESTAMP_FORMAT); // Timestamp is for today, ignore the date
+		else
+			return when.format(LONG_TIMESTAMP_FORMAT); // Timestamp is not today, include the date
+	}
+
 	function addLine(event) {
 		if (EVENT_FILTER(event)) {
 			var tr = $('<tr/>').addClass('logline');
@@ -226,7 +248,7 @@
 			var when = moment(event.when);
 
 			tr.append($('<td/>').addClass('log_endpoint').text(ENDPOINT_RENDERER(event)));
-			tr.append($('<td/>').addClass('log_when').text(when.format(TIMESTAMP_FORMAT)));
+			tr.append($('<td/>').addClass('log_when').text(formatTimestamp(when)));
 			tr.append($('<td/>').addClass('log_level').text(LEVEL_NAMES[event.level]));
 			tr.append(MESSAGE_RENDERER(event, $('<td/>').addClass('log_message')));
 
