@@ -7,7 +7,7 @@ import com.peterphi.rules.types.Rules;
 /**
  * Created by bmcleod on 08/09/2016.
  */
-public class RulelsDaemonModule extends AbstractModule
+public class RulesDaemonModule extends AbstractModule
 {
 	@Override
 	protected void configure()

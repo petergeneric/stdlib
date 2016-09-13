@@ -45,6 +45,11 @@
 			<artifactId>stdlib-guice-metrics</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		<dependency>
+			<groupId>com.peterphi.std</groupId>
+			<artifactId>stdlib-rules</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>javax.servlet</groupId>

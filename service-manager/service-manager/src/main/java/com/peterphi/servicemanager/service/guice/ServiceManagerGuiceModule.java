@@ -7,6 +7,7 @@ import com.microsoft.azure.storage.CloudStorageAccount;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.table.CloudTable;
 import com.microsoft.azure.storage.table.CloudTableClient;
+import com.peterphi.rules.daemon.RulesDaemonModule;
 import com.peterphi.servicemanager.service.logging.LogStore;
 import com.peterphi.servicemanager.service.logging.azure.AzureLogStore;
 import com.peterphi.servicemanager.service.logging.file.FileLogStore;
@@ -25,7 +26,6 @@ public class ServiceManagerGuiceModule extends AbstractModule
 {
 	private final Class<? extends LogStore> logStoreImpl;
 
-
 	public ServiceManagerGuiceModule(final GuiceConfig config)
 	{
 		final String logStoreImplementation = config.get("log-store-implementation");
@@ -38,6 +38,7 @@ public class ServiceManagerGuiceModule extends AbstractModule
 			throw new IllegalArgumentException("Unknown log-store-implementation: " +
 			                                   logStoreImplementation +
 			                                   " (expected azure or log)");
+
 	}
 
 
@@ -52,6 +53,7 @@ public class ServiceManagerGuiceModule extends AbstractModule
 
 		RestResourceRegistry.register(ServiceManagerRegistryRestService.class);
 		RestResourceRegistry.register(ServiceManagerLoggingRestService.class);
+
 	}
 
 
@@ -69,7 +71,7 @@ public class ServiceManagerGuiceModule extends AbstractModule
 	@Provides
 	@Named("logdata")
 	public CloudTable getLogDataTable(@Named("azure.storage-connection-string")
-			                                  String storageConnectionString) throws URISyntaxException, StorageException, InvalidKeyException
+	                                  String storageConnectionString) throws URISyntaxException, StorageException, InvalidKeyException
 	{
 		// Retrieve storage account from connection-string.
 		CloudStorageAccount storageAccount = CloudStorageAccount.parse(storageConnectionString);

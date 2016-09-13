@@ -88,6 +88,8 @@ release:
 
 #clone the deployment repo
 az-clone = git clone --branch master $(1) $(TEMP_LOC)
+#pull on an existing checkout
+az-pull = cd $(TEMP_LOC) ; git pull ; cd $(ORI_LOC) ;
 #copy files to the deployment repo
 az-sync = rsync -a --delete $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION).war $(TEMP_LOC)/webapps/$(WEBAPP_TARGET_NAME).war
 #add or remove files
@@ -99,11 +101,19 @@ az-cleanup = rm -rf $(TEMP_LOC)
 
 
 define az-deploy =
+ifndef CO_PATH
 	$(call az-clone,$(giturl))
+endif
+ifdef CO_PATH
+	$(eval TEMP_LOC := ${CO_PATH})
+	$(call az-pull)
+endif
 	$(call az-sync)
 	$(call az-addrm)
 	$(call az-commit)
+ifndef CO_PATH
 	$(call az-cleanup)
+endif
 endef
 
 azurls:
@@ -135,7 +145,13 @@ servicemanager-az: azurls azlocs package
 	$(call az-deploy)
 
 sm-az: azurls azlocs package
+ifndef CO_PATH
 	$(call az-clone,$(giturl))
+endif
+ifdef CO_PATH
+	$(eval TEMP_LOC := ${CO_PATH})
+	$(call az-pull)
+endif
 	$(eval WEBAPP_PATH := service-manager/configuration)
 	$(eval WEBAPP_BUILD_NAME := configuration)
 	$(eval WEBAPP_TARGET_NAME := configuration)
@@ -152,7 +168,9 @@ sm-az: azurls azlocs package
 	$(call az-sync)
 	$(call az-addrm)
 	$(call az-commit)
+ifndef CO_PATH
 	$(call az-cleanup)
+endif
 
 
 

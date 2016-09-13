@@ -3,6 +3,7 @@ package com.peterphi.rules.types;
 import com.google.inject.Injector;
 import com.google.inject.Key;
 import com.google.inject.name.Names;
+import org.apache.commons.lang.StringUtils;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
@@ -16,7 +17,7 @@ import javax.xml.bind.annotation.XmlType;
 public class LocalObjectVar extends Variable
 {
 
-	@XmlAttribute(required = true, name = "source-name")
+	@XmlAttribute(required = false, name = "source-name")
 	String sourceName;
 
 	@XmlAttribute(required = true, name = "class")
@@ -26,7 +27,14 @@ public class LocalObjectVar extends Variable
 	@Override
 	public Object getValue(final Injector injector)
 	{
-		return injector.getInstance(Key.get(getClazz(), Names.named(sourceName)));
+		if (StringUtils.isEmpty(sourceName))
+		{
+			return injector.getInstance(getClazz());
+		}
+		else
+		{
+			return injector.getInstance(Key.get(getClazz(), Names.named(sourceName)));
+		}
 	}
 
 

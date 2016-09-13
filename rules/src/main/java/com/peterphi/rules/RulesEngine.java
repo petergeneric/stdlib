@@ -1,5 +1,6 @@
 package com.peterphi.rules;
 
+import com.google.inject.ImplementedBy;
 import com.peterphi.rules.types.Rule;
 import com.peterphi.rules.types.Rules;
 import ognl.OgnlContext;
@@ -10,6 +11,7 @@ import java.util.List;
 /**
  * Created by bmcleod on 08/09/2016.
  */
+@ImplementedBy(RulesEngineImpl.class)
 public interface RulesEngine
 {
 	/**
