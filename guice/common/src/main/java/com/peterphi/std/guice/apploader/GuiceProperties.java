@@ -132,8 +132,39 @@ public class GuiceProperties
 	public static final String OAUTH2_CLIENT_SECRET = "service.oauth2.client_secret";
 
 	@Doc("If true then the CharacterEncoding for HttpServletRequest (and InputParts for multipart/form-data resources) with no charset provided by the client will default to UTF-8 (default true)")
-	public static final java.lang.String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";
+	public static final String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";
 
+	//
+	// JAX-RS Exception Display
+	//
+	@Doc("A comma-delimited list of terms to use to decide if a stack trace line should be highlighted (default 'scan-packages', which takes the value from scan.packages)")
+	public static final String JAXRS_EXCEPTION_HIGHLIGHT = "rest.exception.html.highlight.terms";
+	@Doc("If enabled, lines containing certain terms are highlighted in stack traces, all others are dimmed (default true)")
+	public static final String JAXRS_EXCEPTION_HIGHLIGHT_ENABLED = "rest.exception.html.highlight.enabled";
+	@Doc("If set, pretty HTML pages will be rendered for browsers when an exception occurs (default true)")
+	public static final String JAXRS_EXCEPTION_HTML_ENABLED = "rest.exception.html.enabled";
+	@Doc("If set, pretty HTML pages will only be rendered for logged-in users (default false)")
+	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED = "rest.exception.html.enabled.only-for-logged-in";
+	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
+	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED_ROLE = "rest.exception.html.enabled.only-for-logged-in.role";
+	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
+	public static final String JAXRS_EXCEPTION_HTML_JVMINFO = "rest.exception.html.feature.jvminfo";
+	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
+	public static final String JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT = "rest.exception.html.feature.jvminfo.environment";
+	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
+	public static final String JAXRS_EXCEPTION_HTML_REQUESTINFO = "rest.exception.html.feature.requestinfo";
+	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
+	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
+
+	// Create JIRA issue from exception
+	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
+	public static final String JAXRS_EXCEPTION_HTML_JIRA_ENABLED = "rest.exception.html.jira.enabled";
+	@Doc("If non-zero and JIRA is enabled, the JIRA Project ID to use to populate a JIRA issue (default 0)")
+	public static final String JAXRS_EXCEPTION_HTML_JIRA_PID = "rest.exception.html.jira.pid";
+	@Doc("If JIRA is enabled, the JIRA Issue Type ID to use to populate a JIRA issue (default 1, generally 'Bug' on JIRA systems)")
+	public static final String JAXRS_EXCEPTION_HTML_JIRA_ISSUE_TYPE = "rest.exception.html.jira.issueType";
+	@Doc("If JIRA is enabled, the base address for JIRA")
+	public static final String JAXRS_EXCEPTION_HTML_JIRA_ENDPOINT = "rest.exception.html.jira.endpoint";
 	//
 	// Guice Hibernate properties
 	//
@@ -185,5 +216,4 @@ public class GuiceProperties
 
 	@Doc("The prefix property name for all liquibase parameters (this is not a real configurable property)")
 	public static final String LIQUIBASE_PARAMETER = "liquibase.parameter.";
-
 }

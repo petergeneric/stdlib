@@ -24,4 +24,7 @@ public class GuiceConstants
 
 	public static final String CONFIG_SOURCE_NETWORK = "network";
 	public static final String CONFIG_SOURCE_LOCAL = "local";
+
+	@Doc("If set for jaxrs exception highlight then the value of scan.packages will be used")
+	public static final String JAXRS_EXCEPTION_HIGHLIGHT_SCAN_PACKAGES = "scan-packages";
 }

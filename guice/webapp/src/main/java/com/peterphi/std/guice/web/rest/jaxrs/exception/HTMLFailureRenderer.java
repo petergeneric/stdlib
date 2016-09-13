@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
-import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
@@ -22,7 +22,6 @@ import javax.ws.rs.core.Response.ResponseBuilder;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.Locale;
 
 /**
  * A HTML renderer that will only emit HTML when the caller lists text/html as their primary Accept header value
@@ -35,56 +34,48 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.highlight.terms")
-	@Doc("A comma-delimited list of terms to use to decide if a stack trace line should be highlighted (default 'scan-packages', which takes the value from scan.packages)")
-	protected String highlightTerms = "scan-packages";
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HIGHLIGHT)
+	protected String highlightTerms = GuiceConstants.JAXRS_EXCEPTION_HIGHLIGHT_SCAN_PACKAGES;
+
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.highlight.enabled")
-	@Doc("If enabled, lines containing certain terms are highlighted in stack traces, all others are dimmed (default true)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HIGHLIGHT_ENABLED)
 	protected boolean highlightEnabled = true;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.enabled")
-	@Doc("If set, pretty HTML pages will be rendered for browsers when an exception occurs (default true)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_ENABLED)
 	protected boolean enabled = true;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.enabled.only-for-logged-in")
-	@Doc("If set, pretty HTML pages will only be rendered for logged-in users (default false)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED)
 	protected boolean requireLoggedIn = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.enabled.only-for-logged-in.role")
-	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED_ROLE)
 	protected String requireRole = null;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.feature.jvminfo")
-	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JVMINFO)
 	protected boolean jvmInfoEnabled = true;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.feature.jvminfo.environment")
-	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT)
 	protected boolean jvmInfoEnvironmentVariablesEnabled = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.feature.requestinfo")
-	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_REQUESTINFO)
 	protected boolean requestInfoEnabled = true;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.feature.stacktrace")
-	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_STACKTRACE)
 	protected boolean stackTraceEnabled = true;
 
 	/**
@@ -92,8 +83,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.jira.enabled")
-	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ENABLED)
 	protected boolean jiraEnabled = false;
 
 	/**
@@ -101,20 +91,17 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	 */
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.jira.pid")
-	@Doc("If non-zero and JIRA is enabled, the JIRA Project ID to use to populate a JIRA issue (default 0)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_PID)
 	protected int jiraProjectId = 0;
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.jira.issueType")
-	@Doc("If JIRA is enabled, the JIRA Issue Type ID to use to populate a JIRA issue (default 1, generally 'Bug' on JIRA systems)")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ISSUE_TYPE)
 	protected int jiraIssueType = 1; // default id for "Bug"
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named("rest.exception.html.jira.endpoint")
-	@Doc("If JIRA is enabled, the base address for JIRA")
+	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ENDPOINT)
 	protected String jiraEndpoint = "https://somecompany.atlassian.net";
 
 	@Inject
@@ -141,7 +128,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 		// Optionally enable highlighting
 		if (highlightEnabled)
 		{
-			if (StringUtils.equals(highlightTerms, "scan-packages"))
+			if (StringUtils.equals(highlightTerms, GuiceConstants.JAXRS_EXCEPTION_HIGHLIGHT_SCAN_PACKAGES))
 			{
 				// Read scan.packages and use this instead
 				writer.setHighlightTerms(config.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList()));
@@ -215,7 +202,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 
 		for (String accept : accepts)
 		{
-			if (accept.toLowerCase(Locale.UK).startsWith("text/html"))
+			if (StringUtils.startsWithIgnoreCase(accept, "text/html"))
 				return true;
 		}
 
