@@ -21,6 +21,7 @@ public class ServiceManagerGuiceSetup implements GuiceSetup
 			modules.add(new RulesDaemonModule());
 			modules.add(new AzureModule());
 		}
+
 	}
 
 

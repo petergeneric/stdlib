@@ -40,7 +40,6 @@ public class RulesUIServiceImpl implements RulesUIService
 	@Inject
 	RulesEngine rulesEngine;
 
-
 	@Override
 	public String getIndex()
 	{
