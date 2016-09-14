@@ -42,10 +42,17 @@ public class OgnlCommand
 		return originalExpression;
 	}
 
+
 	@XmlValue
 	public void setOriginalExpression(final String originalExpression)
 	{
 		this.originalExpression = originalExpression;
 		ognlExpression = null;
+	}
+
+
+	public void validate() throws OgnlException
+	{
+		getExpr();
 	}
 }

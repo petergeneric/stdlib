@@ -4,6 +4,7 @@
 		<localObject name='verifier1' source-name='verifier1' class='com.peterphi.rules.VerifierObject'></localObject>
 		<localObject name='verifier2' source-name='verifier2' class='com.peterphi.rules.VerifierObject'></localObject>
 		<localObject name='verifier3' source-name='verifier3' class='com.peterphi.rules.VerifierObject'></localObject>
+		<stringObject name='mystring' value='The String' />
 		<jaxbObject name='jaxbobj' class='com.peterphi.rules.SomeJaxbType'>
 			<ns1:sometype>
 				<ns1:field>text</ns1:field>

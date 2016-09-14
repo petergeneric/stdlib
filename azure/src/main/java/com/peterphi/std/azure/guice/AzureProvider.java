@@ -17,7 +17,7 @@ public class AzureProvider implements Provider<Azure>
 {
 	@Inject(optional = true)
 	@Named("azure.http.logging.level")
-	String logLevelStr;
+	String logLevelStr="BASIC";
 
 	@Inject
 	ServiceClientCredentials credentials;

@@ -14,6 +14,7 @@ import ognl.OgnlContext;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.Response;
+import java.util.Map;
 
 /**
  * Created by bmcleod on 13/09/2016.
@@ -39,6 +40,7 @@ public class RulesUIServiceImpl implements RulesUIService
 	@Inject
 	RulesEngine rulesEngine;
 
+
 	@Override
 	public String getIndex()
 	{
@@ -46,24 +48,56 @@ public class RulesUIServiceImpl implements RulesUIService
 
 		call.set("daemon", rulesDaemon);
 
-		boolean rulesValid;
+		boolean inputsValid;
+		Rules rules = null;
 
 		try
 		{
-			Rules rules = rulesProvider.get();
-			rulesValid = true;
+			rules = rulesProvider.get();
 
 			OgnlContext varMap = rulesEngine.prepare(rules);
 			call.set("varMap", varMap);
-
+			inputsValid = true;
 		}
 		catch (Exception e)
 		{
-			rulesValid = false;
-			call.set("rulesError", e.getMessage());
+			inputsValid = false;
+			call.set("inputsError", e.getMessage());
 		}
 
-		call.set("rulesValid", rulesValid);
+		boolean expressionsValid;
+
+		try
+		{
+			if (rules != null)
+			{
+
+				Map<String, String> validationResults = rulesEngine.validateSyntax(rules);
+
+				if (validationResults.size() > 0)
+				{
+					expressionsValid = false;
+					call.set("expressionsErrorMap", validationResults);
+					call.set("expressionsError", "Parse erorrs");
+				}
+				else{
+					expressionsValid=true;
+				}
+			}
+			else
+			{
+				expressionsValid = false;
+			}
+		}
+		catch (Exception e)
+		{
+			expressionsValid = false;
+			call.set("expressionsError", e.getMessage());
+		}
+
+
+		call.set("inputsValid", inputsValid);
+		call.set("expressionsValid", expressionsValid);
 
 		return call.process();
 	}

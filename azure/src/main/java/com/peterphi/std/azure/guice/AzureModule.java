@@ -8,6 +8,7 @@ import com.microsoft.azure.Azure;
 import com.microsoft.azure.management.compute.VirtualMachines;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
 import com.peterphi.std.azure.AzureVMControl;
+import com.peterphi.std.azure.VMControl;
 
 /**
  * Created by bmcleod on 05/09/2016.
@@ -19,7 +20,7 @@ public class AzureModule extends AbstractModule
 	{
 		bind(ServiceClientCredentials.class).toProvider(ServiceClientCredentialsProvider.class);
 		bind(Azure.class).toProvider(AzureProvider.class);
-		bind(AzureVMControl.class).in(Singleton.class);
+		bind(VMControl.class).to(AzureVMControl.class).in(Singleton.class);
 	}
 
 

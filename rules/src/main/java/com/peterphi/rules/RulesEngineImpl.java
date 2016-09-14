@@ -2,6 +2,7 @@ package com.peterphi.rules;
 
 import com.google.inject.Inject;
 import com.google.inject.Injector;
+import com.peterphi.rules.types.OgnlCommand;
 import com.peterphi.rules.types.Rule;
 import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
@@ -11,6 +12,7 @@ import ognl.OgnlException;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -34,6 +36,43 @@ public class RulesEngineImpl implements RulesEngine
 		OgnlContext ognlContext = new OgnlContext();
 		ognlContext.putAll(vars);
 		return ognlContext;
+	}
+
+
+	@Override
+	public Map<String, String> validateSyntax(final Rules rules)
+	{
+		Map<String, String> results = new HashMap<>();
+
+		for (RuleSet ruleSet : rules.ruleSets)
+		{
+
+			validate(ruleSet.input.command, results);
+			validate(ruleSet.input.filter, results);
+
+			for (Rule rule : ruleSet.rules)
+			{
+				validate(rule.condition, results);
+				for (OgnlCommand command : rule.commands)
+				{
+					validate(command, results);
+				}
+			}
+		}
+
+		return results;
+	}
+
+	private void validate(final OgnlCommand command, final Map<String, String> results)
+	{
+		try
+		{
+			command.validate();
+		}
+		catch (OgnlException e)
+		{
+			results.put("Failed: " + command.getOriginalExpression(), e.getMessage());
+		}
 	}
 
 

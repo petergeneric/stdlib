@@ -1,5 +1,6 @@
 package com.peterphi.rules.types;
 
+import ognl.Ognl;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 
@@ -39,4 +40,5 @@ public class Input
 			return commandOutput;
 		}
 	}
+
 }

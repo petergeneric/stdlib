@@ -50,7 +50,11 @@
 			<artifactId>stdlib-rules</artifactId>
 			<version>${project.version}</version>
 		</dependency>
-
+		<dependency>
+			<groupId>com.peterphi.std</groupId>
+			<artifactId>stdlib-azure</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>

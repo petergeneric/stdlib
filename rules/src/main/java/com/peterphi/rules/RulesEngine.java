@@ -7,6 +7,7 @@ import ognl.OgnlContext;
 import ognl.OgnlException;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * Created by bmcleod on 08/09/2016.
@@ -22,6 +23,13 @@ public interface RulesEngine
 	 * @return
 	 */
 	OgnlContext prepare(Rules rules);
+
+	/**
+	 * Validates the expressions in the given rules (but doesnt run them)
+	 * @param rules
+	 * @return
+	 */
+	Map<String, String> validateSyntax(Rules rules) throws OgnlException;
 
 	/**
 	 * Assess all rules in the supplied rules document, returns those that match

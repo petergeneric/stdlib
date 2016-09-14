@@ -27,7 +27,7 @@ public class ServiceClientCredentialsProvider implements Provider<ServiceClientC
 
 	@Inject(optional = true)
 	@Named("azure.environment")
-	private String azureEnvironmentName = AzureEnvironment.AZURE.toString();
+	private String azureEnvironmentName = "AZURE";
 
 
 	@Override

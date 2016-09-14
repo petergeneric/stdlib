@@ -43,6 +43,7 @@ public class ConfigGuiceModule extends AbstractModule
 	{
 		if (reclone && workingDirectory.exists())
 		{
+			log.info("Recloning "+workingDirectory);
 			File[] files = workingDirectory.listFiles();
 
 			if (files != null)

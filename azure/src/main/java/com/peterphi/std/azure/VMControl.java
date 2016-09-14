@@ -1,5 +1,6 @@
 package com.peterphi.std.azure;
 
+import com.google.inject.ImplementedBy;
 import com.microsoft.azure.management.compute.PowerState;
 
 import java.util.concurrent.Future;
@@ -7,6 +8,7 @@ import java.util.concurrent.Future;
 /**
  * Created by bmcleod on 06/09/2016.
  */
+@ImplementedBy(AzureVMControl.class)
 public interface VMControl
 {
 	/**
