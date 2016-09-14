@@ -94,23 +94,10 @@
 	var nonce = /*[[${nonce}]]*/ '';
 
 	$(document).ready(function () {
-		getRecentLines();
-
 		$("#filterLevelOptions input[type=radio]").change(refilter);
-		$("#filterLevelOptions li").click(function () {
-			// When the user clicks on a line, make it the same as clicking on the radio button
-			$(this).find("input[type=radio]").prop('checked', true);
-
-			refilter();
-		});
-
 		$("#renderEndpointOptions input[type=radio]").change(rerender);
-		$("#renderEndpointOptions li").click(function () {
-			// When the user clicks on a line, make it the same as clicking on the radio button
-			$(this).find("input[type=radio]").prop('checked', true);
 
-			rerender();
-		});
+		getRecentLines();
 	});
 
 	function getRecentLines() {
@@ -129,11 +116,17 @@
 					setTimeout(getRecentLines, 500);
 				}
 				else {
-					var failureXML = response.responseXML;
+					var failureXML = data.responseXML;
+					var latestLine = $("#latest td");
 
-					var errorDetail = $($(failureXML).find("detail")[0]).text();
+					if (failureXML) {
+						var errorDetail = $($(failureXML).find("detail")[0]).text();
 
-					alert("Error tailing logs, may need to refresh page: " + errorDetail);
+						latestLine.text("Server returned rich exception as a result of log request: " + errorDetail);
+					}
+					else {
+						latestLine.text("Unknown problem occurred as a result of a log request: textStatus=" + textStatus);
+					}
 				}
 			}
 		});
@@ -143,16 +136,18 @@
 	var END_OF_LOG_TABLE = $("#latest");
 	var MAX_SCROLLBACK_SIZE = 10000;
 	var logLinesInMemory = 0;
+	var lastTableRowMousedown = new Date(0);
 	var ALL_ENDPOINTS = {};
 	var ENDPOINT_RENDERER = endpointRenderShort;
 	var MESSAGE_RENDERER = messageRendererDefault;
 	var EVENT_FILTER = function () {
 		return true;
 	};
+	var OVERRIDE_ENDPOINTS = {};
 
 	function messageRendererDefault(event, td) {
 
-		if (event.exceptionId.length > 0)
+		if (event.exceptionId && event.exceptionId.length > 0)
 			td.text("!!" + event.exceptionId.substring(0, 4) + " " + event.message);
 		else
 			td.text(event.message);
@@ -168,8 +163,10 @@
 		}
 		else {
 			// If the endpoint ends with /rest or /rest/ then we should remove that from it
-			if (endpoint.endsWith("/rest") || endpoint.endsWith("/rest/"))
-				endpoint = endpoint.substring(0, endpoint.lastIndexOf('/', endpoint.length - 1) - 1);
+			if (endpoint.endsWith("/rest/"))
+				endpoint = endpoint.substring(0, endpoint.length - "/rest/".length);
+			else if (endpoint.endsWith("/rest"))
+				endpoint = endpoint.substring(0, endpoint.length - "/rest".length);
 
 			var lastSlash = endpoint.lastIndexOf('/', endpoint.length - 1);
 
@@ -245,16 +242,32 @@
 		if (EVENT_FILTER(event)) {
 			var tr = $('<tr/>').addClass('logline');
 
-			var when = moment(event.when);
-
 			tr.append($('<td/>').addClass('log_endpoint').text(ENDPOINT_RENDERER(event)));
-			tr.append($('<td/>').addClass('log_when').text(formatTimestamp(when)));
+			tr.append($('<td/>').addClass('log_when').text(formatTimestamp(moment(event.when))));
 			tr.append($('<td/>').addClass('log_level').text(LEVEL_NAMES[event.level]));
 			tr.append(MESSAGE_RENDERER(event, $('<td/>').addClass('log_message')));
 
 			tr.data('e', event);
 
-			tr.click(expandEvent);
+			// Keep track of the last time we received a mousedown event.
+			// When we receive a click we'll need to make sure that the
+			// corresponding mousedown event was <= 150ms ago, this
+			// ensures that highlighting text in the cell doesn't cause
+			// the cell to expand/contract
+			tr.mousedown(function () {
+				lastTableRowMousedown = new Date();
+			});
+
+			tr.click(function () {
+				if (lastTableRowMousedown) {
+					var prev = lastTableRowMousedown.getTime();
+					var now = new Date().getTime();
+
+					if (now - prev <= 150) {
+						toggleEventExpansion(this);
+					}
+				}
+			});
 
 			tr.insertBefore(END_OF_LOG_TABLE);
 
@@ -262,13 +275,40 @@
 			if (!(event.endpoint in ALL_ENDPOINTS)) {
 				addEndpoint(event.endpoint);
 			}
+
+			// TODO recognise when a previously-http://unknown instance id gets an endpoint
+			// TODO when this happens, add an entry in a fixup array of instance id -> endpoint and rerender()
+			if (event.endpoint == 'http://unknown') {
+				OVERRIDE_ENDPOINTS[event.instanceId] = event.endpoint;
+			}
+			else if (OVERRIDE_ENDPOINTS[event.instanceId] == 'http://unknown') {
+				OVERRIDE_ENDPOINTS[event.instanceId] = event.endpoint;
+
+				rerender(
+						function (e) {
+							return (e.endpoint == 'http://unknown');
+						},
+						function (e) {
+							if (e.endpoint == 'http://unknown' && e.instanceId in OVERRIDE_ENDPOINTS) {
+								e.endpoint = OVERRIDE_ENDPOINTS[e.instanceId];
+								return e;
+							}
+							else {
+								return null;
+							}
+						});
+			}
 		}
 	}
 
-	function expandEvent() {
-		var tr = $(this).closest('tr');
+	function toggleEventExpansion(clickedElement) {
+		var tr = $(clickedElement).closest('tr.logline');
 		var event = tr.data('e');
 		var expanded = tr.data('expanded');
+
+		if (!event) {
+			throw "Could not read event from log line!";
+		}
 
 		if (expanded == true) {
 			tr.data('expanded', null);
@@ -332,13 +372,7 @@
 
 			// Stop the dropdown closing when clicking on a checkbox
 			li.click(function (e) {
-				var i = $(this).find("input[type=checkbox]");
-
-				// Flip the checkbox state
-				i.prop('checked', !i.prop('checked'));
-				i.val(!i.val());
-
-				refilter();
+				var me = $(this);
 
 				e.stopPropagation();
 			});
@@ -352,7 +386,9 @@
 		}
 	}
 
-	function rerender() {
+	// eventSelector is optional, if it is specified then it should return true for lines which should be rerendered
+	// eventMutator is optional, if it returns a non-null value then that return value is saved as the event data
+	function rerender(eventSelector, eventMutator) {
 		var endpointRenderMode = $("#renderEndpointOptions input[type=radio]:checked").val();
 
 		if (endpointRenderMode == "full")
@@ -362,14 +398,27 @@
 
 		$("#renderEndpointSummary").text(" (" + endpointRenderMode + ")");
 
-		// Now rerender all the endpoint values
-		// TODO in the future we may want this to rerender the whole line but currently only the endpoint needs to change
-		$("td.log_endpoint").each(function () {
-			var td = $(this);
-			var tr = td.parent("tr");
+		// Now rerender the lines
+		// N.B. we currently only rerender the timestamp and endpoint
+		$("tr.logline").each(function () {
+			var tr = $(this);
 			var event = tr.data('e');
 
-			td.text(ENDPOINT_RENDERER(event));
+			if (eventSelector === undefined || eventSelector(event)) {
+				// Allow the event mutator to modify events
+				if (eventMutator !== undefined) {
+					event = eventMutator(event);
+
+					if (event)
+						tr.data('e', event);
+				}
+
+				var endpoint = tr.find("td.log_endpoint");
+				endpoint.text(ENDPOINT_RENDERER(event));
+
+				var timestamp = tr.find("td.log_when");
+				timestamp.text(formatTimestamp(moment(event.when)));
+			}
 		});
 	}
 
