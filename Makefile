@@ -39,6 +39,7 @@ sman:
 	$(MVN) package -DskipTests=true -am --projects service-manager/service-manager
 	rsync -avzr --progress service-manager/service-manager/target/*.war /opt/tomcat/webapps/service-manager.war	
 smtail:
+	rsync -avzr --progress service-manager/service-manager/src/main/webapp/vendor/logui-SNAPSHOT/* /opt/tomcat/webapps/service-manager/vendor/logui-SNAPSHOT/
 	rsync -avzr --progress service-manager/service-manager/src/main/webapp/WEB-INF/template/* /opt/tomcat/webapps/service-manager/WEB-INF/template/
 
 #
