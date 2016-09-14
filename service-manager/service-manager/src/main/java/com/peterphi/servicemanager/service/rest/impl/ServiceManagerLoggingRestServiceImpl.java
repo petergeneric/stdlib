@@ -12,7 +12,6 @@ import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 @Singleton
@@ -30,36 +29,49 @@ public class ServiceManagerLoggingRestServiceImpl implements ServiceManagerLoggi
 	@Override
 	public void report(final LogReport logs)
 	{
-		// Convert the wire format to the storage format
-		List<LogLineTableEntity> lines = convert(logs.getServiceId(), Arrays.asList(logs.getLines()));
+		final ServiceInstanceEntity serviceInstance = cache.get(logs.getServiceId());
 
-		// Now store the log data
-		service.store(lines);
+		// Make sure that all store calls are for the same partition (date + instance id)
+		// This is technically only a requirement for Azure but it's a guarantee other
+		// stores can use effectively (e.g. writing to datestamped log files)
+		String partitionKey = null;
+		List<LogLineTableEntity> pending = new ArrayList<>();
+		for (LogLine line : logs.getLines())
+		{
+			LogLineTableEntity entity = convert(serviceInstance, line);
+
+			if (partitionKey == null)
+			{
+				// First entry in a new partition
+				partitionKey = entity.getPartitionKey();
+			}
+			else if (!partitionKey.equals(entity.getPartitionKey()))
+			{
+				// Flush all the lines up til now and then start a new list
+				service.store(pending);
+				pending.clear();
+				partitionKey = entity.getPartitionKey();
+			}
+		}
+
+		// Make sure we flush any remaining data to the storage system
+		service.store(pending);
 	}
 
 
-	private List<LogLineTableEntity> convert(final String serviceId, final List<LogLine> lines)
+	private LogLineTableEntity convert(final ServiceInstanceEntity entity, final LogLine line)
 	{
-		List<LogLineTableEntity> result = new ArrayList<>(lines.size());
-
-		final ServiceInstanceEntity entity = cache.get(serviceId);
-
-		for (LogLine line : lines)
-		{
-			result.add(new LogLineTableEntity(new DateTime(line.getWhen()),
-			                                  line.getCategory(),
-			                                  line.getLevel(),
-			                                  entity.getEndpoint(),
-			                                  entity.getId(),
-			                                  entity.getCodeRevision(),
-			                                  line.getThread(),
-			                                  line.getUserId(),
-			                                  line.getTraceId(),
-			                                  line.getExceptionId(),
-			                                  line.getException(),
-			                                  line.getMessage()));
-		}
-
-		return result;
+		return new LogLineTableEntity(new DateTime(line.getWhen()),
+		                              line.getCategory(),
+		                              line.getLevel(),
+		                              entity.getEndpoint(),
+		                              entity.getId(),
+		                              entity.getCodeRevision(),
+		                              line.getThread(),
+		                              line.getUserId(),
+		                              line.getTraceId(),
+		                              line.getExceptionId(),
+		                              line.getException(),
+		                              line.getMessage());
 	}
 }
