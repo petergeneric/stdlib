@@ -27,4 +27,5 @@ public class Input
 			command.run(context, context);
 		}
 	}
+
 }

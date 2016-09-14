@@ -39,9 +39,7 @@ public interface RulesEngine
 
 	/**
 	 * Validates the expressions in the given rules (but doesnt run them)
-	 *
 	 * @param rules
-	 *
 	 * @return
 	 */
 	Map<String, String> validateSyntax(Rules rules) throws OgnlException;

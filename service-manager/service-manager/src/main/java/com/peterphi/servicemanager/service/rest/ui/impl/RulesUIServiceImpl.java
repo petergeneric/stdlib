@@ -40,6 +40,7 @@ public class RulesUIServiceImpl implements RulesUIService
 	@Inject
 	RulesEngine rulesEngine;
 
+
 	@Override
 	public String getIndex()
 	{
@@ -78,8 +79,9 @@ public class RulesUIServiceImpl implements RulesUIService
 					call.set("expressionsErrorMap", validationResults);
 					call.set("expressionsError", "Parse erorrs");
 				}
-				else{
-					expressionsValid=true;
+				else
+				{
+					expressionsValid = true;
 				}
 			}
 			else

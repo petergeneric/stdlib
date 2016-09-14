@@ -27,13 +27,15 @@
 	</div>
 	<div class="row" th:if="${inputsValid}">
 				<dt>Rules Valid:</dt>
-				<dd th:text="${rulesValid}"></dd>
-				<dt th:if="${not rulesValid}"></dt>
-				<dd th:if="${not rulesValid}" th:text="${rulesError}"></dd>
+				<dt th:if="${not inputsValid}"></dt>
+				<dd th:if="${not inputsValid}" th:text="${inputsError}"></dd>
+				<dd th:text="${expressionsValid}"></dd>
+				<dt th:if="${not expressionsValid}"></dt>
+				<dd th:if="${not expressionsValid}" th:text="${expressionsError}"></dd>
 			</dl>
 		</div>
 	</div>
-	<div class="row" th:if="${rulesValid}">
+	<div class="row" th:if="${inputsValid}">
 		<div class="col-md-12">
 			<h1>Variables</h1>
 

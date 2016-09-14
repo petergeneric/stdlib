@@ -90,9 +90,7 @@ public class RulesEngineImpl implements RulesEngine, StoppableService
 			{
 				if (StringUtils.isEmpty(rule.id))
 				{
-					throw new IllegalArgumentException("Rule with condition " +
-					                                   rule.condition.getOriginalExpression() +
-					                                   " has no id!");
+					throw new IllegalArgumentException("Rule with condition " + rule.condition + " has no id!");
 				}
 
 				if (knownIds.contains(rule.id))
@@ -226,9 +224,7 @@ public class RulesEngineImpl implements RulesEngine, StoppableService
 				{
 					if (StringUtils.isEmpty(rule.id))
 					{
-						throw new IllegalArgumentException("Rule with condition " +
-						                                   rule.condition.getOriginalExpression() +
-						                                   " has no id!");
+						throw new IllegalArgumentException("Rule with condition " + rule.condition + " has no id!");
 					}
 
 					final RuleProcessTask task = new RuleProcessTask(this, rs, rule, rsContext);
