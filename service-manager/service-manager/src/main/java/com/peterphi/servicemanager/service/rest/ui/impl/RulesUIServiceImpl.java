@@ -86,6 +86,7 @@ public class RulesUIServiceImpl implements RulesUIService
 			}
 			else
 			{
+				call.set("expressionsError", "Rules not loaded!");
 				expressionsValid = false;
 			}
 		}

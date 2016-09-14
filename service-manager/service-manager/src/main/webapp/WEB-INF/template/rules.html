@@ -16,11 +16,11 @@
 				<dd th:text="${daemon.enabled}"></dd>
 				<dt>Inputs Valid:</dt>
 				<dd th:text="${inputsValid}"></dd>
-				<dt th:if="${not inputsValid}"></dt>
+				<dt th:if="${not inputsValid}">Inputs Error:</dt>
 				<dd th:if="${not inputsValid}" th:text="${inputsError}"></dd>
 				<dt>Expressions Valid:</dt>
 				<dd th:text="${expressionsValid}"></dd>
-				<dt th:if="${not expressionsValid}"></dt>
+				<dt th:if="${not expressionsValid}">Expressions Error:</dt>
 				<dd th:if="${not expressionsValid}" th:text="${expressionsError}"></dd>
 			</dl>
 		</div>

@@ -71,6 +71,7 @@ public class RulesEngineImpl implements RulesEngine
 		}
 		catch (OgnlException e)
 		{
+			log.info("OgnlException during validation " + e.getMessage(), e);
 			results.put("Failed: " + command.getOriginalExpression(), e.getMessage());
 		}
 	}

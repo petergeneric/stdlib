@@ -15,8 +15,12 @@ public class ServiceManagerGuiceSetup implements GuiceSetup
 	public void registerModules(final List<Module> modules, final GuiceConfig config)
 	{
 		modules.add(new ServiceManagerGuiceModule(config));
-		modules.add(new RulesDaemonModule());
-		modules.add(new AzureModule());
+
+		if (config.getBoolean("rules.enabled", false))
+		{
+			modules.add(new RulesDaemonModule());
+			modules.add(new AzureModule());
+		}
 	}
 
 
