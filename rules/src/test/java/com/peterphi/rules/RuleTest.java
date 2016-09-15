@@ -6,6 +6,7 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.rules.types.Rule;
+import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 import com.peterphi.std.guice.testing.AbstractTestModule;
@@ -22,12 +23,15 @@ import org.junit.runner.RunWith;
 import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertThat;
 import static org.junit.Assert.assertTrue;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.eq;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -125,17 +129,21 @@ public class RuleTest
 		                          eq(false))).thenReturn(someRestService);
 		when(someRestService.get()).thenReturn("proceed");
 
-		OgnlContext context = rulesEngine.prepare(rules);
+		OgnlContext context = rulesEngine.createContext(rulesEngine.prepare(rules));
 
 		assertTrue(context.containsKey("mylocalparam"));
 		assertTrue(context.get("mylocalparam").equals("named value"));
 
-		List<Rule> matching = rulesEngine.matching(rules, context, false);
+		Map<RuleSet, List<Rule>> matching = rulesEngine.matching(rules, context, false);
+
+		List<Rule> allMatching = new ArrayList<>();
+
+		matching.values().stream().forEach(r -> allMatching.addAll(r));
 
 		//local-object-value-match with input.equals("n") passes
 		//jaxb-value-match with input.equals("text") passes
 		//rest-service-call with input == "proceed" passes
-		assertTrue(matching.size() == 3);
+		assertTrue(allMatching.size() == 3);
 
 		rulesEngine.execute(matching, context);
 
@@ -149,6 +157,6 @@ public class RuleTest
 		assertTrue(verifierObject3.getF() == 0);
 
 		verify(factory).createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false));
-		verify(someRestService).get();
+		verify(someRestService,times(2)).get();
 	}
 }

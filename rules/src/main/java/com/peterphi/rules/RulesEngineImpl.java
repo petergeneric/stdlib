@@ -29,9 +29,17 @@ public class RulesEngineImpl implements RulesEngine
 
 
 	@Override
-	public OgnlContext prepare(final Rules rules)
+	public Map<String, Object> prepare(final Rules rules)
 	{
 		Map<String, Object> vars = rules.variables.stream().collect(Collectors.toMap(v -> v.getName(), v -> prepare(v)));
+
+		return vars;
+	}
+
+
+	@Override
+	public OgnlContext createContext(final Map<String, Object> vars)
+	{
 
 		OgnlContext ognlContext = new OgnlContext();
 		ognlContext.putAll(vars);
@@ -95,19 +103,23 @@ public class RulesEngineImpl implements RulesEngine
 	 * @return
 	 */
 	@Override
-	public List<Rule> matching(Rules rules, OgnlContext context, boolean ignoreMethodErrors) throws OgnlException
+	public Map<RuleSet, List<Rule>> matching(Rules rules,
+	                                         Map<String, Object> vars,
+	                                         boolean ignoreMethodErrors) throws OgnlException
 	{
-		List<Rule> ret = new ArrayList<>();
+		Map<RuleSet, List<Rule>> ret = new HashMap<>();
 
 		for (RuleSet ruleSet : rules.ruleSets)
 		{
 			try
 			{
+				OgnlContext context = createContext(vars);
+
 				List<Rule> matching = match(ruleSet, context);
 
 				if (!matching.isEmpty())
 				{
-					ret.addAll(matching);
+					ret.put(ruleSet, matching);
 				}
 			}
 			catch (MethodFailedException mfe)
@@ -127,11 +139,34 @@ public class RulesEngineImpl implements RulesEngine
 
 
 	@Override
-	public void execute(final List<Rule> rules, final OgnlContext context) throws OgnlException
+	public Map<RuleSet, List<Rule>> matching(final Rules rules, final boolean ignoreMethodErrors) throws OgnlException
 	{
-		for (Rule rule : rules)
+		Map<String, Object> prepare = prepare(rules);
+		return matching(rules, prepare, ignoreMethodErrors);
+	}
+
+
+	@Override
+	public void execute(Map<RuleSet, List<Rule>> matchingrulesMap, Map<String, Object> vars) throws OgnlException
+	{
+		for (Map.Entry<RuleSet, List<Rule>> ruleSetListEntry : matchingrulesMap.entrySet())
 		{
-			rule.runCommands(context);
+			RuleSet rs = ruleSetListEntry.getKey();
+			List<Rule> rules = ruleSetListEntry.getValue();
+
+			for (Rule rule : rules)
+			{
+				OgnlContext context = createContext(vars);
+				rs.runInput(context);
+				if (rule.matches(context))
+				{
+					rule.runCommands(context);
+				}
+				else
+				{
+					log.warn("Rule " + rule.id + " previously matched but doesn't any more");
+				}
+			}
 		}
 	}
 
@@ -139,9 +174,9 @@ public class RulesEngineImpl implements RulesEngine
 	@Override
 	public void run(final Rules rules, boolean ignoreMethodErrors) throws OgnlException
 	{
-		OgnlContext context = prepare(rules);
-		List<Rule> matching = matching(rules, context, ignoreMethodErrors);
-		execute(matching, context);
+		Map<String, Object> vars = prepare(rules);
+		Map<RuleSet, List<Rule>> matching = matching(rules, vars, ignoreMethodErrors);
+		execute(matching, vars);
 	}
 
 
