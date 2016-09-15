@@ -35,6 +35,7 @@ public class RulesEngineImpl implements RulesEngine
 
 		OgnlContext ognlContext = new OgnlContext();
 		ognlContext.putAll(vars);
+		ognlContext.put("logger", log);
 		return ognlContext;
 	}
 
