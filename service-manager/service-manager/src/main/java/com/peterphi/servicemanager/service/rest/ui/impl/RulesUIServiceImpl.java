@@ -54,8 +54,7 @@ public class RulesUIServiceImpl implements RulesUIService
 		try
 		{
 			rules = rulesProvider.get();
-
-			OgnlContext varMap = rulesEngine.prepare(rules);
+			Map<String, Object> varMap = rulesEngine.prepare(rules);
 			call.set("varMap", varMap);
 			inputsValid = true;
 		}
