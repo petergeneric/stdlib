@@ -162,16 +162,30 @@ LogUI.prototype.getRecentLines = function () {
 				}, 500);
 			}
 			else {
-				var failureXML = data.responseXML;
 				var latestLine = me.uiroot.find("#latest td");
 
-				if (failureXML) {
-					var errorDetail = $($(failureXML).find("detail")[0]).text();
+				if (data.getResponseHeader('X-Rich-Exception') == "1") {
+					var failureXML = $.parseXML(data.responseText);
 
-					latestLine.text("Server returned rich exception as a result of log request: " + errorDetail);
+					if (failureXML) {
+						failureXML = $(failureXML);
+
+						var errorDetail;
+						if (failureXML.find("detail").length > 0) {
+							errorDetail = $(failureXML.find("detail")[0]).text();
+						}
+						else {
+							errorDetail = $(failureXML.find("shortName")[0]).text();
+						}
+
+						latestLine.text("Server returned rich exception as a result of a log request: " + errorDetail);
+					}
+					else {
+						latestLine.text("Server returned rich exception that could not be parsed: " + data.responseText);
+					}
 				}
 				else {
-					latestLine.text("Unknown problem occurred as a result of a log request: textStatus=" + textStatus);
+					latestLine.text("Unknown problem occurred as a result of a log request: textStatus=" + textStatus + ". responseText=" + data.responseText);
 				}
 			}
 		}
