@@ -13,8 +13,10 @@ import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -53,8 +55,15 @@ public class RulesEngineImpl implements RulesEngine
 	{
 		Map<String, String> results = new HashMap<>();
 
+		Set<String> knownIds = new HashSet<>();
+
 		for (RuleSet ruleSet : rules.ruleSets)
 		{
+
+			if (knownIds.contains(ruleSet.id))
+			{
+				throw new IllegalArgumentException("Duplicate id " + ruleSet.id);
+			}
 
 			for (OgnlCommand command : ruleSet.input.commands)
 			{
@@ -63,6 +72,11 @@ public class RulesEngineImpl implements RulesEngine
 
 			for (Rule rule : ruleSet.rules)
 			{
+				if (knownIds.contains(rule.id))
+				{
+					throw new IllegalArgumentException("Duplicate id " + rule.id);
+				}
+
 				validate(rule.id + " condition", rule.condition, results);
 				for (OgnlCommand command : rule.commands)
 				{
