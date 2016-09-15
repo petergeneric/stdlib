@@ -7,6 +7,8 @@ import ognl.OgnlException;
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * Created by bmcleod on 08/09/2016.
@@ -15,30 +17,14 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "rule")
 public class Input
 {
-	@XmlElement(name = "command", required = true)
-	public OgnlCommand command;
-	@XmlElement(name = "filter", required = false)
-	public OgnlCommand filter;
+	@XmlElement(name = "command", required = false)
+	public List<OgnlCommand> commands = new ArrayList<>();
 
-
-	public Object run(final OgnlContext context) throws OgnlException
+	public void runCommands(final OgnlContext context) throws OgnlException
 	{
-		Object commandOutput = command.run(context, context);
-
-		if (filter != null)
+		for (OgnlCommand command : commands)
 		{
-			//put the command output into the context to allow the filter to act up on
-			context.put("input", commandOutput);
-			Object filterOutput = filter.run(context, context);
-			//clean up the added input
-			context.remove("input");
-
-			return filterOutput;
-		}
-		else
-		{
-			return commandOutput;
+			command.run(context, context);
 		}
 	}
-
 }

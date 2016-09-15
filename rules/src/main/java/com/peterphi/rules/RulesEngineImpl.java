@@ -48,8 +48,10 @@ public class RulesEngineImpl implements RulesEngine
 		for (RuleSet ruleSet : rules.ruleSets)
 		{
 
-			validate(ruleSet.input.command, results);
-			validate(ruleSet.input.filter, results);
+			for (OgnlCommand command : ruleSet.input.commands)
+			{
+				validate(command, results);
+			}
 
 			for (Rule rule : ruleSet.rules)
 			{
@@ -63,6 +65,7 @@ public class RulesEngineImpl implements RulesEngine
 
 		return results;
 	}
+
 
 	private void validate(final OgnlCommand command, final Map<String, String> results)
 	{
@@ -115,7 +118,7 @@ public class RulesEngineImpl implements RulesEngine
 					throw mfe;
 				}
 
-				log.warn("Method failed for ruleset " + ruleSet.name, mfe);
+				log.warn("Method failed for ruleset " + ruleSet.id, mfe);
 			}
 		}
 
@@ -153,15 +156,13 @@ public class RulesEngineImpl implements RulesEngine
 	private List<Rule> match(final RuleSet ruleSet, final OgnlContext ognlContext) throws OgnlException
 	{
 
-		//get the rulesets name for logging/exception messages
-		final String name = ruleSet.name == null ? "unnamed" : ruleSet.name;
+		//get the rulesets id for logging/exception messages
+		final String name = ruleSet.id == null ? "unnamed" : ruleSet.id;
 
 		log.debug("Assessing input for ruleset : " + name);
 
-		//get the input against which the rules will be assessed
-		final Object input = ruleSet.createInput(ognlContext);
-
-		log.debug("input is " + input);
+		//run the input commands
+		ruleSet.runInput(ognlContext);
 
 		final List<Rule> ret = new ArrayList<>();
 

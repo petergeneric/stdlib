@@ -21,8 +21,8 @@ import java.util.List;
 @XmlType(name = "RuleSetType")
 public class RuleSet
 {
-	@XmlAttribute(name = "name", required = false)
-	public String name;
+	@XmlAttribute(name = "id", required = true)
+	public String id;
 
 	@XmlElement(name = "input", required = true)
 	public Input input;
@@ -30,25 +30,15 @@ public class RuleSet
 	@XmlElement(name = "rule")
 	public List<Rule> rules = new ArrayList<>();
 
-	private Object inputObj = null;
 
-
-	public Object createInput(OgnlContext context) throws OgnlException
+	public void runInput(OgnlContext context) throws OgnlException
 	{
-		Object inputObj = input.run(context);
+		input.runCommands(context);
 
 		for (Rule rule : rules)
 		{
-			//store the produced input against each of the rules for use when they are being matched and run
-			rule.setInputObj(inputObj);
+			//mark the input as run for each rule
+			rule.setInputRun(true);
 		}
-
-		return inputObj;
-	}
-
-
-	public Object getInputObj()
-	{
-		return inputObj;
 	}
 }

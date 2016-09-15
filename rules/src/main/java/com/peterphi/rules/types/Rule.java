@@ -19,21 +19,23 @@ import java.util.List;
 @XmlRootElement(name = "rule")
 public class Rule
 {
+	@XmlAttribute(name = "id", required =  true)
+	public String id;
+
 	@XmlAttribute(name = "condition", required = true)
 	public OgnlCommand condition;
 
 	@XmlElement(name = "command", required = false)
 	public List<OgnlCommand> commands = new ArrayList<>();
 
-	private Object inputObj = null;
+	private boolean inputRun = false;
 	private Boolean matches = null;
 
 
-	public void setInputObj(final Object inputObj)
+	public void setInputRun(final boolean inputRun)
 	{
-		this.inputObj = inputObj;
+		this.inputRun = inputRun;
 	}
-
 
 	public boolean matches(final OgnlContext ognlContext) throws OgnlException
 	{
@@ -60,14 +62,12 @@ public class Rule
 	public boolean assessMatch(final OgnlContext ognlContext) throws OgnlException
 	{
 
-		if (inputObj == null)
+		if (! inputRun)
 		{
 			throw new IllegalArgumentException("Attempted to match on a rule whose rulesets input has not yet been produced");
 		}
 
-		ognlContext.put("input", inputObj);
 		final Object result = condition.run(ognlContext, ognlContext);
-		ognlContext.remove("input");
 
 		if (result == null || !Boolean.class.isAssignableFrom(result.getClass()))
 		{
@@ -85,12 +85,10 @@ public class Rule
 	{
 		if (matches)
 		{
-			context.put("input", inputObj);
 			for (OgnlCommand command : commands)
 			{
 				command.run(context, context);
 			}
-			context.remove("input");
 		}
 		else
 		{
