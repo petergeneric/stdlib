@@ -50,15 +50,15 @@ public class RulesEngineImpl implements RulesEngine
 
 			for (OgnlCommand command : ruleSet.input.commands)
 			{
-				validate(command, results);
+				validate(ruleSet.id + " - input", command, results);
 			}
 
 			for (Rule rule : ruleSet.rules)
 			{
-				validate(rule.condition, results);
+				validate(rule.id + " condition", rule.condition, results);
 				for (OgnlCommand command : rule.commands)
 				{
-					validate(command, results);
+					validate(rule.id, command, results);
 				}
 			}
 		}
@@ -67,7 +67,7 @@ public class RulesEngineImpl implements RulesEngine
 	}
 
 
-	private void validate(final OgnlCommand command, final Map<String, String> results)
+	private void validate(final String identifier, final OgnlCommand command, final Map<String, String> results)
 	{
 		try
 		{
@@ -76,7 +76,7 @@ public class RulesEngineImpl implements RulesEngine
 		catch (OgnlException e)
 		{
 			log.info("OgnlException during validation " + e.getMessage(), e);
-			results.put(command.getOriginalExpression(), e.getMessage());
+			results.put(identifier, e.getMessage());
 		}
 	}
 
