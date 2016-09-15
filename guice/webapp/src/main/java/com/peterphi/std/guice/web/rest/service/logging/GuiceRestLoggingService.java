@@ -33,6 +33,7 @@ public interface GuiceRestLoggingService
 
 	@GET
 	@Path("/recent")
+	@Produces("text/plain")
 	@Doc("If the in-memory appender is in use then this dumps the recent log data")
 	String getRecentLines(@QueryParam("from") @DefaultValue("1970-01-01T00:00:00Z") String from);
 }

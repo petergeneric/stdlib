@@ -100,10 +100,10 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 
 		// Visit each event in turn, writing them to the output stream
 		InMemoryAppender.visit(event ->
-		                            {
-			                            if (event.getTimeStamp() > from)
-				                            append(pw, event);
-		                            });
+		                       {
+			                       if (event.getTimeStamp() > from)
+				                       append(pw, event);
+		                       });
 
 		return sw.toString();
 	}
@@ -129,7 +129,9 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 
 		if (event.getThrowableInformation() != null && event.getThrowableInformation().getThrowable() != null)
 		{
+			pw.append('\n');
 			event.getThrowableInformation().getThrowable().printStackTrace(pw);
 		}
+		pw.append('\n');
 	}
 }
