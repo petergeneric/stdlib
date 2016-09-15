@@ -54,9 +54,12 @@ public class ServiceManagerLoggingRestServiceImpl implements ServiceManagerLoggi
 				{
 					// Flush all the lines up til now and then start a new list
 					service.store(pending);
-					pending.clear();
+
+					pending = new ArrayList<>();
 					partitionKey = entity.getPartitionKey();
 				}
+
+				pending.add(entity);
 			}
 
 			// Make sure we flush any remaining data to the storage system
