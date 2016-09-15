@@ -44,6 +44,12 @@
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-metrics</artifactId>
 			<version>${project.version}</version>
+			<exclusions>
+				<exclusion>
+					<groupId>com.fasterxml.jackson.core</groupId>
+					<artifactId>jackson-databind</artifactId>
+				</exclusion>
+			</exclusions>
 		</dependency>
 		<dependency>
 			<groupId>com.peterphi.std</groupId>
