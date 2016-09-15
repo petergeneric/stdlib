@@ -75,6 +75,17 @@
 			</div>
 		</div>
 
+		<table class="table" id="searchCriteria" style="display: none;">
+			<tbody>
+			<td class="span3">From: <input id="searchFrom" type="datetime-local"/></td>
+			<td class="span3">From: <input id="searchTo" type="datetime-local"/></td>
+			<td class="span4">Filter: <input id="searchFilter" type="text"/></td>
+			<td class="span1">
+				<button id="searchCriteriaExecute" class="btn btn-primary">Search</button>
+			</td>
+			</tbody>
+		</table>
+
 		Your log tail subscription id is: <code th:text="${subscriptionId}"></code>
 
 		<table class="table">

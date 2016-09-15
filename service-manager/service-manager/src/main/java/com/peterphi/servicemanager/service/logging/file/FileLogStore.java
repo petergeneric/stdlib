@@ -90,7 +90,7 @@ public class FileLogStore implements LogStore
 	                                       final DateTime to,
 	                                       final String filter) throws UnsupportedOperationException
 	{
-		throw new UnsupportedOperationException();
+		throw new UnsupportedOperationException("FileLogStore cannot be searched!");
 	}
 
 

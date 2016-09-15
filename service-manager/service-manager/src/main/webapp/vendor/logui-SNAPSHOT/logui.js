@@ -24,15 +24,122 @@ function LogUI(element, nonce, tailURL, searchURL) {
 	this.OVERRIDE_ENDPOINTS = {};
 
 	// Now set up the UI (TODO put this into a UI building method)
-	this.uiroot.find("#filterLevelOptions input[type=radio]").change(function() { me.refilter() });
-	this.uiroot.find("#renderEndpointOptions input[type=radio]").change(function() { me.refilter() });
+	this.uiroot.find("#filterLevelOptions input[type=radio]").change(function () {
+		me.refilter()
+	});
+	this.uiroot.find("#renderEndpointOptions input[type=radio]").change(function () {
+		me.refilter()
+	});
 }
 
-
+// Start tailing logs using a particular subscription id
+// N.B. this subscription id must already exist
 LogUI.prototype.startTail = function (subscriptionId) {
 	this.subscriptionId = subscriptionId;
 
+	// TODO configure the UI for Tail
+
 	this.getRecentLines();
+};
+
+// Search the logs and display the results
+LogUI.prototype.search = function (start, end, minLevel, endpoint) {
+	var me = this;
+
+	// TODO if start/end/minLevel/endpoint specified then populate the UI
+	this.uiroot.find("#searchCriteria").show();
+
+	this.uiroot.find("#searchCriteriaExecute").click(function () {
+		me.searchFromUI();
+	});
+
+	// Produce next/prev buttons
+	var latestLine = this.uiroot.find("#latest td");
+	latestLine.text("");
+
+	var nextButton = $('<button class="btn">Next &raquo</button>');
+	nextButton.click(function () {
+		me.searchFromUI(1);
+	});
+	var prevButton = $('<button class="btn">Prev &laquo</button>');
+	prevButton.click(function () {
+		me.searchFromUI(-1);
+	});
+
+	latestLine.append(prevButton);
+	latestLine.append(nextButton);
+};
+
+LogUI.prototype.searchFromUI = function (delta) {
+	var from = this.uiroot.find("#searchFrom").val();
+	var to = this.uiroot.find("#searchTo").val();
+	var filter = this.uiroot.find("#searchFilter").val();
+
+	if (delta !== undefined) {
+		var fromDate = moment(from);
+		var toDate = moment(to);
+
+		// Produce a duration that's either positive or negative based on the delta value
+		var duration = toDate.diff(fromDate) * delta;
+
+		var from = fromDate.add(delta).format();
+		var to = toDate.add(delta).format();
+	}
+
+	this.executeSearch(from, to, filter);
+};
+
+LogUI.prototype.executeSearch = function (start, end, filter) {
+	var me = this;
+
+	// Start and End are likely in datetime-local format (1970-01-01T00:00:00.00), they should be sent to the server as UTC dates
+	var fromISO = moment(start).format();
+	var toISO = moment(end).format();
+
+	$.ajax({
+		type: "POST",
+		dataType: 'json',
+		url: this.searchURL,
+		data: {
+			'from': fromISO,
+			'to': toISO,
+			'filter': filter
+		},
+		complete: function (data, textStatus) {
+			console.log(data);
+
+			if (textStatus == 'success') {
+				me.addLines($.parseJSON(data.responseText));
+			}
+			else {
+				var latestLine = me.uiroot.find("#latest td");
+
+				if (data.getResponseHeader('X-Rich-Exception') == "1") {
+					var failureXML = $.parseXML(data.responseText);
+
+					if (failureXML) {
+						failureXML = $(failureXML);
+
+						var errorDetail;
+						if (failureXML.find("detail").length > 0) {
+							errorDetail = $(failureXML.find("detail")[0]).text();
+						}
+						else {
+							errorDetail = $(failureXML.find("shortName")[0]).text();
+						}
+
+						latestLine.text("Server returned rich exception as a result of a search: " + errorDetail);
+					}
+					else {
+						latestLine.text("Server returned rich exception that could not be parsed: " + data.responseText);
+					}
+				}
+				else {
+					latestLine.text("Unknown problem occurred as a result of a search: textStatus=" + textStatus + ". responseText=" + data.responseText);
+				}
+			}
+		}
+	});
 };
 
 LogUI.prototype.getRecentLines = function () {
@@ -41,7 +148,7 @@ LogUI.prototype.getRecentLines = function () {
 	$.ajax({
 		type: "POST",
 		dataType: 'json',
-		url: tailURL,
+		url: this.tailURL,
 		data: {
 			'id': subscriptionId,
 			'nonce': nonce
@@ -142,13 +249,15 @@ LogUI.prototype.addLines = function (events) {
 // If no number of lines is supplied then remove all lines
 LogUI.prototype.clearLines = function (linesToRemove) {
 	if (linesToRemove === undefined || linesToRemove > this.logLinesInMemory) {
-		linesToRemove = this.logLinesInMemory;
+		this.uiroot.find("#loglines tr.logline").remove();
+		this.logLinesInMemory = 0;
 	}
+	else {
+		// Remove the number of lines requested
+		this.uiroot.find("#loglines tr.logline").slice(0, linesToRemove).remove();
 
-	// Remove an additional 500 lines (so we aren't having to delete lines every time)
-	this.uiroot.find("#loglines tr").slice(0, linesToRemove).remove();
-
-	this.logLinesInMemory -= linesToRemove;
+		this.logLinesInMemory -= linesToRemove;
+	}
 };
 
 // Formats a timestamp string in the local timezone
@@ -209,7 +318,7 @@ LogUI.prototype.addLine = function (event) {
 		else if (this.OVERRIDE_ENDPOINTS[event.instanceId] == 'http://unknown') {
 			this.OVERRIDE_ENDPOINTS[event.instanceId] = event.endpoint;
 
-			rerender(
+			this.rerender(
 				function (e) {
 					return (e.endpoint == 'http://unknown');
 				},
