@@ -10,7 +10,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.MultivaluedMap;
 import javax.ws.rs.ext.MessageBodyReader;
 import javax.ws.rs.ext.Provider;
-import java.io.EOFException;
+import java.io.FilterInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.lang.annotation.Annotation;
@@ -27,14 +27,9 @@ public class LogReportMessageBodyReader implements MessageBodyReader<LogReport>
 	private static final Logger log = Logger.getLogger(LogReportMessageBodyReader.class);
 
 	/**
-	 * If set to true we will perform our own GZip decompression. This is unnecessary within resteasy because it automatically
-	 * decompresses GZIP streams in request bodies
+	 * If set to true we will perform GZip decompression.
 	 */
-	public static final boolean MANUAL_GZIP_DECODE = true;
-	/**
-	 * GZIP header magic number.
-	 */
-	public final static int GZIP_MAGIC = 0x8b1f;
+	public static final boolean GZIP = true;
 
 
 	@Override
@@ -53,39 +48,26 @@ public class LogReportMessageBodyReader implements MessageBodyReader<LogReport>
 	                          final Annotation[] annotations,
 	                          final MediaType mediaType,
 	                          final MultivaluedMap<String, String> httpHeaders,
-	                          final InputStream entityStream) throws IOException, WebApplicationException
+	                          InputStream entityStream) throws IOException, WebApplicationException
 	{
-		final boolean gzipDecompress;
-		if (entityStream.markSupported())
+		// Make sure we don't close the input stream
+		entityStream = new FilterInputStream(entityStream)
 		{
-			entityStream.mark(2);
-			final int magicBytes = readUShort(entityStream);
-
-			if (magicBytes == GZIP_MAGIC)
+			@Override
+			public void close() throws IOException
 			{
-				log.info("Entity is GZipped, will decompress");
-				gzipDecompress = true;
+				log.trace("Ignoring attempt to close stream as part of LogReportMessageBodyReader");
 			}
-			else
-			{
-				log.info("Entity is not GZipped, first ushort=" + magicBytes);
-				gzipDecompress = false;
-			}
-			entityStream.reset();
-		}
-		else
-		{
-			log.trace("Mark/Reset is not supported on " + entityStream + ", have to assume gzip=" + MANUAL_GZIP_DECODE);
-			gzipDecompress = MANUAL_GZIP_DECODE;
-		}
-		final InputStream is;
+		};
 
 		try
 		{
-			if (gzipDecompress)
+			final InputStream is;
+
+			if (GZIP)
 				is = new GZIPInputStream(entityStream);
 			else
-				is = entityStream; // resteasy will automatically handle decompression for us
+				is = entityStream;
 
 			final byte[] buffer = IOUtils.toByteArray(is);
 
@@ -99,34 +81,5 @@ public class LogReportMessageBodyReader implements MessageBodyReader<LogReport>
 
 			throw t;
 		}
-	}
-
-
-	/*
-	 * Reads unsigned short in Intel byte order.
-	 */
-	private static int readUShort(InputStream in) throws IOException
-	{
-		int b = readUByte(in);
-		return (readUByte(in) << 8) | b;
-	}
-
-
-	/*
-	 * Reads unsigned byte.
-	 */
-	private static int readUByte(InputStream in) throws IOException
-	{
-		int b = in.read();
-		if (b == -1)
-		{
-			throw new EOFException();
-		}
-		if (b < -1 || b > 255)
-		{
-			// Report on this.in, not argument in; see read{Header, Trailer}.
-			throw new IOException(in.getClass().getName() + ".read() returned value out of range -1..255: " + b);
-		}
-		return b;
 	}
 }
