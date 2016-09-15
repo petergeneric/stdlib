@@ -25,7 +25,8 @@ public class Rules
 	@XmlElements({@XmlElement(name = "restService", type = RestServiceVar.class),
 	              @XmlElement(name = "localObject", type = LocalObjectVar.class),
 	              @XmlElement(name = "jaxbObject", type = JaxbObjectVar.class),
-	              @XmlElement(name = "stringObject", type = StringObjectVar.class)})
+	              @XmlElement(name = "stringObject", type = StringObjectVar.class),
+	              @XmlElement(name = "integerObject", type = IntegerObjectVar.class)})
 	public List<Variable> variables = new ArrayList<>();
 
 	/**
