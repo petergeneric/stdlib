@@ -15,8 +15,8 @@ import org.joda.time.DateTime;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
@@ -133,14 +133,14 @@ public class AzureLogStore implements LogStore
 
 	private static String andFilters(List<String> filters)
 	{
-		if (filters.isEmpty() || filters.stream().filter(StringUtils:: isNotEmpty).findAny().isPresent() == false)
+		if (filters.isEmpty() || filters.stream().filter(StringUtils:: isNotBlank).findAny().isPresent() == false)
 		{
 			return null;
 		}
 		else
 		{
-			// More than 1 non-null filters, join them together
-			return filters.stream().filter(Objects:: nonNull).collect(Collectors.joining(" and "));
+			// More than 1 filter, join them together
+			return filters.stream().filter(StringUtils:: isNotBlank).collect(Collectors.joining(" and "));
 		}
 	}
 
@@ -165,7 +165,14 @@ public class AzureLogStore implements LogStore
 		                                                                         .where(logLineFilter));
 
 		// Fetch back the requested number of results
-		return StreamSupport.stream(resultset.spliterator(), false).limit(limit).collect(Collectors.toList());
+		// N.B. we need to sort them according to when they were emitted because in Azure they're broken up
+		// by service by time
+		List<LogLineTableEntity> results = StreamSupport.stream(resultset.spliterator(), false)
+		                                                .limit(limit)
+		                                                .sorted(Comparator.comparing(LogLineTableEntity:: getDateTimeWhen))
+		                                                .collect(Collectors.toList());
+
+		return results;
 	}
 
 
