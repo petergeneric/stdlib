@@ -86,6 +86,8 @@ public class LoggingService
 	{
 		if (lines == null || lines.isEmpty())
 			return; // ignore empty lists
+		else if (log.isTraceEnabled())
+			log.trace("Log store called for " + lines.size() + " lines");
 
 		// Write the lines to the recent logs ring buffer
 		recent.addAll(lines);

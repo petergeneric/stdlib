@@ -38,5 +38,7 @@ public interface ServiceManagerUIService
 	@GZIP
 	@POST
 	@Path("/logs/search.do")
-	public Response doSearchLogs(String fromStr, String toStr, String filter);
+	public Response doSearchLogs(@FormParam("from") String fromStr,
+	                             @FormParam("to") String toStr,
+	                             @FormParam("filter") String filter);
 }

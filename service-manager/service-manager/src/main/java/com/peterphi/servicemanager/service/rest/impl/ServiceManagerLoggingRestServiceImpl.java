@@ -29,33 +29,44 @@ public class ServiceManagerLoggingRestServiceImpl implements ServiceManagerLoggi
 	@Override
 	public void report(final LogReport logs)
 	{
-		final ServiceInstanceEntity serviceInstance = cache.get(logs.getServiceId());
+		if (log.isTraceEnabled())
+			log.trace("Received " + logs.getLines().length + " log lines to store");
 
-		// Make sure that all store calls are for the same partition (date + instance id)
-		// This is technically only a requirement for Azure but it's a guarantee other
-		// stores can use effectively (e.g. writing to datestamped log files)
-		String partitionKey = null;
-		List<LogLineTableEntity> pending = new ArrayList<>();
-		for (LogLine line : logs.getLines())
+		try
 		{
-			LogLineTableEntity entity = convert(serviceInstance, line);
+			final ServiceInstanceEntity serviceInstance = cache.get(logs.getServiceId());
 
-			if (partitionKey == null)
+			// Make sure that all store calls are for the same partition (date + instance id)
+			// This is technically only a requirement for Azure but it's a guarantee other
+			// stores can use effectively (e.g. writing to datestamped log files)
+			String partitionKey = null;
+			List<LogLineTableEntity> pending = new ArrayList<>();
+			for (LogLine line : logs.getLines())
 			{
-				// First entry in a new partition
-				partitionKey = entity.getPartitionKey();
+				LogLineTableEntity entity = convert(serviceInstance, line);
+
+				if (partitionKey == null)
+				{
+					// First entry in a new partition
+					partitionKey = entity.getPartitionKey();
+				}
+				else if (!partitionKey.equals(entity.getPartitionKey()))
+				{
+					// Flush all the lines up til now and then start a new list
+					service.store(pending);
+					pending.clear();
+					partitionKey = entity.getPartitionKey();
+				}
 			}
-			else if (!partitionKey.equals(entity.getPartitionKey()))
-			{
-				// Flush all the lines up til now and then start a new list
-				service.store(pending);
-				pending.clear();
-				partitionKey = entity.getPartitionKey();
-			}
+
+			// Make sure we flush any remaining data to the storage system
+			service.store(pending);
 		}
-
-		// Make sure we flush any remaining data to the storage system
-		service.store(pending);
+		catch (Throwable t)
+		{
+			log.error("Error saving logs", t);
+			throw t;
+		}
 	}
 
 
