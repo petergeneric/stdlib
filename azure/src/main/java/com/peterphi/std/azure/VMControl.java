@@ -26,12 +26,16 @@ public interface VMControl
 	 */
 	Future<Void> stopAsync(final String id);
 
+	boolean startIfStopped(String id);
+
 	/**
 	 * Start the vm if it is stopped
 	 *
 	 * @return true if the vm was stopped and a start was requested, false if the vm was already running,starting or stopping
 	 */
 	boolean requestStartIfStopped(final String id);
+
+	boolean stopIfRunning(String id);
 
 	/**
 	 * stop the vm if it is running

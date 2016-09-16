@@ -25,6 +25,7 @@ public class RuleProcessTask<Void> implements Callable<Void>
 	//for anyone wanting to wait on our result, do not do anything with this future in the call() method!!
 	ListenableFuture<Object> future;
 
+
 	public RuleProcessTask(RulesEngineImpl rulesEngine, final RuleSet ruleSet, final Rule rule, final OgnlContext ruleSetContext)
 	{
 		this.rulesEngine = rulesEngine;
@@ -54,9 +55,25 @@ public class RuleProcessTask<Void> implements Callable<Void>
 	}
 
 
+	public Rule getRule()
+	{
+		return rule;
+	}
+
+
+	public DateTime getCreated()
+	{
+		return created;
+	}
+
+	public ListenableFuture<Object> getFuture()
+	{
+		return future;
+	}
+
+
 	public void submit(final ListeningExecutorService executorService)
 	{
-		future = executorService.submit(new ThreadRenameCallableWrap<Object>("Rule " +
-		                                                                     rule.id, (Callable<Object>) this));
+		future = executorService.submit(new ThreadRenameCallableWrap<Object>("Rule " + rule.id, (Callable<Object>) this));
 	}
 }

@@ -131,6 +131,28 @@ public class AzureVMControl implements StoppableService, VMControl
 		return executorService.submit(call);
 	}
 
+	@Override
+	public boolean startIfStopped(final String id)
+	{
+
+		VirtualMachine vm = getById(id);
+
+		switch (vm.powerState())
+		{
+			case RUNNING:
+			case DEALLOCATING:
+			case STARTING:
+				return false;
+			case DEALLOCATED:
+				log.info(vm.resourceGroupName() + " - " + vm.name() + " is deallocated, starting");
+				start(id);
+				return true;
+			default:
+				throw new IllegalArgumentException("Unknown power state");
+		}
+	}
+
+
 
 	@Override
 	public boolean requestStartIfStopped(final String id)
@@ -153,6 +175,25 @@ public class AzureVMControl implements StoppableService, VMControl
 		}
 	}
 
+	@Override
+	public boolean stopIfRunning(final String id)
+	{
+		VirtualMachine vm = getById(id);
+
+		switch (vm.powerState())
+		{
+			case DEALLOCATING:
+			case STARTING:
+			case DEALLOCATED:
+				return false;
+			case RUNNING:
+				log.info(vm.resourceGroupName() + " - " + vm.name() + " is running, stopping");
+				stop(id);
+				return true;
+			default:
+				throw new IllegalArgumentException("Unknown power state");
+		}
+	}
 
 	@Override
 	public boolean requestStopIfRunning(final String id)

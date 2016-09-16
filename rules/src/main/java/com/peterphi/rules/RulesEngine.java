@@ -6,6 +6,7 @@ import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
 import ognl.OgnlException;
 
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -80,4 +81,7 @@ public interface RulesEngine
 	 */
 	void execute(Map<RuleSet, List<Rule>> matchingrulesMap, Map<String, Object> vars) throws OgnlException;
 
+	Collection<RuleProcessTask> getActive();
+
+	RuleProcessTask getActiveById(String id);
 }

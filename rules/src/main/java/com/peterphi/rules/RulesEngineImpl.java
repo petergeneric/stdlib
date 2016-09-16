@@ -18,6 +18,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -317,5 +318,19 @@ public class RulesEngineImpl implements RulesEngine, StoppableService
 	public void shutdown()
 	{
 		executorService.shutdown();
+	}
+
+
+	@Override
+	public Collection<RuleProcessTask> getActive()
+	{
+		return activeTasks.values();
+	}
+
+
+	@Override
+	public RuleProcessTask getActiveById(final String id)
+	{
+		return activeTasks.get(id);
 	}
 }
