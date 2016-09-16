@@ -7,6 +7,7 @@ import com.peterphi.rules.types.RuleSet;
 import com.peterphi.std.threading.ThreadRenameCallableWrap;
 import ognl.OgnlContext;
 import ognl.OgnlException;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import java.util.concurrent.Callable;
@@ -24,6 +25,8 @@ public class RuleProcessTask<Void> implements Callable<Void>
 
 	//for anyone wanting to wait on our result, do not do anything with this future in the call() method!!
 	ListenableFuture<Object> future;
+
+	private final static Logger log = Logger.getLogger(RuleProcessTask.class);
 
 
 	public RuleProcessTask(RulesEngineImpl rulesEngine, final RuleSet ruleSet, final Rule rule, final OgnlContext ruleSetContext)
@@ -46,6 +49,11 @@ public class RuleProcessTask<Void> implements Callable<Void>
 				rule.runCommands(rContext);
 			}
 		}
+		catch (Exception e)
+		{
+			log.error("Exception processing rule " + rule.id, e);
+			throw e;
+		}
 		finally
 		{
 			rulesEngine.taskOver(rule.id);
@@ -65,6 +73,7 @@ public class RuleProcessTask<Void> implements Callable<Void>
 	{
 		return created;
 	}
+
 
 	public ListenableFuture<Object> getFuture()
 	{
