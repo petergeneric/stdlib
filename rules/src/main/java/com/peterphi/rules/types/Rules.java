@@ -26,7 +26,8 @@ public class Rules
 	              @XmlElement(name = "localObject", type = LocalObjectVar.class),
 	              @XmlElement(name = "jaxbObject", type = JaxbObjectVar.class),
 	              @XmlElement(name = "stringObject", type = StringObjectVar.class),
-	              @XmlElement(name = "integerObject", type = IntegerObjectVar.class)})
+	              @XmlElement(name = "integerObject", type = IntegerObjectVar.class),
+	              @XmlElement(name = "timeout", type = TimeoutObjectVar.class)})
 	public List<Variable> variables = new ArrayList<>();
 
 	/**

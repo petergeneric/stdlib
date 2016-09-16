@@ -2,6 +2,7 @@ package com.peterphi.std.azure;
 
 import com.google.inject.ImplementedBy;
 import com.microsoft.azure.management.compute.PowerState;
+import com.peterphi.std.threading.Timeout;
 
 import java.util.concurrent.Future;
 
@@ -12,21 +13,21 @@ import java.util.concurrent.Future;
 public interface VMControl
 {
 	/**
-	 * Request the vm start, dont wait for the process to complete
+	 * Request the vm start, dont wait for the process to complete (but it will be aborted after 30 mins)
 	 */
 	Future<Void> startAsync(final String id);
 
 	/**
 	 * Request the vm start ,wait for completion
 	 */
-	void start(final String id);
+	void start(final String id, final Timeout timeout) throws InterruptedException;
 
 	/**
-	 * Request the vm stop, dont wait for the process to complete
+	 * Request the vm stop, dont wait for the process to complete (but it will be aborted after 30 mins)
 	 */
 	Future<Void> stopAsync(final String id);
 
-	boolean startIfStopped(String id);
+	boolean startIfStopped(String id, final Timeout timeout) throws InterruptedException;
 
 	/**
 	 * Start the vm if it is stopped
@@ -35,7 +36,7 @@ public interface VMControl
 	 */
 	boolean requestStartIfStopped(final String id);
 
-	boolean stopIfRunning(String id);
+	boolean stopIfRunning(String id, final Timeout timeout) throws InterruptedException;
 
 	/**
 	 * stop the vm if it is running
@@ -47,7 +48,7 @@ public interface VMControl
 	/**
 	 * Request the vm stop, wait for completion
 	 */
-	void stop(final String id);
+	void stop(final String id, final Timeout timeout) throws InterruptedException;
 
 	/**
 	 * Request the vm restart, dont wait for the process to complete
@@ -55,9 +56,9 @@ public interface VMControl
 	Future<Void> restartAsync(final String id);
 
 	/**
-	 * Request the vm restart ,wait for the process to complete
+	 * Request the vm restart ,wait for the process to complete (but it will be aborted after 30 mins)
 	 */
-	void restart(final String id);
+	void restart(final String id, final Timeout timeout) throws InterruptedException;
 
 
 	/**

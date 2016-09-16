@@ -1,5 +1,6 @@
 package com.peterphi.std.azure;
 
+import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.microsoft.azure.CloudException;
@@ -7,7 +8,9 @@ import com.microsoft.azure.management.compute.PowerState;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.compute.VirtualMachines;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
+import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.ThreadRenameCallableWrap;
+import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
 
 import javax.inject.Inject;
@@ -15,6 +18,7 @@ import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
@@ -34,37 +38,45 @@ public class AzureVMControl implements StoppableService, VMControl
 	@Inject
 	VirtualMachines virtualMachines;
 
-	final BlockingQueue<Runnable> queue = new ArrayBlockingQueue<>(10);
-	ListeningExecutorService executorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(10,
-	                                                                                                   10,
-	                                                                                                   0L,
-	                                                                                                   TimeUnit.MILLISECONDS,
-	                                                                                                   queue));
+	final BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(100);
+	ListeningExecutorService wes = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(20,
+	                                                                                       20,
+	                                                                                       0L,
+	                                                                                       TimeUnit.MILLISECONDS,
+	                                                                                       workQueue));
+
+	final BlockingQueue<Runnable> asyncQueue = new ArrayBlockingQueue<>(20);
+	ListeningExecutorService asyncExecutorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(10,
+	                                                                                                        10,
+	                                                                                                        0L,
+	                                                                                                        TimeUnit.MILLISECONDS,
+	                                                                                                        asyncQueue));
 
 
 	@Override
-	public void start(final String id)
+	public void start(final String id, final Timeout timeout) throws InterruptedException
 	{
 		final VirtualMachine vm = getById(id);
-		start(vm);
+
+		start(vm, timeout);
 	}
 
 
 	@Override
-	public void stop(final String id)
+	public void stop(final String id, final Timeout timeout) throws InterruptedException
 	{
 
 		final VirtualMachine vm = getById(id);
-		stop(vm);
+		stop(vm, timeout);
 	}
 
 
 	@Override
-	public void restart(final String id)
+	public void restart(final String id, final Timeout timeout) throws InterruptedException
 	{
 
 		final VirtualMachine vm = getById(id);
-		restart(vm);
+		restart(vm, timeout);
 	}
 
 
@@ -74,19 +86,19 @@ public class AzureVMControl implements StoppableService, VMControl
 
 		final VirtualMachine vm = getById(id);
 
-		final String threadName = "Azure VM Start - " + vm.resourceGroupName() + " - " + vm.name();
+		final String threadName = "Azure Async Call" + vm.resourceGroupName() + " - " + vm.name();
 
 		ThreadRenameCallableWrap<Void> call = new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
 			{
-				start(vm);
+				start(vm, Timeout.THIRTY_MINUTES);
 				return null;
 			}
 		});
 
-		return executorService.submit(call);
+		return asyncExecutorService.submit(call);
 	}
 
 
@@ -95,19 +107,19 @@ public class AzureVMControl implements StoppableService, VMControl
 	{
 		final VirtualMachine vm = getById(id);
 
-		final String threadName = "Azure VM Stop - " + vm.resourceGroupName() + " - " + vm.name();
+		final String threadName = "Azure Async Call - " + vm.resourceGroupName() + " - " + vm.name();
 
 		ThreadRenameCallableWrap<Void> call = new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
 			{
-				stop(vm);
+				stop(vm, Timeout.THIRTY_MINUTES);
 				return null;
 			}
 		});
 
-		return executorService.submit(call);
+		return asyncExecutorService.submit(call);
 	}
 
 
@@ -116,23 +128,24 @@ public class AzureVMControl implements StoppableService, VMControl
 	{
 		final VirtualMachine vm = getById(id);
 
-		final String threadName = "Azure VM Restart - " + vm.resourceGroupName() + " - " + vm.name();
+		final String threadName = "Azure Async Call - " + vm.resourceGroupName() + " - " + vm.name();
 
 		ThreadRenameCallableWrap<Void> call = new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
 			{
-				restart(vm);
+				restart(vm, Timeout.THIRTY_MINUTES);
 				return null;
 			}
 		});
 
-		return executorService.submit(call);
+		return asyncExecutorService.submit(call);
 	}
 
+
 	@Override
-	public boolean startIfStopped(final String id)
+	public boolean startIfStopped(final String id, final Timeout timeout) throws InterruptedException
 	{
 
 		VirtualMachine vm = getById(id);
@@ -145,13 +158,12 @@ public class AzureVMControl implements StoppableService, VMControl
 				return false;
 			case DEALLOCATED:
 				log.info(vm.resourceGroupName() + " - " + vm.name() + " is deallocated, starting");
-				start(id);
+				start(id, timeout);
 				return true;
 			default:
 				throw new IllegalArgumentException("Unknown power state");
 		}
 	}
-
 
 
 	@Override
@@ -175,8 +187,9 @@ public class AzureVMControl implements StoppableService, VMControl
 		}
 	}
 
+
 	@Override
-	public boolean stopIfRunning(final String id)
+	public boolean stopIfRunning(final String id, final Timeout timeout) throws InterruptedException
 	{
 		VirtualMachine vm = getById(id);
 
@@ -188,12 +201,13 @@ public class AzureVMControl implements StoppableService, VMControl
 				return false;
 			case RUNNING:
 				log.info(vm.resourceGroupName() + " - " + vm.name() + " is running, stopping");
-				stop(id);
+				stop(id, timeout);
 				return true;
 			default:
 				throw new IllegalArgumentException("Unknown power state");
 		}
 	}
+
 
 	@Override
 	public boolean requestStopIfRunning(final String id)
@@ -271,78 +285,178 @@ public class AzureVMControl implements StoppableService, VMControl
 	}
 
 
-	private void stop(final VirtualMachine vm)
+	private void stop(final VirtualMachine vm, final Timeout timeout) throws InterruptedException
 	{
-		try
+		final String threadName = "Azure VM Stop - " + vm.resourceGroupName() + " - " + vm.name();
+
+		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
-			vm.deallocate();
-		}
-		catch (CloudException e)
-		{
-			log.error("Error deallocating " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		catch (IOException e)
-		{
-			log.error("Error deallocating " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		catch (InterruptedException e)
-		{
-			throw new RuntimeException(e);
-		}
+			@Override
+			public Void call() throws Exception
+			{
+				try
+				{
+					vm.deallocate();
+				}
+				catch (CloudException e)
+				{
+					log.error("Error deallocating " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				catch (IOException e)
+				{
+					log.error("Error deallocating " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				return null;
+			}
+		}));
+
+		waitForResult(future, timeout);
 	}
 
 
-	private void start(final VirtualMachine vm)
+	private void start(final VirtualMachine vm, final Timeout timeout) throws InterruptedException
 	{
-		try
+
+		//start some work
+		final String threadName = "Azure VM Start - " + vm.resourceGroupName() + " - " + vm.name();
+
+		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
-			vm.start();
-		}
-		catch (CloudException e)
-		{
-			log.error("Error starting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		catch (IOException e)
-		{
-			log.error("Error starting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		catch (InterruptedException e)
-		{
-			throw new RuntimeException(e);
-		}
+			@Override
+			public Void call() throws Exception
+			{
+				try
+				{
+					vm.start();
+				}
+				catch (CloudException e)
+				{
+					log.error("Error starting " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				catch (IOException e)
+				{
+					log.error("Error starting " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				return null;
+			}
+		}));
+
+		waitForResult(future, timeout);
 	}
 
 
-	private void restart(final VirtualMachine vm)
+	private void restart(final VirtualMachine vm, final Timeout timeout) throws InterruptedException
 	{
-		try
+		//start some work
+		final String threadName = "Azure VM Restart - " + vm.resourceGroupName() + " - " + vm.name();
+
+		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
-			vm.restart();
-		}
-		catch (CloudException e)
+			@Override
+			public Void call() throws Exception
+			{
+				try
+				{
+					vm.restart();
+				}
+				catch (CloudException e)
+				{
+					log.error("Error restarting " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				catch (IOException e)
+				{
+					log.error("Error restarting " +
+					          vm.resourceGroupName() +
+					          " " +
+					          vm.name() +
+					          ": " +
+					          e.getMessage(), e);
+					throw new RuntimeException(e);
+				}
+				return null;
+			}
+		}));
+
+		waitForResult(future, timeout);
+	}
+
+
+	private void waitForResult(final ListenableFuture<Void> future, final Timeout timeout) throws InterruptedException
+	{
+		Deadline deadline = timeout.start();
+
+		while (deadline.isValid())
 		{
-			log.error("Error restarting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
+
+			if (future.isDone())
+			{
+				try
+				{
+					//get the future to allow any thrown exceptions to appear
+					future.get();
+				}
+				catch (ExecutionException e)
+				{
+					throw new RuntimeException(e);
+				}
+				return;
+			}
+
+			if (deadline.isValid())
+			{
+				try
+				{
+					Thread.sleep(Timeout.TEN_SECONDS.getMilliseconds());
+				}
+				catch (InterruptedException ie)
+				{
+					//cancel the future im waiting on
+					future.cancel(true);
+					throw ie;
+				}
+			}
 		}
-		catch (IOException e)
-		{
-			log.error("Error restarting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
-			throw new RuntimeException(e);
-		}
-		catch (InterruptedException e)
-		{
-			throw new RuntimeException(e);
-		}
+
+		//taken too long
+		future.cancel(true);
+
+		throw new RuntimeException("Hit timeout of " + timeout + " waiting for azure api call to complete");
 	}
 
 
 	@Override
 	public void shutdown()
 	{
-		executorService.shutdown();
+		wes.shutdown();
 	}
 }

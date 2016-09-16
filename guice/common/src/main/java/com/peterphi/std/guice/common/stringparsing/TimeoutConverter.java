@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 /**
  * Interprets a number of milliseconds as a Timeout
  */
-class TimeoutConverter
+public class TimeoutConverter
 {
 	private static final Pattern pattern = Pattern.compile("^([0-9]+)\\s*([a-zA-Z]+)$", Pattern.CASE_INSENSITIVE);
 

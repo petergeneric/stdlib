@@ -46,6 +46,10 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	 * Five minutes
 	 */
 	public static final Timeout FIVE_MINUTES = new Timeout(5, TimeUnit.MINUTES);
+	/**
+	 * Five minutes
+	 */
+	public static final Timeout THIRTY_MINUTES = new Timeout(30, TimeUnit.MINUTES);
 
 	/**
 	 * The maximum possible timeout

@@ -9,6 +9,7 @@ import com.peterphi.std.guice.testing.AbstractTestModule;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestModule;
+import com.peterphi.std.threading.Timeout;
 import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -22,11 +23,11 @@ import java.util.concurrent.Future;
  */
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "azuretest.properties")
-@Ignore
+//@Ignore
 public class AzureTest
 {
 	@Inject
-	AzureVMControl toTest;
+	VMControl toTest;
 
 
 	@TestModule
@@ -45,12 +46,13 @@ public class AzureTest
 
 
 	@Test
-	public void test() throws InterruptedException, ExecutionException, IOException, CloudException
+	public void test() throws ExecutionException, IOException, CloudException, InterruptedException
 	{
 		final String group = "some-group";
 		final String name = "some-name";
 
 		String id = toTest.getIdFromName(group, name);
-		boolean b = toTest.requestStartIfStopped(id);
+		toTest.stop(id, Timeout.TEN_SECONDS);
+
 	}
 }
