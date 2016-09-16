@@ -23,7 +23,7 @@ import java.util.concurrent.Future;
  */
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "azuretest.properties")
-//@Ignore
+@Ignore
 public class AzureTest
 {
 	@Inject
