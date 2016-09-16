@@ -35,13 +35,19 @@
 		<rule id="eq txt" condition='input.equals("text")'>
 			<!-- will match -->
 			<command>verifier2.pass(1)</command>
+			<command>input = text2</command>
+		</rule>
+		<!--shouldnt match, runs in a separate context to the previous rule-->
+		<rule id="eq txt" condition='input.equals("text2")'>
+			<!-- will match -->
+			<command>verifier2.pass(1)</command>
 		</rule>
 	</ruleset>
 	<ruleset id='rest-service-call'>
 		<input>
 			<command>input = rs.get()</command>
 		</input>
-		<rule if="eq proceed" condition='input == "proceed"'>
+		<rule id='eq proceed' if="eq proceed" condition='input == "proceed"'>
 			<command>verifier3.pass(1)</command>
 		</rule>
 	</ruleset>

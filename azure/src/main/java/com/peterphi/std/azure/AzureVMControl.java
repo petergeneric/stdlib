@@ -7,6 +7,7 @@ import com.microsoft.azure.management.compute.PowerState;
 import com.microsoft.azure.management.compute.VirtualMachine;
 import com.microsoft.azure.management.compute.VirtualMachines;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
+import com.peterphi.std.threading.ThreadRenameCallableWrap;
 import org.apache.log4j.Logger;
 
 import javax.inject.Inject;

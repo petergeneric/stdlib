@@ -1,17 +1,17 @@
-package com.peterphi.std.azure;
+package com.peterphi.std.threading;
 
 import java.util.concurrent.Callable;
 
 /**
  * Created by bmcleod on 06/09/2016.
  */
-class ThreadRenameCallableWrap<V> implements Callable<V>
+public class ThreadRenameCallableWrap<V> implements Callable<V>
 {
 
 	final Callable<V> wrappedCall;
 	final String threadName;
 
-	ThreadRenameCallableWrap(String threadName, Callable<V> callable)
+	public ThreadRenameCallableWrap(String threadName, Callable<V> callable)
 	{
 		this.wrappedCall = callable;
 		this.threadName = threadName;

@@ -46,7 +46,7 @@ public class RuleTest
 	Rules rules;
 
 	@Inject
-	RulesEngine rulesEngine;
+	RulesEngineImpl rulesEngine;
 
 	@Inject
 	@Named("verifier1")
@@ -119,22 +119,26 @@ public class RuleTest
 		};
 	}
 
+	@Test
+	public void testPrep() throws OgnlException
+	{
+		when(factory.createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false))).thenReturn(someRestService);
+
+		Map<String, Object> vars = rulesEngine.prepare(rules);
+
+		assertTrue(vars.containsKey("mylocalparam"));
+		assertTrue(vars.get("mylocalparam").equals("named value"));
+	}
 
 	@Test
-	public void test() throws OgnlException
+	public void testMatching() throws OgnlException
 	{
-
-		when(factory.createClient(eq(SomeRestService.class),
-		                          eq(URI.create("http://0.0.0.0/foo")),
-		                          eq(false))).thenReturn(someRestService);
+		when(factory.createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false))).thenReturn(someRestService);
 		when(someRestService.get()).thenReturn("proceed");
 
-		OgnlContext context = rulesEngine.createContext(rulesEngine.prepare(rules));
+		Map<String, Object> vars = rulesEngine.prepare(rules);
 
-		assertTrue(context.containsKey("mylocalparam"));
-		assertTrue(context.get("mylocalparam").equals("named value"));
-
-		Map<RuleSet, List<Rule>> matching = rulesEngine.matching(rules, context, false);
+		Map<RuleSet, List<Rule>> matching = rulesEngine.matching(rules, vars, false);
 
 		List<Rule> allMatching = new ArrayList<>();
 
@@ -145,7 +149,19 @@ public class RuleTest
 		//rest-service-call with input == "proceed" passes
 		assertTrue(allMatching.size() == 3);
 
-		rulesEngine.execute(matching, context);
+		verify(factory).createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false));
+		verify(someRestService).get();
+	}
+
+
+	@Test
+	public void testRun() throws OgnlException, InterruptedException
+	{
+		when(factory.createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false))).thenReturn(someRestService);
+		when(someRestService.get()).thenReturn("proceed");
+
+		rulesEngine.run(rules, false);
+		rulesEngine.waitForAllRuleTasks();
 
 		assertTrue(verifierObject1.getP() == 3);
 		assertTrue(verifierObject1.getF() == 0);
@@ -157,6 +173,6 @@ public class RuleTest
 		assertTrue(verifierObject3.getF() == 0);
 
 		verify(factory).createClient(eq(SomeRestService.class), eq(URI.create("http://0.0.0.0/foo")), eq(false));
-		verify(someRestService,times(2)).get();
+		verify(someRestService).get();
 	}
 }
