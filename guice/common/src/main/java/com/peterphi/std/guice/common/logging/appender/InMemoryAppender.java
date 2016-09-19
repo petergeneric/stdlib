@@ -41,8 +41,8 @@ public class InMemoryAppender extends AppenderSkeleton
 		{
 			EVENTS.push(event);
 
-			if (EVENTS.size() >= MAX_EVENTS)
-				EVENTS.removeFirst();
+			while (EVENTS.size() >= MAX_EVENTS)
+				EVENTS.removeLast();
 		}
 	}
 
