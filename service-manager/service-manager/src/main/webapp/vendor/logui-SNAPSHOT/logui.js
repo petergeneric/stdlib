@@ -9,6 +9,7 @@ function LogUI(element, nonce, tailURL, searchURL) {
 
 	this.uiroot = $(element);
 	this.nonce = nonce;
+	this.tailTimeout = null;
 	this.tailURL = tailURL;
 	this.searchURL = searchURL;
 
@@ -38,6 +39,7 @@ LogUI.prototype.startTail = function (subscriptionId) {
 	this.subscriptionId = subscriptionId;
 
 	// TODO configure the UI for Tail
+	this.uiroot.find("#searchCriteria").hide();
 
 	this.getRecentLines();
 };
@@ -45,6 +47,16 @@ LogUI.prototype.startTail = function (subscriptionId) {
 // Search the logs and display the results
 LogUI.prototype.search = function (start, end, minLevel, endpoint) {
 	var me = this;
+
+	// If there's an active tail timeout we should cancel it
+	if (this.tailTimeout != null) {
+		clearTimeout(this.tailTimeout);
+
+		this.tailTimeout = null;
+	}
+
+	// Make sure we remove any lines from previous UI operations
+	this.clearLines();
 
 	// TODO if start/end/minLevel/endpoint specified then populate the UI
 	this.uiroot.find("#searchCriteria").show();
@@ -157,7 +169,7 @@ LogUI.prototype.getRecentLines = function () {
 			if (textStatus == 'success') {
 				me.addLines($.parseJSON(data.responseText));
 
-				setTimeout(function () {
+				me.tailTimeout = setTimeout(function () {
 					me.getRecentLines()
 				}, 500);
 			}
