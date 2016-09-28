@@ -31,4 +31,66 @@
 			</column>
 		</createTable>
 	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="create_resource_tables">
+		<createTable tableName="resource_template">
+			<column name="id" type="VARCHAR(255)">
+				<constraints primaryKey="true" primaryKeyName="PK__resource_template"/>
+			</column>
+			<column name="revision_commit" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="revision_counter" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<createTable tableName="resource_instance">
+			<column name="id" type="INT">
+				<constraints primaryKey="true" primaryKeyName="PK__resource_instance"/>
+			</column>
+			<column name="template_id" type="VARCHAR(255)">
+				<constraints nullable="false" foreignKeyName="FK__resource_instance__template_id" referencedTableName="resource_template" referencedColumnNames="id" deleteCascade="true"/>
+			</column>
+			<column name="template_revision_commit" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="template_revision_counter" type="INT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="resource_state" type="TINYINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="provider_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="provider_instance_id" type="VARCHAR(1024)">
+				<constraints nullable="true"/>
+			</column>
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+			<column name="updated_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<createTable tableName="resource_instance_metadata">
+			<column name="resource_instance_id" type="INT">
+				<constraints nullable="false" foreignKeyName="FK__resource_instance_metadata__resource_instance_id" referencedTableName="resource_instance" referencedColumnNames="id" deleteCascade="true"/>
+			</column>
+			<column name="meta_name" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="meta_val" type="VARCHAR(4096)"/>
+		</createTable>
+
+		<addPrimaryKey tableName="resource_instance_metadata" columnNames="resource_instance_id, meta_name" constraintName="PK__resource_instance_metadata"/>
+	</changeSet>
 </databaseChangeLog>
