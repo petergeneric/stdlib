@@ -3,6 +3,7 @@ package com.peterphi.std.azure;
 import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
+import com.google.inject.Singleton;
 import com.microsoft.azure.CloudException;
 import com.microsoft.azure.management.compute.PowerState;
 import com.microsoft.azure.management.compute.VirtualMachine;
@@ -12,12 +13,10 @@ import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.ThreadRenameCallableWrap;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
-import com.google.inject.Singleton;
 
 import javax.inject.Inject;
 import java.io.IOException;
 import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -25,34 +24,35 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
 /**
- * Created by bmcleod on 02/09/2016.
- */
-
-/**
  * wraps azure management sdk calls, turns checked exceptions into runtime exceptions
  */
 @Singleton
 public class AzureVMControlImpl implements StoppableService, AzureVMControl
 {
-
 	private final static Logger log = Logger.getLogger(AzureVMControlImpl.class);
 
 	@Inject
 	VirtualMachines virtualMachines;
 
-	final BlockingQueue<Runnable> workQueue = new ArrayBlockingQueue<>(100);
-	ListeningExecutorService wes = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(20,
-	                                                                                       20,
-	                                                                                       0L,
-	                                                                                       TimeUnit.MILLISECONDS,
-	                                                                                       workQueue));
+	/**
+	 * Executor service used for synchronous operations. This is used so that we can timeout & cancel Azure API calls (the Azure
+	 * Java API actually makes multiple HTTP calls, tracking operations until they complete rather than returning a handle to the
+	 * operations)
+	 */
+	ListeningExecutorService synchronous = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(0,
+	                                                                                               512,
+	                                                                                               250L,
+	                                                                                               TimeUnit.MILLISECONDS,
+	                                                                                               new ArrayBlockingQueue<>(1024)));
 
-	final BlockingQueue<Runnable> asyncQueue = new ArrayBlockingQueue<>(20);
-	ListeningExecutorService asyncExecutorService = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(10,
-	                                                                                                        10,
-	                                                                                                        0L,
-	                                                                                                        TimeUnit.MILLISECONDS,
-	                                                                                                        asyncQueue));
+	/**
+	 * Executor service used for fire-and-forget operations
+	 */
+	ListeningExecutorService asynchronous = MoreExecutors.listeningDecorator(new ThreadPoolExecutor(0,
+	                                                                                                512,
+	                                                                                                250L,
+	                                                                                                TimeUnit.MILLISECONDS,
+	                                                                                                new ArrayBlockingQueue<>(1024)));
 
 
 	@Override
@@ -100,7 +100,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 			}
 		});
 
-		return asyncExecutorService.submit(call);
+		return asynchronous.submit(call);
 	}
 
 
@@ -121,7 +121,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 			}
 		});
 
-		return asyncExecutorService.submit(call);
+		return asynchronous.submit(call);
 	}
 
 
@@ -142,7 +142,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 			}
 		});
 
-		return asyncExecutorService.submit(call);
+		return asynchronous.submit(call);
 	}
 
 
@@ -291,7 +291,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 	{
 		final String threadName = "Azure VM Stop - " + vm.resourceGroupName() + " - " + vm.name();
 
-		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
+		ListenableFuture<Void> future = synchronous.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
@@ -302,22 +302,12 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 				}
 				catch (CloudException e)
 				{
-					log.error("Error deallocating " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error deallocating " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				catch (IOException e)
 				{
-					log.error("Error deallocating " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error deallocating " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				return null;
@@ -334,7 +324,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 		//start some work
 		final String threadName = "Azure VM Start - " + vm.resourceGroupName() + " - " + vm.name();
 
-		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
+		ListenableFuture<Void> future = synchronous.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
@@ -345,22 +335,12 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 				}
 				catch (CloudException e)
 				{
-					log.error("Error starting " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error starting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				catch (IOException e)
 				{
-					log.error("Error starting " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error starting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				return null;
@@ -376,7 +356,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 		//start some work
 		final String threadName = "Azure VM Restart - " + vm.resourceGroupName() + " - " + vm.name();
 
-		ListenableFuture<Void> future = wes.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
+		ListenableFuture<Void> future = synchronous.submit(new ThreadRenameCallableWrap<Void>(threadName, new Callable<Void>()
 		{
 			@Override
 			public Void call() throws Exception
@@ -387,22 +367,12 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 				}
 				catch (CloudException e)
 				{
-					log.error("Error restarting " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error restarting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				catch (IOException e)
 				{
-					log.error("Error restarting " +
-					          vm.resourceGroupName() +
-					          " " +
-					          vm.name() +
-					          ": " +
-					          e.getMessage(), e);
+					log.error("Error restarting " + vm.resourceGroupName() + " " + vm.name() + ": " + e.getMessage(), e);
 					throw new RuntimeException(e);
 				}
 				return null;
@@ -459,6 +429,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 	@Override
 	public void shutdown()
 	{
-		wes.shutdown();
+		synchronous.shutdown();
+		asynchronous.shutdown();
 	}
 }
