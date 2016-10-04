@@ -27,7 +27,7 @@ import java.util.concurrent.Future;
 public class AzureTest
 {
 	@Inject
-	VMControl toTest;
+	AzureVMControl toTest;
 
 
 	@TestModule
