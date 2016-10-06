@@ -1,13 +1,16 @@
 package com.peterphi.servicemanager.service.logging.azure;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.microsoft.azure.storage.StorageException;
 import com.microsoft.azure.storage.table.CloudTable;
 import com.microsoft.azure.storage.table.TableBatchOperation;
 import com.microsoft.azure.storage.table.TableQuery;
+import com.peterphi.servicemanager.service.guice.ServiceManagerGuiceModule;
 import com.peterphi.servicemanager.service.logging.LogLineTableEntity;
 import com.peterphi.servicemanager.service.logging.LogStore;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -20,6 +23,7 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
 
+@Singleton
 public class AzureLogStore implements LogStore
 {
 	private static final Logger log = Logger.getLogger(AzureLogStore.class);
@@ -29,6 +33,14 @@ public class AzureLogStore implements LogStore
 	@Inject
 	@Named("logdata")
 	CloudTable logdata;
+
+	/**
+	 * N.B. included here so it can be discovered, used in {@link ServiceManagerGuiceModule#getLogDataTable}
+	 */
+	@Inject
+	@Doc("The azure table to use for storing log lines (if azure is enabled)")
+	@Named("azure.logging-table")
+	public String logTableName;
 
 
 	@Override

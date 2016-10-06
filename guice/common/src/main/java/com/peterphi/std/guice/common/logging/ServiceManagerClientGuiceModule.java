@@ -10,12 +10,12 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 
-public class ServiceManagerGuiceModule extends AbstractModule
+public class ServiceManagerClientGuiceModule extends AbstractModule
 {
 	private LogForwardDaemonPreGuice startup;
 
 
-	public ServiceManagerGuiceModule(GuiceConfig config, ShutdownManager shutdown)
+	public ServiceManagerClientGuiceModule(GuiceConfig config, ShutdownManager shutdown)
 	{
 		this.startup = new LogForwardDaemonPreGuice(shutdown, config);
 	}

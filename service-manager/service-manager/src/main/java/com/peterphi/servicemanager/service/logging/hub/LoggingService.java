@@ -1,9 +1,9 @@
 package com.peterphi.servicemanager.service.logging.hub;
 
 import com.google.inject.Inject;
-import com.google.inject.Singleton;
 import com.peterphi.servicemanager.service.logging.LogLineTableEntity;
 import com.peterphi.servicemanager.service.logging.LogStore;
+import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
 
@@ -12,7 +12,7 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
 
-@Singleton
+@EagerSingleton
 public class LoggingService
 {
 	private static final Logger log = Logger.getLogger(LoggingService.class);

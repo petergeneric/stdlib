@@ -11,7 +11,7 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
-import com.peterphi.std.guice.common.logging.ServiceManagerGuiceModule;
+import com.peterphi.std.guice.common.logging.ServiceManagerClientGuiceModule;
 import com.peterphi.std.guice.common.logging.appender.ServiceManagerAppender;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
@@ -263,7 +263,7 @@ class GuiceFactory
 		if (config.get("service.service-manager.endpoint") != null && !config.getBoolean(GuiceProperties.SERVICE_MANAGER_SKIP,
 		                                                                                 false))
 		{
-			modules.add(new ServiceManagerGuiceModule(config, shutdown.getShutdownManager()));
+			modules.add(new ServiceManagerClientGuiceModule(config, shutdown.getShutdownManager()));
 		}
 		else
 		{

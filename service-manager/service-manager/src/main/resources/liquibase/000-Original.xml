@@ -56,7 +56,7 @@
 				<constraints primaryKey="true" primaryKeyName="PK__resource_instance"/>
 			</column>
 			<column name="template_id" type="VARCHAR(255)">
-				<constraints nullable="false" foreignKeyName="FK__resource_instance__template_id" referencedTableName="resource_template" referencedColumnNames="id" deleteCascade="true"/>
+				<constraints nullable="false" />
 			</column>
 			<column name="template_revision_commit" type="VARCHAR(255)">
 				<constraints nullable="false"/>
@@ -81,9 +81,11 @@
 			</column>
 		</createTable>
 
+		<addForeignKeyConstraint constraintName="FK__resource_instance__template_id" baseTableName="resource_instance" baseColumnNames="template_id" referencedTableName="resource_template" referencedColumnNames="id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"/>
+
 		<createTable tableName="resource_instance_metadata">
 			<column name="resource_instance_id" type="INT">
-				<constraints nullable="false" foreignKeyName="FK__resource_instance_metadata__resource_instance_id" referencedTableName="resource_instance" referencedColumnNames="id" deleteCascade="true"/>
+				<constraints nullable="false" />
 			</column>
 			<column name="meta_name" type="VARCHAR(255)">
 				<constraints nullable="false"/>
@@ -91,6 +93,8 @@
 			<column name="meta_val" type="VARCHAR(4096)"/>
 		</createTable>
 
-		<addPrimaryKey tableName="resource_instance_metadata" columnNames="resource_instance_id, meta_name" constraintName="PK__resource_instance_metadata"/>
+		<addPrimaryKey constraintName="PK__resource_instance_metadata" tableName="resource_instance_metadata" columnNames="resource_instance_id, meta_name" />
+		<addForeignKeyConstraint constraintName="FK__resource_instance_metadata__resource_instance_id" baseTableName="resource_instance_metadata" baseColumnNames="resource_instance_id" referencedTableName="resource_instance" referencedColumnNames="id" deferrable="false" initiallyDeferred="false" onDelete="CASCADE" onUpdate="NO ACTION"/>
+
 	</changeSet>
 </databaseChangeLog>
