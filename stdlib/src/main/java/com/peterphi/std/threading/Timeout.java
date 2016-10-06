@@ -137,7 +137,7 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	/**
 	 * Get this timeout represented in a different unit
 	 *
-	 * @param unit
+	 * @param toUnit
 	 *
 	 * @return
 	 */
