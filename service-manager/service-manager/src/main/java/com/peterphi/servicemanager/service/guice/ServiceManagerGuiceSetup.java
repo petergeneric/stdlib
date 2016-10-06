@@ -21,7 +21,7 @@ public class ServiceManagerGuiceSetup implements GuiceSetup
 			modules.add(new RulesDaemonModule());
 			modules.add(new AzureModule());
 		}
-		
+
 		// Resource Provisioning
 		modules.add(new ResourceGuiceModule());
 		modules.add(new AzureModule()); // TODO only if Azure is enabled

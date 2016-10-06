@@ -12,6 +12,7 @@ import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
 import javax.persistence.ManyToOne;
 import javax.persistence.MapKeyColumn;
+import javax.persistence.Version;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -31,7 +32,7 @@ public class ResourceInstanceEntity
 
 	private Map<String, String> metadata = new HashMap<>();
 
-	private DateTime created;
+	private DateTime created = new DateTime();
 	private DateTime updated;
 
 
@@ -104,6 +105,7 @@ public class ResourceInstanceEntity
 
 
 	@Column(name = "updated_ts")
+	@Version
 	public DateTime getUpdated()
 	{
 		return updated;

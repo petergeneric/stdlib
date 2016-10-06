@@ -95,6 +95,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	{
 		try
 		{
+			log.trace("Load config data from " + config.path + " into " + config);
 			final ConfigPropertyData read = configService.read(config.path, configInstanceId, config.getLastRevision());
 
 			// Abort if the server returns no config - we have the latest revision

@@ -10,8 +10,13 @@ import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigReloadDaemon;
 public class ResourceNetworkConfig
 {
 	@Inject
-	public void setup(NetworkConfigReloadDaemon daemon, @Named("template-config") NetworkConfig templateConfig)
+	@Named("template-config")
+	public NetworkConfig config;
+
+
+	@Inject
+	public void setup(NetworkConfigReloadDaemon daemon)
 	{
-		daemon.register(templateConfig);
+		daemon.register(config);
 	}
 }

@@ -21,7 +21,7 @@ public class ResourceTemplateEntity
 
 	private List<ResourceInstanceEntity> instances = new ArrayList<>();
 
-	private DateTime created;
+	private DateTime created = new DateTime();
 	private DateTime updated;
 
 

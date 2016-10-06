@@ -7,6 +7,7 @@ import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Order;
+import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
@@ -24,6 +25,8 @@ public class ResourceInstanceDaoImpl extends HibernateDao<ResourceInstanceEntity
 		criteria.add(Restrictions.in("state", states));
 
 		criteria.addOrder(Order.asc("updated"));
+
+		criteria.setProjection(Projections.id());
 
 		return getIdList(criteria);
 	}

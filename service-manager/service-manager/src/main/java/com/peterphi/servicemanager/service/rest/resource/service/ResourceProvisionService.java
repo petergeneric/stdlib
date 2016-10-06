@@ -2,19 +2,19 @@ package com.peterphi.servicemanager.service.rest.resource.service;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
 import com.peterphi.servicemanager.service.db.entity.ResourceInstanceEntity;
 import com.peterphi.servicemanager.service.db.entity.ResourceTemplateEntity;
+import com.peterphi.servicemanager.service.guice.ResourceNetworkConfig;
 import com.peterphi.servicemanager.service.rest.resource.jaxb.AzureExistingVM;
 import com.peterphi.servicemanager.service.rest.resource.jaxb.ResourceTemplateDefinition;
 import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
-import com.peterphi.std.guice.common.serviceprops.net.NetworkConfig;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -30,8 +30,7 @@ public class ResourceProvisionService
 	HibernateDao<ResourceInstanceEntity, Integer> instanceDao;
 
 	@Inject
-	@Named("template-config")
-	public NetworkConfig templateConfig;
+	public ResourceNetworkConfig templateConfig;
 
 	@Inject
 	JAXBSerialiserFactory serialiserFactory;
@@ -78,7 +77,7 @@ public class ResourceProvisionService
 
 	public ResourceTemplateDefinition getTemplateDefinition(final String name)
 	{
-		final String rawTemplateData = templateConfig.properties.getRaw(name, null);
+		final String rawTemplateData = templateConfig.config.properties.getRaw(name, null);
 
 		if (rawTemplateData == null)
 			throw new IllegalArgumentException("No template definition data in config provider for name: " + name);
@@ -135,14 +134,23 @@ public class ResourceProvisionService
 	@Transactional
 	public List<ResourceInstanceEntity> getAllRunning(ResourceTemplateEntity template)
 	{
-		return template.getInstances().stream().filter(e -> e.getState().isProvisioned()).collect(Collectors.toList());
+		List<ResourceInstanceEntity> results = new ArrayList<>();
+
+		for (ResourceInstanceEntity instance : templateDao.getById(template.getId()).getInstances())
+		{
+			if (instance.getState().isProvisioned())
+				results.add(instance);
+		}
+
+		return results;
 	}
 
 
 	@Transactional
 	public ResourceTemplateEntity getOrCreateTemplate(final String name)
 	{
-		final String revision = templateConfig.getLastRevision();
+		final String revision = templateConfig.config.getLastRevision();
+
 		ResourceTemplateEntity entity = templateDao.getById(name);
 
 		if (entity != null)

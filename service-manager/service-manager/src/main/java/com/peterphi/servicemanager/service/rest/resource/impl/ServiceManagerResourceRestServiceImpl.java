@@ -17,6 +17,8 @@ import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
+import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.Map;
 
@@ -52,7 +54,8 @@ public class ServiceManagerResourceRestServiceImpl implements ServiceManagerReso
 	/**
 	 * N.B. no {@link Transactional} annotation because the inner service does transaction management
 	 *
-	 * @param id the instance id
+	 * @param id
+	 * 		the instance id
 	 *
 	 * @return
 	 */
@@ -83,12 +86,31 @@ public class ServiceManagerResourceRestServiceImpl implements ServiceManagerReso
 
 
 	@Override
+	public ResourceTemplateDTO getTemplateById(final String id)
+	{
+		ResourceTemplateEntity entity = service.getOrCreateTemplate(id);
+
+		if (entity == null)
+			throw new RestException(404, "No such resource instance with id: " + id);
+		else
+			return marshaller.marshal(entity);
+	}
+
+
+	@Override
 	@Transactional(readOnly = true)
 	public List<ResourceInstanceDTO> searchInstances(final WebQuery query)
 	{
 		final ConstrainedResultSet<ResourceInstanceEntity> results = instanceDao.findByUriQuery(query);
 
 		return marshaller.marshal(results.getList(), marshaller:: marshal);
+	}
+
+
+	@Override
+	public List<ResourceInstanceDTO> searchInstances(@Context final UriInfo info)
+	{
+		return searchInstances(new WebQuery().limit(200).decode(info));
 	}
 
 
