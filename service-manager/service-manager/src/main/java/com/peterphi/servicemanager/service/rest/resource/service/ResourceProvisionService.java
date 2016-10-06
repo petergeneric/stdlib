@@ -4,15 +4,16 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.servicemanager.service.db.entity.ResourceInstanceEntity;
-import com.peterphi.servicemanager.service.db.entity.ResourceInstanceState;
 import com.peterphi.servicemanager.service.db.entity.ResourceTemplateEntity;
 import com.peterphi.servicemanager.service.rest.resource.jaxb.AzureExistingVM;
 import com.peterphi.servicemanager.service.rest.resource.jaxb.ResourceTemplateDefinition;
+import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfig;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.Map;
@@ -21,14 +22,16 @@ import java.util.stream.Collectors;
 @Singleton
 public class ResourceProvisionService
 {
+	private static final Logger log = Logger.getLogger(ResourceProvisionService.class);
+
 	@Inject
 	HibernateDao<ResourceTemplateEntity, String> templateDao;
 	@Inject
 	HibernateDao<ResourceInstanceEntity, Integer> instanceDao;
 
 	@Inject
-	@Named("resource-template-config")
-	NetworkConfig templateConfig;
+	@Named("template-config")
+	public NetworkConfig templateConfig;
 
 	@Inject
 	JAXBSerialiserFactory serialiserFactory;
@@ -48,6 +51,8 @@ public class ResourceProvisionService
 		}
 		else if (instance.getState().mayDiscard())
 		{
+			log.info("Transition Instance #" + instanceId + ": " + instance.getState() + "->" + ResourceInstanceState.TO_DISCARD);
+
 			instance.setState(ResourceInstanceState.TO_DISCARD);
 			instanceDao.update(instance);
 		}
@@ -61,13 +66,13 @@ public class ResourceProvisionService
 	}
 
 
-	public void newInstance(String template, Map<String, String> metadata)
+	public ResourceInstanceEntity newInstance(String template, Map<String, String> metadata)
 	{
 		final ResourceTemplateDefinition def = getTemplateDefinition(template);
 
 		final ResourceTemplateEntity dbTemplate = getOrCreateTemplate(template);
 
-		newInstance(dbTemplate, def, metadata);
+		return newInstance(dbTemplate, def, metadata);
 	}
 
 
@@ -88,6 +93,8 @@ public class ResourceProvisionService
 	                                          final ResourceTemplateDefinition definition,
 	                                          Map<String, String> metadata)
 	{
+		log.info("Provision new instance of template:" + dbTemplate.getId());
+
 		final AzureExistingVM azureVM = definition.azureExistingVM;
 
 		// TODO when adding a second provider make this generic so providers can be easily plugged in
@@ -95,6 +102,7 @@ public class ResourceProvisionService
 
 		if (running.isEmpty())
 		{
+			log.info("Provision new instance of template: ");
 			ResourceInstanceEntity instance = new ResourceInstanceEntity();
 			instance.setTemplate(dbTemplate);
 			instance.setTemplateRevision(dbTemplate.getLatestRevision());

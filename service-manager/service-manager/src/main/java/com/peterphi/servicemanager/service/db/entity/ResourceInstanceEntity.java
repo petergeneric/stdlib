@@ -1,5 +1,6 @@
 package com.peterphi.servicemanager.service.db.entity;
 
+import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;

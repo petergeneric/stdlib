@@ -3,7 +3,6 @@ package com.peterphi.std.azure;
 import com.google.inject.Inject;
 import com.google.inject.Module;
 import com.microsoft.azure.CloudException;
-import com.microsoft.azure.management.compute.VirtualMachine;
 import com.peterphi.std.azure.guice.AzureModule;
 import com.peterphi.std.guice.testing.AbstractTestModule;
 import com.peterphi.std.guice.testing.GuiceUnit;
@@ -16,7 +15,6 @@ import org.junit.runner.RunWith;
 
 import java.io.IOException;
 import java.util.concurrent.ExecutionException;
-import java.util.concurrent.Future;
 
 /**
  * Created by bmcleod on 05/09/2016.
@@ -27,7 +25,7 @@ import java.util.concurrent.Future;
 public class AzureTest
 {
 	@Inject
-	AzureVMControl toTest;
+	AzureVMControlImpl toTest;
 
 
 	@TestModule

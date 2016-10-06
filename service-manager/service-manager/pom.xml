@@ -26,6 +26,11 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.peterphi.std.config</groupId>
+			<artifactId>service-manager-api</artifactId>
+			<version>${project.version}</version>
+		</dependency>
+		<dependency>
 			<groupId>com.peterphi.std</groupId>
 			<artifactId>stdlib</artifactId>
 			<version>${project.version}</version>
@@ -51,16 +56,19 @@
 				</exclusion>
 			</exclusions>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.peterphi.std</groupId>
 			<artifactId>stdlib-rules</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+		
 		<dependency>
 			<groupId>com.peterphi.std</groupId>
 			<artifactId>stdlib-azure</artifactId>
 			<version>${project.version}</version>
 		</dependency>
+
 		<dependency>
 			<groupId>javax.servlet</groupId>
 			<artifactId>servlet-api</artifactId>

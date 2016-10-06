@@ -1,4 +1,4 @@
-package com.peterphi.std.azure.guice;
+package com.peterphi.servicemanager.service.guice;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -7,11 +7,9 @@ import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
 
-/**
- * Created by bmcleod on 05/09/2016.
- */
 public class ServiceClientCredentialsProvider implements Provider<ServiceClientCredentials>
 {
+
 	@Inject
 	@Named("azure.app.client-id")
 	private String clientId;
@@ -26,7 +24,7 @@ public class ServiceClientCredentialsProvider implements Provider<ServiceClientC
 
 	@Inject(optional = true)
 	@Named("azure.environment")
-	private String azureEnvironmentName = "AZURE";
+	private String azureEnvironmentName = AzureEnvironment.AZURE.toString();
 
 
 	@Override

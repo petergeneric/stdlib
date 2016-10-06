@@ -2,7 +2,7 @@ package com.peterphi.servicemanager.service.db.dao.impl;
 
 import com.google.inject.Singleton;
 import com.peterphi.servicemanager.service.db.entity.ResourceInstanceEntity;
-import com.peterphi.servicemanager.service.db.entity.ResourceInstanceState;
+import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import org.hibernate.Criteria;

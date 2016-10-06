@@ -3,7 +3,7 @@ package com.peterphi.servicemanager.service.rest.resource.daemon;
 import com.google.inject.Inject;
 import com.peterphi.servicemanager.service.db.dao.impl.ResourceInstanceDaoImpl;
 import com.peterphi.servicemanager.service.db.entity.ResourceInstanceEntity;
-import com.peterphi.servicemanager.service.db.entity.ResourceInstanceState;
+import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
 import com.peterphi.servicemanager.service.rest.resource.service.AzureExistingVMProvider;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
@@ -65,18 +65,19 @@ public class AzureInstanceActionDaemon extends GuiceRecurringDaemon
 
 	public void handle(final ResourceInstanceEntity instance)
 	{
+		updateState(instance);
+
 		switch (instance.getState())
 		{
 			case TO_PROVISION:
+			case PROVISIONING:
 				start(instance);
 				return;
 			case TO_DISCARD:
+			case DISCARDING:
 				stop(instance);
 				return;
-			case PROVISIONING:
-			case DISCARDING:
 			default:
-				updateState(instance);
 				return;
 		}
 	}
@@ -86,6 +87,7 @@ public class AzureInstanceActionDaemon extends GuiceRecurringDaemon
 	private void start(final ResourceInstanceEntity instance)
 	{
 		azure.start(instance.getProviderInstanceId());
+
 		instance.setState(ResourceInstanceState.PROVISIONING);
 	}
 
@@ -94,6 +96,7 @@ public class AzureInstanceActionDaemon extends GuiceRecurringDaemon
 	private void stop(final ResourceInstanceEntity instance)
 	{
 		azure.stop(instance);
+
 		instance.setState(ResourceInstanceState.DISCARDING);
 	}
 
@@ -101,8 +104,8 @@ public class AzureInstanceActionDaemon extends GuiceRecurringDaemon
 	// Check in with Azure on the instance state
 	private void updateState(final ResourceInstanceEntity instance)
 	{
-		// Poll the Azure VM API to determine the state
-		// If stopped, instance.setState(ResourceInstanceState.DISCARDED)
-		// If running, instance.setState(ResourceInstanceState.IN_SERVICE)
+		ResourceInstanceState actual = azure.determineState(instance);
+
+		instance.setState(actual);
 	}
 }

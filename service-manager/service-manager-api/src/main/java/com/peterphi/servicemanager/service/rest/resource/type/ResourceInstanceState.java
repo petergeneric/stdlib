@@ -1,4 +1,4 @@
-package com.peterphi.servicemanager.service.db.entity;
+package com.peterphi.servicemanager.service.rest.resource.type;
 
 public enum ResourceInstanceState
 {
