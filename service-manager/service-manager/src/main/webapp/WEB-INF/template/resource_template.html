@@ -75,7 +75,7 @@
 			<td th:text="${currentUser.format(inst.created)}"></td>
 			<td th:text="${currentUser.format(inst.updated)}"></td>
 			<td>
-				<form method="POST" th:action="@{/resources/resource-instances/discard}">
+				<form method="POST" th:action="@{/resources/resource-instances/discard}" th:if="${inst.state.mayDiscard()}">
 					<input type="hidden" name="id" th:value="${inst.id}" />
 					<input type="hidden" name="nonce" th:value="${nonce}" />
 
