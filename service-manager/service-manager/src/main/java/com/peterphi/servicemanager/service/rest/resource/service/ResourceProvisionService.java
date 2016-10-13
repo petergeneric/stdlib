@@ -40,7 +40,7 @@ public class ResourceProvisionService
 
 
 	@Transactional
-	public void discardInstance(final int instanceId)
+	public ResourceInstanceEntity discardInstance(final int instanceId)
 	{
 		final ResourceInstanceEntity instance = instanceDao.getById(instanceId);
 
@@ -54,6 +54,8 @@ public class ResourceProvisionService
 
 			instance.setState(ResourceInstanceState.TO_DISCARD);
 			instanceDao.update(instance);
+
+			return instance;
 		}
 		else
 		{

@@ -8,6 +8,7 @@ import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
+import javax.persistence.OrderBy;
 import javax.persistence.Version;
 import java.util.ArrayList;
 import java.util.List;
@@ -48,6 +49,7 @@ public class ResourceTemplateEntity
 
 
 	@OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OrderBy("state")
 	public List<ResourceInstanceEntity> getInstances()
 	{
 		return instances;

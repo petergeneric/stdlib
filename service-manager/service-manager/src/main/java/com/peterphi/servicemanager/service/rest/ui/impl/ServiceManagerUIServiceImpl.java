@@ -55,7 +55,7 @@ public class ServiceManagerUIServiceImpl implements ServiceManagerUIService
 	@Override
 	public Response getIndex()
 	{
-		return Response.seeOther(URI.create("/logs/tail")).build();
+		return Response.seeOther(URI.create("/resources")).build();
 	}
 
 
