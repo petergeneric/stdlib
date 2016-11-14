@@ -41,8 +41,11 @@ public class ConfigGuiceModule extends AbstractModule
 	                                      @Named("repo.config.remote")
 	                                      final String remote) throws IOException, URISyntaxException, GitAPIException
 	{
+		log.info("Repo path "+workingDirectory+ ", reclone: "+reclone);
+
 		if (reclone && workingDirectory.exists())
 		{
+			log.info("Recloning "+workingDirectory);
 			File[] files = workingDirectory.listFiles();
 
 			if (files != null)

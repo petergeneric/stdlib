@@ -65,13 +65,13 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			return invocation.proceed();
 
 		if (log.isTraceEnabled())
-			log.trace("Check authz for: " + invocation);
+			log.trace("Check authn for: " + invocation.getMethod());
 
 		// Skip auth if we're not inside a Servlet call and we are only to enforce auth constraints on service calls
 		if (onlyServletRequest && HttpCallContext.peek() == null)
 		{
 			if (log.isTraceEnabled())
-				log.trace("Skip authz, should only run on servlet requests and this is not a servlet request");
+				log.trace("Skip authn, should only run on servlet requests and this is not a servlet request");
 
 			return invocation.proceed();
 		}

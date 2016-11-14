@@ -20,4 +20,11 @@ public class GuiceConstants
 
 	@Doc("CurrentUser retrieved from OAuth2 (delegates to remote OAuth2 provider)")
 	public static final String JAXRS_SERVER_WEBAUTH_OAUTH2_PROVIDER = "oauth2";
+
+
+	public static final String CONFIG_SOURCE_NETWORK = "network";
+	public static final String CONFIG_SOURCE_LOCAL = "local";
+
+	@Doc("If set for jaxrs exception highlight then the value of scan.packages will be used")
+	public static final String JAXRS_EXCEPTION_HIGHLIGHT_SCAN_PACKAGES = "scan-packages";
 }

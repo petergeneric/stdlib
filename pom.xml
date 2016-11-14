@@ -77,6 +77,8 @@
 		<module>util/carbon-client</module>
 		<module>service-manager</module>
 		<module>user-manager</module>
+		<module>rules</module>
+		<module>azure</module>
 	</modules>
 
 	<dependencyManagement>

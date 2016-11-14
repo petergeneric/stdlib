@@ -9,6 +9,8 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
+import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyReader;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
@@ -161,15 +163,16 @@ class GuicedResteasy implements GuiceApplication
 		try
 		{
 			// Share the call id to log4j
-			MDC.put("call.id", ctx.getLogId());
-			MDC.put("remote_addr", ctx.getRequest().getRemoteAddr());
-			MDC.put("context_path", ctx.getServletContext().getContextPath());
+			MDC.put(LoggingMDCConstants.TRACE_ID, ctx.getLogId());
+			MDC.put(LoggingMDCConstants.HTTP_REMOTE_ADDR, ctx.getRequest().getRemoteAddr());
+			MDC.put(LoggingMDCConstants.SERVLET_CONTEXT_PATH, ctx.getServletContext().getContextPath());
+			MDC.put(LoggingMDCConstants.HTTP_REQUEST_URI, ctx.getRequest().getRequestURI());
 
 			// Add the session id (if present)
 			final HttpSession session = ctx.getRequest().getSession(false);
 			if (session != null)
 			{
-				MDC.put("session_id", session.getId());
+				MDC.put(LoggingMDCConstants.HTTP_SESSION_ID, session.getId());
 			}
 
 			try
@@ -223,9 +226,7 @@ class GuicedResteasy implements GuiceApplication
 	                                HttpServletResponse response,
 	                                Throwable t) throws ServletException, IOException, RuntimeException, Error
 	{
-		if (suppressClientAbortExceptions &&
-		    t instanceof UnhandledException &&
-		    t.getCause() != null)
+		if (suppressClientAbortExceptions && t instanceof UnhandledException && t.getCause() != null)
 		{
 			// Only look 20 exceptions deep
 			int maxDepth = 20;
@@ -336,6 +337,7 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory.registerProviderInstance(provider);
 		}
 
+		providerFactory.registerProviderInstance(new LogReportMessageBodyReader());
 		// Register the JAXBContext provider
 		providerFactory.registerProviderInstance(jaxbContextResolver);
 

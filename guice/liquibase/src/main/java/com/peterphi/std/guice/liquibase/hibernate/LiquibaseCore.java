@@ -13,6 +13,7 @@ import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
 import liquibase.exception.LiquibaseException;
+import liquibase.logging.LogFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.FileSystemResourceAccessor;
@@ -40,6 +41,11 @@ import java.util.Properties;
 class LiquibaseCore
 {
 	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
+
+	static
+	{
+		LogFactory.setInstance(new LiquibaseLog4j());
+	}
 
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
@@ -214,6 +220,7 @@ class LiquibaseCore
 			}
 
 			Liquibase liquibase = new Liquibase(changeLogFile, resourceAccessor, database);
+
 
 			for (Map.Entry<String, String> param : parameters.entrySet())
 			{

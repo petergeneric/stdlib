@@ -12,7 +12,13 @@ import javax.servlet.http.HttpServletResponse;
  */
 public class HttpCallContext
 {
-	private static ThreadLocal<HttpCallContext> contexts = new ThreadLocal<HttpCallContext>();
+	/**
+	 * The number of bytes to use when generating a random trace id
+	 */
+	private static final int TRACE_ID_LENGTH = 10;
+	public static final String HTTP_HEADER_CORRELATION_ID = "X-Correlation-ID";
+	private static ThreadLocal<HttpCallContext> contexts = new ThreadLocal<>();
+
 
 	/**
 	 * Retrieve the HttpCallContext associated with this Thread
@@ -32,6 +38,7 @@ public class HttpCallContext
 			throw new IllegalStateException("Not in an HttpCallContext!");
 	}
 
+
 	/**
 	 * Retrieve the HttpCallContext associated with this Thread (or null if none is associated)
 	 *
@@ -45,10 +52,12 @@ public class HttpCallContext
 		return contexts.get();
 	}
 
+
 	public static void clear()
 	{
 		contexts.remove();
 	}
+
 
 	/**
 	 * Creates and associates an HttpCallContext with the current Thread
@@ -60,11 +69,29 @@ public class HttpCallContext
 	 */
 	public static HttpCallContext set(HttpServletRequest request, HttpServletResponse response, ServletContext servletContext)
 	{
-		final HttpCallContext ctx = new HttpCallContext(request, response, servletContext);
+		final HttpCallContext ctx = new HttpCallContext(generateTraceId(request), request, response, servletContext);
 
 		contexts.set(ctx);
 
 		return ctx;
+	}
+
+
+	/**
+	 * Generates a trace id (or uses the existing trace id passed in from the requesting service)
+	 *
+	 * @param request
+	 *
+	 * @return
+	 */
+	private static String generateTraceId(final HttpServletRequest request)
+	{
+		final String existing = request.getHeader(HTTP_HEADER_CORRELATION_ID);
+
+		if (existing == null)
+			return SimpleId.alphanumeric(TRACE_ID_LENGTH);
+		else
+			return existing;
 	}
 
 	// Instance fields and methods
@@ -76,20 +103,6 @@ public class HttpCallContext
 	private final HttpServletResponse response;
 	private final ServletContext servletContext;
 
-	public HttpCallContext(HttpServletRequest request, HttpServletResponse response, ServletContext servletContext)
-	{
-		this(generateLogId(), request, response, servletContext);
-	}
-
-	/**
-	 * Generates an id for a call to be used when logging
-	 *
-	 * @return
-	 */
-	private static String generateLogId()
-	{
-		return SimpleId.alphanumeric(5);
-	}
 
 	public HttpCallContext(String logId, HttpServletRequest request, HttpServletResponse response, ServletContext servletContext)
 	{
@@ -99,25 +112,30 @@ public class HttpCallContext
 		this.servletContext = servletContext;
 	}
 
+
 	public String getLogId()
 	{
 		return logId;
 	}
+
 
 	public HttpServletRequest getRequest()
 	{
 		return request;
 	}
 
+
 	public HttpServletResponse getResponse()
 	{
 		return response;
 	}
 
+
 	public ServletContext getServletContext()
 	{
 		return servletContext;
 	}
+
 
 	/**
 	 * Returns a string representation of the request (e.g. "GET /webapp/rest/resource?a=b")
@@ -135,5 +153,4 @@ public class HttpCallContext
 		else
 			return method + " " + uri + "?" + qs;
 	}
-
 }

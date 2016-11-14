@@ -1,0 +1,21 @@
+package logreport
+
+type LogReport struct {
+       serviceId       text
+       lines           []LogLine
+}
+
+type LogLine struct {
+       when            int64
+       category        text
+       level           uint32
+
+       requestUri      text
+       thread          text
+       userId          text
+       traceId         text
+
+       exceptionId     text
+       exception       text
+       message         text
+}

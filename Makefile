@@ -28,12 +28,28 @@ all: install
 #
 
 config-service-full:
-	$(MVN) package -DskipTests=true -am --projects configuration/configuration
-	rsync -avzr --progress configuration/configuration/target/*.war /opt/tomcat/webapps/config.war
+	$(MVN) package -DskipTests=true -am --projects service-manager/configuration
+	rsync -avzr --progress service-manager/configuration/target/*.war /opt/tomcat/webapps/config.war
 
 uman:
 	$(MVN) package -DskipTests=true -am --projects user-manager/service
 	rsync -avzr --progress user-manager/service/target/*.war /opt/tomcat/webapps/user-manager.war
+
+sman:
+	$(MVN) package -DskipTests=true -am --projects service-manager/service-manager
+	rsync -avzr --progress service-manager/service-manager/target/*.war /opt/tomcat/webapps/service-manager.war	
+smtail:
+	rsync -avzr --progress service-manager/service-manager/src/main/webapp/vendor/logui-SNAPSHOT/* /opt/tomcat/webapps/service-manager/vendor/logui-SNAPSHOT/
+	rsync -avzr --progress service-manager/service-manager/src/main/webapp/WEB-INF/template/* /opt/tomcat/webapps/service-manager/WEB-INF/template/
+
+#
+#
+# Code Generation
+#
+#
+colf:
+	-rm guice/common/src/main/java/com/peterphi/std/guice/common/logging/logreport/*.java
+	colf -b guice/common/src/main/java/ -p com/peterphi/std/guice/common/logging java guice/common/src/main/colfer/logreport.colf
 
 #
 #
@@ -72,6 +88,8 @@ release:
 
 #clone the deployment repo
 az-clone = git clone --branch master $(1) $(TEMP_LOC)
+#pull on an existing checkout
+az-pull = cd $(TEMP_LOC) ; git pull ; cd $(ORI_LOC) ;
 #copy files to the deployment repo
 az-sync = rsync -a --delete $(WEBAPP_PATH)/target/$(WEBAPP_BUILD_NAME)-$(CURRENT_VERSION).war $(TEMP_LOC)/webapps/$(WEBAPP_TARGET_NAME).war
 #add or remove files
@@ -83,11 +101,19 @@ az-cleanup = rm -rf $(TEMP_LOC)
 
 
 define az-deploy =
+ifndef CO_PATH
 	$(call az-clone,$(giturl))
+endif
+ifdef CO_PATH
+	$(eval TEMP_LOC := ${CO_PATH})
+	$(call az-pull)
+endif
 	$(call az-sync)
 	$(call az-addrm)
 	$(call az-commit)
+ifndef CO_PATH
 	$(call az-cleanup)
+endif
 endef
 
 azurls:
@@ -101,7 +127,7 @@ azlocs:
 	$(eval ORI_LOC := $(shell pwd))
 
 configservce-az: azurls azlocs package
-	$(eval WEBAPP_PATH := configuration/configuration)
+	$(eval WEBAPP_PATH := service-manager/configuration)
 	$(eval WEBAPP_BUILD_NAME := configuration)
 	$(eval WEBAPP_TARGET_NAME := configuration)
 	$(call az-deploy)
@@ -112,9 +138,21 @@ usermanager-az: azurls azlocs package
 	$(eval WEBAPP_TARGET_NAME := user-manager)
 	$(call az-deploy)
 
+servicemanager-az: azurls azlocs package
+	$(eval WEBAPP_PATH := service-manager/service-manager)
+	$(eval WEBAPP_BUILD_NAME := service-manager)
+	$(eval WEBAPP_TARGET_NAME := service-manager)
+	$(call az-deploy)
+
 sm-az: azurls azlocs package
+ifndef CO_PATH
 	$(call az-clone,$(giturl))
-	$(eval WEBAPP_PATH := configuration/configuration)
+endif
+ifdef CO_PATH
+	$(eval TEMP_LOC := ${CO_PATH})
+	$(call az-pull)
+endif
+	$(eval WEBAPP_PATH := service-manager/configuration)
 	$(eval WEBAPP_BUILD_NAME := configuration)
 	$(eval WEBAPP_TARGET_NAME := configuration)
 	$(call az-sync)
@@ -124,8 +162,15 @@ sm-az: azurls azlocs package
 	$(eval WEBAPP_TARGET_NAME := user-manager)
 	$(call az-sync)
 	$(call az-addrm)
+	$(eval WEBAPP_PATH := service-manager/service-manager)
+	$(eval WEBAPP_BUILD_NAME := service-manager)
+	$(eval WEBAPP_TARGET_NAME := service-manager)
+	$(call az-sync)
+	$(call az-addrm)
 	$(call az-commit)
+ifndef CO_PATH
 	$(call az-cleanup)
+endif
 
 
 

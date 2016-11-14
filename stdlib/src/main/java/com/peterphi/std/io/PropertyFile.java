@@ -137,7 +137,7 @@ public class PropertyFile
 				throw new IllegalArgumentException("Error finding property files in classpath: " + Arrays.asList(fileNames));
 		}
 		else if (log.isInfoEnabled())
-			log.info("[PropertyFile] {find} Loading properties from " + resolvedFile);
+			log.info("{find} Loading properties from " + resolvedFile);
 
 		return openResource(classloader, resolvedResource, resolvedFile);
 	}
@@ -151,9 +151,6 @@ public class PropertyFile
 
 	public static PropertyFile fromString(final String contents, final String filename)
 	{
-		if (log.isTraceEnabled())
-			log.trace("[ProprtyFile] {fromString} filename " + filename);
-
 		PropertyFile props = new PropertyFile();
 		try
 		{
@@ -174,7 +171,7 @@ public class PropertyFile
 		try
 		{
 			if (log.isTraceEnabled())
-				log.trace("[PropertyFile] {find} Resource search results: " + resource);
+				log.trace("{find} Resource search results: " + resource);
 
 			if (resource.getProtocol().equalsIgnoreCase("file"))
 			{
@@ -597,7 +594,7 @@ public class PropertyFile
 	public boolean containsKey(final String name)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {containsKey} key=" + name);
+			log.trace("{containsKey} key=" + name);
 
 		return _contains(name);
 	}
@@ -612,7 +609,7 @@ public class PropertyFile
 	public String get(final String name, final String defaultValue)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {get} key=" +
+			log.trace("{get} key=" +
 			          name +
 			          "; default=" +
 			          defaultValue +
@@ -804,7 +801,7 @@ public class PropertyFile
 	public String set(final String name, final String value)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {set} key=" + name + "; value=" + value);
+			log.trace("{set} key=" + name + "; value=" + value);
 
 		return _set(name, value);
 	}
@@ -839,7 +836,7 @@ public class PropertyFile
 	public void remove(final String name)
 	{
 		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {remove} key=" + name);
+			log.trace("{remove} key=" + name);
 
 		_rm(name);
 	}
@@ -982,7 +979,7 @@ public class PropertyFile
 							NameValuePair nvp = new NameValuePair(name, value);
 							if (vars.containsKey(nvp.name))
 							{
-								log.warn("[PropertyFile] {load} duplicate entry: overwriting previous value");
+								log.warn("{load} duplicate entry '" + nvp.name + "': overwriting previous value");
 							}
 
 							entries.add(nvp);
@@ -1042,9 +1039,6 @@ public class PropertyFile
 
 	protected void _clear()
 	{
-		if (log.isTraceEnabled())
-			log.trace("[PropertyFile] {_clear}");
-
 		if (readOnly)
 			throw new UnsupportedOperationException("Cannot modify a read-only collection");
 

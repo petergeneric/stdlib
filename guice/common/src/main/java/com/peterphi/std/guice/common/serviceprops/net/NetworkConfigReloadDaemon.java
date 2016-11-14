@@ -28,7 +28,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	 * Uniquely identifies us to the configuration provider (e.g. for proactive updates)
 	 */
 	@Inject
-	@Named(GuiceProperties.CONFIG_INSTANCE_ID)
+	@Named(GuiceProperties.INSTANCE_ID)
 	public String configInstanceId;
 
 	/**
@@ -95,6 +95,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	{
 		try
 		{
+			log.trace("Load config data from " + config.path + " into " + config);
 			final ConfigPropertyData read = configService.read(config.path, configInstanceId, config.getLastRevision());
 
 			// Abort if the server returns no config - we have the latest revision

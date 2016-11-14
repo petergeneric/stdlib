@@ -114,7 +114,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	@Override
+	@Deprecated
 	public List<T> getByIds(final Collection<ID> ids)
+	{
+		return getListById(ids);
+	}
+
+	@Override
+	public List<T> getListById(final Collection<ID> ids)
 	{
 		if (ids.isEmpty())
 			return new ArrayList<>();

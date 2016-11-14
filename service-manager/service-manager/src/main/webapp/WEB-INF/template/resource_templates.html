@@ -1,0 +1,52 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<meta th:substituteby="includes :: htmlhead"/>
+	<title>Service Manager - Templates</title>
+
+	<style th:fragment="htmlhead">
+		pre {
+			font-size: 11px;
+		}
+
+		body {
+			padding-bottom: 40px;
+		}
+
+		.dl-horizontal > dd:after {
+			display: table;
+			content: "";
+			clear: both;
+		}
+	</style>
+</head>
+
+<body th:with="page='resources'">
+<span th:substituteby="includes :: navbar"></span>
+
+<div class="container">
+	<h1>Templates</h1>
+
+	<table class="table">
+		<thead>
+		<tr>
+			<th>Name</th>
+			<th>Revisions</th>
+			<th>Latest Revision</th>
+		</tr>
+		</thead>
+		<tbody>
+		<tr th:each="entity: ${entities}">
+			<td><a th:href="@{'/resources/template/' + ${entity.id}}" th:text="${entity.id}"></a></td>
+			<td th:text="${entity.revisions}"></td>
+			<td th:text="${entity.latestRevision}"></td>
+		</tr>
+		</tbody>
+	</table>
+
+	<p th:substituteby="includes :: footer"/>
+</div>
+
+<p th:substituteby="includes :: htmlfoot"/>
+</body>
+</html>

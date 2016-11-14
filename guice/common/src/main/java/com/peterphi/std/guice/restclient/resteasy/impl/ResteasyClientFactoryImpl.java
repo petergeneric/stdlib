@@ -4,10 +4,15 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
+import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyWriter;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
+import org.apache.http.HttpException;
+import org.apache.http.HttpRequest;
+import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -22,12 +27,16 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.http.protocol.HttpContext;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.MDC;
 
+import java.io.IOException;
 import java.net.ProxySelector;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -92,6 +101,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
 
+		// Register the LogReport reader
+		// TODO find a better way to handle registration for external applications?
+		resteasyProviderFactory.registerProviderInstance(new LogReportMessageBodyWriter());
+
 		// Register the exception processor
 		if (remoteExceptionClientResponseFilter != null)
 			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
@@ -116,7 +129,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	 * @param credentials
 	 * 		the credentials to use (optional, e.g. {@link org.apache.http.auth.UsernamePasswordCredentials})
 	 * @param customiser
-	 * 		optional HttpClientBuilder customiser
+	 * 		optional HttpClientBuilder customiser.
 	 *
 	 * @return
 	 */
@@ -201,6 +214,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// If cookies are enabled then set up a cookie store
 		if (storeCookies)
 			customiser = concat(customiser, b -> b.setDefaultCookieStore(new BasicCookieStore()));
+
 		return customiser;
 	}
 
@@ -212,13 +226,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		{
 			// Recursively call self to create a shared client for other non-customised consumers
 			if (client == null)
-				client = getOrCreateClient(b ->
-				                           {
-					                           // nothing to customise, supplied so we don't take this code path again
-				                           }, b ->
-				                           {
-					                           // nothing to customise, supplied so we don't take this code path again
-				                           });
+				client = getOrCreateClient(Objects:: requireNonNull, Objects:: requireNonNull);
 
 			return client; // use shared client
 		}
@@ -273,6 +281,20 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// By default use the JRE default route planner for proxies
 		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
 
+		// If a correlation id is set locally then make sure we pass it along to the remote service
+		// N.B. we use the value from the MDC because the correlation id could be for a internal task
+		builder.addInterceptorFirst(new HttpRequestInterceptor()
+		{
+			@Override
+			public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException
+			{
+				final String traceId = MDC.get(LoggingMDCConstants.TRACE_ID);
+
+				if (traceId != null)
+					request.addHeader("X-Correlation-ID", traceId);
+			}
+		});
+
 		// Allow customisation
 		if (customiser != null)
 			customiser.accept(builder);
@@ -282,27 +304,25 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 
 	/**
-	 * Combine a number of consumers together, ignoring nulls
+	 * Combine two consumers. Consumers may be null, in which case this selects the non-null one. If both are null then will
+	 * return <code>null</code>
 	 *
-	 * @param consumers
+	 * @param a
+	 * 		the first consumer (optional)
+	 * @param b
+	 * 		the second consumer (optional)
 	 * @param <T>
 	 *
 	 * @return
 	 */
-	private static <T> Consumer<T> concat(Consumer<T>... consumers)
+	private static <T> Consumer<T> concat(Consumer<T> a, Consumer<T> b)
 	{
-		Consumer<T> rootConsumer = null;
-
-		for (Consumer<T> consumer : consumers)
-			if (consumer != null)
-			{
-				if (rootConsumer == null)
-					rootConsumer = consumer;
-				else
-					rootConsumer = rootConsumer.andThen(consumer);
-			}
-
-		return rootConsumer;
+		if (a != null && b != null) // both non-null
+			return a.andThen(b);
+		else if (a != null)
+			return a;
+		else
+			return b;
 	}
 
 

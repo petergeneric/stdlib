@@ -94,7 +94,6 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 
 		if (ctx == null)
 		{
-			System.out.println("HttpCallContext not present!!");
 			return false; // Not an HTTP call!
 		}
 
