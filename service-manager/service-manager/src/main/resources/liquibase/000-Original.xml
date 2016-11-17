@@ -34,7 +34,7 @@
 
 	<changeSet author="peter@peterphi.com" id="create_resource_tables">
 		<createTable tableName="resource_template">
-			<column autoIncrement="true" name="id" type="VARCHAR(255)">
+			<column name="id" type="VARCHAR(255)">
 				<constraints primaryKey="true" primaryKeyName="PK__resource_template"/>
 			</column>
 			<column name="revision_commit" type="VARCHAR(255)">
