@@ -1,20 +1,29 @@
 package com.peterphi.std.guice.web.rest.service.jwt;
 
-import com.auth0.jwt.JWTSigner;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.web.HttpCallContext;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import org.apache.commons.lang.StringUtils;
+import org.jose4j.jws.AlgorithmIdentifiers;
+import org.jose4j.jws.JsonWebSignature;
+import org.jose4j.jwt.JwtClaims;
+import org.jose4j.jwt.MalformedClaimException;
+import org.jose4j.jwt.consumer.InvalidJwtException;
+import org.jose4j.jwt.consumer.JwtConsumer;
+import org.jose4j.jwt.consumer.JwtConsumerBuilder;
+import org.jose4j.jwx.HeaderParameterNames;
+import org.jose4j.keys.HmacKey;
+import org.jose4j.lang.JoseException;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 import java.net.URI;
-import java.util.Map;
+import java.nio.charset.StandardCharsets;
 
 /**
  *
@@ -61,19 +70,44 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 		final Long expireTime;
 		if (token == null)
 		{
-			// Decode JSON from payload object
-			Map<String, Object> claims = JSONUtil.parse(payload);
+			try
+			{
+				JwtClaims claims = JwtClaims.parse(payload);
 
-			expireTime = (Long) claims.get("exp");
+				if (claims.getExpirationTime() != null)
+					expireTime = claims.getExpirationTime().getValueInMillis();
+				else
+					expireTime = null;
 
-			JWTSigner signer = new JWTSigner(secret);
-
-			token = signer.sign(claims);
+				token = createJWT(secret, payload);
+			}
+			catch (InvalidJwtException | MalformedClaimException | JoseException e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 		else
 		{
-			Map<String, Object> claims = JWTInspector.getClaims(token);
-			expireTime = (Long) claims.get("exp");
+			// User has provided a JWT. We should simply parse it and extract the expiry time (for the cookie)
+			try
+			{
+				JwtConsumer jwtConsumer = new JwtConsumerBuilder()
+						                          .setSkipAllValidators()
+						                          .setDisableRequireSignature()
+						                          .setSkipSignatureVerification()
+						                          .build();
+
+				final JwtClaims claims = jwtConsumer.processToClaims(token);
+
+				if (claims.getExpirationTime() != null)
+					expireTime = claims.getExpirationTime().getValueInMillis();
+				else
+					expireTime = null;
+			}
+			catch (InvalidJwtException | MalformedClaimException e)
+			{
+				throw new RuntimeException(e);
+			}
 		}
 
 		final boolean save = StringUtils.equalsIgnoreCase("save", op);
@@ -98,7 +132,9 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 			final HttpSession session = HttpCallContext.get().getRequest().getSession(false);
 
 			if (session != null)
+			{
 				session.invalidate();
+			}
 
 			// Now add the JWT cookie
 			HttpCallContext.get().getResponse().addCookie(cookie);
@@ -108,5 +144,21 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 		template.set("token", token);
 
 		return template.process();
+	}
+
+
+	public static String createJWT(final String secret, final String payload) throws JoseException
+	{
+		String token;
+		JsonWebSignature sig = new JsonWebSignature();
+		//sig.setKey(new HmacKey(DigestUtils.sha256(secret.getBytes(StandardCharsets.UTF_8))));
+		sig.setKey(new HmacKey(secret.getBytes(StandardCharsets.UTF_8)));
+		sig.setDoKeyValidation(false);
+		sig.setPayload(payload);
+		sig.setAlgorithmHeaderValue(AlgorithmIdentifiers.HMAC_SHA256);
+		sig.setHeader(HeaderParameterNames.TYPE, "JWT");
+
+		token = sig.getCompactSerialization();
+		return token;
 	}
 }

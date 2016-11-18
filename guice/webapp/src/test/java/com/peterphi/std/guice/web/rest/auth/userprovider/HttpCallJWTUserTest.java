@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
-import com.auth0.jwt.internal.org.apache.commons.codec.binary.Base64;
+import org.apache.commons.codec.binary.Base64;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;

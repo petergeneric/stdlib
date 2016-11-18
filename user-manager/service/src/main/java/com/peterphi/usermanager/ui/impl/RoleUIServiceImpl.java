@@ -155,7 +155,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		if (entity == null)
 			throw new IllegalArgumentException("No such Role: " + id);
 
-		final List<UserEntity> users = userDao.getByIds(members);
+		final List<UserEntity> users = userDao.getListById(members);
 
 		if (users.size() != members.size())
 			throw new IllegalArgumentException("One or more members provided did not exist! " + members);

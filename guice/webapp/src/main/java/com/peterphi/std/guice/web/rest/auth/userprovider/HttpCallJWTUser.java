@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
-import com.auth0.jwt.JWTVerifier;
-import com.auth0.jwt.JWTVerifyException;
 import com.google.common.base.Objects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -112,7 +110,7 @@ class HttpCallJWTUser implements CurrentUser
 	}
 
 
-	private Map<String, Object> parseToken(final String token) throws NoSuchAlgorithmException, InvalidKeyException, IOException, SignatureException, JWTVerifyException
+	private Map<String, Object> parseToken(final String token) throws NoSuchAlgorithmException, InvalidKeyException, IOException, SignatureException
 	{
 		final Map<String, Object> cached = TOKEN_CACHE.getIfPresent(token);
 

@@ -12,7 +12,7 @@ public class RingBuffer<T>
 	private int next = 0;
 	private boolean full = false;
 
-
+	@SuppressWarnings("unchecked")
 	public RingBuffer(Class<T> clazz, final int size)
 	{
 		array = (T[]) Array.newInstance(clazz, size);

@@ -1,6 +1,5 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
-import com.auth0.jwt.JWTVerifier;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.HttpCallContext;
