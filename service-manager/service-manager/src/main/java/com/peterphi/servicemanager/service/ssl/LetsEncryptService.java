@@ -9,6 +9,7 @@ import com.peterphi.servicemanager.service.db.entity.LetsEncryptAccountEntity;
 import com.peterphi.servicemanager.service.db.entity.LetsEncryptCertificateEntity;
 import com.peterphi.servicemanager.service.dns.AzureDNS;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.threading.Timeout;
 import org.apache.log4j.Logger;
@@ -34,6 +35,7 @@ import java.io.OutputStreamWriter;
 import java.nio.charset.StandardCharsets;
 import java.security.KeyPair;
 import java.security.cert.X509Certificate;
+import java.util.concurrent.TimeUnit;
 
 @Singleton
 public class LetsEncryptService
@@ -301,7 +303,8 @@ public class LetsEncryptService
 	}
 
 
-	private void proveOwnership(final String domain)
+	@Retry
+	public void proveOwnership(final String domain)
 	{
 		Registration registration = getRegistration();
 
@@ -326,6 +329,11 @@ public class LetsEncryptService
 
 		// Create the TXT record
 		dns.createDNSRecord(domainName, RecordType.TXT, challenge.getDigest());
+
+		// Wait for a short time for the change to DNS records to propagate through Microsoft's system
+		// N.B. there's no docs suggesting this is needed or that this is the right value, but Let's Encrypt challenges
+		//      seem to fail more regularly against the live API without this wait
+		new Timeout(5, TimeUnit.SECONDS).sleep();
 
 		// Allow the CA to start checking the TXT record
 		try
@@ -359,7 +367,7 @@ public class LetsEncryptService
 			}
 			catch (AcmeException e)
 			{
-				throw new RuntimeException("Error updating authorisation for " + domain, e);
+				log.warn("Error updating challenge", e);
 			}
 		}
 
@@ -369,8 +377,12 @@ public class LetsEncryptService
 
 		if (challenge.getStatus() != Status.VALID)
 		{
-			log.error("Challenge " + challenge + " failed for " + domainName + "! " + challenge.getStatus());
-			return;
+			throw new RuntimeException("Challenge " +
+			                           challenge +
+			                           " failed for " +
+			                           domainName +
+			                           "! Failed with state " +
+			                           challenge.getStatus());
 		}
 		else
 		{
