@@ -5,12 +5,8 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.microsoft.azure.AzureEnvironment;
 import com.microsoft.azure.credentials.ApplicationTokenCredentials;
-import com.microsoft.rest.credentials.ServiceClientCredentials;
 
-/**
- * Created by bmcleod on 05/09/2016.
- */
-public class ServiceClientCredentialsProvider implements Provider<ServiceClientCredentials>
+public class AzureCredentialsProvider implements Provider<ApplicationTokenCredentials>
 {
 	@Inject
 	@Named("azure.app.client-id")
@@ -30,7 +26,7 @@ public class ServiceClientCredentialsProvider implements Provider<ServiceClientC
 
 
 	@Override
-	public ServiceClientCredentials get()
+	public ApplicationTokenCredentials get()
 	{
 		return new ApplicationTokenCredentials(clientId, tenantId, key, getEnvironment());
 	}

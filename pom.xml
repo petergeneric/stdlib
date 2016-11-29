@@ -49,6 +49,7 @@
 		<hibernate.version>4.3.8.Final</hibernate.version>
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.3.2</hsqldb.version>
+		<bouncycastle.version>1.55</bouncycastle.version>
 	</properties>
 
 	<scm>

@@ -1,7 +1,9 @@
 package com.peterphi.servicemanager.service.db;
 
 import com.google.inject.Inject;
+import com.peterphi.servicemanager.service.db.dao.impl.LetsEncryptCertificateDaoImpl;
 import com.peterphi.servicemanager.service.db.dao.impl.ServiceInstanceDaoImpl;
+import com.peterphi.servicemanager.service.db.entity.LetsEncryptAccountEntity;
 import com.peterphi.servicemanager.service.db.entity.ResourceInstanceEntity;
 import com.peterphi.servicemanager.service.db.entity.ResourceTemplateEntity;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
@@ -22,6 +24,11 @@ public class ServiceManagerDatabaseTest
 	@Inject
 	ServiceInstanceDaoImpl serviceInstanceDao;
 
+	@Inject
+	LetsEncryptCertificateDaoImpl certDao;
+
+	@Inject
+	HibernateDao<LetsEncryptAccountEntity,Integer> accountDao;
 
 	@Test
 	public void doTest()
@@ -29,5 +36,9 @@ public class ServiceManagerDatabaseTest
 		templateDao.getAll();
 		instanceDao.getAll();
 		serviceInstanceDao.getAll();
+
+
+		certDao.getAll();
+		accountDao.getAll();
 	}
 }

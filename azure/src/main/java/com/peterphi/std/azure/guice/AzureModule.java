@@ -4,6 +4,7 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Inject;
 import com.google.inject.Provides;
 import com.microsoft.azure.Azure;
+import com.microsoft.azure.credentials.ApplicationTokenCredentials;
 import com.microsoft.azure.management.compute.VirtualMachines;
 import com.microsoft.rest.credentials.ServiceClientCredentials;
 
@@ -15,7 +16,8 @@ public class AzureModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
-		bind(ServiceClientCredentials.class).toProvider(ServiceClientCredentialsProvider.class);
+		bind(ApplicationTokenCredentials.class).toProvider(AzureCredentialsProvider.class);
+		bind(ServiceClientCredentials.class).to(ApplicationTokenCredentials.class);
 		bind(Azure.class).toProvider(AzureProvider.class);
 	}
 

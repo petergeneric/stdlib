@@ -272,6 +272,7 @@ public class AzureVMControlImpl implements StoppableService, AzureVMControl
 
 	private VirtualMachine getById(final String id)
 	{
+
 		try
 		{
 			return virtualMachines.getById(id);
