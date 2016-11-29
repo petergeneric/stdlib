@@ -18,7 +18,7 @@
 			</column>
 		</createTable>
 		<createTable tableName="acme_ca_cert">
-			<column name="id" type="VARCHAR(8192)">
+			<column name="id" type="VARCHAR(600)">
 				<constraints primaryKey="true" primaryKeyName="PK_acme_ca_cert"/>
 			</column>
 			<column name="keypair_utf8" type="BLOB">
