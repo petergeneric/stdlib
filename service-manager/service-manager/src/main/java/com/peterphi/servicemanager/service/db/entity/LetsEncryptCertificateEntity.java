@@ -77,7 +77,7 @@ public class LetsEncryptCertificateEntity
 	}
 
 
-	@Column(name = "mgmnt_token", nullable = true, length = 32)
+	@Column(name = "mgmt_token", nullable = true, length = 32)
 	public String getManagementToken()
 	{
 		return managementToken;
