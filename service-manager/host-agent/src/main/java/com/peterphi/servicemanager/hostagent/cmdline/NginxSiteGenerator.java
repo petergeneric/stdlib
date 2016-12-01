@@ -25,12 +25,12 @@ public class NginxSiteGenerator
 	                                         "\tssl_session_tickets off; # Requires nginx >= 1.5.9\n" +
 	                                         "\tssl_stapling on; # Requires nginx >= 1.3.7\n" +
 	                                         "\tssl_stapling_verify on; # Requires nginx => 1.3.7\n" +
-	                                         "\tresolver $DNS-IP-1 $DNS-IP-2 valid=300s;\n" +
-	                                         "\tresolver_timeout 5s;\n" +
 	                                         "\tadd_header X-Frame-Options DENY;\n" +
 	                                         "\tadd_header X-Content-Type-Options nosniff;\n";
 
 	private static final String HSTS_CONFIG = "\tadd_header Strict-Transport-Security \"max-age=63072000; includeSubDomains; preload\";\n";
+
+	private static final String EXPLICIT_DNS_CONFIG = "\tresolver 8.8.8.8 8.8.4.4 valid=300s;\n" + "\tresolver_timeout 5s;\n";
 
 	private static final String LOCATION_CONFIG = "\t\tproxy_cache off;\n" +
 	                                              "\t\tproxy_set_header Host $host;\n" +
