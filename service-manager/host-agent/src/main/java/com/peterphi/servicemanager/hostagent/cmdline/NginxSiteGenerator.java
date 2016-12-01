@@ -133,7 +133,6 @@ public class NginxSiteGenerator
 
 	public static void main(String[] args) throws Exception
 	{
-		args = new String[]{"some.hostname.com", "/path/to/ssl.cert", "/path/to/ssl.key", "/opt/tomcat/tomcat/webapps", "8080"};
 		final String name = args[0];
 		final File sslCert = new File(args[1]);
 		final File sslKey = new File(args[2]);
