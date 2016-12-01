@@ -15,6 +15,7 @@ public class LetsEncryptCertificateEntity
 	private byte[] keypair;
 	private byte[] cert;
 	private byte[] chain;
+	private String managementToken;
 	private DateTime expires;
 	private DateTime created = DateTime.now();
 	private DateTime updated;
@@ -73,6 +74,19 @@ public class LetsEncryptCertificateEntity
 	public void setChain(final byte[] chain)
 	{
 		this.chain = chain;
+	}
+
+
+	@Column(name = "mgmnt_token", nullable = true, length = 32)
+	public String getManagementToken()
+	{
+		return managementToken;
+	}
+
+
+	public void setManagementToken(final String managementToken)
+	{
+		this.managementToken = managementToken;
 	}
 
 

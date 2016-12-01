@@ -12,6 +12,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.std.types.SimpleId;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.shredzone.acme4j.Authorization;
@@ -289,6 +290,10 @@ public class LetsEncryptService
 		entity.setCert(certBytes);
 		entity.setChain(chainBytes);
 		entity.setExpires(new DateTime(cert.getNotAfter()));
+
+		// Make sure a management token is assigned
+		if (entity.getManagementToken() == null)
+			entity.setManagementToken(SimpleId.alphanumeric(32));
 
 		if (isNew)
 		{

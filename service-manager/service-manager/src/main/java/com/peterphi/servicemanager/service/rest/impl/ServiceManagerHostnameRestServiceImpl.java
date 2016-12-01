@@ -45,7 +45,13 @@ public class ServiceManagerHostnameRestServiceImpl implements ServiceManagerHost
 			throw new IllegalArgumentException("Invalid/malformed IP address: " + request.ip);
 		}
 
-		final String hostname = generateHostname(request.prefix);
+		final String hostname;
+
+
+		if (request.hostname != null)
+			hostname = request.hostname;
+		else
+			hostname = generateHostname(request.prefix);
 
 		final HostnameResponseDTO response = new HostnameResponseDTO();
 
@@ -55,6 +61,7 @@ public class ServiceManagerHostnameRestServiceImpl implements ServiceManagerHost
 		{
 			final LetsEncryptCertificateEntity cert = letsEncrypt.issue(hostname);
 
+			response.managementToken = cert.getManagementToken();
 			response.sslKeypair = new String(cert.getKeypair(), StandardCharsets.UTF_8);
 			response.sslCert = new String(cert.getCert(), StandardCharsets.UTF_8);
 			response.sslChain = new String(cert.getChain(), StandardCharsets.UTF_8);

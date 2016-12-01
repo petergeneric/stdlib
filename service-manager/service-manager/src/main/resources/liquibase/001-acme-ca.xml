@@ -41,4 +41,11 @@
 			</column>
 		</createTable>
 	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_mgmt_token_to_acme_ca_cert">
+		<addColumn tableName="acme_ca_Cert">
+			<column name="mgmt_token" type="VARCHAR(32)">
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

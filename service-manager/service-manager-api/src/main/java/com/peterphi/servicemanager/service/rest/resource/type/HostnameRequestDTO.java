@@ -11,6 +11,12 @@ public class HostnameRequestDTO
 	@XmlElement(required = false)
 	public String prefix = "host";
 
+	/**
+	 * Allows a specific hostname to be requested instead of requesting one be assigned
+	 */
+	@XmlElement(required = false)
+	public String hostname;
+
 	@XmlElement(required = true)
 	public String ip;
 
@@ -21,6 +27,12 @@ public class HostnameRequestDTO
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("prefix", prefix).add("ip", ip).add("ssl", ssl).toString();
+		return Objects
+				       .toStringHelper(this)
+				       .add("prefix", prefix)
+				       .add("hostname", hostname)
+				       .add("ip", ip)
+				       .add("ssl", ssl)
+				       .toString();
 	}
 }

@@ -18,5 +18,6 @@
 		<module>configuration</module>
 		<module>service-manager-api</module>
 		<module>service-manager</module>
+		<module>host-agent</module>
 	</modules>
 </project>

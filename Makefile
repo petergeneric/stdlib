@@ -42,6 +42,10 @@ smtail:
 	rsync -avzr --progress service-manager/service-manager/src/main/webapp/vendor/logui-SNAPSHOT/* /opt/tomcat/webapps/service-manager/vendor/logui-SNAPSHOT/
 	rsync -avzr --progress service-manager/service-manager/src/main/webapp/WEB-INF/template/* /opt/tomcat/webapps/service-manager/WEB-INF/template/
 
+hagent:
+	$(MVN) package -am --projects service-manager/host-agent
+	rsync -avzr --progress service-manager/host-agent/target/*.war /opt/tomcat/webapps/host-agent.war
+
 #
 #
 # Code Generation

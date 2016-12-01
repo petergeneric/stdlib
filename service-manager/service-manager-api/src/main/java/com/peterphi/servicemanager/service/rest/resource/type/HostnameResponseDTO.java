@@ -16,6 +16,12 @@ public class HostnameResponseDTO
 	@XmlElement(name = "hostname")
 	public List<String> alternateHostnames = new ArrayList<>();
 
+	/**
+	 * A secret management token shared between the Service Manager and this host
+	 */
+	@XmlElement(required = true)
+	public String managementToken;
+
 	@XmlElement(required = false)
 	public String sslKeypair;
 	@XmlElement(required = false)
