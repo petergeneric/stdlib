@@ -31,7 +31,7 @@ public class ResourceInstanceHelper
 
 
 	/**
-	 * Returns the number of active instnaces of the given template name
+	 * Returns the number of active instances of the given template name
 	 *
 	 * @param service
 	 * @param templateName
@@ -51,5 +51,15 @@ public class ResourceInstanceHelper
 		List<ResourceInstanceDTO> instances = service.searchInstances(wq);
 
 		return instances;
+	}
+
+
+	public void stopActiveInstances(ServiceManagerResourceRestService service, String templateName)
+	{
+		for (ResourceInstanceDTO resourceInstanceDTO : activeInstances(service, templateName))
+		{
+			service.discardInstance(resourceInstanceDTO.id);
+		}
+		;
 	}
 }
