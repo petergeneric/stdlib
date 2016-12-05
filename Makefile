@@ -18,6 +18,15 @@ ifeq ($(env), azure)
 	MVN=mvn3 -T$(MAVEN_PARALLELISM) -P azure
 endif
 
+RSYNC=rsync --progress -vzr
+
+ifeq ($(env), azure)
+	HOST=$(host)
+	DESTINATION=/opt/tomcat/
+	WEBAPPS=$(HOST):$(DESTINATION)core-services/webapps
+	RSYNC=rsync --progress -vzr --chmod=a+wrx --perms
+endif
+
 all: install
 
 hagent:
@@ -178,7 +187,12 @@ ifndef CO_PATH
 endif
 
 
-
-
+sm-full: package
+ifndef host
+		$(error host is not set)
+endif
+	 $(RSYNC) service-manager/configuration/target/*.war $(WEBAPPS)/configuration.war
+	 $(RSYNC) user-manager/service/target/*.war $(WEBAPPS)/user-manager.war
+	 $(RSYNC) service-manager/service-manager/target/*.war $(WEBAPPS)/service-manager.war
 
 
