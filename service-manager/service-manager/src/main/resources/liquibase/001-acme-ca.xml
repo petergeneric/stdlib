@@ -43,7 +43,7 @@
 	</changeSet>
 
 	<changeSet author="peter@peterphi.com" id="add_mgmt_token_to_acme_ca_cert">
-		<addColumn tableName="acme_ca_Cert">
+		<addColumn tableName="acme_ca_cert">
 			<column name="mgmt_token" type="VARCHAR(32)">
 			</column>
 		</addColumn>
