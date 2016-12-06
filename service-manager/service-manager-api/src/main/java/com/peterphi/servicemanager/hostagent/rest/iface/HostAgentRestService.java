@@ -20,4 +20,8 @@ public interface HostAgentRestService
 	@Path("/deploy-webapp.do")
 	@Consumes(MediaType.APPLICATION_XML)
 	void deployWebapp(DeployWebappRequest request);
+
+	@POST
+	@Path("/reindex-webapps.do")
+	void reindexWebapps();
 }

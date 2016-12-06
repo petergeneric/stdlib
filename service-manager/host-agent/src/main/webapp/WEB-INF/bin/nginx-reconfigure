@@ -1,0 +1,21 @@
+#!/bin/bash
+
+NEW_CONFIG_FILE="$1"
+LIVE_CONFIG_FILE="/etc/nginx/sites-enabled/tomcat"
+
+if [ -z "$NEW_CONFIG_FILE" ] ; then
+	echo "Expected 1 argument: source file to be copied to $LIVE_CONFIG_FILE" >&2
+	exit 1
+elif [ -f "$NEW_CONFIG_FILE" ] ; then
+	NEW_CONFIG_FILE=$(readlink -f "$NEW_CONFIG_FILE")
+	
+	if [ $(stat -c %u "$NEW_CONFIG_FILE") = "0" ] ; then
+		echo "Input file is owned by root! Will not proceed" >&2
+		exit 5;
+	fi
+
+	cat -- "$NEW_CONFIG_FILE" >"$LIVE_CONFIG_FILE"
+else
+	echo "Source is not a file: $NEW_CONFIG_FILE" >&2
+	exit 2
+fi

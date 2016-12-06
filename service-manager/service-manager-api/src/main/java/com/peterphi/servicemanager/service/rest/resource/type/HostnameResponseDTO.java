@@ -4,6 +4,7 @@ import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @XmlRootElement(name = "HostnameResponse")
@@ -28,4 +29,9 @@ public class HostnameResponseDTO
 	public String sslCert;
 	@XmlElement(required = false)
 	public String sslChain;
+
+	@XmlElement(required=true)
+	public Date updated;
+	@XmlElement(required=true)
+	public Date created;
 }

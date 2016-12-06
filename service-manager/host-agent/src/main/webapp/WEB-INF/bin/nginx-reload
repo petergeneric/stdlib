@@ -1,0 +1,11 @@
+#!/bin/bash
+
+service nginx status >/dev/null 2>/dev/null
+NGINX_STATUS=$?
+
+if [ "$NGINX_STATUS" = "0" ] ; then
+	service nginx reload
+else
+	service nginx start
+fi
+

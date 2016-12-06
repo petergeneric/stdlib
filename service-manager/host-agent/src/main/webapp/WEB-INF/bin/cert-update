@@ -1,0 +1,67 @@
+#!/bin/bash
+
+# The SSL folders; N.B. these folders do not exist on macOS
+CERT_FOLDER="/etc/ssl/certs"
+KEY_FOLDER="/etc/ssl/private"
+
+KEY_FILE="$1"
+CERT_FILE="$2"
+CHAIN_FILE="$3"
+
+# The arguments must be supplied and must be files
+if [ -z "$KEY_FILE" ] || [ -f "$KEY_FILE" ] ; then
+	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
+	exit 1
+elif [ -z "$CERT_FILE" ] || [ -f "$CERT_FILE" ] ; then
+	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
+	exit 2
+elif [ -z "$CHAIN_FILE" ] || [ -f "$CHAIN_FILE" ] ; then
+	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
+	exit 3
+fi
+
+# Resolve any symlinks so we're looking at the real source files
+# N.B. readlink isn't available on macOS
+KEY_FILE=$(readlink -f "$KEY_FILE")
+CERT_FILE=$(readlink -f "$CERT_FILE")
+CHAIN_FILE=$(readlink -f "$CHAIN_FILE")
+
+# Make sure the source files are in /tmp
+# N.B. if /tmp is linked to elsewhere (e.g. on macOS) this check won't work once we've resolved the links
+# TODO in this case allow /tmp or /private/tmp
+if [ "${KEY_FILE:0:5}" != "/tmp/" ] ; then
+        echo "Input file is not in /tmp so cannot proceed: $KEY_FILE" >&2
+        exit 5;
+elif [ "${CERT_FILE:0:5}" != "/tmp/" ] ; then
+        echo "Input file is not in /tmp so cannot proceed: $CERT_FILE" >&2
+        exit 5;
+elif [ "${CHAIN_FILE:0:5}" != "/tmp/" ] ; then
+        echo "Input file is not in /tmp so cannot proceed: $CHAIN_FILE" >&2
+        exit 5;
+fi
+
+# Read the contents into memory
+sslKeyPair=$(cat "$KEY_FILE")
+sslCert=$(cat "$CERT_FILE")
+sslChain=$(cat "$CHAIN_FILE")
+
+# Write the key, cert and chain files out to disk
+echo "${sslKeyPair}" > ${KEY_FOLDER}/host.key
+echo "${sslCert}" > ${CERT_FOLDER}/host.pem
+echo "${sslChain}" > ${CERT_FOLDER}/host-chain.pem
+
+# Combine the key and certificate files together for different applications
+cat ${CERT_FOLDER}/host.pem ${CERT_FOLDER}/host-chain.pem > ${CERT_FOLDER}/host-cert-and-chain.pem
+cat ${KEY_FOLDER}/host.key ${CERT_FOLDER}/host.pem ${CERT_FOLDER}/host-chain.pem > ${KEY_FOLDER}/host-key-and-cert-and-chain.pem
+
+# Make sure we've set up the right permissions on the files
+chmod 640 ${KEY_FOLDER}/host.key ${KEY_FOLDER}/host-key-and-cert-and-chain.pem
+chmod 644 ${CERT_FOLDER}/host.pem ${CERT_FOLDER}/host-chain.pem ${CERT_FOLDER}/host-cert-and-chain.pem
+
+# Make sure we set up the right ownership on the files
+chown root.www-data ${KEY_FOLDER}/host.key
+chown root.www-data ${CERT_FOLDER}/host.pem
+chown root.www-data ${CERT_FOLDER}/host-chain.pem
+chown root.www-data ${CERT_FOLDER}/host-cert-and-chain.pem
+chown root.www-data ${KEY_FOLDER}/host-key-and-cert-and-chain.pem
+

@@ -111,7 +111,7 @@ public class NginxSiteGenerator
 			if (ENABLE_HSTS)
 				sb.append(HSTS_CONFIG);
 
-			// Immediately drop connections to unexpected locations
+			// Immediately drop connections to unexpected webapps
 			sb.append("\n");
 			sb.append("\tlocation / {\n");
 			sb.append("\t\treturn 444;\n");
@@ -131,13 +131,8 @@ public class NginxSiteGenerator
 	}
 
 
-	public static void main(String[] args) throws Exception
+	public String render(final String name, final File sslCert, final File sslKey, final Map<File, Integer> foldersAndPorts)
 	{
-		final String name = args[0];
-		final File sslCert = new File(args[1]);
-		final File sslKey = new File(args[2]);
-		final Map<File, Integer> foldersAndPorts = getFoldersAndPorts(3, args);
-
 		Server server = new Server(name, 443, sslCert, sslKey);
 
 		for (Map.Entry<File, Integer> webappFolder : foldersAndPorts.entrySet())
@@ -158,7 +153,7 @@ public class NginxSiteGenerator
 		StringBuilder sb = new StringBuilder();
 		server.append(sb);
 
-		System.out.println(sb.toString());
+		return sb.toString();
 	}
 
 
@@ -230,5 +225,27 @@ public class NginxSiteGenerator
 		}
 
 		return map;
+	}
+
+
+	/**
+	 * Entry point for initial generation, called from the commandline
+	 *
+	 * @param args
+	 *
+	 * @throws Exception
+	 */
+	public static void main(String[] args) throws Exception
+	{
+		final String name = args[0];
+		final File sslCert = new File(args[1]);
+		final File sslKey = new File(args[2]);
+		final Map<File, Integer> foldersAndPorts = getFoldersAndPorts(3, args);
+
+		NginxSiteGenerator generator = new NginxSiteGenerator();
+
+		final String config = generator.render(name, sslCert, sslKey, foldersAndPorts);
+
+		System.out.println(config);
 	}
 }

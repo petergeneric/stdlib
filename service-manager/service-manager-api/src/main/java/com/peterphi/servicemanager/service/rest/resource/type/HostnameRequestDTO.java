@@ -20,10 +20,6 @@ public class HostnameRequestDTO
 	@XmlElement(required = true)
 	public String ip;
 
-	@XmlElement(required = false)
-	public boolean ssl = false;
-
-
 	@Override
 	public String toString()
 	{
@@ -32,7 +28,6 @@ public class HostnameRequestDTO
 				       .add("prefix", prefix)
 				       .add("hostname", hostname)
 				       .add("ip", ip)
-				       .add("ssl", ssl)
 				       .toString();
 	}
 }

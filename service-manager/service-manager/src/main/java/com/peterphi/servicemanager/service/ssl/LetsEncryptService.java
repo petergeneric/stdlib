@@ -143,12 +143,18 @@ public class LetsEncryptService
 
 	public LetsEncryptCertificateEntity renew(final String domains)
 	{
-		final LetsEncryptCertificateEntity entity = certificateDao.getById(domains);
+		final LetsEncryptCertificateEntity entity = getCertificate(domains);
 
 		if (entity != null)
 			return issue(domains);
 		else
 			throw new IllegalArgumentException("Cannot renew certs for " + domains + ": no such cert exists currently!");
+	}
+
+
+	public LetsEncryptCertificateEntity getCertificate(final String domains)
+	{
+		return certificateDao.getById(domains);
 	}
 
 
@@ -172,7 +178,7 @@ public class LetsEncryptService
 
 	public LetsEncryptCertificateEntity generateOrRenewCertificate(final String domains)
 	{
-		LetsEncryptCertificateEntity entity = certificateDao.getById(domains);
+		LetsEncryptCertificateEntity entity = getCertificate(domains);
 
 		// If we already have a keypair for these domains we shouldn't regenerate it, only regenerate the cert
 		final KeyPair domainKeyPair;
