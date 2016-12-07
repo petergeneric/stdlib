@@ -9,13 +9,13 @@ CERT_FILE="$2"
 CHAIN_FILE="$3"
 
 # The arguments must be supplied and must be files
-if [ -z "$KEY_FILE" ] || [ -f "$KEY_FILE" ] ; then
+if ! [ -f "$KEY_FILE" ] ; then
 	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
 	exit 1
-elif [ -z "$CERT_FILE" ] || [ -f "$CERT_FILE" ] ; then
+elif ! [ -f "$CERT_FILE" ] ; then
 	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
 	exit 2
-elif [ -z "$CHAIN_FILE" ] || [ -f "$CHAIN_FILE" ] ; then
+elif ! [ -f "$CHAIN_FILE" ] ; then
 	echo "Expected arguments: KEY_FILE CERT_FILE CHAIN_FILE" >&2
 	exit 3
 fi
