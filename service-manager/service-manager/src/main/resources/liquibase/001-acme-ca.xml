@@ -42,7 +42,11 @@
 		</createTable>
 	</changeSet>
 
-	<changeSet author="peter@peterphi.com" id="add_mgmt_token_to_acme_ca_cert">
+	<changeSet author="peter@peterphi.com" id="add_mgmt_token_to_acme_ca_cert" >
+		<!-- current -->
+		<validCheckSum>7:798668bcb07521f9932e05e816436746</validCheckSum>
+		<validCheckSum>7:b4a3364079a3ac2588212c6817b7d451</validCheckSum>
+
 		<addColumn tableName="acme_ca_cert">
 			<column name="mgmt_token" type="VARCHAR(32)">
 			</column>
