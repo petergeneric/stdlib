@@ -24,12 +24,18 @@ function LogUI(element, nonce, tailURL, searchURL) {
 	};
 	this.OVERRIDE_ENDPOINTS = {};
 
-	// Now set up the UI (TODO put this into a UI building method)
-	this.uiroot.find("#filterLevelOptions input[type=radio]").change(function () {
-		me.refilter()
+	// Register listeners for the filter options being changed
+	this.uiroot.find("#filter-level").dropdown('setting', 'onChange', function () {
+		me.refilter();
 	});
-	this.uiroot.find("#renderEndpointOptions input[type=radio]").change(function () {
-		me.refilter()
+	this.uiroot.find("#filter-endpoint").dropdown('setting', 'onChange', function () {
+
+		if (me.getFilteredEndpoints().length == 1)
+			me.uiroot.find(".log_endpoint").hide();
+		else if (me.getFilteredEndpoints().length == 0 || me.getFilteredEndpoints().length == 2)
+			me.uiroot.find(".log_endpoint").show();
+
+		me.refilter();
 	});
 }
 
@@ -118,8 +124,6 @@ LogUI.prototype.executeSearch = function (start, end, filter) {
 			'filter': filter
 		},
 		complete: function (data, textStatus) {
-			console.log(data);
-
 			if (textStatus == 'success') {
 				me.addLines($.parseJSON(data.responseText));
 			}
@@ -336,8 +340,8 @@ LogUI.prototype.addLine = function (event) {
 			this.addEndpoint(event.endpoint);
 		}
 
-		// TODO recognise when a previously-http://unknown instance id gets an endpoint
-		// TODO when this happens, add an entry in a fixup array of instance id -> endpoint and rerender()
+		// Recognise when a previously-http://unknown instance id gets an endpoint.
+		// When this happens, add an entry in a fixup array of instance id -> endpoint and rerender()
 		if (event.endpoint == 'http://unknown') {
 			this.OVERRIDE_ENDPOINTS[event.instanceId] = event.endpoint;
 		}
@@ -417,46 +421,34 @@ LogUI.prototype.addEndpoint = function (endpoint) {
 
 	var previouslyChecked = this.getFilteredEndpoints();
 
-	var options = this.uiroot.find('#filterEndpointsOptions');
-	options.empty();
+	var dropdown = this.uiroot.find('#filter-endpoint');
+	var options = dropdown.find('.menu');
+
+	// Remove the existing items
+	options.find("div.item").remove();
 
 	var keys = Object.keys(this.ALL_ENDPOINTS).sort();
 
 	for (var i = 0; i < keys.length; i++) {
-		var li = $('<li/>');
-		var label = $('<label class="checkbox control-label"/>');
+		var url = keys[i];
+		var entry = $('<div class="item" data-inverted="" data-position="right center" />');
 
-		var checkbox = $('<input type="checkbox"/>').data('endpoint', keys[i]).attr('checked', previouslyChecked.includes(keys[i]))
-		label.append(checkbox);
-		label.append(" " + keys[i]);
-		li.append(label);
+		entry.attr('data-tooltip', url);
+		entry.attr('data-value', url);
+		entry.text(this.ENDPOINT_RENDERER({'endpoint': url}));
 
-		// Stop the dropdown closing when clicking on a checkbox
-		li.click(function (e) {
-			e.stopPropagation();
-		});
-
-		// Refilter the log lines when a selection is made
-		checkbox.change(function () {
-			me.refilter();
-		});
-
-		options.append(li);
+		options.append(entry);
 	}
+
+	dropdown.dropdown('refresh');
+
+	// TODO set filtered endpoints
 }
 
 // eventSelector is optional, if it is specified then it should return true for lines which should be rerendered
 // eventMutator is optional, if it returns a non-null value then that return value is saved as the event data
 LogUI.prototype.rerender = function (eventSelector, eventMutator) {
 	var me = this;
-	var endpointRenderMode = this.uiroot.find("#renderEndpointOptions input[type=radio]:checked").val();
-
-	if (endpointRenderMode == "full")
-		this.ENDPOINT_RENDERER = this.endpointRenderFull;
-	else
-		this.ENDPOINT_RENDERER = this.endpointRenderShort;
-
-	this.uiroot.find("#renderEndpointSummary").text(" (" + endpointRenderMode + ")");
 
 	// Now rerender the lines
 	// N.B. we currently only rerender the timestamp and endpoint
@@ -484,26 +476,14 @@ LogUI.prototype.rerender = function (eventSelector, eventMutator) {
 
 LogUI.prototype.refilter = function () {
 	var permittedEndpoints = this.getFilteredEndpoints();
-	var minLevel = this.uiroot.find("#filterLevelOptions input[type=radio]:checked").val();
 
-	// Update the UI to reflect the number of endpoint filters
-	if (permittedEndpoints.length == 0)
-		this.uiroot.find("#filterEndpointsSummary").text("");
-	else
-		this.uiroot.find("#filterEndpointsSummary").text(" (" + permittedEndpoints.length + ")");
+	var minLevel = this.uiroot.find("#filter-level").dropdown('get value');
 
-	if (minLevel > 2)
-		this.uiroot.find("#filterLevelSummary").text(" (" + this.LEVEL_NAMES[minLevel] + ")");
-	else
-		this.uiroot.find("#filterLevelSummary").text("");
+	if (minLevel == "")
+		minLevel = 0;
 
-	if (permittedEndpoints.length == 1) {
-		this.uiroot.find('.log_endpoint').hide();
-	}
-	else {
-		this.uiroot.find('.log_endpoint').show();
-	}
-
+	// Set up a filter function
+	// If no filtering is requested use a function that always returns true
 	if (permittedEndpoints.length == 0 && minLevel <= 2)
 		this.setEventFilter(function () {
 			return true;
@@ -518,10 +498,13 @@ LogUI.prototype.setEventFilter = function (newFilterFunction) {
 	var me = this;
 	this.EVENT_FILTER = newFilterFunction;
 
+	// Pick up all the log lines
 	var rows = this.uiroot.find('#loglines tr').slice(0, -1);
 
+	// First, show all rows
 	rows.show();
 
+	// Now hide ineligible rows
 	rows.each(function () {
 		var row = $(this);
 		var event = row.data('e');
@@ -532,10 +515,5 @@ LogUI.prototype.setEventFilter = function (newFilterFunction) {
 };
 
 LogUI.prototype.getFilteredEndpoints = function () {
-	var checked = [];
-	this.uiroot.find('#filterEndpointsOptions :checkbox:checked').each(function () {
-		checked.push($(this).data('endpoint'));
-	});
-
-	return checked;
+	return this.uiroot.find("#filter-endpoint").dropdown('get values');
 };

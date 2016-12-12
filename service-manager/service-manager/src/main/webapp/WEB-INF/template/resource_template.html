@@ -3,28 +3,13 @@
 <head>
 	<meta th:substituteby="includes :: htmlhead"/>
 	<title>Service Manager - Template</title>
-
-	<style th:fragment="htmlhead">
-		pre {
-			font-size: 11px;
-		}
-
-		body {
-			padding-bottom: 40px;
-		}
-
-		.dl-horizontal > dd:after {
-			display: table;
-			content: "";
-			clear: both;
-		}
-	</style>
 </head>
 
 <body th:with="page='resources'">
 <span th:substituteby="includes :: navbar"></span>
 
-<div class="container">
+<!-- Main Body -->
+<div>
 	<h1>Template '<span th:text="${entity.id}"></span>'</h1>
 
 	<dl>
@@ -46,7 +31,7 @@
 						<input type="hidden" name="id" th:value="${entity.id}" />
 						<input type="hidden" name="nonce" th:value="${nonce}" />
 
-						<input type="submit" class="btn" value="New Instance" />
+						<input type="submit" class="ui button" value="New Instance" />
 					</form>
 				</li>
 			</ul>
@@ -54,16 +39,16 @@
 	</dl>
 
 	<h2>Instances</h2>
-	<table class="table">
+	<table class="ui table">
 		<thead>
 		<tr>
-			<th>Id</th>
-			<th>Provider Instance ID</th>
-			<th>State</th>
-			<th>Revision</th>
-			<th>Created</th>
-			<th>Updated</th>
-			<th>Actions</th>
+			<th scope="col">Id</th>
+			<th scope="col">Provider Instance ID</th>
+			<th scope="col">State</th>
+			<th scope="col">Revision</th>
+			<th scope="col">Created</th>
+			<th scope="col">Updated</th>
+			<th scope="col">Actions</th>
 		</tr>
 		</thead>
 		<tbody>

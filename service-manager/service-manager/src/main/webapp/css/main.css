@@ -2,9 +2,8 @@ pre {
 	font-size: 11px;
 }
 
-body {
-	/*	padding-top: 60px; */
-	padding-bottom: 40px;
+dt {
+	font-weight: bold;
 }
 
 /* display empty dd elements in a dl */

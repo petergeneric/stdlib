@@ -1,71 +1,50 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta th:substituteby="includes :: htmlhead" />
-	<meta th:fragment="htmlhead" charset="utf-8" />
-	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
-	<meta th:fragment="htmlhead" name="description" content="" />
-	<meta th:fragment="htmlhead" name="viewport" content="width=device-width" />
-	<style th:fragment="htmlhead" >
-		body {
-			padding-top: 60px;
-			padding-bottom: 40px;
-		}
-	</style>
-	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/css/bootstrap.min.css}" />
-	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/css/bootstrap-responsive.min.css}" />
-	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/css/main.css}" />
-	<script th:fragment="htmlhead" th:src="@{/js/vendor/modernizr-2.6.1-respond-1.1.0.min.js}"></script>
-	<script th:fragment="htmlhead" th:src="@{/vendor/jquery-3.1.0/jquery.min.js}"></script>
-	<script th:fragment="htmlhead" th:src="@{/vendor/moment-2.14.1/moment.min.js}"></script>
+	<meta th:fragment="htmlhead" charset="utf-8"/>
+	<meta th:fragment="htmlhead" http-equiv="X-UA-Compatible" content="IE=edge,chrome=1"/>
+	<meta th:fragment="htmlhead" name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/>
 
-	<!-- Chosen -->
-	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/vendor/chosen-1.6.2/chosen.min.css}" />
-	<script th:fragment="htmlhead" th:src="@{/vendor/chosen-1.6.2/chosen.jquery.min.js}"></script>
+	<link th:fragment="htmlhead" rel="stylesheet" href="//cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.css"
+	      integrity="sha384-RxXKUwX/F6fscGMWGhMiqOo9eEGrPgGJrMdgVORn1eS2y1UdMzDnCmZt60lopVlE" crossorigin="anonymous"/>
+	<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/css/main.css}"/>
 </head>
 <body>
 
 <!--@thymesVar id="page" type="java.lang.String"-->
+<!--@thymesVar id="currentUser" type="com.peterphi.std.guice.common.auth.iface.CurrentUser" -->
+<div th:fragment="navbar" class="ui inverted menu">
+	<a class="item" th:href="@{/}">
+		<h3>Service Manager</h3>
+	</a>
+	<a class="item" th:classappend="(${page} == 'resources') ? 'active':null" th:href="@{/}">Resources</a>
+	<a class="item" th:classappend="(${page} == 'logtail') ? 'active':null" th:href="@{/logs/tail}">Logs</a>
 
-<div th:fragment="navbar" class="navbar navbar-inverse navbar-fixed-top">
-	<div class="navbar-inner">
-		<div class="container">
-			<a class="btn btn-navbar" data-toggle="collapse" data-target=".nav-collapse">
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-				<span class="icon-bar"></span>
-			</a>
-			<a class="brand" th:href="@{/}">Service Manager</a>
-			<div class="nav-collapse collapse">
-				<ul class="nav">
-					<li th:class="(${page} == 'resources') ? 'active':null"><a th:href="@{/}">Resources</a></li>
-					<li th:class="(${page} == 'logtail') ? 'active':null"><a th:href="@{/logs/tail}">Tail Logs</a></li>
-					<!-- <li th:class="(${page} == 'logsearch') ? 'active':null"><a th:href="@{/logs/search}">Search Logs</a></li> -->
-				</ul>
-			</div><!--/.nav-collapse -->
-
-			<div th:if="${not currentUser.anonymous}" class="btn-group navbar-text pull-right" id="whoamidropdown">
-				<a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-user icon-white"></i> <span th:text="${currentUser.name}">user</span> <span class="caret"></span></a>
-				<ul class="dropdown-menu">
-					<li><a th:href="@{/logout}"><i class="i"></i> Logout</a></li>
-				</ul>
-			</div>
+	<div class="right menu">
+		<div th:unless="${currentUser.anonymous}" class="ui item" id="whoamidropdown">
+			<i class="user icon"></i>
+			<th:block th:text="${currentUser.name}" />
 		</div>
 	</div>
 </div>
 
 
-<div class="container">
-	<p>content goes here</p>
+<hr th:fragment="footer" />
+<p th:fragment="footer">Service Manager</p>
 
-	<hr th:fragment="footer" />
 
-	<footer th:fragment="footer">
-		<p>Configuration Service</p>
-	</footer>
-
-</div> <!-- /container -->
-<script th:fragment="htmlfoot" th:src="@{/js/vendor/bootstrap.min.js}"></script>
+<script th:fragment="htmlfoot" src="//ajax.googleapis.com/ajax/libs/jquery/3.1.1/jquery.min.js"
+        integrity="sha384-3ceskX3iaEnIogmQchP8opvBy3Mi7Ce34nWjpBIwVTHfGYWQS9jwHDVRnpKKHJg7" crossorigin="anonymous"></script>
+<script th:fragment="htmlfoot" src="//cdn.jsdelivr.net/semantic-ui/2.2.6/semantic.min.js"
+        integrity="sha384-kZT+CItOKWHYL+Rz37W2NEz60Pu2JJJ8wgzq+82VWsi3QM53eNFzQJZqzhPuyo63" crossorigin="anonymous"></script>
 <script th:fragment="htmlfoot" th:src="@{/js/main.js}"></script>
+<script th:fragment="htmlfoot" th:src="@{/vendor/moment-2.14.1/moment.min.js}"></script>
+
+<!-- Initialise all dropdowns -->
+<script th:fragment="htmlfoot">
+	$(document).ready(function() {
+		$('.ui.dropdown,select').dropdown();
+	});
+</script>
 </body>
 </html>

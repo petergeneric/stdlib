@@ -3,76 +3,53 @@
 <head>
 	<meta th:substituteby="includes :: htmlhead"/>
 	<title>Service Manager - Tail Logs</title>
-
-	<style th:fragment="htmlhead">
-		pre {
-			font-size: 11px;
-		}
-
-		body {
-			padding-bottom: 40px;
-		}
-
-		.dl-horizontal > dd:after {
-			display: table;
-			content: "";
-			clear: both;
-		}
-	</style>
 	<script th:src="@{/vendor/logui-SNAPSHOT/logui.js}"></script>
 </head>
 
-<body th:with="page='logtail'">
-<span th:substituteby="includes :: navbar"></span>
-<div class="container">
-	<h1>Log Tail</h1>
+<body>
+<span th:substituteby="includes :: navbar (page='logtail')"></span>
+<div class="ui fluid container">
+	<h1 class="ui header" style="padding-left: 1em;">Log Tail</h1>
 
 	<div id="logui">
-		<div class="btn-toolbar">
-			<div class="btn-group">
-				<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Filter Endpoints<span
-						id="filterEndpointsSummary"></span>
-					<span class="caret"></span></button>
-				<ul class="dropdown-menu" id="filterEndpointsOptions" style="padding-left: 10px; padding-right: 10px;">
-					<li><em>No endpoints observed yet</em></li>
-				</ul>
+
+		<!-- Action / Filter menu -->
+		<div class="ui secondary menu">
+			<div class="item">
+				<div class="ui dropdown" id="filter-level">
+					<i class="filter icon"></i>
+					<span class="text">Any Level</span>
+					<i class="dropdown icon"></i>
+					<div class="menu">
+						<div class="header">
+							Minimum log level
+						</div>
+						<div class="item" data-value="0">All</div>
+						<div class="item" data-value="3">DEBUG</div>
+						<div class="item" data-value="4">INFO</div>
+						<div class="item" data-value="5">WARN</div>
+						<div class="item" data-value="6">ERROR</div>
+						<div class="item" data-value="7">FATAL</div>
+					</div>
+				</div>
 			</div>
 
-			<div class="btn-group">
-				<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Level<span
-						id="filterLevelSummary"></span>
-					<span class="caret"></span></button>
-				<ul class="dropdown-menu" id="filterLevelOptions" style="padding-left: 10px;">
-					<li><label class="radio control-label"><input type="radio" name="level" value="0" checked="checked"/>
-						All</label>
-					</li>
-					<li><label class="radio control-label"><input type="radio" name="level" value="3"/> DEBUG</label></li>
-					<li><label class="radio control-label"><input type="radio" name="level" value="4"/> INFO</label></li>
-					<li><label class="radio control-label"><input type="radio" name="level" value="5"/> WARN</label></li>
-					<li><label class="radio control-label"><input type="radio" name="level" value="6"/> ERROR</label></li>
-					<li style="padding-bottom: 5px;"><label class="radio control-label"><input type="radio" name="level"
-					                                                                           value="7"/>
-						FATAL</label></li>
-				</ul>
+			<div class="item">
+				<div class="ui multiple dropdown" id="filter-endpoint">
+					<i class="filter icon"></i>
+					<span class="text">Any Service <i class="dropdown icon"></i></span>
+					<div class="menu">
+						<div class="header">
+							Filter by service
+						</div>
+					</div>
+				</div>
 			</div>
 
-
-			<div class="btn-group">
-				<button class="btn dropdown-toggle" type="button" data-toggle="dropdown">Endpoint Display<span
-						id="renderEndpointSummary"> (short)</span>
-					<span class="caret"></span></button>
-				<ul class="dropdown-menu" id="renderEndpointOptions" style="padding-left: 10px;">
-					<li><label class="radio control-label"><input type="radio" name="endpointRender" value="short"
-					                                              checked="checked"/>
-						Short</label>
-					</li>
-					<li style="padding-bottom: 5px;"><label class="radio control-label"><input type="radio" name="endpointRender"
-					                                                                           value="full"/> Full</label></li>
-				</ul>
-			</div>
-
-			<div class="btn-group">
-				<button class="btn" type="button" onclick="logui.clearLines()">Clear</button>
+			<div class="right menu">
+				<div class="item">
+					<button class="ui button" onclick="logui.clearLines();">Clear Screen</button>
+				</div>
 			</div>
 		</div>
 
@@ -87,13 +64,13 @@
 			</tbody>
 		</table>
 
-		<table class="table">
+		<table class="ui table">
 			<thead>
 			<tr>
-				<th class="span2 log_endpoint">Endpoint</th>
-				<th class="span1 log_when">When</th>
-				<th class="span1 log_level">Level</th>
-				<th class="span7 log_message">Message</th>
+				<th class="span2 log_endpoint" scope="col">Endpoint</th>
+				<th class="span1 log_when" scope="col">When</th>
+				<th class="span1 log_level" scope="col">Level</th>
+				<th class="span7 log_message" scope="col">Message</th>
 			</tr>
 			</thead>
 			<tbody id="loglines" style="text-overflow: ellipsis;">
@@ -104,25 +81,25 @@
 		</table>
 	</div>
 
-	<script th:inline="javascript">/*<![CDATA[*/
-	var tailURL = /*[[@{/logs/tail.do}]]*/ '';
-	var searchURL = /*[[@{/logs/search.do}]]*/ '';
-	var subscriptionId = /*[[${subscriptionId}]]*/ '';
-	var nonce = /*[[${nonce}]]*/ '';
-	var logui;
-
-	$(document).ready(function () {
-		logui = new LogUI($("#logui"), nonce, tailURL, searchURL);
-
-		logui.startTail(subscriptionId);
-	});
-
-	/*]]>*/
-	</script>
-
 	<p th:substituteby="includes :: footer"/>
 </div>
 
 <p th:substituteby="includes :: htmlfoot"/>
+<script th:inline="javascript">/*<![CDATA[*/
+var tailURL = /*[[@{/logs/tail.do}]]*/ '';
+var searchURL = /*[[@{/logs/search.do}]]*/ '';
+var subscriptionId = /*[[${subscriptionId}]]*/ '';
+var nonce = /*[[${nonce}]]*/ '';
+var logui;
+
+$(document).ready(function () {
+	logui = new LogUI($("#logui"), nonce, tailURL, searchURL);
+
+	logui.startTail(subscriptionId);
+});
+
+/*]]>*/
+</script>
+
 </body>
 </html>
