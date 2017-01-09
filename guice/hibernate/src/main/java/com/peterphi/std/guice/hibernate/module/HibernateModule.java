@@ -10,6 +10,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
+import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.usertype.DateUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaDateTimeUserType;
 import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
@@ -57,17 +58,18 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry);
+		TransactionMethodInterceptor txinterceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry);
 
 		// handles @Transactional methods
-		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
+		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), txinterceptor);
 	}
 
 
 	@Provides
 	@Singleton
 	public Configuration getHibernateConfiguration(GuiceConfig guiceConfig,
-	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName)
+	                                               @Named(GuiceProperties.HIBERNATE_PROPERTIES) String propertyFileName,
+	                                               HibernateObservingInterceptor interceptor)
 	{
 		final Properties properties = extractHibernateProperties(guiceConfig, propertyFileName);
 
@@ -75,6 +77,10 @@ public abstract class HibernateModule extends AbstractModule
 
 		// Set up the hibernate Configuration
 		Configuration config = new Configuration();
+
+		// Set up the interceptor
+		config.setInterceptor(interceptor.getInterceptor());
+
 		config.addProperties(properties);
 
 		configure(config);

@@ -9,6 +9,8 @@ import com.peterphi.std.guice.database.annotation.LargeTable;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.database.dao.Dao;
 import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
+import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
+import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
@@ -59,6 +61,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Reconfigurable
 	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
 	boolean performSeparateIdQueryForLargeTables = true;
+
+	@Inject
+	HibernateObservingInterceptor hibernateObserver;
 
 	protected Class<T> clazz;
 
@@ -119,6 +124,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		return getListById(ids);
 	}
+
 
 	@Override
 	public List<T> getListById(final Collection<ID> ids)
@@ -430,45 +436,66 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
-		// Optionally execute the count query
-		final Long total;
-		if (query.constraints.computeSize)
-		{
-			// Re-run the query to obtain the size
-			final Criteria countCriteria = toRowCountCriteria(query);
+		final HibernateSQLLogger statementLog;
 
-			final Number size = (Number) countCriteria.uniqueResult();
-
-			total = size.longValue();
-		}
+		if (query.isLogSQL())
+			statementLog = hibernateObserver.startSQLLogger();
 		else
-		{
-			total = null;
-		}
+			statementLog = null;
 
 
-		// Now fetch back the data
-		final ConstrainedResultSet<T> resultset;
+		try
 		{
-			if (total == null || total > 0)
+			// Optionally execute the count query
+			final Long total;
+			if (query.constraints.computeSize)
 			{
-				final Criteria criteria = createCriteria(query);
+				// Re-run the query to obtain the size
+				final Criteria countCriteria = toRowCountCriteria(query);
 
-				final List<T> results = getList(criteria);
+				final Number size = (Number) countCriteria.uniqueResult();
 
-				resultset = new ConstrainedResultSet<>(query, results);
+				total = size.longValue();
 			}
 			else
 			{
-				// We know there were no results because the collection size was computed
-				resultset = new ConstrainedResultSet<>(query, Collections.emptyList());
+				total = null;
 			}
+
+
+			// Now fetch back the data
+			final ConstrainedResultSet<T> resultset;
+			{
+				if (total == null || total > 0)
+				{
+					final Criteria criteria = createCriteria(query);
+
+					final List<T> results = getList(criteria);
+
+					resultset = new ConstrainedResultSet<>(query, results);
+				}
+				else
+				{
+					// We know there were no results because the collection size was computed
+					resultset = new ConstrainedResultSet<>(query, Collections.emptyList());
+				}
+			}
+
+			resultset.setTotal(total);
+
+			// If we have an active statement log then expose the statements that have been prepared
+			if (statementLog != null)
+			{
+				resultset.setSql(statementLog.getAllStatements());
+			}
+
+			return resultset;
 		}
-
-		resultset.setTotal(total);
-
-
-		return resultset;
+		finally
+		{
+			if (statementLog != null)
+				statementLog.close();
+		}
 	}
 
 

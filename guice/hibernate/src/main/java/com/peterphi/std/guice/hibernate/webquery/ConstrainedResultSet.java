@@ -2,12 +2,14 @@ package com.peterphi.std.guice.hibernate.webquery;
 
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
+import java.util.Collections;
 import java.util.List;
 
 public class ConstrainedResultSet<T>
 {
 	protected /*final*/ ResultSetConstraint constraint;
 	protected /*final*/ WebQuery query;
+	protected List<String> sql = Collections.emptyList();
 	protected final List<T> list;
 
 	protected Long total;
@@ -91,5 +93,17 @@ public class ConstrainedResultSet<T>
 	public void setTotal(final Long total)
 	{
 		this.total = total;
+	}
+
+
+	public List<String> getSql()
+	{
+		return sql;
+	}
+
+
+	public void setSql(final List<String> sql)
+	{
+		this.sql = sql;
 	}
 }

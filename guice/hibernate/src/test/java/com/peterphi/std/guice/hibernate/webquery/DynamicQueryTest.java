@@ -19,11 +19,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		classPackages = ParentEntity.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = ParentEntity.class)
 public class DynamicQueryTest
 {
 	@Inject
@@ -194,13 +194,13 @@ public class DynamicQueryTest
 			dao.save(obj2);
 		}
 
-		assertEquals("deprecated=true matches 2 rows", 2, dao.findByUriQuery(new WebQuery().eq("deprecated", true))
-		                                                     .getList()
-		                                                     .size());
+		assertEquals("deprecated=true matches 2 rows",
+		             2,
+		             dao.findByUriQuery(new WebQuery().eq("deprecated", true)).getList().size());
 
-		assertEquals("deprecated=false matches nothing", 0, dao.findByUriQuery(new WebQuery().eq("deprecated", false))
-		                                                       .getList()
-		                                                       .size());
+		assertEquals("deprecated=false matches nothing",
+		             0,
+		             dao.findByUriQuery(new WebQuery().eq("deprecated", false)).getList().size());
 	}
 
 
@@ -216,6 +216,25 @@ public class DynamicQueryTest
 		dao.save(obj2);
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(dao.findByUriQuery(new WebQuery().orderAsc("id")).getList()));
+	}
+
+
+	@Test
+	public void testLogSQL() throws Exception
+	{
+		ParentEntity obj1 = new ParentEntity();
+		obj1.setName("Name1");
+		dao.save(obj1);
+
+		ParentEntity obj2 = new ParentEntity();
+		obj2.setName("Name2");
+		dao.save(obj2);
+
+		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("id").logSQL(true));
+
+		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
+		assertNotNull(resultset.getSql());
+		assertTrue("Hibernate must have prepared at least one statement", resultset.getSql().size() >= 1);
 	}
 
 

@@ -39,6 +39,9 @@ public class WebQuery
 	@XmlAttribute
 	public String expand = "all";
 
+	@XmlAttribute
+	public boolean logSQL = false;
+
 	@XmlElement
 	public WQConstraints constraints = new WQConstraints();
 
@@ -89,14 +92,28 @@ public class WebQuery
 	}
 
 
+	public boolean isLogSQL()
+	{
+		return this.logSQL;
+	}
+
+
 	@Override
 	public String toString()
 	{
 		return "WebQuery{" +
-		       "fetch='" + fetch + '\'' +
-		       ", expand='" + expand + '\'' +
-		       ", constraints=" + constraintsToQueryFragment() +
-		       ", orderings=" + orderings +
+		       "fetch='" +
+		       fetch +
+		       '\'' +
+		       ", expand='" +
+		       expand +
+		       '\'' +
+		       ", constraints=" +
+		       constraintsToQueryFragment() +
+		       ", logSQL=" +
+		       logSQL +
+		       ", orderings=" +
+		       orderings +
 		       '}';
 	}
 
@@ -185,6 +202,13 @@ public class WebQuery
 		return this;
 	}
 
+
+	public WebQuery logSQL(final boolean enabled)
+	{
+		this.logSQL = enabled;
+
+		return this;
+	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 	// Constraints
@@ -454,6 +478,8 @@ public class WebQuery
 					case COMPUTE_SIZE:
 						def.computeSize(parseBoolean(entry.getValue().get(0)));
 						break;
+					case LOG_SQL:
+						def.logSQL(parseBoolean(entry.getValue().get(0)));
 					case EXPAND:
 						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
 						break;
@@ -465,7 +491,7 @@ public class WebQuery
 						def.fetch(entry.getValue().stream().collect(Collectors.joining(",")));
 						break;
 					default:
-						throw new IllegalArgumentException("Unknown query field: " + specialField);
+						throw new IllegalArgumentException("Unknown query field: " + specialField + " expected one of " + WQUriControlField.getAllNames());
 				}
 			}
 			else
@@ -488,10 +514,11 @@ public class WebQuery
 
 					group.operator = WQGroupType.OR;
 
-					group.constraints = entry.getValue()
-					                         .stream()
-					                         .map(value -> WQConstraint.decode(entry.getKey(), value))
-					                         .collect(Collectors.toList());
+					group.constraints = entry
+							                    .getValue()
+							                    .stream()
+							                    .map(value -> WQConstraint.decode(entry.getKey(), value))
+							                    .collect(Collectors.toList());
 
 					def.constraints.constraints.add(group);
 				}
@@ -505,10 +532,12 @@ public class WebQuery
 
 	private static boolean parseBoolean(String value)
 	{
-		if (StringUtils.equalsIgnoreCase(value, "true") || StringUtils.equalsIgnoreCase(value, "yes") ||
+		if (StringUtils.equalsIgnoreCase(value, "true") ||
+		    StringUtils.equalsIgnoreCase(value, "yes") ||
 		    StringUtils.equalsIgnoreCase(value, "on"))
 			return true;
-		else if (StringUtils.equalsIgnoreCase(value, "false") || StringUtils.equalsIgnoreCase(value, "no") ||
+		else if (StringUtils.equalsIgnoreCase(value, "false") ||
+		         StringUtils.equalsIgnoreCase(value, "no") ||
 		         StringUtils.equalsIgnoreCase(value, "off"))
 			return false;
 		else
