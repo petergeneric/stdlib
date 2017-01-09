@@ -533,7 +533,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected Criteria toRowCountCriteria(WebQuery constraints)
 	{
-		final Criteria criteria = toSimpleUnorderedCriteria(constraints);
+		final Criteria criteria = toSimpleCriteria(constraints);
 
 		// Discount offset/limit
 		criteria.setFirstResult(0);
@@ -575,24 +575,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return criteria;
 	}
 
-	/**
-	 * Create a straight conversion of the provided ResultSetConstraint, ignoring any ordering specified in the query.
-	 *
-	 * @param query
-	 * 		the constraints (optional, if null then no restrictions will be appended to the base criteria)
-	 *
-	 * @return
-	 */
-	private Criteria toSimpleUnorderedCriteria(WebQuery query)
-	{
-		final Criteria criteria = createCriteria();
-
-		// Encode the WebQuery (skip ordering) and add the constraints
-		toCriteriaBuilder(query, true).appendTo(criteria);
-
-		return criteria;
-	}
-
 
 	/**
 	 * Convert a WebQuery to a QCriteriaBuilder representing the same query
@@ -603,20 +585,11 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 */
 	protected QCriteriaBuilder toCriteriaBuilder(final WebQuery query)
 	{
-		return toCriteriaBuilder(query,false);
-	}
-
-	private QCriteriaBuilder toCriteriaBuilder(final WebQuery query, boolean skipOrdering)
-	{
 		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity()).offset(query.getOffset()).limit(query.getLimit());
 
-
-		if(!skipOrdering)
-		{
-			// Add the sort order
-			for (WQOrder order : query.orderings)
-				builder.addOrder(builder.getProperty(order.field), order.isAsc());
-		}
+		// Add the sort order
+		for (WQOrder order : query.orderings)
+			builder.addOrder(builder.getProperty(order.field), order.isAsc());
 
 		if (StringUtils.isNotBlank(query.constraints.subclass))
 			builder.addClass(Arrays.asList(query.constraints.subclass.split(",")));
