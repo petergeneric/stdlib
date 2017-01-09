@@ -4,12 +4,16 @@ import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Disjunction;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.sql.JoinType;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
@@ -28,8 +32,8 @@ public class QCriteriaBuilder
 
 	private final List<String> discriminators = new ArrayList<>();
 
-	private int offset = 0;
-	private int limit = 200;
+	private Integer offset = 0;
+	private Integer limit = 200;
 
 
 	public QCriteriaBuilder(final QEntity entity)
@@ -38,7 +42,49 @@ public class QCriteriaBuilder
 	}
 
 
-	public QCriteriaBuilder limit(int limit)
+	public QCriteriaBuilder(final QEntity entity, final WebQuery query)
+	{
+		this(entity);
+
+		this.offset(query.getOffset());
+		this.limit(query.getLimit());
+
+		// Add the sort order
+		for (WQOrder order : query.orderings)
+			this.addOrder(this.getProperty(order.field), order.isAsc());
+
+		if (StringUtils.isNotBlank(query.constraints.subclass))
+			this.addClass(Arrays.asList(query.constraints.subclass.split(",")));
+
+		this.addConstraints(query.constraints.constraints);
+	}
+
+	public QCriteriaBuilder clearConstraints()
+	{
+		this.constraints.clear();
+
+		return this;
+	}
+
+
+	public QCriteriaBuilder clearOrder()
+	{
+		this.order.clear();
+
+		return this;
+	}
+
+
+	public QCriteriaBuilder clearPagination()
+	{
+		this.offset = null;
+		this.limit = null;
+
+		return this;
+	}
+
+
+	public QCriteriaBuilder limit(Integer limit)
 	{
 		this.limit = limit;
 
@@ -46,7 +92,7 @@ public class QCriteriaBuilder
 	}
 
 
-	public QCriteriaBuilder offset(int offset)
+	public QCriteriaBuilder offset(Integer offset)
 	{
 		this.offset = offset;
 
@@ -110,45 +156,28 @@ public class QCriteriaBuilder
 
 	/**
 	 * Append the Criteria currently described by this object to the provided Criteria<br />
-	 * This method will also set the FirstResult and the MaxResults properties of the Criteria.
+	 * This method will set the FirstResult and the MaxResults properties of the Criteria if they're set in the query.
 	 *
 	 * @param criteria
 	 * 		the base criteria to use
 	 */
 	public void appendTo(Criteria criteria)
 	{
-		appendTo(criteria, true, true);
-	}
-
-
-	/**
-	 * @param criteria
-	 * 		the base criteria to use
-	 * @param includeConstraints
-	 * 		if true, the regular criteria will be added to the query (all non-discriminator constraints)
-	 * @param includePagination
-	 * 		if true, LIMIT and OFFSET will be set in the query
-	 */
-	public void appendTo(Criteria criteria, boolean includeConstraints, boolean includePagination)
-	{
 		appendJoins(criteria);
 
 		appendDiscriminators(criteria);
 
-		if (includeConstraints)
-		{
-			// Add the constraints
-			for (QFunction constraint : constraints)
-				criteria.add(constraint.encode());
-		}
+		// Add the constraints
+		for (QFunction constraint : constraints)
+			criteria.add(constraint.encode());
 
 		appendOrder(criteria);
 
-		if (includePagination)
-		{
+		if (offset != null)
 			criteria.setFirstResult(offset);
+
+		if (limit != null)
 			criteria.setMaxResults(limit);
-		}
 	}
 
 

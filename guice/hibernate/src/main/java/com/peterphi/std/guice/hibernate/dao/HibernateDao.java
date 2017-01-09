@@ -13,9 +13,7 @@ import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
-import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
@@ -27,7 +25,6 @@ import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -485,6 +482,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Criteria createCriteria(WebQuery constraints)
 	{
 		// Optionally treat large tables differently (works around a SQL Server performance issue)
+		// See documentation on toGetByIdCriteria for more detail
 		if (isLargeTable && performSeparateIdQueryForLargeTables)
 			return toGetByIdCriteria(constraints);
 		else
@@ -492,6 +490,25 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	/**
+	 * SQL Server Performance Workaround
+	 * <p>
+	 * Given a normal query, execute the search component <strong>but not the data retrieval</strong>, instead retrieving only
+	 * the Primary Keys of the entities to return (paginated and in the correct order).
+	 * <p>
+	 * This is to side-step an issue in SQL Server where it expands all the joins against a large table into a temporary table
+	 * before then applying filtering to that temporary table (not applying any of the filters to the original table) - this
+	 * results in a massive temporary table being created and then almost immediately being filtered down to a very small number
+	 * of rows.
+	 * <p>
+	 * If the initial query is only asking for Primary Keys then SQL Server is able to optimise the query correctly. N.B. this
+	 * could also be implemented as a subquery to avoid a double-query however it'd be necessary to be able to convert a WebQuery
+	 * into a DetachedCriteria in order to do this (and support is not yet written for this)
+	 *
+	 * @param constraints
+	 *
+	 * @return
+	 */
 	protected Criteria toGetByIdCriteria(WebQuery constraints)
 	{
 		// Retrieve the primary keys separately from the data
@@ -503,8 +520,8 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		{
 			criteria.add(Restrictions.in(idProperty(), ids));
 
-			// Append joins, orders and discriminators (but not the constraints, we have already evaluated them)
-			toCriteriaBuilder(constraints).appendTo(criteria, false, false);
+			// Append joins, orders and discriminators (but not the constraint/order/pagination, we have already evaluated them)
+			toCriteriaBuilder(constraints).clearConstraints().clearOrder().clearPagination().appendTo(criteria);
 
 			return criteria;
 		}
@@ -533,7 +550,10 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected Criteria toRowCountCriteria(WebQuery constraints)
 	{
-		final Criteria criteria = toSimpleCriteria(constraints);
+		final Criteria criteria = createCriteria();
+
+		// Encode the WebQuery and add the constraints
+		toCriteriaBuilder(constraints).clearPagination().clearOrder().appendTo(criteria);
 
 		// Discount offset/limit
 		criteria.setFirstResult(0);
@@ -585,17 +605,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 */
 	protected QCriteriaBuilder toCriteriaBuilder(final WebQuery query)
 	{
-		final QCriteriaBuilder builder = new QCriteriaBuilder(getQEntity()).offset(query.getOffset()).limit(query.getLimit());
-
-		// Add the sort order
-		for (WQOrder order : query.orderings)
-			builder.addOrder(builder.getProperty(order.field), order.isAsc());
-
-		if (StringUtils.isNotBlank(query.constraints.subclass))
-			builder.addClass(Arrays.asList(query.constraints.subclass.split(",")));
-
-		builder.addConstraints(query.constraints.constraints);
-
-		return builder;
+		return new QCriteriaBuilder(getQEntity(), query);
 	}
 }
