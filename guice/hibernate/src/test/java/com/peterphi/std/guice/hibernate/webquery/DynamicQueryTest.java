@@ -22,8 +22,7 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		classPackages = ParentEntity.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = ParentEntity.class)
 public class DynamicQueryTest
 {
 	@Inject
@@ -194,13 +193,13 @@ public class DynamicQueryTest
 			dao.save(obj2);
 		}
 
-		assertEquals("deprecated=true matches 2 rows", 2, dao.findByUriQuery(new WebQuery().eq("deprecated", true))
-		                                                     .getList()
-		                                                     .size());
+		assertEquals("deprecated=true matches 2 rows",
+		             2,
+		             dao.findByUriQuery(new WebQuery().eq("deprecated", true)).getList().size());
 
-		assertEquals("deprecated=false matches nothing", 0, dao.findByUriQuery(new WebQuery().eq("deprecated", false))
-		                                                       .getList()
-		                                                       .size());
+		assertEquals("deprecated=false matches nothing",
+		             0,
+		             dao.findByUriQuery(new WebQuery().eq("deprecated", false)).getList().size());
 	}
 
 
@@ -234,8 +233,13 @@ public class DynamicQueryTest
 	}
 
 
+	/**
+	 * Tests that computing size while applying ordering and limiting to the resultset still works
+	 *
+	 * @throws Exception
+	 */
 	@Test
-	public void testComputeSize() throws Exception
+	public void testComputeSizeWithOrder() throws Exception
 	{
 		{
 			ParentEntity obj1 = new ParentEntity();
@@ -245,13 +249,25 @@ public class DynamicQueryTest
 			ParentEntity obj2 = new ParentEntity();
 			obj2.setName("Name2");
 			dao.save(obj2);
+
+			ParentEntity obj3 = new ParentEntity();
+			obj3.setName("Name3");
+			dao.save(obj3);
 		}
 
 
-		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(new WebQuery().limit(1).computeSize(true));
+		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(new WebQuery()
+				                                                                .computeSize(true)
+				                                                                .orderDesc("name")
+				                                                                .limit(2));
 
-		assertEquals(1, results.getList().size());
-		assertEquals(Long.valueOf(2), results.getTotal());
+		// Must have correct total size
+		assertEquals("must have computed total size", Long.valueOf(3), results.getTotal());
+
+		// Must still honour limit
+		assertEquals(2, results.getList().size());
+		assertEquals(Arrays.asList("Name3", "Name2"),
+		             results.getList().stream().map(e -> e.getName()).collect(Collectors.toList()));
 	}
 
 
