@@ -67,6 +67,7 @@ public class WebappAuthenticationModule extends AbstractModule
 	@SessionScoped
 	public CurrentUser getCurrentUser(Injector injector, HttpServletRequest request)
 	{
+
 		for (String providerName : providerNames)
 		{
 			final Provider<CurrentUser> provider = injector.getProvider(Key.get(CurrentUser.class, Names.named(providerName)));
