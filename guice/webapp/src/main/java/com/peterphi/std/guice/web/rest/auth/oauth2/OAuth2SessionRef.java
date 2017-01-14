@@ -13,6 +13,7 @@ import org.apache.log4j.Logger;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.Base64;
 
 /**
  * Holds the OAuth2 callback information for this session; will start unpopulated (see {@link #isValid()}) and then be populated
@@ -110,14 +111,35 @@ public class OAuth2SessionRef
 		builder.replaceQueryParam("response_type", "code");
 		builder.replaceQueryParam("client_id", clientId);
 		builder.replaceQueryParam("redirect_uri", getOwnCallbackUri());
-
 		if (scope != null)
 			builder.replaceQueryParam("scope", scope);
 
 		if (returnTo != null)
-			builder.replaceQueryParam("state", callbackNonce + " " + returnTo);
+			builder.replaceQueryParam("state", encodeState(callbackNonce + " " + returnTo));
 
 		return builder.build();
+	}
+
+
+	/**
+	 * Encode the state value into RFC $648 URL-safe base64
+	 * @param src
+	 * @return
+	 */
+	private String encodeState(final String src)
+	{
+		return Base64.getUrlEncoder().encodeToString(src.getBytes());
+	}
+
+
+	/**
+	 * Decode the state value (which should be encoded as RFC 4648 URL-safe base64)
+	 * @param src
+	 * @return
+	 */
+	private String decodeState(final String src)
+	{
+		return new String(Base64.getUrlDecoder().decode(src));
 	}
 
 
@@ -130,7 +152,7 @@ public class OAuth2SessionRef
 	 */
 	public URI getRedirectToFromState(final String state)
 	{
-		final String[] pieces = state.split(" ", 2);
+		final String[] pieces = decodeState(state).split(" ", 2);
 
 		if (!StringUtils.equals(callbackNonce, pieces[0]))
 			throw new IllegalArgumentException("WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
