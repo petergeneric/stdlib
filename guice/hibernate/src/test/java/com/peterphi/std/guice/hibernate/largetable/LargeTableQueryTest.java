@@ -9,6 +9,8 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
@@ -42,6 +44,30 @@ public class LargeTableQueryTest
 		// Now try a web query
 		assertEquals(2, dao.findByUriQuery(new WebQuery().contains("name", "a")).getList().size());
 	}
+
+	/**
+	 * Test that searching works with ordering
+	 */
+	@Test
+	@Transactional
+	public void testSearchWorksWithOrder()
+	{
+		dao.save(new LargeTableSimplePKEntity("Alice"));
+		dao.save(new LargeTableSimplePKEntity("Bob"));
+		dao.save(new LargeTableSimplePKEntity("Carol"));
+		dao.save(new LargeTableSimplePKEntity("Dave"));
+		dao.save(new LargeTableSimplePKEntity("Eve"));
+
+		// Now try a web query
+
+		List<LargeTableSimplePKEntity> list = dao.findByUriQuery(new WebQuery().contains("name", "l").orderDesc("name")).getList();
+
+		assertEquals(2,list.size());
+		assertEquals("Carol",list.get(0).name);
+		assertEquals("Alice",list.get(1).name);
+	}
+
+
 
 
 	/**
