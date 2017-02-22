@@ -9,13 +9,14 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		classPackages = LargeTableQueryTest.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = LargeTableQueryTest.class)
 public class LargeTableQueryTest
 {
 	@Inject
@@ -45,6 +46,7 @@ public class LargeTableQueryTest
 		assertEquals(2, dao.findByUriQuery(new WebQuery().contains("name", "a")).getList().size());
 	}
 
+
 	/**
 	 * Test that searching works with ordering
 	 */
@@ -60,14 +62,15 @@ public class LargeTableQueryTest
 
 		// Now try a web query
 
-		List<LargeTableSimplePKEntity> list = dao.findByUriQuery(new WebQuery().contains("name", "l").orderDesc("name")).getList();
+		List<LargeTableSimplePKEntity> list = dao
+				                                      .findByUriQuery(new WebQuery().contains("name", "l").orderDesc("name"))
+				                                      .getList();
 
-		assertEquals(2,list.size());
-		assertEquals("Carol",list.get(0).name);
-		assertEquals("Alice",list.get(1).name);
+		List<String> expected = Arrays.asList("Carol", "Alice");
+		List<String> actual = list.stream().map(e -> e.name).collect(Collectors.toList());
+
+		assertEquals(expected, actual);
 	}
-
-
 
 
 	/**

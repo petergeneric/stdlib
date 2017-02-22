@@ -547,7 +547,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		{
 			criteria.add(Restrictions.in(idProperty(), ids));
 
-			// Append joins, orders and discriminators (but not the constraint/order/pagination, we have already evaluated them)
+			// Append joins, orders and discriminators (but not the constraint/pagination, we have already evaluated them)
 			toCriteriaBuilder(constraints).clearConstraints().clearPagination().appendTo(criteria);
 
 			return criteria;
