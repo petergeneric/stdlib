@@ -4,18 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.rules.RulesEngine;
-import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
-import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfigChangeObserver;
-import com.peterphi.std.guice.common.serviceprops.jaxbref.JAXBResourceFactory;
 import com.peterphi.std.threading.Timeout;
-import ognl.OgnlException;
 
 /**
  * Created by bmcleod on 08/09/2016.
@@ -38,13 +33,17 @@ public class RulesDaemon extends GuiceRecurringDaemon implements GuiceConfigChan
 	@Inject
 	GuiceConfig guiceConfig;
 
+	@Inject(optional = true)
+	@Named("daemon.RulesDaemon.enabled")
 	boolean enabled = true;
+
 
 	@Inject
 	protected RulesDaemon(@Named("rules.daemon.sleep.time") final Timeout sleepTime)
 	{
 		super(sleepTime);
 	}
+
 
 	@Override
 	public void postConstruct()
@@ -53,9 +52,13 @@ public class RulesDaemon extends GuiceRecurringDaemon implements GuiceConfigChan
 		guiceConfig.registerChangeObserver(this);
 	}
 
+
 	@Override
 	protected void execute() throws Exception
 	{
+		if (!enabled)
+			return; // We have been disabled
+
 		Rules rules = rulesProvider.get();
 		rulesEngine.run(rules, true);
 	}
