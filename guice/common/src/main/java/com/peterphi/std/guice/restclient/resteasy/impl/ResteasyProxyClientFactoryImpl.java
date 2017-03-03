@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
@@ -29,6 +30,9 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	@Inject
 	GuiceConfig config;
+
+	@Inject
+	Injector guice;
 
 	@Inject(optional = true)
 	@Named("jaxrs.cookie-store")
@@ -105,7 +109,35 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final String authType = config.get("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store", defaultStoreCookies);
 		final String bearerToken = config.get("service." + name + ".bearer", null);
-		final Supplier<String> bearerSupplier = (bearerToken != null) ? () -> bearerToken : null; // Supply fixed token
+		final String bearerTokenClassName = config.get("service." + name + ".bearer-generator", null);
+
+
+		final Supplier<String> bearerSupplier;
+		{
+			if (bearerToken != null)
+			{
+				bearerSupplier = () -> bearerToken;
+			}
+			else if (bearerTokenClassName != null)
+			{
+				try
+				{
+					final Class<?> bearerClass = Class.forName(bearerTokenClassName);
+
+					final Object instance = guice.getInstance(bearerClass);
+
+					bearerSupplier = (Supplier<String>) instance;
+				}
+				catch (Throwable e)
+				{
+					throw new RuntimeException("Error trying to instantiate bearer-generator class " + bearerTokenClassName, e);
+				}
+			}
+			else
+			{
+				bearerSupplier = null;
+			}
+		}
 
 		final boolean preemptiveAuth;
 		if (bearerToken != null)
@@ -243,12 +275,14 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			credentials = null;
 		}
 
-		return clientFactory.getOrCreateClient(fastFail,
-		                                       scope,
-		                                       credentials,
-		                                       (credentials != null) && preemptiveAuth,
-		                                       storeCookies,
-		                                       null).target(endpoint);
+		return clientFactory
+				       .getOrCreateClient(fastFail,
+				                          scope,
+				                          credentials,
+				                          (credentials != null) && preemptiveAuth,
+				                          storeCookies,
+				                          null)
+				       .target(endpoint);
 	}
 
 
