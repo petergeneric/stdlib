@@ -140,7 +140,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		}
 
 		final boolean preemptiveAuth;
-		if (bearerToken != null)
+		if (bearerSupplier != null)
 			preemptiveAuth = true; // force pre-emptive auth
 		else if (authType.equalsIgnoreCase(GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT))
 			preemptiveAuth = false;
