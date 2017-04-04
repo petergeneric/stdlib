@@ -87,6 +87,23 @@ public class Timebase
 	}
 
 
+	public boolean isIntegerRate()
+	{
+		if (numerator == 1)
+			return true;
+		else if (this.equals(NTSC))
+			return false;
+		else
+			return Math.ceil(getSamplesPerSecond()) == Math.floor(getSamplesPerSecond());
+	}
+
+
+	public boolean isDropFrame()
+	{
+		return !isIntegerRate();
+	}
+
+
 	/**
 	 * The number of samples each second
 	 *
@@ -99,13 +116,13 @@ public class Timebase
 
 
 	/**
-	 * Samples per second, cast to an integer (accurate only if the numerator is 1)
+	 * Samples per second, cast to an integer (rounded in the case of fractional frames per second)
 	 *
 	 * @return
 	 */
 	public int getIntSamplesPerSecond()
 	{
-		return (int) getSamplesPerSecond();
+		return (int) Math.round(getSamplesPerSecond());
 	}
 
 
@@ -176,8 +193,8 @@ public class Timebase
 		final double resampled = resample((double) samples, oldRate);
 		final double rounded = Math.round(resampled);
 
-		// Warn about any loss in precision
-		if (resampled != rounded)
+		// Warn about significant loss of precision
+		if (resampled != rounded && Math.abs(rounded - resampled) > 0.000001)
 		{
 			if (failOnPrecisionLoss)
 			{
@@ -199,7 +216,9 @@ public class Timebase
 				         " to " +
 				         this +
 				         " produced " +
-				         resampled + " which will be rounded to " + rounded);
+				         resampled +
+				         " which will be rounded to " +
+				         rounded);
 			}
 		}
 

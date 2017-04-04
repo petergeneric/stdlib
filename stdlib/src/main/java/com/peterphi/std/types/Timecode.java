@@ -122,30 +122,41 @@ public class Timecode
 	 */
 	public long getDurationInFrames(boolean allowDropFrameRemoval)
 	{
-		final double fps = this.timebase.getSamplesPerSecond();
-
-		double totalFrames = frames;
-
-		totalFrames += seconds * fps;
-		totalFrames += (minutes * 60) * fps;
-		totalFrames += (hours * 60 * 60) * fps;
-		totalFrames += (days * 24 * 60 * 60) * fps;
-
-		if (dropFrame && allowDropFrameRemoval)
-		{
-			// remove the drop frames
-			long totalMins = (hours * 60) + minutes;
-			long dropFrames = (totalMins * 2) - ((totalMins / 10) * 2);
-			totalFrames -= dropFrames;
-		}
+		final long totalFrames = getFrameNumber(hours + (days * 24),
+		                                        minutes,
+		                                        seconds,
+		                                        frames,
+		                                        dropFrame,
+		                                        timebase.getSamplesPerSecond());
 
 		// Flip the sign if negative
 		if (negative)
-		{
-			totalFrames = totalFrames * -1;
-		}
+			return totalFrames * -1;
+		else
+			return totalFrames;
+	}
 
-		return Math.round(totalFrames);
+
+	static long getFrameNumber(final long hours,
+	                           final long minutes,
+	                           final long seconds,
+	                           final long frames,
+	                           final boolean dropFrame,
+	                           final double framerate)
+	{
+		//Code by David Heidelberger, adapted from Andrew Duncan
+
+		long dropFrames = dropFrame ?
+		                  Math.round(framerate * .066666) :
+		                  0; //Number of drop frames is 6% of framerate rounded to nearest integer
+		long timeBase = Math.round(framerate); //We don't need the exact framerate anymore, we just need it rounded to nearest integer
+
+		long hourFrames = timeBase * 60 * 60; //Number of frames per hour (non-drop)
+		long minuteFrames = timeBase * 60; //Number of frames per minute (non-drop)
+		long totalMinutes = (60 * hours) + minutes; //Total number of minutes
+		long frameNumber = ((hourFrames * hours) + (minuteFrames * minutes) + (timeBase * seconds) + frames) -
+		                   (dropFrames * (totalMinutes - (totalMinutes / 10)));
+		return frameNumber;
 	}
 
 
@@ -674,7 +685,7 @@ public class Timecode
 	 */
 	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Timebase timebase)
 	{
-		return TimecodeBuilder.fromFrames(frameNumber, dropFrame, timebase).build();
+		return TimecodeBuilder.fromFrames(frameNumber, timebase).withDropFrame(dropFrame).build();
 	}
 
 

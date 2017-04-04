@@ -10,8 +10,6 @@ import java.util.Date;
  */
 public class TimecodeBuilder
 {
-	private static final int DROP_FRAMES_PER_TEN_MIN = 9 * 2;
-
 	private boolean negative = false;
 	private long days = 0;
 	private long hours = 0;
@@ -19,7 +17,7 @@ public class TimecodeBuilder
 	private long seconds = 0;
 	private long frames = 0;
 	private Timebase rate = null;
-	private boolean dropFrame = false;
+	private Boolean dropFrame;
 
 
 	/**
@@ -31,14 +29,15 @@ public class TimecodeBuilder
 	 */
 	public TimecodeBuilder withTimecode(Timecode timecode)
 	{
-		return this.withNegative(timecode.isNegative())
-		           .withDays(timecode.getDaysPart())
-		           .withHours(timecode.getHoursPart())
-		           .withMinutes(timecode.getMinutesPart())
-		           .withSeconds(timecode.getSecondsPart())
-		           .withFrames(timecode.getFramesPart())
-		           .withDropFrame(timecode.isDropFrame())
-		           .withRate(timecode.getTimebase());
+		return this
+				       .withNegative(timecode.isNegative())
+				       .withDays(timecode.getDaysPart())
+				       .withHours(timecode.getHoursPart())
+				       .withMinutes(timecode.getMinutesPart())
+				       .withSeconds(timecode.getSecondsPart())
+				       .withFrames(timecode.getFramesPart())
+				       .withDropFrame(timecode.isDropFrame())
+				       .withRate(timecode.getTimebase());
 	}
 
 
@@ -59,13 +58,15 @@ public class TimecodeBuilder
 		return withTime(time, Timebase.HZ_25);
 	}
 
+
 	public TimecodeBuilder withTime(LocalTime time, Timebase timebase)
 	{
-		final Timecode baseTimecode = new TimecodeBuilder().withHours(time.getHourOfDay())
-		                                                   .withMinutes(time.getMinuteOfHour())
-		                                                   .withSeconds(time.getSecondOfMinute())
-		                                                   .withRate(timebase)
-		                                                   .build();
+		final Timecode baseTimecode = new TimecodeBuilder()
+				                              .withHours(time.getHourOfDay())
+				                              .withMinutes(time.getMinuteOfHour())
+				                              .withSeconds(time.getSecondOfMinute())
+				                              .withRate(timebase)
+				                              .build();
 
 		// Add the samples component (we can't just setFrames lest it round toa whole second)
 		final Timecode timecode = baseTimecode.add(new SampleCount(time.getMillisOfSecond(), Timebase.HZ_1000));
@@ -140,6 +141,8 @@ public class TimecodeBuilder
 	 */
 	public Timecode build()
 	{
+		final boolean dropFrame = (this.dropFrame != null) ? this.dropFrame.booleanValue() : getRate().isDropFrame();
+
 		return new Timecode(negative, days, hours, minutes, seconds, frames, rate, dropFrame);
 	}
 
@@ -191,7 +194,7 @@ public class TimecodeBuilder
 	}
 
 
-	public boolean isDropFrame()
+	public Boolean isDropFrame()
 	{
 		return dropFrame;
 	}
@@ -206,14 +209,22 @@ public class TimecodeBuilder
 	public String toString()
 	{
 		return "[TimecodeBuilder" +
-		       "negative=" + negative +
-		       ", days=" + days +
-		       ", hours=" + hours +
-		       ", minutes=" + minutes +
-		       ", seconds=" + seconds +
-		       ", frames=" + frames +
-		       ", rate=" + rate +
-		       ", dropFrame=" + dropFrame +
+		       "negative=" +
+		       negative +
+		       ", days=" +
+		       days +
+		       ", hours=" +
+		       hours +
+		       ", minutes=" +
+		       minutes +
+		       ", seconds=" +
+		       seconds +
+		       ", frames=" +
+		       frames +
+		       ", rate=" +
+		       rate +
+		       ", dropFrame=" +
+		       dropFrame +
 		       ']';
 	}
 
@@ -302,65 +313,76 @@ public class TimecodeBuilder
 		final int seconds = Integer.parseInt(parts[i++]);
 		final int frames = Integer.parseInt(parts[i++]);
 
-		return new TimecodeBuilder().withNegative(negative)
-		                            .withDropFrame(dropFrame)
-		                            .withDays(days)
-		                            .withHours(hours)
-		                            .withMinutes(minutes)
-		                            .withSeconds(seconds)
-		                            .withFrames(frames);
+		return new TimecodeBuilder()
+				       .withNegative(negative)
+				       .withDropFrame(dropFrame)
+				       .withDays(days)
+				       .withHours(hours)
+				       .withMinutes(minutes)
+				       .withSeconds(seconds)
+				       .withFrames(frames);
 	}
 
 
 	public static TimecodeBuilder fromSamples(final SampleCount samples, final boolean dropFrame)
 	{
-		return fromFrames(samples.getSamples(), dropFrame, samples.getRate());
+		return fromFrames(samples.getSamples(), samples.getRate());
 	}
 
 
-	public static TimecodeBuilder fromFrames(final long signedFrameNumber, boolean dropFrame, final Timebase rate)
+	public static TimecodeBuilder fromFrames(final long signedFrameNumber, final Timebase rate)
 	{
-		final double fps = rate.getSamplesPerSecond();
 		final boolean negative = signedFrameNumber < 0;
 
 		// Now make it positive
 		long frameNumber = Math.abs(signedFrameNumber);
 
-		if (dropFrame)
-		{
-			// add in the number of drop frames, we can then treat the new value as a "non drop frame calc".
-			frameNumber = compensateForDropFrame(frameNumber, fps);
-		}
+		if (rate.isDropFrame())
+			frameNumber = compensateForDropFrame(frameNumber, rate.getSamplesPerSecond());
 
+		final int fps = rate.getIntSamplesPerSecond();
 		final long frames = Math.round(Math.floor((frameNumber % fps)));
 		final long seconds = Math.round(Math.floor((frameNumber / fps))) % 60;
 		final long minutes = (Math.round(Math.floor((frameNumber / fps))) / 60) % 60;
 		final long hours = ((Math.round(Math.floor((frameNumber / fps))) / 60) / 60) % 24;
 		final long days = (Math.round(Math.floor(((((frameNumber / fps) / 60) / 60) / 24))));
 
-		return new TimecodeBuilder().withNegative(negative)
-		                            .withDropFrame(dropFrame)
-		                            .withDays(days)
-		                            .withHours(hours)
-		                            .withMinutes(minutes)
-		                            .withSeconds(seconds)
-		                            .withFrames(frames)
-		                            .withRate(rate);
+		return new TimecodeBuilder()
+				       .withNegative(negative)
+				       .withDropFrame(rate.isDropFrame())
+				       .withDays(days)
+				       .withHours(hours)
+				       .withMinutes(minutes)
+				       .withSeconds(seconds)
+				       .withFrames(frames)
+				       .withRate(rate);
 	}
 
 
-	private static long compensateForDropFrame(final long frames, final double framesPerSecond)
+	/**
+	 * @param framenumber
+	 * @param framerate
+	 * 		should be 29.97, 59.94, or 23.976, otherwise the calculations will be off.
+	 *
+	 * @return a frame number that lets us use non-dropframe computations to extract time components
+	 */
+	static long compensateForDropFrame(final long framenumber, final double framerate)
 	{
-		// add in the number of drop frames, we can then treat the new value as a "non drop frame calc".
-		final double framesPerMin = (framesPerSecond * 60L);
-		final double framesPerTenMin = (framesPerMin * 10L) + DROP_FRAMES_PER_TEN_MIN;
+		//Code by David Heidelberger, adapted from Andrew Duncan
 
-		final long numberOfTenMinExtents = Math.round(Math.floor(frames / framesPerTenMin));
-		final long numberOfTrailingExtents = Math.round(Math.floor(((frames % framesPerTenMin) / framesPerMin)));
+		//Number of frames to drop on the minute marks is the nearest integer to 6% of the framerate
+		final long dropFrames = Math.round(framerate * .066666);
 
-		// add the number of drop frames
-		final long compensated = frames + (numberOfTenMinExtents * DROP_FRAMES_PER_TEN_MIN) + (numberOfTrailingExtents * 2);
+		final long framesPer10Minutes = Math.round(framerate * 60 * 10);
+		final long framesPerMinute = (Math.round(framerate) * 60) - dropFrames;
 
-		return compensated;
+		final long d = framenumber / framesPer10Minutes;
+		final long m = framenumber % framesPer10Minutes;
+
+		//In the original post, the next line read m>1, which only worked for 29.97. Jean-Baptiste Mardelle correctly pointed out that m should be compared to dropFrames.
+		if (m > dropFrames)
+			return framenumber + (dropFrames * 9 * d) + dropFrames * ((m - dropFrames) / framesPerMinute);
+		else
+			return framenumber + dropFrames * 9 * d;
 	}
 }
