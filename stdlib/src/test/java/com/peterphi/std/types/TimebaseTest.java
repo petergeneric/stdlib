@@ -14,6 +14,8 @@ public class TimebaseTest
 		assertEquals(50, Timebase.HZ_50.getIntSamplesPerSecond());
 		assertEquals(25, new Timebase(2, 50).getIntSamplesPerSecond());
 		assertEquals(1000000, Timebase.HZ_1000000.getIntSamplesPerSecond());
+
+		assertEquals(30, Timebase.NTSC.getIntSamplesPerSecond());
 	}
 
 

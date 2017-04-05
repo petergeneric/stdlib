@@ -299,6 +299,7 @@ public class TimecodeTest
 		assertEquals("20:15:10:24", Timecode.valueOf("20:15:10:24@25").toSMPTEString());
 	}
 
+
 	@Test
 	public void testToEncodedString()
 	{
@@ -308,6 +309,7 @@ public class TimecodeTest
 		assertEquals("00:15:10:24@25", Timecode.valueOf("00:15:10:24@25").toEncodedString());
 		assertEquals("20:15:10:24@25", Timecode.valueOf("20:15:10:24@25").toEncodedString());
 	}
+
 
 	@Test
 	public void testToEncodedStringWithDays()
@@ -329,5 +331,87 @@ public class TimecodeTest
 
 		assertEquals("P01DT20H15M10S24F", Timecode.valueOf("01:20:15:10:24@25").toISODurationWithFrames(true));
 		assertEquals("P30DT20H15M10S24F", Timecode.valueOf("30:20:15:10:24@25").toISODurationWithFrames(true));
+	}
+
+
+	@Test
+	public void test107892FramesInDropFrameNTSCIsOneHourExactly()
+	{
+		final Timecode timecode = TimecodeBuilder.fromFrames(107892, Timebase.NTSC).build();
+
+		assertEquals("forwards: 107,892 frames of NTSC is 1 hour exactly", "01:00:00;00@30000:1001", timecode.toEncodedString());
+		assertEquals("backwards: one hour in NTSC is 107,892 frames", 107892, timecode.getDurationInFrames());
+		assertEquals("adding 1 NTSC frame to 1 hour in NTSC should yield 1h and 1 frame",
+		             "01:00:00;01@30000:1001",
+		             timecode.add(SampleCount.valueOf("1@NTSC")).toEncodedString());
+	}
+
+
+	@Test
+	public void testOneHourAndOneMinuteDropFrameNTSC()
+	{
+		final long oneHour = 107892;
+		final long frame1 = oneHour + 1800;
+		final long frame2 = oneHour + 1799;
+
+		final Timecode timecode1 = TimecodeBuilder.fromFrames(frame1, Timebase.NTSC).build();
+		final Timecode timecode2 = TimecodeBuilder.fromFrames(frame2, Timebase.NTSC).build();
+
+		// Make sure this results in the timecode we expect
+		assertEquals("forward conversion (1h 1m)", "01:01:00;02@30000:1001", timecode1.toEncodedString());
+		assertEquals("forward conversion (1h 59s 29 frames)", "01:00:59;29@30000:1001", timecode2.toEncodedString());
+
+		// Make sure the duration in frames is what we expect
+		assertEquals("backward conversion (1h 1m)", frame1, timecode1.getDurationInFrames());
+		assertEquals("backward conversion (1h 59s 29 frames)", frame2, timecode2.getDurationInFrames());
+	}
+
+
+	@Test
+	public void testOneHourOfTimeTimeToDropFrameNTSCTimecode() throws ResamplingException
+	{
+		SampleCount oneHourInMillis = SampleCount.seconds(Timebase.HZ_1000, 3600);
+		SampleCount ntscFrames = oneHourInMillis.resample(Timebase.NTSC);
+
+		Timecode timecode = TimecodeBuilder.fromSamples(ntscFrames, true).build();
+
+		assertEquals("01:00:00;00", timecode.toSMPTEString());
+	}
+
+
+	@Test
+	public void testCountingToTwoMinutesInDropFrameTimecode() throws ResamplingException
+	{
+		Timecode timecode = TimecodeBuilder.fromFrames(0, Timebase.NTSC).build();
+		final SampleCount oneFrame = new SampleCount(1, Timebase.NTSC);
+
+		for (int i = 0; i < 1800 * 2; i++)
+		{
+			timecode = timecode.add(oneFrame);
+		}
+
+		assertEquals("00:02:00;04", timecode.toSMPTEString());
+	}
+
+
+	@Test
+	public void testDropFrameNTSCParsing()
+	{
+		Timecode tc = Timecode.valueOf("01:23:45;06@NTSC");
+
+		final long expected = 150606;
+
+		assertEquals(expected, tc.getDurationInFrames());
+	}
+
+
+	@Test
+	public void testDateToDropFrameNTSCTimecode()
+	{
+		final long expected = 111884;
+		final Timecode tc = Timecode.valueOf("01:02:13;06@NTSC");
+
+		assertEquals("forward", expected, tc.getDurationInFrames());
+		assertEquals("backward", tc, Timecode.getInstance(expected, true, Timebase.NTSC));
 	}
 }
