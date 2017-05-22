@@ -13,6 +13,7 @@ import org.hibernate.Query;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -46,7 +47,7 @@ public class HQBuilder implements HQLEncodingContext
 	public Query toHQL(Function<String, Query> supplier)
 	{
 		final String hql = toHQLString();
-		System.out.println("Execute HQL: " + hql);
+		System.out.println("Execute HQL: " + hql + " with vars: " + this.aliases);
 
 		final Query query = supplier.apply(hql);
 
@@ -120,7 +121,14 @@ public class HQBuilder implements HQLEncodingContext
 	public void configure(final Query query)
 	{
 		for (Map.Entry<String, Object> entry : aliases.entrySet())
-			query.setParameter(entry.getKey(), entry.getValue());
+		{
+			final Object val = entry.getValue();
+
+			if (val instanceof Collection)
+				query.setParameterList(entry.getKey(), (Collection) val);
+			else
+				query.setParameter(entry.getKey(), val);
+		}
 
 		if (limit != null)
 			query.setMaxResults(limit);
