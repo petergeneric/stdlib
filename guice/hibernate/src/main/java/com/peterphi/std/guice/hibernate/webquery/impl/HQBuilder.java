@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
 
 public class HQBuilder implements HQLEncodingContext
 {
-	private final QEntity entity;
+	private QEntity entity;
 	/**
 	 * TODO in the future allow this to be disabled for certain databases (e.g. SQL Server)
 	 * This should really only be false for HSQLDB
@@ -183,11 +183,65 @@ public class HQBuilder implements HQLEncodingContext
 
 	public HQBuilder addClassConstraint(final List<String> values)
 	{
-		HSQLFragment fragment = new HSQLFragment(HQPath.ROOT_OBJECT_ALIAS + ".class IN " + createPropertyPlaceholder(values));
+		final List<Class<?>> classes = getClassesByDiscriminators(values);
 
-		this.conditions.add(fragment);
+		QEntity commonParentClass = entity.getCommonSubclass(values);
+
+		if (commonParentClass != entity)
+		{
+			// All the discriminators share a common subclass, so allow the query to reference columns of that subclass
+			entity = commonParentClass;
+		}
+		else
+		{
+			// Multiple classes,
+			HSQLFragment fragment = new HSQLFragment("TYPE(" +
+			                                         HQPath.ROOT_OBJECT_ALIAS +
+			                                         ") IN " +
+			                                         createPropertyPlaceholder(classes));
+
+			this.conditions.add(fragment);
+		}
 
 		return this;
+	}
+
+
+	/**
+	 * Translates the set of string discriminators into entity classes
+	 *
+	 * @return
+	 */
+	private List<Class<?>> getClassesByDiscriminators(Collection<String> discriminators)
+	{
+		Map<String, Class<?>> entitiesByName = new HashMap<>();
+
+		// Prepare a Map of discriminator name -> entity class
+		for (QEntity child : entity.getSubEntities())
+		{
+			entitiesByName.put(child.getDiscriminatorValue(), child.getEntityClass());
+		}
+
+		// If the root class isn't abstract then add it to the list of possible discriminators too
+		if (!entity.isEntityClassAbstract())
+			entitiesByName.put(entity.getDiscriminatorValue(), entity.getEntityClass());
+
+		// Translate the discriminator string values to classes
+		List<Class<?>> classes = new ArrayList<>(discriminators.size());
+		for (String discriminator : discriminators)
+		{
+			final Class<?> clazz = entitiesByName.get(discriminator);
+
+			if (clazz != null)
+				classes.add(clazz);
+			else
+				throw new IllegalArgumentException("Invalid class discriminator '" +
+				                                   discriminator +
+				                                   "', expected one of: " +
+				                                   entitiesByName.keySet());
+		}
+
+		return classes;
 	}
 
 
@@ -352,6 +406,7 @@ public class HQBuilder implements HQLEncodingContext
 	public void addWebQuery(final WebQuery query)
 	{
 		// First, add the subclass discriminators
+		// This allows the query constraints to reference properties of the subclass (if there's a single subclass / they are all descended from the same class)
 		if (StringUtils.isNotEmpty(query.constraints.subclass))
 			addClassConstraint(Arrays.asList(query.constraints.subclass.split(",")));
 

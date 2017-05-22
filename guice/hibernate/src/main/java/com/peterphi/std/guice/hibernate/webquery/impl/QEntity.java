@@ -15,6 +15,7 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.lang.reflect.Modifier;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -161,8 +162,7 @@ public class QEntity
 			}
 			else if (type.isEntityType())
 			{
-				relations.put(name,
-				              new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection));
+				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection));
 
 				// Set up a special property to allow constraining the collection size
 				properties.put(name + ":size", new QSizeProperty(relations.get(name)));
@@ -398,5 +398,45 @@ public class QEntity
 		       ", aliases=" +
 		       aliases.values() +
 		       '}';
+	}
+
+
+	public QEntity getSubEntity(final String discriminator)
+	{
+		if (StringUtils.equals(getDiscriminatorValue(), discriminator))
+			return this;
+		else
+			for (QEntity entity : getSubEntities())
+				if (StringUtils.equals(entity.getDiscriminatorValue(), discriminator))
+					return entity;
+
+		throw new IllegalArgumentException("Unknown subclass with discriminator: " + discriminator);
+	}
+
+
+	public QEntity getCommonSubclass(final List<String> discriminators)
+	{
+		Map<Class, QEntity> entities = discriminators
+				                               .stream()
+				                               .map(this :: getSubEntity)
+				                               .collect(Collectors.toMap(e -> e.clazz, e -> e));
+
+		Collection<Class> classes = entities.keySet();
+
+		for (Class potentialSuperclass : classes)
+		{
+			boolean suitableForAll = true;
+			for (Class test : classes)
+			{
+				suitableForAll = suitableForAll && test.isAssignableFrom(potentialSuperclass);
+			}
+
+			// If this is a suitable superclass for all classes we have tested then we have a winner!
+			if (suitableForAll)
+				return entities.get(potentialSuperclass);
+		}
+
+		// Found no more specific subclass
+		return this;
 	}
 }

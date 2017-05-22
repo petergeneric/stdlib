@@ -9,12 +9,13 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.List;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
-@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties",
-		            classPackages = MyBaseObject.class)
+@GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = MyBaseObject.class)
 public class DiscriminatorDynamicQueryTest
 {
 	@Inject
@@ -36,6 +37,28 @@ public class DiscriminatorDynamicQueryTest
 	}
 
 
+	/**
+	 * Tests that if we specify a subclass then the fields from that subclass become available (also true for a collection of
+	 * subclasses in a nested hierarchy, but that complex hierarchy is rarely used in the db so we don't have a test for it)
+	 */
+	@Test
+	public void testDiscriminatorInWebQueryAllowsUseOfSubclassFields()
+	{
+		MyChildObject1 a = new MyChildObject1();
+
+		MyChildObject2 b = new MyChildObject2();
+
+		a.id = dao.save(a);
+		b.id = dao.save(b);
+
+
+		final List<MyBaseObject> results = dao.findByUriQuery(new WebQuery().subclass("one").eq("someId", a.someId)).getList();
+
+		assertEquals("should match exactly 1 entity", 1, results.size());
+		assertEquals("should match the first child object stored", a.id, results.get(0).id);
+	}
+
+
 	@Test
 	public void testDiscriminatorInWebQuery()
 	{
@@ -47,10 +70,11 @@ public class DiscriminatorDynamicQueryTest
 
 		{
 			// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(new WebQuery().eq("id",
-			                                                                                  String.valueOf(a.id),
-			                                                                                  String.valueOf(b.id))
-			                                                                              .subclass("one"));
+			ConstrainedResultSet<MyBaseObject> results = dao.findByUriQuery(new WebQuery()
+					                                                                .eq("id",
+					                                                                    String.valueOf(a.id),
+					                                                                    String.valueOf(b.id))
+					                                                                .subclass("one"));
 
 			assertEquals("discriminator should match exactly one entity", 1, results.getList().size());
 			assertEquals(a.id, results.getList().get(0).id);
