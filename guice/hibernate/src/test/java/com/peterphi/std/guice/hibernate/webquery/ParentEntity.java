@@ -33,7 +33,7 @@ class ParentEntity
 	@Lob
 	private byte[] someBytes = "some bytes".getBytes();
 
-	@ManyToOne(optional = true, fetch = FetchType.EAGER)
+	@ManyToOne(optional = true, fetch = FetchType.LAZY)
 	@JoinColumn(name = "other_object_id", nullable = true)
 	private ChildEntity otherObject;
 

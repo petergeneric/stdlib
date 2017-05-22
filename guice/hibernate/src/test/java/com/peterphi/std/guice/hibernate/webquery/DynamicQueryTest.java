@@ -7,6 +7,7 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import org.hibernate.exception.SQLGrammarException;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -73,6 +74,17 @@ public class DynamicQueryTest
 	{
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
 		dao.findByUriQuery(new WebQuery().eq("otherObject.parent.name", "Alice"));
+	}
+
+
+	/**
+	 * This does not work with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed
+	 * @throws Exception
+	 */
+	@Test(expected = SQLGrammarException.class)
+	public void testOrderingByLazyAssociatedRelationThatIsNotSelectedDoesNotWorkWithHSQLDB() throws Exception
+	{
+		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
 	}
 
 

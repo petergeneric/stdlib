@@ -76,7 +76,7 @@ public class HQBuilder implements HQLEncodingContext
 		switch (projection)
 		{
 			case ENTITIES:
-				sb.append("SELECT DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS);
+				sb.append("SELECT DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(' ');
 				break;
 			case IDS:
 				final String idColumn = HQPath.ROOT_OBJECT_ALIAS + ".id";
@@ -86,20 +86,19 @@ public class HQBuilder implements HQLEncodingContext
 				    (orderColumns.size() == 1 && StringUtils.equals(orderColumns.get(0), idColumn)))
 				{
 					// No ORDER BY (or only ordering by ID column)
-					sb.append("SELECT DISTINCT ").append(idColumn).append(", mobj.name ");
+					sb.append("SELECT DISTINCT ").append(idColumn).append(' ');
 				}
 				else
 				{
-					final List<String> columns = new ArrayList<>(orderColumns.size() + 1);
-					columns.add(idColumn);
-					columns.addAll(orderColumns);
-
-					sb.append("SELECT DISTINCT ").append(StringUtils.join(columns, ',')).append(' ');
+					sb.append("SELECT DISTINCT ").append(idColumn);
+					sb.append(',');
+					sb.append(StringUtils.join(orderColumns, ','));
+					sb.append(' ');
 				}
 
 				break;
 			case COUNT:
-				sb.append("SELECT COUNT(DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id)");
+				sb.append("SELECT COUNT(DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id) ");
 
 				// Pagination and ordering are meaningless for a COUNT(distinct id) query
 				clearPagination();
@@ -112,7 +111,7 @@ public class HQBuilder implements HQLEncodingContext
 
 		// List the primary table and primary entity alias
 		sb
-				.append(" FROM ")
+				.append("FROM ")
 				.append(entity.getEntityClass().getName())
 				.append(' ')
 				.append(HQPath.ROOT_OBJECT_ALIAS)
