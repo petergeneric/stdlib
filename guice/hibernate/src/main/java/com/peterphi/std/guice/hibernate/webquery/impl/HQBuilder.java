@@ -100,6 +100,11 @@ public class HQBuilder implements HQLEncodingContext
 				break;
 			case COUNT:
 				sb.append("SELECT COUNT(DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id)");
+
+				// Pagination and ordering are meaningless for a COUNT(distinct id) query
+				clearPagination();
+				clearOrder();
+
 				break;
 			default:
 				throw new IllegalArgumentException("Unknown projection: " + projection);
