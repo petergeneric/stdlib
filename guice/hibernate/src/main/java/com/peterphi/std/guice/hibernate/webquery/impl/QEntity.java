@@ -162,7 +162,7 @@ public class QEntity
 			else if (type.isEntityType())
 			{
 				relations.put(name,
-				              new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, type.isCollectionType()));
+				              new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection));
 
 				// Set up a special property to allow constraining the collection size
 				properties.put(name + ":size", new QSizeProperty(relations.get(name)));

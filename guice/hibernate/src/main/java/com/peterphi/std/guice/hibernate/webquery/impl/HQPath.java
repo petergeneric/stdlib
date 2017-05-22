@@ -130,7 +130,7 @@ public class HQPath
 
 		while (true)
 		{
-			if (parent == null)
+			if (current == null)
 			{
 				path.add(ROOT_OBJECT_ALIAS);
 				break;

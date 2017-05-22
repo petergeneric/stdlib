@@ -264,19 +264,20 @@ public class HQBuilder implements HQLEncodingContext
 
 	private String createJoin(final HQPath path)
 	{
-		final HQJoin existing = joins.get(path);
+		HQJoin join = joins.get(path);
 
-		if (existing == null)
+		// Lazy-create the join if necessary
+		if (join == null)
 		{
 			final String alias = "j" + joins.size();
 			final HSQLFragment expr = new HSQLFragment("JOIN " + path.toHsqlPath() + " " + alias);
 
-			HQJoin join = new HQJoin(path, alias, expr);
+			join = new HQJoin(path, alias, expr);
 
 			joins.put(path, join);
 		}
 
-		return existing.getAlias();
+		return join.getAlias();
 	}
 
 
