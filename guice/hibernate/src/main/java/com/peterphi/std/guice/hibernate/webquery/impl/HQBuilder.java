@@ -169,6 +169,18 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
+	public boolean isDatabaseAllowsOrderByWithoutSelect()
+	{
+		return databaseAllowsOrderByWithoutSelect;
+	}
+
+
+	public void setDatabaseAllowsOrderByWithoutSelect(final boolean databaseAllowsOrderByWithoutSelect)
+	{
+		this.databaseAllowsOrderByWithoutSelect = databaseAllowsOrderByWithoutSelect;
+	}
+
+
 	public HQBuilder addClassConstraint(final List<String> values)
 	{
 		HSQLFragment fragment = new HSQLFragment(HQPath.ROOT_OBJECT_ALIAS + ".class IN " + createPropertyPlaceholder(values));

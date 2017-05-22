@@ -63,6 +63,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
 	boolean performSeparateIdQueryForLargeTables = true;
 
+	@Inject(optional = true)
+	@Named("hibernate.database-allows-order-by-without-select")
+	@Reconfigurable
+	@Doc("If true then the HQL emitted from WebQueries will be allowed to include an ORDER BY without those columns being explicitly listed in the SELECT. Recommended this be false for HSQLDB and true for all other database engines.")
+	boolean databaseAllowsOrderByWithoutSelect = true;
+
 	@Inject
 	HibernateObservingInterceptor hibernateObserver;
 
@@ -661,6 +667,8 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected HQBuilder toCriteriaBuilder(final WebQuery query)
 	{
 		HQBuilder builder = new HQBuilder(getQEntity());
+
+		builder.setDatabaseAllowsOrderByWithoutSelect(this.databaseAllowsOrderByWithoutSelect);
 
 		builder.addWebQuery(query);
 
