@@ -20,16 +20,16 @@ class QOrder
 		if (property.getProperty() instanceof QSizeProperty)
 		{
 			if (asc)
-				return SizeOrder.asc(property.getName());
+				return SizeOrder.asc(property.toHqlPath());
 			else
-				return SizeOrder.desc(property.getName());
+				return SizeOrder.desc(property.toHqlPath());
 		}
 		else
 		{
 			if (asc)
-				return Order.asc(property.getName());
+				return Order.asc(property.toHqlPath());
 			else
-				return Order.desc(property.getName());
+				return Order.desc(property.toHqlPath());
 		}
 	}
 }

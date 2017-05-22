@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
@@ -22,7 +23,7 @@ import java.util.Map;
 /**
  * Builds a Hibernate Criteria
  */
-public class QCriteriaBuilder
+class QCriteriaBuilder
 {
 	private final QEntity entity;
 
@@ -169,7 +170,8 @@ public class QCriteriaBuilder
 
 		// Add the constraints
 		for (QFunction constraint : constraints)
-			criteria.add(constraint.encode());
+			throw new NotImplementedException("Moved to HQBuilder, QFunction no longer works this way");
+			//criteria.add(constraint.encode());
 
 		appendOrder(criteria);
 
@@ -280,7 +282,8 @@ public class QCriteriaBuilder
 			final QJoin join = join(propertyPath.getPath());
 			final QProperty property = propertyPath.getProperty();
 
-			return new QPropertyRef(join, property);
+			throw new NotImplementedException("Moved to HQBuilder style, QPropertyRef no longer works in this way");
+			//return new QPropertyRef(join, property);
 		}
 		catch (Exception e)
 		{

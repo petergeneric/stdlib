@@ -9,9 +9,10 @@ public class QRelation
 	private final String name;
 	private final QEntity entity;
 	private final boolean nullable;
+	private final boolean collection;
 
 
-	public QRelation(final QEntity owner, final String prefix, final String name, final QEntity entity, final boolean nullable)
+	public QRelation(final QEntity owner, final String prefix, final String name, final QEntity entity, final boolean nullable, final boolean collection)
 	{
 		this.owner = owner;
 
@@ -22,6 +23,7 @@ public class QRelation
 
 		this.entity = entity;
 		this.nullable = nullable;
+		this.collection=collection;
 	}
 
 
@@ -69,6 +71,12 @@ public class QRelation
 	}
 
 
+	public boolean isCollection()
+	{
+		return collection;
+	}
+
+
 	@Override
 	public String toString()
 	{
@@ -77,6 +85,7 @@ public class QRelation
 		       ", name='" + name + '\'' +
 		       ", entity=" + entity.getName() +
 		       ", nullable=" + nullable +
+		       ", collection=" + collection+
 		       '}';
 	}
 

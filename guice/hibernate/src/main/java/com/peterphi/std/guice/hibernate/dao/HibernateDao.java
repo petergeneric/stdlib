@@ -12,21 +12,23 @@ import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.impl.QCriteriaBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQProjection;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -448,9 +450,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			if (query.constraints.computeSize)
 			{
 				// Re-run the query to obtain the size
-				final Criteria countCriteria = toRowCountCriteria(query);
+				final Query countQuery = toRowCountQuery(query);
 
-				final Number size = (Number) countCriteria.uniqueResult();
+				final Number size = (Number) countQuery.uniqueResult();
 
 				total = size.longValue();
 			}
@@ -465,7 +467,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			{
 				if (total == null || total > 0)
 				{
-					final Criteria criteria = createCriteria(query);
+					final Query criteria = createQuery(query);
 
 					final List<T> results = getList(criteria);
 
@@ -506,14 +508,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	protected Criteria createCriteria(WebQuery constraints)
+	protected Query createQuery(WebQuery constraints)
 	{
 		// Optionally treat large tables differently (works around a SQL Server performance issue)
 		// See documentation on toGetByIdCriteria for more detail
 		if (isLargeTable && performSeparateIdQueryForLargeTables)
-			return toGetByIdCriteria(constraints);
+			return toGetByIdQuery(constraints);
 		else
-			return toSimpleCriteria(constraints);
+			return toSimpleQuery(constraints);
 	}
 
 
@@ -536,72 +538,69 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 *
 	 * @return
 	 */
-	protected Criteria toGetByIdCriteria(WebQuery constraints)
+	protected Query toGetByIdQuery(WebQuery constraints)
 	{
 		// Retrieve the primary keys separately from the data
-		final List<ID> ids = toGetIdCriteria(constraints).list();
-
-		final Criteria criteria = createCriteria();
+		final List<ID> ids = toGetIdQuery(constraints).list();
 
 		if (ids.size() > 0)
 		{
-			criteria.add(Restrictions.in(idProperty(), ids));
+			final HQBuilder byIdBuilder = toCriteriaBuilder(constraints);
 
-			// Append joins, orders and discriminators (but not the constraint/pagination, we have already evaluated them)
-			toCriteriaBuilder(constraints).clearConstraints().clearPagination().appendTo(criteria);
+			// N.B. we do not need the constraints / pagination because we have already evaluated them
+			byIdBuilder.clearConstraints();
+			byIdBuilder.clearPagination();
 
-			return criteria;
+			// Re-apply subclass constraints if defined
+			if (StringUtils.isNotEmpty(constraints.constraints.subclass))
+				byIdBuilder.addClassConstraint(Arrays.asList(constraints.constraints.subclass.split(",")));
+
+			// Add a custom constraint that the ID must be one of the values we've already determined
+			byIdBuilder.addIdInConstraint(ids);
+
+			return byIdBuilder.toHQL(this :: createQuery);
 		}
 		else
 		{
+			final HQBuilder emptyQueryBuilder = toCriteriaBuilder(new WebQuery());
+
 			// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
-			criteria.add(Restrictions.sqlRestriction("(0=1)"));
+			emptyQueryBuilder.addAlwaysFalseConstraint();
 
 			// Hint that we don't want any results
-			criteria.setMaxResults(0);
+			emptyQueryBuilder.limit(0);
 
-			return criteria;
+			return emptyQueryBuilder.toHQL(this :: createQuery);
 		}
 	}
 
 
-	protected Criteria toGetIdCriteria(WebQuery constraints)
+	protected Query toGetIdQuery(WebQuery query)
 	{
-		final Criteria criteria = toSimpleCriteria(constraints);
+		// Encode the WebQuery and add the constraints
+		final HQBuilder builder = toCriteriaBuilder(query);
 
-		criteria.setProjection(Projections.id());
+		builder.setProjection(HQProjection.IDS);
 
-		return criteria;
+		return builder.toHQL(this :: createQuery);
 	}
 
 
-	protected Criteria toRowCountCriteria(WebQuery constraints)
+	protected Query toRowCountQuery(WebQuery constraints)
 	{
-		final Criteria criteria = createCriteria();
-
 		// Encode the WebQuery and add the constraints
-		toCriteriaBuilder(constraints).clearPagination().clearOrder().appendTo(criteria);
+		final HQBuilder builder = toCriteriaBuilder(constraints).clearPagination().clearOrder();
+
+		builder.setProjection(HQProjection.COUNT);
+
+		Query hql = builder.toHQL(this :: createQuery);
 
 		// Discount offset/limit
-		criteria.setFirstResult(0);
-		criteria.setMaxResults(Integer.MAX_VALUE);
+		hql.setFirstResult(0);
+		hql.setMaxResults(Integer.MAX_VALUE);
 
-		// Request the row count
-		criteria.setProjection(Projections.rowCount());
-
-		return criteria;
+		return hql;
 	}
-
-/*
-	protected DetachedCriteria toDetachedCriteria(WebQuery query)
-	{
-		final DetachedCriteria criteria = DetachedCriteria.forClass(getEntityType());
-
-		// Encode the WebQuery and add the constraints
-		toCriteriaBuilder(query).appendTo(criteria);
-
-		return criteria;
-	}*/
 
 
 	/**
@@ -612,14 +611,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 *
 	 * @return
 	 */
-	protected Criteria toSimpleCriteria(WebQuery query)
+	protected Query toSimpleQuery(WebQuery query)
 	{
-		final Criteria criteria = createCriteria();
-
 		// Encode the WebQuery and add the constraints
-		toCriteriaBuilder(query).appendTo(criteria);
+		final HQBuilder builder = toCriteriaBuilder(query);
 
-		return criteria;
+		return builder.toHQL(this :: createQuery);
 	}
 
 
@@ -630,8 +627,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 *
 	 * @return
 	 */
-	protected QCriteriaBuilder toCriteriaBuilder(final WebQuery query)
+	protected HQBuilder toCriteriaBuilder(final WebQuery query)
 	{
-		return new QCriteriaBuilder(getQEntity(), query);
+		HQBuilder builder = new HQBuilder(getQEntity());
+
+		builder.addWebQuery(query);
+
+		return builder;
 	}
 }

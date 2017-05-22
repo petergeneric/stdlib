@@ -34,11 +34,12 @@ public class QEntity
 
 	private List<QEntity> descendants = Collections.emptyList();
 
-	private final Cache<String, QPropertyPathBuilder> builderCache = CacheBuilder.newBuilder()
-	                                                                             .weakKeys()
-	                                                                             .weakValues()
-	                                                                             .initialCapacity(0)
-	                                                                             .build();
+	private final Cache<String, QPropertyPathBuilder> builderCache = CacheBuilder
+			                                                                 .newBuilder()
+			                                                                 .weakKeys()
+			                                                                 .weakValues()
+			                                                                 .initialCapacity(0)
+			                                                                 .build();
 
 
 	public QEntity(Class<?> clazz)
@@ -160,7 +161,8 @@ public class QEntity
 			}
 			else if (type.isEntityType())
 			{
-				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable));
+				relations.put(name,
+				              new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, type.isCollectionType()));
 
 				// Set up a special property to allow constraining the collection size
 				properties.put(name + ":size", new QSizeProperty(relations.get(name)));
@@ -310,9 +312,7 @@ public class QEntity
 			expected.addAll(getRelationNames());
 			expected.addAll(getAliasNames());
 
-			throw new IllegalArgumentException("Relationship path error: got " +
-			                                   head +
-			                                   ", expected one of: " + expected);
+			throw new IllegalArgumentException("Relationship path error: got " + head + ", expected one of: " + expected);
 		}
 	}
 
@@ -386,11 +386,17 @@ public class QEntity
 	public String toString()
 	{
 		return "QEntity{" +
-		       "clazz=" + clazz +
-		       ", name='" + name + '\'' +
-		       ", properties=" + properties.values() +
-		       ", relations=" + relations.values() +
-		       ", aliases=" + aliases.values() +
+		       "clazz=" +
+		       clazz +
+		       ", name='" +
+		       name +
+		       '\'' +
+		       ", properties=" +
+		       properties.values() +
+		       ", relations=" +
+		       relations.values() +
+		       ", aliases=" +
+		       aliases.values() +
 		       '}';
 	}
 }

@@ -175,7 +175,7 @@ public class DynamicQueryTest
 	public void testDynamicQuerySeesManyToOneRelation() throws IllegalArgumentException
 	{
 		// Will throw an IllegalArgumentException if the "children" field is not parsed from the entity
-		dao.findByUriQuery(new WebQuery().eq("children.id", null));
+		dao.findByUriQuery(new WebQuery().isNull("children.id"));
 	}
 
 
