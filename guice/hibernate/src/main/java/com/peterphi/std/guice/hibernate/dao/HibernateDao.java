@@ -27,11 +27,13 @@ import org.hibernate.criterion.CriteriaSpecification;
 import org.hibernate.criterion.Restrictions;
 
 import java.io.Serializable;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * The default implementation of a Dao for Hibernate; often it is necessary to extend this to produce richer queries<br />
@@ -541,7 +543,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Query toGetByIdQuery(WebQuery constraints)
 	{
 		// Retrieve the primary keys separately from the data
-		final List<ID> ids = toGetIdQuery(constraints).list();
+		final Collection<ID> ids = getIds(constraints);
 
 		if (ids.size() > 0)
 		{
@@ -558,6 +560,8 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			// Add a custom constraint that the ID must be one of the values we've already determined
 			byIdBuilder.addIdInConstraint(ids);
 
+			System.out.println(byIdBuilder.toHQLString());
+
 			return byIdBuilder.toHQL(this :: createQuery);
 		}
 		else
@@ -571,6 +575,33 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			emptyQueryBuilder.limit(0);
 
 			return emptyQueryBuilder.toHQL(this :: createQuery);
+		}
+	}
+
+
+	/**
+	 * Get a list of IDs matching a WebQuery
+	 *
+	 * @param constraints
+	 *
+	 * @return
+	 */
+	public Collection<ID> getIds(final WebQuery constraints)
+	{
+		final List ret = toGetIdQuery(constraints).list();
+
+		if (ret.isEmpty())
+			return Collections.emptyList(); // Empty list
+		else if (ret.get(0).getClass().isArray())
+		{
+			// In the case where there are ORDER BY statements and the database needs ORDER BYs to be SELECTed, we may be returned a bunch of data in addition to the IDs
+			// List of columns, we only care about the first column in each row
+			return (List<ID>) ret.stream().map(r -> Array.get(r, 0)).map(id -> (ID) id).collect(Collectors.toList());
+		}
+		else
+		{
+			// Simple list of IDs
+			return (List<ID>) ret;
 		}
 	}
 

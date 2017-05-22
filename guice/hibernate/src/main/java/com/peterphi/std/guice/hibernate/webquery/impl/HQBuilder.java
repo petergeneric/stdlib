@@ -23,6 +23,11 @@ import java.util.stream.Collectors;
 public class HQBuilder implements HQLEncodingContext
 {
 	private final QEntity entity;
+	/**
+	 * TODO in the future allow this to be disabled for certain databases (e.g. SQL Server)
+	 * This should really only be false for HSQLDB
+	 */
+	private boolean databaseAllowsOrderByWithoutSelect = false;
 	private final Map<HQPath, HQJoin> joins = new HashMap<>();
 	private final List<HSQLFragment> conditions = new ArrayList<>();
 	private final List<HSQLFragment> orders = new ArrayList<>();
@@ -31,6 +36,12 @@ public class HQBuilder implements HQLEncodingContext
 	 * Holds all the property aliases we have generated for fragments to use and the values that have been aliased to them
 	 */
 	private final Map<String, Object> aliases = new HashMap<>();
+
+	/**
+	 * A list of names for columns referenced by ORDER BY statements, to work around a bug in certain databases (primarily HSQLDB
+	 * in our experience) that don't permit a column to be referenced in an ORDER BY unless it is also referenced in a SELECT
+	 */
+	private final List<String> orderColumns = new ArrayList<>();
 
 	private Integer offset = 0;
 	private Integer limit = 200;
@@ -68,7 +79,24 @@ public class HQBuilder implements HQLEncodingContext
 				sb.append("SELECT DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS);
 				break;
 			case IDS:
-				sb.append("SELECT DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id");
+				final String idColumn = HQPath.ROOT_OBJECT_ALIAS + ".id";
+
+				if (databaseAllowsOrderByWithoutSelect ||
+				    orderColumns.size() == 0 ||
+				    (orderColumns.size() == 1 && StringUtils.equals(orderColumns.get(0), idColumn)))
+				{
+					// No ORDER BY (or only ordering by ID column)
+					sb.append("SELECT DISTINCT ").append(idColumn).append(", mobj.name ");
+				}
+				else
+				{
+					final List<String> columns = new ArrayList<>(orderColumns.size() + 1);
+					columns.add(idColumn);
+					columns.addAll(orderColumns);
+
+					sb.append("SELECT DISTINCT ").append(StringUtils.join(columns, ',')).append(' ');
+				}
+
 				break;
 			case COUNT:
 				sb.append("SELECT COUNT(DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id)");
@@ -159,6 +187,7 @@ public class HQBuilder implements HQLEncodingContext
 	public HQBuilder clearOrder()
 	{
 		this.orders.clear();
+		this.orderColumns.clear();
 
 		return this;
 	}
@@ -233,10 +262,14 @@ public class HQBuilder implements HQLEncodingContext
 
 	public HQBuilder addOrder(QPropertyRef property, boolean asc)
 	{
+		final String column = property.toHqlPath();
+
 		if (asc)
-			orders.add(new HSQLFragment(property.toHqlPath() + " ASC"));
+			orders.add(new HSQLFragment(column + " ASC"));
 		else
-			orders.add(new HSQLFragment(property.toHqlPath() + " DESC"));
+			orders.add(new HSQLFragment(column + " DESC"));
+
+		this.orderColumns.add(column);
 
 		return this;
 	}
@@ -357,7 +390,7 @@ public class HQBuilder implements HQLEncodingContext
 	 * @param ids
 	 * @param <ID>
 	 */
-	public <ID extends Serializable> void addIdInConstraint(final List<ID> ids)
+	public <ID extends Serializable> void addIdInConstraint(final Collection<ID> ids)
 	{
 		this.conditions.add(new HSQLFragment("id IN " + createPropertyPlaceholder(ids)));
 	}
