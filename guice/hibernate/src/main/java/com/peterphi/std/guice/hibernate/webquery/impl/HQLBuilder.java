@@ -8,6 +8,7 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.Query;
 
 import java.io.Serializable;
@@ -23,6 +24,8 @@ import java.util.stream.Collectors;
 
 public class HQLBuilder implements HQLEncodingContext
 {
+	private static final Logger log = Logger.getLogger(HQLBuilder.class);
+
 	private QEntity entity;
 	/**
 	 * TODO in the future allow this to be disabled for certain databases (e.g. SQL Server)
@@ -59,7 +62,9 @@ public class HQLBuilder implements HQLEncodingContext
 	public Query toHQL(Function<String, Query> supplier)
 	{
 		final String hql = toHQLString();
-		System.out.println("Execute HQL: " + hql + " with vars: " + this.aliases);
+
+		if (log.isTraceEnabled())
+			log.trace("Execute HQL: " + hql + " with vars: " + this.aliases);
 
 		final Query query = supplier.apply(hql);
 

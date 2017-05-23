@@ -566,8 +566,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 			// Add a custom constraint that the ID must be one of the values we've already determined
 			byIdBuilder.addIdInConstraint(ids);
 
-			System.out.println(byIdBuilder.toHQLString());
-
 			return byIdBuilder.toHQL(this :: createQuery);
 		}
 		else
