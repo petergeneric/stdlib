@@ -15,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
@@ -353,13 +354,13 @@ public class HQBuilder implements HQLEncodingContext
 
 	public HQPath getPath(final String path)
 	{
-		final String[] segments = StringUtils.split(path, '.');
+		final LinkedList<String> segments = new LinkedList<>(Arrays.asList(StringUtils.split(path, '.')));
 
 		HQPath builtPath = null;
 
-		for (String segment : segments)
+		while (segments.size() > 0)
 		{
-			builtPath = HQPath.parse(entity, builtPath, segment);
+			builtPath = HQPath.parse(entity, builtPath, segments);
 
 			if (builtPath.getRelation() != null && builtPath.getRelation().isCollection())
 			{

@@ -15,10 +15,12 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -234,9 +236,38 @@ public class QEntity
 	}
 
 
-	public boolean hasAlias(String name)
+	/**
+	 * Modify a list of segments by replacing any defined alias on this entity. If there is no such destination alias then does
+	 * nothing<br />
+	 * This is designed to allow underlying database schema changes without changing the query API exposed to users
+	 *
+	 * @param segments
+	 * 		some path optionally including an aliased name (e.g. "asset.parentId")
+	 *
+	 * @return some new path (e.g. "asset.parent.id")
+	 */
+	public void fixupPathUsingAliases(final LinkedList<String> segments)
 	{
-		return aliases.containsKey(name);
+		if (aliases.isEmpty())
+			return; // No transformation necessary or possible
+
+		final String remainingPath = segments.stream().collect(Collectors.joining("."));
+
+		for (Map.Entry<String, String> entry : aliases.entrySet())
+		{
+			final String from = entry.getKey();
+			final String to = entry.getValue();
+
+			if (StringUtils.equals(remainingPath, from) || StringUtils.startsWith(remainingPath, from + "."))
+			{
+				final String newPath = to + remainingPath.substring(from.length());
+
+				segments.clear();
+				segments.addAll(Arrays.asList(StringUtils.split(newPath, '.')));
+
+				return;
+			}
+		}
 	}
 
 
@@ -288,7 +319,7 @@ public class QEntity
 		final String head = terminal ? path : path.substring(0, firstDot);
 		final String tail = terminal ? null : path.substring(firstDot + 1);
 
-		if (hasAlias(head))
+		if (aliases.containsKey(head))
 		{
 			final String newPath;
 

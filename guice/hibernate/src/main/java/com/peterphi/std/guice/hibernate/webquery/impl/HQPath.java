@@ -4,6 +4,7 @@ import com.google.common.base.Objects;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -39,13 +40,18 @@ public class HQPath
 	}
 
 
-	public static HQPath parse(final QEntity rootEntity, final HQPath parent, final String expr)
+	public static HQPath parse(final QEntity rootEntity, final HQPath parent, final LinkedList<String> segments)
 	{
 		final QEntity entity;
 		if (parent == null)
 			entity = rootEntity;
 		else
 			entity = parent.getRelation().getEntity();
+
+		// Resolve any aliases at this entity level
+		entity.fixupPathUsingAliases(segments);
+
+		final String expr = segments.removeFirst();
 
 		final String name;
 		final String alias;
@@ -66,15 +72,15 @@ public class HQPath
 
 		if (entity.hasProperty(name))
 			return new HQPath(parent, name, alias, null, entity.getProperty(name));
-		else if (entity.hasAlias(name))
-			throw new IllegalArgumentException("Aliases not currently supported!" +
-			                                   name +
-			                                   " for " +
-			                                   entity +
-			                                   " in path " +
-			                                   parent);
-		else
+		else if (entity.hasRelation(name))
 			return new HQPath(parent, name, alias, entity.getRelation(name), null);
+		else
+			throw new IllegalArgumentException("Cannot resolve path fragment " +
+			                                   expr +
+			                                   ": expected property " +
+			                                   entity.getPropertyNames() +
+			                                   " or relation " +
+			                                   entity.getRelationNames());
 	}
 
 
