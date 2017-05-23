@@ -7,7 +7,6 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
-import org.hibernate.exception.SQLGrammarException;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
@@ -44,6 +43,9 @@ public class DynamicQueryTest
 	@Before
 	public void clearDatabaseBeforeTest()
 	{
+		for (ChildEntity obj : childDao.getAll())
+			childDao.delete(obj);
+
 		for (ParentEntity obj : dao.getAll())
 			dao.delete(obj);
 
@@ -79,9 +81,10 @@ public class DynamicQueryTest
 
 	/**
 	 * This does not work with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed
+	 *
 	 * @throws Exception
 	 */
-	@Test(expected = SQLGrammarException.class)
+	@Test
 	public void testOrderingByLazyAssociatedRelationThatIsNotSelectedDoesNotWorkWithHSQLDB() throws Exception
 	{
 		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
