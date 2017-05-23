@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class HQLFragment
@@ -8,14 +9,21 @@ public class HQLFragment
 	private final String expr;
 
 
+	public static void main(String[] args) throws Exception
+	{
+		new HQLFragment("SELECT x FROM SomeClass x;");
+	}
+
+
 	public HQLFragment(final String expr)
 	{
 		this.expr = expr;
 	}
 
-	public String toHsqlString()
+
+	public String toHsqlString(final Map<String, String> expansions)
 	{
-		return expr;
+		return replace(expr, expansions);
 	}
 
 
@@ -29,10 +37,23 @@ public class HQLFragment
 		                    fragments
 				                    .stream()
 				                    .filter(f -> f != null)
-				                    .map(f -> f.toHsqlString())
+				                    .map(f -> f.expr)
 				                    .filter(f -> f != null)
 				                    .collect(Collectors.joining(separator)) + suffix;
 
 		return new HQLFragment(expr);
+	}
+
+
+	public static String replace(String hql, final Map<String, String> expansions)
+	{
+		// If there are fragments to expand, expand them
+		if (hql.indexOf('{') != -1)
+			for (Map.Entry<String, String> expansion : expansions.entrySet())
+			{
+				hql = hql.replace(expansion.getKey(), expansion.getValue());
+			}
+
+		return hql;
 	}
 }

@@ -13,8 +13,6 @@ import java.util.stream.Collectors;
 
 class QPath
 {
-	public static final String ROOT_OBJECT_ALIAS = "mobj";
-
 	private final QPath parent;
 	private final String name;
 	private final String alias;
@@ -141,7 +139,7 @@ class QPath
 		{
 			if (current == null)
 			{
-				path.add(ROOT_OBJECT_ALIAS);
+				path.add("{alias}"); // root object
 				break;
 			}
 			if (current.getHsqlAlias() != null)

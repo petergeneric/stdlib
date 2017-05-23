@@ -4,5 +4,6 @@ public enum HQLProjection
 {
 	IDS,
 	COUNT,
-	ENTITIES;
+	ENTITIES,
+	CUSTOM_HQL;
 }

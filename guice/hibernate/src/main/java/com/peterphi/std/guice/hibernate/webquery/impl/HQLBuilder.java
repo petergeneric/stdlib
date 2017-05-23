@@ -9,13 +9,16 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
 import org.hibernate.Query;
 
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -24,22 +27,31 @@ import java.util.stream.Collectors;
 
 public class HQLBuilder implements HQLEncodingContext
 {
+	public static final String ROOT_OBJECT_ALIAS = "mobj";
+
 	private static final Logger log = Logger.getLogger(HQLBuilder.class);
 
 	private QEntity entity;
 	/**
-	 * TODO in the future allow this to be disabled for certain databases (e.g. SQL Server)
-	 * This should really only be false for HSQLDB
+	 * Controls whether the database allows queries to list columns in ORDER clauses without including them in the SELECT clause.<br />
+	 * SQL Server and HSQLDB both disallow this (since we using SELECT DISTINCT)
 	 */
 	private boolean databaseAllowsOrderByWithoutSelect = false;
-	private final Map<QPath, HQLJoin> joins = new HashMap<>();
+
+	/**
+	 * N.B. Uses {@link LinkedHashMap} to maintain the insertion order (because joins can depend on subsequent joins)
+	 */
+	private final LinkedHashMap<QPath, HQLJoin> joins = new LinkedHashMap<>();
 	private final List<HQLFragment> conditions = new ArrayList<>();
 	private final List<HQLFragment> orders = new ArrayList<>();
+	private final List<HQLFragment> groupings = new ArrayList<>();
 
 	/**
 	 * Holds all the property aliases we have generated for fragments to use and the values that have been aliased to them
 	 */
 	private final Map<String, Object> aliases = new HashMap<>();
+
+	private final Map<String, String> expansions = new HashMap<>();
 
 	/**
 	 * A list of names for columns referenced by ORDER BY statements, to work around a bug in certain databases (primarily HSQLDB
@@ -51,11 +63,15 @@ public class HQLBuilder implements HQLEncodingContext
 	private Integer limit = 200;
 
 	private HQLProjection projection = HQLProjection.ENTITIES;
+	private HQLFragment customHqlProjection = null;
 
 
 	public HQLBuilder(final QEntity entity)
 	{
 		this.entity = entity;
+
+		// Register the default {alias} fragment expansion (matching Hibernate's Criteria SQL fragment)
+		this.expansions.put("{alias}", ROOT_OBJECT_ALIAS);
 	}
 
 
@@ -66,11 +82,19 @@ public class HQLBuilder implements HQLEncodingContext
 		if (log.isTraceEnabled())
 			log.trace("Execute HQL: " + hql + " with vars: " + this.aliases);
 
-		final Query query = supplier.apply(hql);
+		try
+		{
+			final Query query = supplier.apply(hql);
 
-		configure(query);
+			configure(query);
 
-		return query;
+			return query;
+		}
+		catch (Throwable t)
+		{
+			log.error("Error preparing HQL statement '" + hql + "'", t);
+			throw t;
+		}
 	}
 
 
@@ -82,33 +106,52 @@ public class HQLBuilder implements HQLEncodingContext
 		switch (projection)
 		{
 			case ENTITIES:
-				sb.append("SELECT DISTINCT ").append(QPath.ROOT_OBJECT_ALIAS).append(' ');
+			{
+				if (databaseAllowsOrderByWithoutSelect || orderColumns.size() == 0)
+				{
+					// No ORDER BY (or only ordering by ID column)
+					sb.append("SELECT DISTINCT {alias} ");
+				}
+				else
+				{
+					sb.append("SELECT DISTINCT ");
+					sb.append(StringUtils.join(orderColumns, ','));
+					sb.append(", {alias} ");
+				}
+
+
 				break;
+			}
 			case IDS:
-				final String idColumn = QPath.ROOT_OBJECT_ALIAS + ".id";
+				final String idColumn = "{alias}.id";
 
 				if (databaseAllowsOrderByWithoutSelect ||
 				    orderColumns.size() == 0 ||
 				    (orderColumns.size() == 1 && StringUtils.equals(orderColumns.get(0), idColumn)))
 				{
 					// No ORDER BY (or only ordering by ID column)
-					sb.append("SELECT DISTINCT ").append(idColumn).append(' ');
+					sb.append("SELECT DISTINCT {alias}.id ");
 				}
 				else
 				{
-					sb.append("SELECT DISTINCT ").append(idColumn);
-					sb.append(',');
+					sb.append("SELECT DISTINCT ");
 					sb.append(StringUtils.join(orderColumns, ','));
-					sb.append(' ');
+					sb.append(", {alias}.id ");
 				}
 
 				break;
 			case COUNT:
-				sb.append("SELECT COUNT(DISTINCT ").append(QPath.ROOT_OBJECT_ALIAS).append(".id) ");
+				sb.append("SELECT COUNT(DISTINCT {alias}.id) ");
 
 				// Pagination and ordering are meaningless for a COUNT(distinct id) query
 				clearPagination();
 				clearOrder();
+
+				break;
+			case CUSTOM_HQL:
+				sb.append(customHqlProjection.toHsqlString(expansions));
+
+				sb.append(' '); // Make sure there's a space after the user-supplied expression for chaining further statements
 
 				break;
 			default:
@@ -119,15 +162,17 @@ public class HQLBuilder implements HQLEncodingContext
 		sb
 				.append("FROM ")
 				.append(entity.getEntityClass().getName())
-				.append(' ')
-				.append(QPath.ROOT_OBJECT_ALIAS)
-				.append(' '); // make sure we end on a space for chaining further statements
+				.append(" {alias} "); // make sure we end on a space for chaining further statements
 
 
 		// Append the JOIN statements
 		if (joins.size() > 0)
 		{
-			sb.append(joins.values().stream().map(c -> c.getJoinExpr().toHsqlString()).collect(Collectors.joining(" ")));
+			sb.append(joins
+					          .values()
+					          .stream()
+					          .map(c -> c.getJoinExpr().toHsqlString(expansions))
+					          .collect(Collectors.joining(" ")));
 			sb.append(' '); // make sure we end on a space for chaining further statements
 		}
 
@@ -138,7 +183,7 @@ public class HQLBuilder implements HQLEncodingContext
 
 			if (conditions.size() > 0)
 			{
-				sb.append(conditions.stream().map(c -> c.toHsqlString()).collect(Collectors.joining(" AND ")));
+				sb.append(conditions.stream().map(c -> c.toHsqlString(expansions)).collect(Collectors.joining(" AND ")));
 				sb.append(' '); // make sure we end on a space for chaining further statements
 			}
 		}
@@ -147,12 +192,21 @@ public class HQLBuilder implements HQLEncodingContext
 		{
 			sb.append("ORDER BY ");
 
-			sb.append(orders.stream().map(c -> c.toHsqlString()).collect(Collectors.joining(", ")));
+			sb.append(orders.stream().map(c -> c.toHsqlString(expansions)).collect(Collectors.joining(", ")));
 
 			sb.append(' '); // make sure we end on a space for chaining further statements
 		}
 
-		return sb.toString();
+		if (groupings.size() > 0)
+		{
+			sb.append("GROUP BY ");
+
+			sb.append(groupings.stream().map(c -> c.toHsqlString(expansions)).collect(Collectors.joining(", ")));
+
+			sb.append(' '); // make sure we end on a space for chaining further statements
+		}
+
+		return HQLFragment.replace(sb.toString(), this.expansions);
 	}
 
 
@@ -167,6 +221,9 @@ public class HQLBuilder implements HQLEncodingContext
 			else
 				query.setParameter(entry.getKey(), val);
 		}
+
+		if (!databaseAllowsOrderByWithoutSelect && (projection == HQLProjection.ENTITIES || projection == HQLProjection.IDS) && this.orderColumns.size() > 0)
+			query.setResultTransformer(Criteria.ROOT_ENTITY);
 
 		if (limit != null)
 			query.setMaxResults(limit);
@@ -201,10 +258,7 @@ public class HQLBuilder implements HQLEncodingContext
 		else
 		{
 			// Multiple classes,
-			HQLFragment fragment = new HQLFragment("TYPE(" +
-			                                       QPath.ROOT_OBJECT_ALIAS +
-			                                       ") IN " +
-			                                       createPropertyPlaceholder(classes));
+			HQLFragment fragment = new HQLFragment("TYPE({alias}) IN " + createPropertyPlaceholder(classes));
 
 			this.conditions.add(fragment);
 		}
@@ -351,6 +405,32 @@ public class HQLBuilder implements HQLEncodingContext
 	}
 
 
+	public HQLBuilder addOrderCustomHQL(HQLFragment... orderings)
+	{
+		Collections.addAll(orders, orderings);
+
+		return this;
+	}
+
+
+	public HQLBuilder addFragmentExpansion(final String expansionAlias, HQLFragment fragment)
+	{
+		final String hql = fragment.toHsqlString(this.expansions);
+
+		expansions.put("{" + expansionAlias + "}", hql);
+
+		return this;
+	}
+
+
+	public HQLBuilder addCustomGrouping(HQLFragment grouping)
+	{
+		this.groupings.add(grouping);
+
+		return this;
+	}
+
+
 	public QPropertyRef getProperty(final String path)
 	{
 		return new QPropertyRef(getPath(path));
@@ -367,7 +447,7 @@ public class HQLBuilder implements HQLEncodingContext
 		{
 			builtPath = QPath.parse(entity, builtPath, segments);
 
-			if (builtPath.getRelation() != null && builtPath.getRelation().isCollection())
+			if (builtPath.getRelation() != null) // && builtPath.getRelation().isCollection())
 			{
 				final String alias = createJoin(builtPath);
 
@@ -387,7 +467,7 @@ public class HQLBuilder implements HQLEncodingContext
 		if (join == null)
 		{
 			final String alias = "j" + joins.size();
-			final HQLFragment expr = new HQLFragment("JOIN " + path.toHsqlPath() + " " + alias);
+			final HQLFragment expr = new HQLFragment("LEFT OUTER JOIN " + path.toHsqlPath() + " " + alias);
 
 			join = new HQLJoin(path, alias, expr);
 
@@ -437,9 +517,30 @@ public class HQLBuilder implements HQLEncodingContext
 	}
 
 
+	/**
+	 * Sets the projection to one of a set of predefined options. Note, you may not supply {@link HQLProjection#CUSTOM_HQL} to
+	 * this method, please use {@link #setProjectionCustomHQL(HQLFragment)} instead.
+	 *
+	 * @param projection
+	 */
 	public void setProjection(final HQLProjection projection)
 	{
+		if (projection == HQLProjection.CUSTOM_HQL)
+			throw new IllegalArgumentException("Must use setHqlProjection to set up a custom HQL projection");
+
 		this.projection = projection;
+	}
+
+
+	/**
+	 * Sets the projection to a custom fragment of HQL
+	 *
+	 * @param fragment
+	 */
+	public void setProjectionCustomHQL(final HQLFragment fragment)
+	{
+		this.projection = HQLProjection.CUSTOM_HQL;
+		this.customHqlProjection = fragment;
 	}
 
 
@@ -452,12 +553,19 @@ public class HQLBuilder implements HQLEncodingContext
 	}
 
 
+	public void addCustomHQLConstraint(HQLFragment fragment)
+	{
+		if (fragment != null)
+			this.conditions.add(fragment);
+	}
+
+
 	/**
 	 * Add a constraint that will always fail, meaning the query will return no results
 	 */
 	public void addAlwaysFalseConstraint()
 	{
-		this.conditions.add(new HQLFragment("(0=1)"));
+		addCustomHQLConstraint(new HQLFragment("(0=1)"));
 	}
 
 
@@ -469,6 +577,6 @@ public class HQLBuilder implements HQLEncodingContext
 	 */
 	public <ID extends Serializable> void addIdInConstraint(final Collection<ID> ids)
 	{
-		this.conditions.add(new HQLFragment("id IN " + createPropertyPlaceholder(ids)));
+		addCustomHQLConstraint(new HQLFragment("{alias}.id IN " + createPropertyPlaceholder(ids)));
 	}
 }
