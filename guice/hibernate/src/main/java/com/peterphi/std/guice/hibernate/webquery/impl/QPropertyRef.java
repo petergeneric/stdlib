@@ -37,7 +37,7 @@ public class QPropertyRef
 		if (getProperty() instanceof QSizeProperty)
 			return ((QSizeProperty) getProperty()).toHqlPath(path);
 		else
-			return path.toHsqlPath();
+			return path.toHsqlPath().replace(':', '.'); // For composite primary keys, turn : into . (e.g. id:timestamp -> id.timestamp as HQL expects)
 	}
 
 

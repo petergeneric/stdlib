@@ -72,15 +72,17 @@ public class QEntity
 			final Type type = metadata.getIdentifierType();
 			final Class<?> clazz = type.getReturnedClass();
 
-			// Add an id property (N.B. may not work for embedded ids)
-			properties.put(name, new QProperty(this, null, name, clazz, false));
-
-			// If the identifier is a composite primary key then we should also add the composite fields
+			// If the identifier is a composite primary key then we should add the composite fields
 			if (type.isComponentType())
 			{
 				CompositeType composite = (CompositeType) type;
 
 				parseFields(entityFactory, sessionFactory, name, composite);
+			}
+			else
+			{
+				// The identifier is not a composite type, so just add the field directly
+				properties.put(name, new QProperty(this, null, name, clazz, false));
 			}
 		}
 
@@ -153,7 +155,7 @@ public class QEntity
 				final String newPrefix;
 
 				if (prefix != null)
-					newPrefix = prefix + "." + name;
+					newPrefix = prefix + ":" + name;
 				else
 					newPrefix = name;
 
@@ -169,7 +171,15 @@ public class QEntity
 			}
 			else
 			{
-				properties.put(name, new QProperty(this, prefix, name, clazz, nullable));
+				final String newPrefix;
+
+				if (prefix != null)
+					newPrefix = prefix + ":" + name;
+				else
+					newPrefix = name;
+
+
+				properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
 			}
 		}
 	}

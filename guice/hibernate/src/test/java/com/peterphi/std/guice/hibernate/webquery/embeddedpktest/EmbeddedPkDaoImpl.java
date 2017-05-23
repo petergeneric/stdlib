@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.embeddedpktest;
 
+import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import org.hibernate.Criteria;
 import org.hibernate.criterion.Restrictions;
@@ -15,5 +16,12 @@ class EmbeddedPkDaoImpl extends HibernateDao<EmbeddedPkEntity, SomePrimaryKey>
 		criteria.add(Restrictions.eq("id.timestamp", timestamp));
 
 		return getList(criteria);
+	}
+
+
+	@Transactional
+	public List<EmbeddedPkEntity> runQuery(String query)
+	{
+		return createQuery(query).list();
 	}
 }

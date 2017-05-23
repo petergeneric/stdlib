@@ -18,7 +18,7 @@ public class QProperty
 		this.entity = entity;
 
 		if (prefix != null)
-			this.name = prefix + "." + name;
+			this.name = prefix + ":" + name;
 		else
 			this.name = name;
 
