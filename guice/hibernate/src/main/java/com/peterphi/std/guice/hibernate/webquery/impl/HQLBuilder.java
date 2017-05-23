@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-public class HQBuilder implements HQLEncodingContext
+public class HQLBuilder implements HQLEncodingContext
 {
 	private QEntity entity;
 	/**
@@ -29,9 +29,9 @@ public class HQBuilder implements HQLEncodingContext
 	 * This should really only be false for HSQLDB
 	 */
 	private boolean databaseAllowsOrderByWithoutSelect = false;
-	private final Map<HQPath, HQJoin> joins = new HashMap<>();
-	private final List<HSQLFragment> conditions = new ArrayList<>();
-	private final List<HSQLFragment> orders = new ArrayList<>();
+	private final Map<QPath, HQLJoin> joins = new HashMap<>();
+	private final List<HQLFragment> conditions = new ArrayList<>();
+	private final List<HQLFragment> orders = new ArrayList<>();
 
 	/**
 	 * Holds all the property aliases we have generated for fragments to use and the values that have been aliased to them
@@ -47,10 +47,10 @@ public class HQBuilder implements HQLEncodingContext
 	private Integer offset = 0;
 	private Integer limit = 200;
 
-	private HQProjection projection = HQProjection.ENTITIES;
+	private HQLProjection projection = HQLProjection.ENTITIES;
 
 
-	public HQBuilder(final QEntity entity)
+	public HQLBuilder(final QEntity entity)
 	{
 		this.entity = entity;
 	}
@@ -77,10 +77,10 @@ public class HQBuilder implements HQLEncodingContext
 		switch (projection)
 		{
 			case ENTITIES:
-				sb.append("SELECT DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(' ');
+				sb.append("SELECT DISTINCT ").append(QPath.ROOT_OBJECT_ALIAS).append(' ');
 				break;
 			case IDS:
-				final String idColumn = HQPath.ROOT_OBJECT_ALIAS + ".id";
+				final String idColumn = QPath.ROOT_OBJECT_ALIAS + ".id";
 
 				if (databaseAllowsOrderByWithoutSelect ||
 				    orderColumns.size() == 0 ||
@@ -99,7 +99,7 @@ public class HQBuilder implements HQLEncodingContext
 
 				break;
 			case COUNT:
-				sb.append("SELECT COUNT(DISTINCT ").append(HQPath.ROOT_OBJECT_ALIAS).append(".id) ");
+				sb.append("SELECT COUNT(DISTINCT ").append(QPath.ROOT_OBJECT_ALIAS).append(".id) ");
 
 				// Pagination and ordering are meaningless for a COUNT(distinct id) query
 				clearPagination();
@@ -115,7 +115,7 @@ public class HQBuilder implements HQLEncodingContext
 				.append("FROM ")
 				.append(entity.getEntityClass().getName())
 				.append(' ')
-				.append(HQPath.ROOT_OBJECT_ALIAS)
+				.append(QPath.ROOT_OBJECT_ALIAS)
 				.append(' '); // make sure we end on a space for chaining further statements
 
 
@@ -182,7 +182,7 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder addClassConstraint(final List<String> values)
+	public HQLBuilder addClassConstraint(final List<String> values)
 	{
 		final List<Class<?>> classes = getClassesByDiscriminators(values);
 
@@ -196,10 +196,10 @@ public class HQBuilder implements HQLEncodingContext
 		else
 		{
 			// Multiple classes,
-			HSQLFragment fragment = new HSQLFragment("TYPE(" +
-			                                         HQPath.ROOT_OBJECT_ALIAS +
-			                                         ") IN " +
-			                                         createPropertyPlaceholder(classes));
+			HQLFragment fragment = new HQLFragment("TYPE(" +
+			                                       QPath.ROOT_OBJECT_ALIAS +
+			                                       ") IN " +
+			                                       createPropertyPlaceholder(classes));
 
 			this.conditions.add(fragment);
 		}
@@ -246,7 +246,7 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder clearPagination()
+	public HQLBuilder clearPagination()
 	{
 		this.offset = null;
 		this.limit = null;
@@ -255,7 +255,7 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder clearOrder()
+	public HQLBuilder clearOrder()
 	{
 		this.orders.clear();
 		this.orderColumns.clear();
@@ -264,7 +264,7 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder limit(Integer limit)
+	public HQLBuilder limit(Integer limit)
 	{
 		this.limit = limit;
 
@@ -272,7 +272,7 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder offset(Integer offset)
+	public HQLBuilder offset(Integer offset)
 	{
 		this.offset = offset;
 
@@ -331,14 +331,14 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQBuilder addOrder(QPropertyRef property, boolean asc)
+	public HQLBuilder addOrder(QPropertyRef property, boolean asc)
 	{
 		final String column = property.toHqlPath();
 
 		if (asc)
-			orders.add(new HSQLFragment(column + " ASC"));
+			orders.add(new HQLFragment(column + " ASC"));
 		else
-			orders.add(new HSQLFragment(column + " DESC"));
+			orders.add(new HQLFragment(column + " DESC"));
 
 		this.orderColumns.add(column);
 
@@ -352,15 +352,15 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQPath getPath(final String path)
+	public QPath getPath(final String path)
 	{
 		final LinkedList<String> segments = new LinkedList<>(Arrays.asList(StringUtils.split(path, '.')));
 
-		HQPath builtPath = null;
+		QPath builtPath = null;
 
 		while (segments.size() > 0)
 		{
-			builtPath = HQPath.parse(entity, builtPath, segments);
+			builtPath = QPath.parse(entity, builtPath, segments);
 
 			if (builtPath.getRelation() != null && builtPath.getRelation().isCollection())
 			{
@@ -374,17 +374,17 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	private String createJoin(final HQPath path)
+	private String createJoin(final QPath path)
 	{
-		HQJoin join = joins.get(path);
+		HQLJoin join = joins.get(path);
 
 		// Lazy-create the join if necessary
 		if (join == null)
 		{
 			final String alias = "j" + joins.size();
-			final HSQLFragment expr = new HSQLFragment("JOIN " + path.toHsqlPath() + " " + alias);
+			final HQLFragment expr = new HQLFragment("JOIN " + path.toHsqlPath() + " " + alias);
 
-			join = new HQJoin(path, alias, expr);
+			join = new HQLJoin(path, alias, expr);
 
 			joins.put(path, join);
 		}
@@ -426,19 +426,19 @@ public class HQBuilder implements HQLEncodingContext
 	}
 
 
-	public HQProjection getProjection()
+	public HQLProjection getProjection()
 	{
 		return projection;
 	}
 
 
-	public void setProjection(final HQProjection projection)
+	public void setProjection(final HQLProjection projection)
 	{
 		this.projection = projection;
 	}
 
 
-	public HQBuilder clearConstraints()
+	public HQLBuilder clearConstraints()
 	{
 		this.conditions.clear();
 		this.aliases.clear();
@@ -452,7 +452,7 @@ public class HQBuilder implements HQLEncodingContext
 	 */
 	public void addAlwaysFalseConstraint()
 	{
-		this.conditions.add(new HSQLFragment("(0=1)"));
+		this.conditions.add(new HQLFragment("(0=1)"));
 	}
 
 
@@ -464,6 +464,6 @@ public class HQBuilder implements HQLEncodingContext
 	 */
 	public <ID extends Serializable> void addIdInConstraint(final Collection<ID> ids)
 	{
-		this.conditions.add(new HSQLFragment("id IN " + createPropertyPlaceholder(ids)));
+		this.conditions.add(new HQLFragment("id IN " + createPropertyPlaceholder(ids)));
 	}
 }

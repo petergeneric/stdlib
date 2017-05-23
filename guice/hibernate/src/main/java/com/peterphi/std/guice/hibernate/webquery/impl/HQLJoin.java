@@ -1,12 +1,13 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-public class HQJoin
+class HQLJoin
 {
-	private final HQPath path;
+	private final QPath path;
 	private final String alias;
-	private final HSQLFragment joinExpr;
+	private final HQLFragment joinExpr;
 
-	public HQJoin(final HQPath path, final String alias, final HSQLFragment joinExpr)
+
+	public HQLJoin(final QPath path, final String alias, final HQLFragment joinExpr)
 	{
 		this.path = path;
 		this.alias = alias;
@@ -14,7 +15,7 @@ public class HQJoin
 	}
 
 
-	public HQPath getPath()
+	public QPath getPath()
 	{
 		return path;
 	}
@@ -26,7 +27,7 @@ public class HQJoin
 	}
 
 
-	public HSQLFragment getJoinExpr()
+	public HQLFragment getJoinExpr()
 	{
 		return joinExpr;
 	}

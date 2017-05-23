@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-public enum HQProjection
+public enum HQLProjection
 {
 	IDS,
 	COUNT,

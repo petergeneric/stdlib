@@ -1,109 +1,207 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.google.common.base.Objects;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 
-public class QPath
+class QPath
 {
-	private final List<QRelation> components;
-	private final int depth;
+	public static final String ROOT_OBJECT_ALIAS = "mobj";
+
+	private final QPath parent;
+	private final String name;
+	private final String alias;
+	private final QRelation relation;
+	private final QProperty property;
+
+	/**
+	 * Alias for collections
+	 */
+	private String hsqlAlias = null;
 
 
-	public QPath(final List<QRelation> components, final int depth)
+	public QPath(final QPath parent, final String name, final String alias, final QRelation relation, final QProperty property)
 	{
-		if (components.isEmpty())
-			throw new IllegalArgumentException("Must provide at least one component for a path!");
-		else if (depth > components.size())
-			throw new IllegalArgumentException("Depth must be <= component list size!");
+		this.parent = parent;
+		this.name = name;
 
-		this.components = components;
-		this.depth = depth;
+		if (alias == null && relation != null && relation.isCollection())
+			this.alias = UUID.randomUUID().toString(); // Generate a random alias name
+		else
+			this.alias = alias;
+
+		this.relation = relation;
+		this.property = property;
+	}
+
+
+	public static QPath parse(final QEntity rootEntity, final QPath parent, final LinkedList<String> segments)
+	{
+		final QEntity entity;
+		if (parent == null)
+			entity = rootEntity;
+		else
+			entity = parent.getRelation().getEntity();
+
+		// Resolve any aliases at this entity level
+		entity.fixupPathUsingAliases(segments);
+
+		final String expr = segments.removeFirst();
+
+		final String name;
+		final String alias;
+		if (expr.indexOf('[') == -1)
+		{
+			name = expr;
+			alias = null;
+		}
+		else
+		{
+			// Should have a ] at the end of the expression
+			if (expr.indexOf(']') != expr.length() - 1)
+				throw new IllegalArgumentException("Expected segmentName[aliasName]! Got: " + expr);
+
+			name = expr.substring(0, expr.indexOf('[') - 1);
+			alias = expr.substring(expr.indexOf('[') + 1, expr.length() - 1);
+		}
+
+		if (entity.hasProperty(name))
+			return new QPath(parent, name, alias, null, entity.getProperty(name));
+		else if (entity.hasRelation(name))
+			return new QPath(parent, name, alias, entity.getRelation(name), null);
+		else
+		{
+			final Set<String> expected = new HashSet<>(entity.getPropertyNames());
+			expected.addAll(entity.getRelationNames());
+			expected.addAll(entity.getAliasNames());
+
+			throw new IllegalArgumentException("Relationship path error: got " + expr + ", expected one of: " + expected);
+		}
 	}
 
 
 	public QPath getParent()
 	{
-		if (depth > 1)
-			return new QPath(this.components, depth - 1);
-		else
-			return null;
+		return parent;
 	}
 
 
-	public QRelation getRelation(final int index)
+	public String getName()
 	{
-		if (index > depth || index < 0)
-			throw new IllegalArgumentException("Illegal value for index: must be between 0 and " + depth);
-		else
-			return components.get(index);
+		return name;
 	}
 
 
-	public String toJoinAlias()
+	public String getAlias()
 	{
-		return toString('_');
+		return alias;
 	}
 
 
-	private String toString(char separator)
+	public QRelation getRelation()
 	{
-		StringBuilder sb = new StringBuilder();
+		return relation;
+	}
 
-		for (int i = 0; i < depth; i++)
+
+	public QProperty getProperty()
+	{
+		return property;
+	}
+
+
+	public String getHsqlAlias()
+	{
+		return hsqlAlias;
+	}
+
+
+	public void setHsqlAlias(final String hsqlAlias)
+	{
+		this.hsqlAlias = hsqlAlias;
+	}
+
+
+	public String toHsqlPath()
+	{
+		List<String> path = new ArrayList<>();
+
+		path.add(name);
+
+		QPath current = getParent();
+
+		while (true)
 		{
-			if (i != 0)
-				sb.append(separator);
+			if (current == null)
+			{
+				path.add(ROOT_OBJECT_ALIAS);
+				break;
+			}
+			if (current.getHsqlAlias() != null)
+			{
+				path.add(current.getHsqlAlias());
+				break;
+			}
+			else
+			{
+				path.add(current.getName());
+			}
 
-			sb.append(components.get(i).getName());
+			current = current.getParent();
 		}
 
-		return sb.toString();
+		Collections.reverse(path);
+
+		return path.stream().collect(Collectors.joining("."));
 	}
 
 
 	@Override
-	public String toString()
+	public boolean equals(final Object o)
 	{
-		if (depth == 1)
-			return components.get(0).getName();
-		else
-			return toString('.');
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+
+		QPath qPath = (QPath) o;
+
+		if (parent != null ? !parent.equals(qPath.parent) : qPath.parent != null)
+			return false;
+		if (name != null ? !name.equals(qPath.name) : qPath.name != null)
+			return false;
+		return alias != null ? alias.equals(qPath.alias) : qPath.alias == null;
 	}
 
 
 	@Override
 	public int hashCode()
 	{
-		// Copied from AbstractList.hashCode
-		int hashCode = 1;
-
-		for (int i = 0; i < depth; i++)
-			hashCode = 31 * hashCode + (components.get(i).hashCode());
-
-		return hashCode;
+		int result = parent != null ? parent.hashCode() : 0;
+		result = 31 * result + (name != null ? name.hashCode() : 0);
+		result = 31 * result + (alias != null ? alias.hashCode() : 0);
+		return result;
 	}
 
 
 	@Override
-	public boolean equals(Object o)
+	public String toString()
 	{
-		if (o == this)
-			return true;
-		else if (!(o instanceof QPath))
-			return false;
-		else
-		{
-			QPath other = (QPath) o;
-
-			// Must have the same depth to be identical
-			if (other.depth != this.depth)
-				return false;
-
-			for (int i = 0; i < depth; i++)
-				if (!other.components.get(i).equals(this.components.get(i)))
-					return false; // path mismatch
-
-			// No mismatch encountered
-			return true;
-		}
+		return Objects
+				       .toStringHelper(this)
+				       .add("parent", parent)
+				       .add("name", name)
+				       .add("alias", alias)
+				       .add("relation", relation)
+				       .add("property", property)
+				       .add("hsqlAlias", hsqlAlias)
+				       .toString();
 	}
 }

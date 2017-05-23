@@ -16,7 +16,7 @@ public class QSizeProperty extends QProperty
 	}
 
 
-	public String toHqlPath(final HQPath path)
+	public String toHqlPath(final QPath path)
 	{
 		final String rawPath = path.toHsqlPath();
 

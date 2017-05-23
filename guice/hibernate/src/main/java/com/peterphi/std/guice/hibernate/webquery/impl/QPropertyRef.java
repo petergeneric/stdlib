@@ -2,10 +2,10 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 public class QPropertyRef
 {
-	private final HQPath path;
+	private final QPath path;
 
 
-	public QPropertyRef(final HQPath path)
+	public QPropertyRef(final QPath path)
 	{
 		if (path.getProperty() == null)
 			throw new IllegalArgumentException("Must supply property path! Not " + path);
@@ -14,7 +14,7 @@ public class QPropertyRef
 	}
 
 
-	public HQPath getPath()
+	public QPath getPath()
 	{
 		return path;
 	}

@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
-import com.peterphi.std.guice.hibernate.webquery.impl.HSQLFragment;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQLFragment;
 import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
 import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
 
@@ -19,8 +19,8 @@ public class UnaryFunction implements QFunction
 
 
 	@Override
-	public HSQLFragment encode(final HQLEncodingContext ctx)
+	public HQLFragment encode(final HQLEncodingContext ctx)
 	{
-		return new HSQLFragment(property.toHqlPath() + " " + operator);
+		return new HQLFragment(property.toHqlPath() + " " + operator);
 	}
 }

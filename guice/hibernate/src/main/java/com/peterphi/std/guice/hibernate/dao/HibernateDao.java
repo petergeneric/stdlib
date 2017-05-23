@@ -12,8 +12,8 @@ import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQBuilder;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQProjection;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQLBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQLProjection;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -553,7 +553,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 		if (ids.size() > 0)
 		{
-			final HQBuilder byIdBuilder = toCriteriaBuilder(constraints);
+			final HQLBuilder byIdBuilder = toCriteriaBuilder(constraints);
 
 			// N.B. we do not need the constraints / pagination because we have already evaluated them
 			byIdBuilder.clearConstraints();
@@ -572,7 +572,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		}
 		else
 		{
-			final HQBuilder emptyQueryBuilder = toCriteriaBuilder(new WebQuery());
+			final HQLBuilder emptyQueryBuilder = toCriteriaBuilder(new WebQuery());
 
 			// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
 			emptyQueryBuilder.addAlwaysFalseConstraint();
@@ -615,9 +615,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Query toGetIdQuery(WebQuery query)
 	{
 		// Encode the WebQuery and add the constraints
-		final HQBuilder builder = toCriteriaBuilder(query);
+		final HQLBuilder builder = toCriteriaBuilder(query);
 
-		builder.setProjection(HQProjection.IDS);
+		builder.setProjection(HQLProjection.IDS);
 
 		return builder.toHQL(this :: createQuery);
 	}
@@ -626,9 +626,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Query toRowCountQuery(WebQuery constraints)
 	{
 		// Encode the WebQuery and add the constraints
-		final HQBuilder builder = toCriteriaBuilder(constraints).clearPagination().clearOrder();
+		final HQLBuilder builder = toCriteriaBuilder(constraints).clearPagination().clearOrder();
 
-		builder.setProjection(HQProjection.COUNT);
+		builder.setProjection(HQLProjection.COUNT);
 
 		Query hql = builder.toHQL(this :: createQuery);
 
@@ -651,7 +651,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected Query toSimpleQuery(WebQuery query)
 	{
 		// Encode the WebQuery and add the constraints
-		final HQBuilder builder = toCriteriaBuilder(query);
+		final HQLBuilder builder = toCriteriaBuilder(query);
 
 		return builder.toHQL(this :: createQuery);
 	}
@@ -664,9 +664,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 *
 	 * @return
 	 */
-	protected HQBuilder toCriteriaBuilder(final WebQuery query)
+	protected HQLBuilder toCriteriaBuilder(final WebQuery query)
 	{
-		HQBuilder builder = new HQBuilder(getQEntity());
+		HQLBuilder builder = new HQLBuilder(getQEntity());
 
 		builder.setDatabaseAllowsOrderByWithoutSelect(this.databaseAllowsOrderByWithoutSelect);
 

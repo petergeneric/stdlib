@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
-import com.peterphi.std.guice.hibernate.webquery.impl.HSQLFragment;
+import com.peterphi.std.guice.hibernate.webquery.impl.HQLFragment;
 import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
 
 import java.util.ArrayList;
@@ -35,7 +35,7 @@ class GroupFunction implements QFunction
 
 
 	@Override
-	public HSQLFragment encode(HQLEncodingContext ctx)
+	public HQLFragment encode(HQLEncodingContext ctx)
 	{
 		if (constraints.isEmpty())
 			return null;
@@ -43,7 +43,7 @@ class GroupFunction implements QFunction
 			return constraints.get(0).encode(ctx);
 		else
 		{
-			final List<HSQLFragment> fragments = constraints
+			final List<HQLFragment> fragments = constraints
 					                                     .stream()
 					                                     .filter(c -> c != null)
 					                                     .map(c -> c.encode(ctx))
@@ -51,7 +51,7 @@ class GroupFunction implements QFunction
 
 			final String separator = and ? " AND " : " OR ";
 
-			return HSQLFragment.combine(fragments, "(", separator, ")");
+			return HQLFragment.combine(fragments, "(", separator, ")");
 		}
 	}
 
