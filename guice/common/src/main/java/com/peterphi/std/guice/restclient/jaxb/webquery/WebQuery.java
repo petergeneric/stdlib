@@ -135,7 +135,10 @@ public class WebQuery
 
 	public WebQuery subclass(String... subclasses)
 	{
-		this.constraints.subclass = String.join(",", subclasses);
+		if (subclasses == null || subclasses.length == 0)
+			this.constraints.subclass = null;
+		else
+			this.constraints.subclass = String.join(",", subclasses);
 
 		return this;
 	}
@@ -491,7 +494,10 @@ public class WebQuery
 						def.fetch(entry.getValue().stream().collect(Collectors.joining(",")));
 						break;
 					default:
-						throw new IllegalArgumentException("Unknown query field: " + specialField + " expected one of " + WQUriControlField.getAllNames());
+						throw new IllegalArgumentException("Unknown query field: " +
+						                                   specialField +
+						                                   " expected one of " +
+						                                   WQUriControlField.getAllNames());
 				}
 			}
 			else

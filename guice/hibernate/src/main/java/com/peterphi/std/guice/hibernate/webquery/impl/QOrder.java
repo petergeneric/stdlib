@@ -17,19 +17,9 @@ class QOrder
 
 	public Order encode()
 	{
-		if (property.getProperty() instanceof QSizeProperty)
-		{
-			if (asc)
-				return SizeOrder.asc(property.getName());
-			else
-				return SizeOrder.desc(property.getName());
-		}
+		if (asc)
+			return Order.asc(property.toHqlPath());
 		else
-		{
-			if (asc)
-				return Order.asc(property.getName());
-			else
-				return Order.desc(property.getName());
-		}
+			return Order.desc(property.toHqlPath());
 	}
 }

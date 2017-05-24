@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.module.logging;
 
+import org.apache.log4j.Logger;
+
 import java.io.Closeable;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -11,6 +13,8 @@ import java.util.function.Consumer;
  */
 public class HibernateSQLLogger implements Closeable, AutoCloseable, Consumer<String>
 {
+	private static final Logger log = Logger.getLogger(HibernateSQLLogger.class);
+
 	private final List<String> statements = new ArrayList<>(0);
 	private final HibernateObservingInterceptor interceptor;
 
@@ -30,6 +34,9 @@ public class HibernateSQLLogger implements Closeable, AutoCloseable, Consumer<St
 	@Override
 	public void accept(final String sql)
 	{
+		if (log.isTraceEnabled())
+			log.trace("Hibernate executing SQL: " + sql);
+
 		synchronized (statements)
 		{
 			statements.add(sql);

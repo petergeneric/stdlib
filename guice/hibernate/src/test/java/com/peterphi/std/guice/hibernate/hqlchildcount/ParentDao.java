@@ -7,9 +7,16 @@ import java.util.List;
 
 public class ParentDao extends HibernateDao<ParentEntity, Long>
 {
-	@Transactional
+	@Transactional(readOnly = true)
 	public List<Long> getIdsByQuery(String query)
 	{
 		return getIdList(createQuery(query));
+	}
+
+
+	@Transactional(readOnly = true)
+	public List<ParentEntity> getByQuery(String query)
+	{
+		return (List<ParentEntity>) getList(createQuery(query));
 	}
 }

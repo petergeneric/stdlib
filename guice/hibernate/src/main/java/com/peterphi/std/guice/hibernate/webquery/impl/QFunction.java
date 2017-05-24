@@ -1,8 +1,8 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import org.hibernate.criterion.Criterion;
+import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
 
 public interface QFunction
 {
-	public Criterion encode();
+	HQLFragment encode(HQLEncodingContext ctx);
 }

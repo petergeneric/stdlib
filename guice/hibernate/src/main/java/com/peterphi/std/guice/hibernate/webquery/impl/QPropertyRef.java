@@ -2,64 +2,48 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 public class QPropertyRef
 {
-	private final QJoin join;
-	private final QProperty property;
+	private final QPath path;
 
 
-	public QPropertyRef(final QJoin join, final QProperty property)
+	public QPropertyRef(final QPath path)
 	{
-		this.join = join;
-		this.property = property;
+		if (path.getProperty() == null)
+			throw new IllegalArgumentException("Must supply property path! Not " + path);
+
+		this.path = path;
 	}
 
 
-	public QJoin getJoin()
+	public QPath getPath()
 	{
-		return join;
+		return path;
 	}
 
 
 	public QProperty getProperty()
 	{
-		return property;
+		return path.getProperty();
 	}
 
 
 	public Object parseValue(String value)
 	{
-		return QTypeHelper.parse(property.getClazz(), value);
+		return QTypeHelper.parse(getProperty().getClazz(), value);
 	}
 
 
-	public String getName()
+	public String toHqlPath()
 	{
-		if (join != null)
-			return join.getAlias() + "." + property.getName();
+		if (getProperty() instanceof QSizeProperty)
+			return ((QSizeProperty) getProperty()).toHqlPath(path);
 		else
-			return property.getName();
-	}
-
-
-	/**
-	 * Get a name that can be used in a SQLRestriction
-	 *
-	 * @return
-	 */
-	public String getSQLRestrictionName()
-	{
-		if (join != null)
-			return "{" + join.getAlias() + "}." + property.getName();
-		else
-			return "{alias}." + property.getName();
+			return path.toHsqlPath().replace(':', '.'); // For composite primary keys, turn : into . (e.g. id:timestamp -> id.timestamp as HQL expects)
 	}
 
 
 	@Override
 	public String toString()
 	{
-		return "QPropertyRef{" +
-		       "join=" + join +
-		       ", property=" + property +
-		       '}';
+		return "QPropertyRef{" + path + '}';
 	}
 }

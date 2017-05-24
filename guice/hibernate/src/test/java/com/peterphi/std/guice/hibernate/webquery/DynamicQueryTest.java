@@ -43,6 +43,9 @@ public class DynamicQueryTest
 	@Before
 	public void clearDatabaseBeforeTest()
 	{
+		for (ChildEntity obj : childDao.getAll())
+			childDao.delete(obj);
+
 		for (ParentEntity obj : dao.getAll())
 			dao.delete(obj);
 
@@ -73,6 +76,19 @@ public class DynamicQueryTest
 	{
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
 		dao.findByUriQuery(new WebQuery().eq("otherObject.parent.name", "Alice"));
+	}
+
+
+	/**
+	 * This does not work natively with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed, so this
+	 * test confirms that WebQuery is able to implement it
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	public void testOrderingByLazyAssociatedRelationThatIsNotSelectedWorks() throws Exception
+	{
+		dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
 	}
 
 
@@ -175,7 +191,7 @@ public class DynamicQueryTest
 	public void testDynamicQuerySeesManyToOneRelation() throws IllegalArgumentException
 	{
 		// Will throw an IllegalArgumentException if the "children" field is not parsed from the entity
-		dao.findByUriQuery(new WebQuery().eq("children.id", null));
+		dao.findByUriQuery(new WebQuery().isNull("children.id"));
 	}
 
 

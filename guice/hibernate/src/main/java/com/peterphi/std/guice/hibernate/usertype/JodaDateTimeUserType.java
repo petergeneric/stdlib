@@ -89,6 +89,10 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 		{
 			statement.setNull(index, Types.BIGINT);
 		}
+		else if (value instanceof Long)
+		{
+			statement.setLong(index, (Long) value);
+		}
 		else
 		{
 			final long millis = ((DateTime) value).getMillis();

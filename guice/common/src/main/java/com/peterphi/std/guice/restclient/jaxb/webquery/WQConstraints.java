@@ -34,11 +34,17 @@ public class WQConstraints
 	public String toString()
 	{
 		return "WebQueryConstraints{" +
-		       "offset=" + offset +
-		       ", limit=" + limit +
-		       ", computeSize=" + computeSize +
-		       ", clazz='" + subclass + '\'' +
-		       ", constraints=" + constraints +
+		       "offset=" +
+		       offset +
+		       ", limit=" +
+		       limit +
+		       ", computeSize=" +
+		       computeSize +
+		       ", clazz='" +
+		       subclass +
+		       '\'' +
+		       ", constraints=" +
+		       constraints +
 		       '}';
 	}
 }

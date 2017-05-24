@@ -16,6 +16,16 @@ public class QSizeProperty extends QProperty
 	}
 
 
+	public String toHqlPath(final QPath path)
+	{
+		final String rawPath = path.toHsqlPath();
+
+		final String collectionPath = rawPath.replace(":size", "");
+
+		return "SIZE(" + collectionPath + ")";
+	}
+
+
 	public QRelation getRelation()
 	{
 		return relation;
@@ -26,11 +36,17 @@ public class QSizeProperty extends QProperty
 	public String toString()
 	{
 		return "QSizeProperty{" +
-		       "relation.name=" + relation.getName() +
-		       ", entity.name=" + super.entity.getName() +
-		       ", name='" + super.name + '\'' +
-		       ", clazz=" + super.clazz +
-		       ", nullable=" + super.nullable +
+		       "relation.name=" +
+		       relation.getName() +
+		       ", entity.name=" +
+		       super.entity.getName() +
+		       ", name='" +
+		       super.name +
+		       '\'' +
+		       ", clazz=" +
+		       super.clazz +
+		       ", nullable=" +
+		       super.nullable +
 		       '}';
 	}
 }

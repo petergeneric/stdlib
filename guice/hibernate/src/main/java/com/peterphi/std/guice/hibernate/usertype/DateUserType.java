@@ -82,6 +82,10 @@ public class DateUserType implements UserType, UserVersionType, Comparator
 		{
 			statement.setNull(index, Types.BIGINT);
 		}
+		else if (value instanceof Long)
+		{
+			statement.setLong(index, (Long) value);
+		}
 		else
 		{
 			final long timestamp = ((Date) value).getTime();

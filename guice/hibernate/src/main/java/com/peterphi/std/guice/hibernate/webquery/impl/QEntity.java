@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
@@ -15,9 +13,11 @@ import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Table;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -33,12 +33,6 @@ public class QEntity
 	private Map<String, QRelation> relations = new HashMap<>();
 
 	private List<QEntity> descendants = Collections.emptyList();
-
-	private final Cache<String, QPropertyPathBuilder> builderCache = CacheBuilder.newBuilder()
-	                                                                             .weakKeys()
-	                                                                             .weakValues()
-	                                                                             .initialCapacity(0)
-	                                                                             .build();
 
 
 	public QEntity(Class<?> clazz)
@@ -70,15 +64,17 @@ public class QEntity
 			final Type type = metadata.getIdentifierType();
 			final Class<?> clazz = type.getReturnedClass();
 
-			// Add an id property (N.B. may not work for embedded ids)
-			properties.put(name, new QProperty(this, null, name, clazz, false));
-
-			// If the identifier is a composite primary key then we should also add the composite fields
+			// If the identifier is a composite primary key then we should add the composite fields
 			if (type.isComponentType())
 			{
 				CompositeType composite = (CompositeType) type;
 
 				parseFields(entityFactory, sessionFactory, name, composite);
+			}
+			else
+			{
+				// The identifier is not a composite type, so just add the field directly
+				properties.put(name, new QProperty(this, null, name, clazz, false));
 			}
 		}
 
@@ -151,7 +147,7 @@ public class QEntity
 				final String newPrefix;
 
 				if (prefix != null)
-					newPrefix = prefix + "." + name;
+					newPrefix = prefix + ":" + name;
 				else
 					newPrefix = name;
 
@@ -160,14 +156,22 @@ public class QEntity
 			}
 			else if (type.isEntityType())
 			{
-				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable));
+				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection));
 
 				// Set up a special property to allow constraining the collection size
 				properties.put(name + ":size", new QSizeProperty(relations.get(name)));
 			}
 			else
 			{
-				properties.put(name, new QProperty(this, prefix, name, clazz, nullable));
+				final String newPrefix;
+
+				if (prefix != null)
+					newPrefix = prefix + ":" + name;
+				else
+					newPrefix = name;
+
+
+				properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
 			}
 		}
 	}
@@ -222,9 +226,38 @@ public class QEntity
 	}
 
 
-	public boolean hasAlias(String name)
+	/**
+	 * Modify a list of segments by replacing any defined alias on this entity. If there is no such destination alias then does
+	 * nothing<br />
+	 * This is designed to allow underlying database schema changes without changing the query API exposed to users
+	 *
+	 * @param segments
+	 * 		some path optionally including an aliased name (e.g. "asset.parentId")
+	 *
+	 * @return some new path (e.g. "asset.parent.id")
+	 */
+	public void fixupPathUsingAliases(final LinkedList<String> segments)
 	{
-		return aliases.containsKey(name);
+		if (aliases.isEmpty())
+			return; // No transformation necessary or possible
+
+		final String remainingPath = segments.stream().collect(Collectors.joining("."));
+
+		for (Map.Entry<String, String> entry : aliases.entrySet())
+		{
+			final String from = entry.getKey();
+			final String to = entry.getValue();
+
+			if (StringUtils.equals(remainingPath, from) || StringUtils.startsWith(remainingPath, from + "."))
+			{
+				final String newPath = to + remainingPath.substring(from.length());
+
+				segments.clear();
+				segments.addAll(Arrays.asList(StringUtils.split(newPath, '.')));
+
+				return;
+			}
+		}
 	}
 
 
@@ -247,88 +280,6 @@ public class QEntity
 			                                   this.clazz.getSimpleName() +
 			                                   ", expected one of " +
 			                                   properties.keySet());
-	}
-
-
-	public QPropertyPathBuilder getPath(final String path)
-	{
-		QPropertyPathBuilder cached = builderCache.getIfPresent(path);
-
-		if (cached == null)
-		{
-			final QPropertyPathBuilder builder = new QPropertyPathBuilder();
-
-			cached = getPath(builder, path);
-
-			builderCache.put(path, cached);
-		}
-
-		return cached;
-	}
-
-
-	public QPropertyPathBuilder getPath(final QPropertyPathBuilder builder, String path)
-	{
-		final int firstDot = path.indexOf('.');
-
-		final boolean terminal = (firstDot == -1);
-
-		final String head = terminal ? path : path.substring(0, firstDot);
-		final String tail = terminal ? null : path.substring(firstDot + 1);
-
-		if (hasAlias(head))
-		{
-			final String newPath;
-
-			if (terminal)
-				newPath = getAlias(head);
-			else
-				newPath = getAlias(head) + "." + tail;
-
-			return getPath(builder, newPath);
-		}
-		else if (hasProperty(head))
-		{
-			if (tail != null)
-				throw new IllegalArgumentException("Found property " + head + " but there are other path components: " + tail);
-
-			builder.append(getProperty(head));
-
-			return builder;
-		}
-		else if (hasRelation(head))
-		{
-			final QRelation relation = getRelation(head);
-
-			builder.append(getRelation(head));
-
-			return relation.getEntity().getPath(builder, tail);
-		}
-		else
-		{
-			final Set<String> expected = new HashSet<>(getPropertyNames());
-			expected.addAll(getRelationNames());
-			expected.addAll(getAliasNames());
-
-			throw new IllegalArgumentException("Relationship path error: got " +
-			                                   head +
-			                                   ", expected one of: " + expected);
-		}
-	}
-
-
-	/**
-	 * Retrieve the resolution of a defined alias on this entity. If there is no such destination alias then return null<br />
-	 * This is designed to allow underlying database schema changes without changing the query API exposed to users
-	 *
-	 * @param name
-	 * 		some aliased name (e.g. "assetId")
-	 *
-	 * @return some alias destination (e.g. "asset.id")
-	 */
-	public String getAlias(String name)
-	{
-		return aliases.get(name);
 	}
 
 
@@ -386,11 +337,57 @@ public class QEntity
 	public String toString()
 	{
 		return "QEntity{" +
-		       "clazz=" + clazz +
-		       ", name='" + name + '\'' +
-		       ", properties=" + properties.values() +
-		       ", relations=" + relations.values() +
-		       ", aliases=" + aliases.values() +
+		       "clazz=" +
+		       clazz +
+		       ", name='" +
+		       name +
+		       '\'' +
+		       ", properties=" +
+		       properties.values() +
+		       ", relations=" +
+		       relations.values() +
+		       ", aliases=" +
+		       aliases.values() +
 		       '}';
+	}
+
+
+	public QEntity getSubEntity(final String discriminator)
+	{
+		if (StringUtils.equals(getDiscriminatorValue(), discriminator))
+			return this;
+		else
+			for (QEntity entity : getSubEntities())
+				if (StringUtils.equals(entity.getDiscriminatorValue(), discriminator))
+					return entity;
+
+		throw new IllegalArgumentException("Unknown subclass with discriminator: " + discriminator);
+	}
+
+
+	public QEntity getCommonSubclass(final List<String> discriminators)
+	{
+		Map<Class, QEntity> entities = discriminators
+				                               .stream()
+				                               .map(this :: getSubEntity)
+				                               .collect(Collectors.toMap(e -> e.clazz, e -> e));
+
+		Collection<Class> classes = entities.keySet();
+
+		for (Class potentialSuperclass : classes)
+		{
+			boolean suitableForAll = true;
+			for (Class test : classes)
+			{
+				suitableForAll = suitableForAll && test.isAssignableFrom(potentialSuperclass);
+			}
+
+			// If this is a suitable superclass for all classes we have tested then we have a winner!
+			if (suitableForAll)
+				return entities.get(potentialSuperclass);
+		}
+
+		// Found no more specific subclass
+		return this;
 	}
 }

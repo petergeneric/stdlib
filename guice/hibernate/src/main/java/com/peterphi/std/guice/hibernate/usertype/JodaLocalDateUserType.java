@@ -85,6 +85,10 @@ public class JodaLocalDateUserType implements UserType, Comparator
 		{
 			statement.setNull(index, Types.DATE);
 		}
+		else if (value instanceof Long)
+		{
+			statement.setLong(index, (Long) value);
+		}
 		else
 		{
 			final long timestamp = ((LocalDate) value).toDateTimeAtStartOfDay().getMillis();
