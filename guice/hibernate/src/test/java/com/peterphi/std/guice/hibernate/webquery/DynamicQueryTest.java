@@ -80,14 +80,15 @@ public class DynamicQueryTest
 
 
 	/**
-	 * This does not work with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed
+	 * This does not work natively with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed, so this
+	 * test confirms that WebQuery is able to implement it
 	 *
 	 * @throws Exception
 	 */
 	@Test
-	public void testOrderingByLazyAssociatedRelationThatIsNotSelectedDoesNotWorkWithHSQLDB() throws Exception
+	public void testOrderingByLazyAssociatedRelationThatIsNotSelectedWorks() throws Exception
 	{
-		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
+		dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
 	}
 
 
