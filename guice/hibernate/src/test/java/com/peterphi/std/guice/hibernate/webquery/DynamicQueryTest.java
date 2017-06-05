@@ -162,6 +162,25 @@ public class DynamicQueryTest
 
 
 	@Test
+	public void testGetByUniquePropertyWithAliasOnCollection() throws Exception
+	{
+		dao.getByUniqueProperty("children[r0].id", 1L);
+	}
+
+
+	@Test
+	public void testGetUsingPropertiesOfEmbeddedCollection() throws Exception
+	{
+		// Hibernate will throw if the property doesn't work
+		WebQuery q = new WebQuery();
+		q.eq("friends[r0].firstName", "Firstname");
+		q.eq("friends[r0].lastName", "Surname");
+
+		dao.findByUriQuery(q);
+	}
+
+
+	@Test
 	public void testNestedAssociatorConstraintWorksInGetByUniqueProperty() throws Exception
 	{
 		// Hibernate will throw if the join doesn't get automatically set up

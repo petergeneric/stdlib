@@ -66,7 +66,7 @@ class QPath
 			if (expr.indexOf(']') != expr.length() - 1)
 				throw new IllegalArgumentException("Expected segmentName[aliasName]! Got: " + expr);
 
-			name = expr.substring(0, expr.indexOf('[') - 1);
+			name = expr.substring(0, expr.indexOf('['));
 			alias = expr.substring(expr.indexOf('[') + 1, expr.length() - 1);
 		}
 
@@ -80,7 +80,14 @@ class QPath
 			expected.addAll(entity.getRelationNames());
 			expected.addAll(entity.getAliasNames());
 
-			throw new IllegalArgumentException("Relationship path error: got " + expr + ", expected one of: " + expected);
+			throw new IllegalArgumentException("Relationship path error: got " +
+			                                   expr +
+			                                   "(converted to " +
+			                                   name +
+			                                   " with alias " +
+			                                   alias +
+			                                   "), expected one of: " +
+			                                   expected);
 		}
 	}
 

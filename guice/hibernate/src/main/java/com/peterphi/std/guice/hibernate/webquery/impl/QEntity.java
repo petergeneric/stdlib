@@ -3,9 +3,11 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
 import org.hibernate.type.CollectionType;
+import org.hibernate.type.ComponentType;
 import org.hibernate.type.CompositeType;
 import org.hibernate.type.Type;
 
@@ -25,6 +27,8 @@ import java.util.stream.Collectors;
 
 public class QEntity
 {
+	private static final Logger log = Logger.getLogger(QEntity.class);
+
 	private final Class<?> clazz;
 	private String name;
 
@@ -108,6 +112,19 @@ public class QEntity
 	}
 
 
+	public void parseEmbeddable(final QEntityFactory qEntityFactory,
+	                            final SessionFactoryImplementor sessionFactory,
+	                            final ComponentType ct)
+	{
+		final String[] names = ct.getPropertyNames();
+		final Type[] types = ct.getSubtypes();
+		final boolean[] nullable = ct.getPropertyNullability();
+
+		// unknown what to do...
+		parseFields(qEntityFactory, sessionFactory, null, nullable, names, types);
+	}
+
+
 	private void parseFields(final QEntityFactory entityFactory,
 	                         final SessionFactoryImplementor sessionFactory,
 	                         final String prefix,
@@ -140,7 +157,7 @@ public class QEntity
 
 			// TODO is it also meaningful to add the parent composite type as a field too?
 			// TODO if not we should have this as a separate if condition
-			if (types[i].isComponentType())
+			if (types[i].isComponentType() && !isCollection)
 			{
 				CompositeType composite = (CompositeType) types[i];
 
@@ -154,12 +171,33 @@ public class QEntity
 				// This is a composite type, so add the composite types instead
 				parseFields(entityFactory, sessionFactory, newPrefix, composite);
 			}
-			else if (type.isEntityType())
+			else if (type.isEntityType() || isCollection)
 			{
-				relations.put(name, new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection));
+				final QRelation relation;
+				if (type.isEntityType())
+				{
+					relation = new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection);
+				}
+				else if (isCollection && type instanceof ComponentType)
+				{
+					ComponentType ct = (ComponentType) type;
 
-				// Set up a special property to allow constraining the collection size
-				properties.put(name + ":size", new QSizeProperty(relations.get(name)));
+					relation = new QRelation(this, prefix, name, entityFactory.getEmbeddable(clazz, ct), nullable, isCollection);
+				}
+				else
+				{
+					log.warn("Unknown Collection type: " + type + " with name " + name + " within " + clazz + " - ignoring");
+					relation = null;
+				}
+
+				if (relation != null)
+				{
+					relations.put(name, relation);
+
+					// Set up a special property to allow constraining the collection size
+					if (isCollection)
+						properties.put(name + ":size", new QSizeProperty(relations.get(name)));
+				}
 			}
 			else
 			{

@@ -2,7 +2,9 @@ package com.peterphi.std.guice.hibernate.webquery;
 
 import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
 
+import javax.persistence.CollectionTable;
 import javax.persistence.Column;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
@@ -12,11 +14,13 @@ import javax.persistence.JoinColumn;
 import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
-@SearchFieldAlias(name="otherObjectParentName", aliasOf = "otherObject.parent.name")
-@SearchFieldAlias(name="otherObjectParent", aliasOf = "otherObject.parent")
+@SearchFieldAlias(name = "otherObjectParentName", aliasOf = "otherObject.parent.name")
+@SearchFieldAlias(name = "otherObjectParent", aliasOf = "otherObject.parent")
 class ParentEntity
 {
 	@Id
@@ -39,6 +43,10 @@ class ParentEntity
 
 	@OneToMany(mappedBy = "parent")
 	private List<ChildEntity> children;
+
+	@ElementCollection(fetch = FetchType.EAGER)
+	@CollectionTable(name = "parent_friends", joinColumns = @JoinColumn(name = "parent_id"))
+	private Set<HumanEmbeddedEntity> friends = new HashSet<>();
 
 
 	public Long getId()
@@ -110,5 +118,17 @@ class ParentEntity
 	public void setChildren(final List<ChildEntity> children)
 	{
 		this.children = children;
+	}
+
+
+	public Set<HumanEmbeddedEntity> getFriends()
+	{
+		return friends;
+	}
+
+
+	public void setFriends(final Set<HumanEmbeddedEntity> friends)
+	{
+		this.friends = friends;
 	}
 }

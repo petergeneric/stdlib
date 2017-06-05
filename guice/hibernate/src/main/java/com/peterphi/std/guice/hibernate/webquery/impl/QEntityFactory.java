@@ -7,6 +7,7 @@ import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.metadata.ClassMetadata;
+import org.hibernate.type.ComponentType;
 
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -66,12 +67,35 @@ public class QEntityFactory
 			log.debug("Begin create QEntity " + clazz);
 			final ClassMetadata metadata = sessionFactory.getClassMetadata(clazz);
 
+			if (metadata == null)
+				throw new IllegalArgumentException("Hibernate has no ClassMetadata for: " +
+				                                   clazz +
+				                                   " (should be following Embeddable codepath?)");
+
 			QEntity entity = new QEntity(clazz);
 			entities.put(clazz, entity);
 
 			entity.parse(this, metadata, sessionFactory);
 
 			log.debug("End create QEntity " + clazz);
+		}
+
+		return entities.get(clazz);
+	}
+
+
+	public QEntity getEmbeddable(final Class clazz, final ComponentType ct)
+	{
+		if (!entities.containsKey(clazz))
+		{
+			log.debug("Begin create QEntity " + clazz + " from ComponentType " + ct);
+
+			QEntity entity = new QEntity(clazz);
+			entities.put(clazz, entity);
+
+			entity.parseEmbeddable(this, sessionFactory, ct);
+
+			log.debug("End create QEntity " + clazz + " from ComponentType " + ct);
 		}
 
 		return entities.get(clazz);
