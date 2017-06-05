@@ -202,7 +202,7 @@ public class GuiceProperties
 	//
 	// Guice Liquibase module
 	//
-	@Doc("The liquibase action to execute, should be one of LiquibaseAction - IGNORE/ASSERT_UPDATED/UPDATE/MARK_UPDATED (default ASSERT_UPDATED)")
+	@Doc("The liquibase action to execute, should be one of LiquibaseAction - IGNORE/ASSERT_UPDATED/UPDATE/MARK_UPDATED/GENERATE_CHANGELOG (default ASSERT_UPDATED)")
 	public static final java.lang.String LIQUIBASE_ACTION = "liquibase.action";
 
 	@Doc("The liquibase changelog file to use")

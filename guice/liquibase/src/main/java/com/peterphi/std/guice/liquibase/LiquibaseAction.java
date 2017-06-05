@@ -18,7 +18,12 @@ public enum LiquibaseAction
 	 * Mark that all pending changesets have been applied without actually executing any of their logic (this is "changeLogSync"
 	 * at the liquibase command-line)
 	 */
-	MARK_UPDATED;
+	MARK_UPDATED,
+
+	/**
+	 * Generate a changelog XML and dump it to stdout
+	 */
+	GENERATE_CHANGELOG;
 
 
 	public boolean isWriteAction()

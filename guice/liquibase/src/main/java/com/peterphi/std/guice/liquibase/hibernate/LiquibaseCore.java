@@ -4,6 +4,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.liquibase.LiquibaseAction;
 import com.peterphi.std.guice.liquibase.exception.LiquibaseChangesetsPending;
+import liquibase.CatalogAndSchema;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
@@ -12,6 +13,8 @@ import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.diff.output.DiffOutputControl;
+import liquibase.diff.output.changelog.DiffToChangeLog;
 import liquibase.exception.LiquibaseException;
 import liquibase.logging.LogFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
@@ -25,6 +28,10 @@ import org.hibernate.cfg.AvailableSettings;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 import javax.sql.DataSource;
+import javax.xml.parsers.ParserConfigurationException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.PrintStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -131,7 +138,7 @@ class LiquibaseCore
 	private static void executeAction(InitialContext jndi,
 	                                  GuiceApplicationValueContainer config,
 	                                  Map<String, String> parameters,
-	                                  LiquibaseAction action) throws NamingException, SQLException, LiquibaseException
+	                                  LiquibaseAction action) throws NamingException, SQLException, LiquibaseException, IOException, ParserConfigurationException
 	{
 		// Make sure we don't execute any write actions if the database connection is set to read-only
 		// N.B. liquibase may create a databasechangeloglock / databasechangelog table if one does not already exist
@@ -144,7 +151,7 @@ class LiquibaseCore
 		}
 
 		// Fail if hbm2ddl is enabled (Hibernate should not be involved in schema management)
-		if (StringUtils.isNotEmpty(config.getValue(HIBERNATE_SCHEMA_MANAGEMENT)))
+		if (StringUtils.isNotEmpty(config.getValue(HIBERNATE_SCHEMA_MANAGEMENT)) && action != LiquibaseAction.GENERATE_CHANGELOG)
 		{
 			throw new RuntimeException("Liquibase is enabled but so is " +
 			                           HIBERNATE_SCHEMA_MANAGEMENT +
@@ -252,6 +259,18 @@ class LiquibaseCore
 					// Mark all pending changesets as run
 					liquibase.changeLogSync(new Contexts(contexts), new LabelExpression(labels));
 					return;
+				case GENERATE_CHANGELOG:
+					CatalogAndSchema catalogueAndSchema = CatalogAndSchema.DEFAULT;
+					DiffToChangeLog writer = new DiffToChangeLog(new DiffOutputControl(false, false, false));
+
+					ByteArrayOutputStream bos = new ByteArrayOutputStream();
+					PrintStream pw = new PrintStream(bos);
+					liquibase.generateChangeLog(catalogueAndSchema, writer, pw);
+
+					System.out.println("********** GENERATED CHANGELOG START **********");
+					System.out.println(new String(bos.toByteArray()));
+					System.out.println("********** GENERATED CHANGELOG END **********");
+					break;
 				default:
 					throw new RuntimeException("Unknown liquibase action: " + action);
 			}
