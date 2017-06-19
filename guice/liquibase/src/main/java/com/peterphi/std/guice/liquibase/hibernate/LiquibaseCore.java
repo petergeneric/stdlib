@@ -13,6 +13,7 @@ import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
 import liquibase.database.DatabaseFactory;
 import liquibase.database.jvm.JdbcConnection;
+import liquibase.diff.compare.CompareControl;
 import liquibase.diff.output.DiffOutputControl;
 import liquibase.diff.output.changelog.DiffToChangeLog;
 import liquibase.exception.LiquibaseException;
@@ -261,7 +262,10 @@ class LiquibaseCore
 					return;
 				case GENERATE_CHANGELOG:
 					CatalogAndSchema catalogueAndSchema = CatalogAndSchema.DEFAULT;
-					DiffToChangeLog writer = new DiffToChangeLog(new DiffOutputControl(false, false, false));
+					DiffToChangeLog writer = new DiffToChangeLog(new DiffOutputControl(false,
+					                                                                   false,
+					                                                                   false,
+					                                                                   new CompareControl.SchemaComparison[0]));
 
 					ByteArrayOutputStream bos = new ByteArrayOutputStream();
 					PrintStream pw = new PrintStream(bos);
