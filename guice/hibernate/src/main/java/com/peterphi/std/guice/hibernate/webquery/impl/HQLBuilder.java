@@ -32,11 +32,6 @@ public class HQLBuilder implements HQLEncodingContext
 	private static final Logger log = Logger.getLogger(HQLBuilder.class);
 
 	private QEntity entity;
-	/**
-	 * Controls whether the database allows queries to list columns in ORDER clauses without including them in the SELECT clause.<br />
-	 * SQL Server and HSQLDB both disallow this (since we using SELECT DISTINCT)
-	 */
-	private boolean databaseAllowsOrderByWithoutSelect = false;
 
 	/**
 	 * N.B. Uses {@link LinkedHashMap} to maintain the insertion order (because joins can depend on subsequent joins)
@@ -107,33 +102,23 @@ public class HQLBuilder implements HQLEncodingContext
 		{
 			case ENTITIES:
 			{
-				if (databaseAllowsOrderByWithoutSelect || orderColumns.size() == 0)
-				{
-					// No ORDER BY (or only ordering by ID column)
-					sb.append("SELECT DISTINCT {alias} ");
-				}
-				else
-				{
-					sb.append("SELECT DISTINCT ");
-					sb.append(StringUtils.join(orderColumns, ','));
-					sb.append(", {alias} ");
-				}
-
+				sb.append("SELECT {alias} ");
 
 				break;
 			}
 			case IDS:
 				final String idColumn = "{alias}.id";
 
-				if (databaseAllowsOrderByWithoutSelect ||
-				    orderColumns.size() == 0 ||
-				    (orderColumns.size() == 1 && StringUtils.equals(orderColumns.get(0), idColumn)))
+				if (orderColumns.size() == 0)
 				{
-					// No ORDER BY (or only ordering by ID column)
+					// No ORDER BY
+					// We can use DISTINCT here and know that the db will only return 1 value for each PK
 					sb.append("SELECT DISTINCT {alias}.id ");
 				}
 				else
 				{
+					// N.B. we use DISTINCT here but because we're selecting the ORDER BY columns
+					//      all the DISTINCT does is reduce the number of duplicates we'll get
 					sb.append("SELECT DISTINCT ");
 					sb.append(StringUtils.join(orderColumns, ','));
 					sb.append(", {alias}.id ");
@@ -222,25 +207,13 @@ public class HQLBuilder implements HQLEncodingContext
 				query.setParameter(entry.getKey(), val);
 		}
 
-		if (!databaseAllowsOrderByWithoutSelect && (projection == HQLProjection.ENTITIES || projection == HQLProjection.IDS) && this.orderColumns.size() > 0)
-			query.setResultTransformer(Criteria.ROOT_ENTITY);
+		if (this.orderColumns.size() > 0 && (projection == HQLProjection.ENTITIES || projection == HQLProjection.IDS))
+			query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
 		if (limit != null)
 			query.setMaxResults(limit);
 		if (offset != null)
 			query.setFirstResult(offset);
-	}
-
-
-	public boolean isDatabaseAllowsOrderByWithoutSelect()
-	{
-		return databaseAllowsOrderByWithoutSelect;
-	}
-
-
-	public void setDatabaseAllowsOrderByWithoutSelect(final boolean databaseAllowsOrderByWithoutSelect)
-	{
-		this.databaseAllowsOrderByWithoutSelect = databaseAllowsOrderByWithoutSelect;
 	}
 
 
