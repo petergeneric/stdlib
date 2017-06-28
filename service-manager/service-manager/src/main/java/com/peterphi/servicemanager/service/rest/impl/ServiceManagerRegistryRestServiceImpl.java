@@ -5,7 +5,6 @@ import com.google.inject.Singleton;
 import com.peterphi.servicemanager.service.db.dao.impl.ServiceInstanceDaoImpl;
 import com.peterphi.servicemanager.service.db.entity.ServiceInstanceEntity;
 import com.peterphi.std.guice.common.logging.rest.iface.ServiceManagerRegistryRestService;
-import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.database.annotation.Transactional;
 
 @Singleton
@@ -20,7 +19,6 @@ public class ServiceManagerRegistryRestServiceImpl implements ServiceManagerRegi
 
 	@Override
 	@Transactional
-	@Retry
 	public void register(final String instanceId, final String endpoint, final String managementToken, final String codeRevision)
 	{
 		ServiceInstanceEntity entity = dao.getById(instanceId);

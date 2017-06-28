@@ -162,7 +162,6 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Transactional
-	@Retry
 	public Response createSessionAndRedirect(final String responseType,
 	                                         final String clientId,
 	                                         final String redirectUri,
@@ -276,7 +275,6 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Override
 	@Transactional
-	@Retry
 	@AuthConstraint(id = "oauth2server_token", skip = true)
 	public String getToken(final String grantType,
 	                       final String code,
@@ -335,7 +333,6 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
 	public UserManagerUser get(final String token, final String clientId)
 	{

@@ -29,7 +29,10 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
+import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.exception.GenericJDBCException;
+import org.hibernate.exception.LockAcquisitionException;
 
 import java.lang.reflect.Method;
 
@@ -63,13 +66,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
-		final Session session = sessionProvider.get();
-
 		Timer.Context callTimer = calls.time();
 
 		try
 		{
-			if (session.getTransaction().isActive())
+			if (sessionProvider.get().getTransaction().isActive())
 			{
 				// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
 				if (log.isTraceEnabled())
@@ -79,94 +80,142 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			}
 			else
 			{
-				if (log.isTraceEnabled())
-					log.trace("Creating new transaction to call " + invocation.getMethod().toGenericString());
-
 				final Transactional annotation = readAnnotation(invocation);
-				final boolean readOnly = annotation.readOnly();
 
-				// We are responsible for creating+closing the connection
-				Timer.Context ownerTimer = transactionStartedCalls.time();
-				try
+				// If we are allowed to auto-retry, first run the method with exception-catching retry behaviour
+				// After the max attempts for auto retry are exhausted we'll fall back on the non-retrying default behaviour
+				if (annotation.autoRetry())
 				{
-					// no transaction already started, so start one and enforce its semantics
-					final Transaction tx = session.beginTransaction();
+					// Try all but the last attempt
+					final int retries = Math.max(0, annotation.autoRetryCount() - 1);
 
-					if (readOnly)
-						makeReadOnly(session);
-					else
-						makeReadWrite(session);
+					// N.B. more aggressive than the @Retry annotation implements
+					long backoff = 1000;
+					final double multiplier = 1.5;
 
-					// Execute the method
-					final Object result;
-					try
+					for (int attempt = 0; attempt < retries; attempt++)
 					{
-						result = invocation.proceed();
-					}
-					catch (Exception e)
-					{
-						if (shouldRollback(annotation, e))
+						try
 						{
-							errorRollbacks.mark();
-
-							rollback(tx, e);
+							return createTransactionAndExecuteMethod(invocation, annotation);
 						}
-						else
+						catch (LockAcquisitionException | StaleStateException | GenericJDBCException e)
 						{
-							complete(tx, readOnly);
+							log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
+
+							try
+							{
+								Thread.sleep(backoff);
+							}
+							catch (InterruptedException ie)
+							{
+								throw new RuntimeException("Interrupted while attempting a @Transactional retry!", ie);
+							}
+
+							// Increase backoff for the next exception
+							backoff *= multiplier;
 						}
-
-						// propagate the exception
-						throw e;
-					}
-					catch (Error e)
-					{
-						errorRollbacks.mark();
-
-						rollback(tx);
-
-						// propagate the error
-						throw e;
-					}
-
-					// The method completed successfully, we can complete the the transaction
-					// we can't move into the above try block because it'll interfere with the do not move into try block as it interferes with the advised method's throwing semantics
-					RuntimeException commitException = null;
-					try
-					{
-						complete(tx, readOnly);
-					}
-					catch (RuntimeException e)
-					{
-						commitFailures.mark();
-
-						rollback(tx);
-
-						commitException = e;
-					}
-
-					// propagate anyway
-					if (commitException != null)
-						throw commitException;
-
-					// or return result
-					return result;
-				}
-				finally
-				{
-					ownerTimer.stop();
-
-					if (session.isOpen())
-					{
-						// Close the session
-						session.close();
 					}
 				}
+
+				// Run without further retries
+				return createTransactionAndExecuteMethod(invocation, annotation);
 			}
 		}
 		finally
 		{
 			callTimer.stop();
+		}
+	}
+
+
+	private Object createTransactionAndExecuteMethod(final MethodInvocation invocation,
+	                                                 final Transactional annotation) throws Throwable
+	{
+		if (log.isTraceEnabled())
+			log.trace("Creating new transaction to call " + invocation.getMethod().toGenericString());
+
+
+		final boolean readOnly = annotation.readOnly();
+
+		// We are responsible for creating+closing the connection
+		Timer.Context ownerTimer = transactionStartedCalls.time();
+
+		final Session session = sessionProvider.get();
+		try
+		{
+			// no transaction already started, so start one and enforce its semantics
+			final Transaction tx = session.beginTransaction();
+
+			if (readOnly)
+				makeReadOnly(session);
+			else
+				makeReadWrite(session);
+
+			// Execute the method
+			final Object result;
+			try
+			{
+				result = invocation.proceed();
+			}
+			catch (Exception e)
+			{
+				if (shouldRollback(annotation, e))
+				{
+					errorRollbacks.mark();
+
+					rollback(tx, e);
+				}
+				else
+				{
+					complete(tx, readOnly);
+				}
+
+				// propagate the exception
+				throw e;
+			}
+			catch (Error e)
+			{
+				errorRollbacks.mark();
+
+				rollback(tx);
+
+				// propagate the error
+				throw e;
+			}
+
+			// The method completed successfully, we can complete the the transaction
+			// we can't move into the above try block because it'll interfere with the do not move into try block as it interferes with the advised method's throwing semantics
+			RuntimeException commitException = null;
+			try
+			{
+				complete(tx, readOnly);
+			}
+			catch (RuntimeException e)
+			{
+				commitFailures.mark();
+
+				rollback(tx);
+
+				commitException = e;
+			}
+
+			// propagate anyway
+			if (commitException != null)
+				throw commitException;
+
+			// or return result
+			return result;
+		}
+		finally
+		{
+			ownerTimer.stop();
+
+			if (session.isOpen())
+			{
+				// Close the session
+				session.close();
+			}
 		}
 	}
 

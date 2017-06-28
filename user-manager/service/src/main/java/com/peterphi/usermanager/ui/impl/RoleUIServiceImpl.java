@@ -3,7 +3,6 @@ package com.peterphi.usermanager.ui.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -45,7 +44,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String getRoles(UriInfo query)
 	{
 		ConstrainedResultSet<RoleEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));
@@ -62,7 +60,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String get(final String id)
 	{
 		TemplateCall call = templater.template("role");
@@ -83,7 +80,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response create(final String id, final String nonce, final String caption)
 	{
 		nonceStore.validate(NONCE_USE, nonce);
@@ -104,7 +100,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response delete(final String id, final String nonce)
 	{
 		nonceStore.validate(NONCE_USE, nonce);
@@ -125,7 +120,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response changeCaption(final String id, final String nonce, final String caption)
 	{
 		nonceStore.validate(NONCE_USE, nonce);
@@ -145,7 +139,6 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response changeMembers(final String id, final String nonce, final List<Integer> members)
 	{
 		nonceStore.validate(NONCE_USE, nonce);

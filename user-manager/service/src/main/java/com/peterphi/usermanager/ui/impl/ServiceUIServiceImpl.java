@@ -49,7 +49,6 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String getList(final UriInfo query)
 	{
 		final ConstrainedResultSet<OAuthServiceEntity> resultset = dao.findByUriQuery(new WebQuery().decode(query.getQueryParameters()));
@@ -66,7 +65,6 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String get(final String id)
 	{
 		final OAuthServiceEntity entity = dao.getById(id);
@@ -86,7 +84,6 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response create(final String nonce, final String name, final String endpoints)
 	{
 		nonceStore.validate(NONCE_USE,nonce);
@@ -109,7 +106,6 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response disable(final String id, final String nonce)
 	{
 		nonceStore.validate(NONCE_USE,nonce);
@@ -133,7 +129,6 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response setEndpoints(final String nonce, final String id, final String endpoints)
 	{
 		nonceStore.validate(NONCE_USE,nonce);

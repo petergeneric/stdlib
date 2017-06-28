@@ -2,7 +2,6 @@ package com.peterphi.usermanager.ui.impl;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -65,7 +64,6 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String getUsers(UriInfo query)
 	{
 		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));
@@ -82,7 +80,6 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@Retry
 	public String getUserEdit(final int userId)
 	{
 		final int localUser = login.getId();
@@ -115,7 +112,6 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response editUserProfile(final int userId,
 	                                final String nonce,
 	                                final String dateFormat,
@@ -179,7 +175,6 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional
-	@Retry
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public Response deleteUser(final int userId, final String nonce)
 	{
@@ -206,7 +201,6 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional
-	@Retry
 	public Response changePassword(final int userId,
 	                               final String nonce,
 	                               final String newPassword,

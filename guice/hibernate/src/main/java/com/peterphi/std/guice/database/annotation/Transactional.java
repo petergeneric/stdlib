@@ -27,7 +27,17 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Transactional
 {
-	public boolean readOnly() default false;
+	boolean readOnly() default false;
+
+	/**
+	 * If true, will automatically retry 5 times (with backoff) if the method throws {@link org.hibernate.StaleStateException}, {@link
+	 * org.hibernate.exception.LockAcquisitionException} or {@link org.hibernate.exception.GenericJDBCException}
+	 *
+	 * @return
+	 */
+	boolean autoRetry() default true;
+
+	int autoRetryCount() default 5;
 
 	/**
 	 * A list of exceptions to rollback on, if thrown by the transactional method. These exceptions are propagated correctly after
