@@ -371,7 +371,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<ID> getIdList(WebQuery query)
 	{
-		return (List<ID>) findByUriQuery(query).getList();
+		return getIdList(toGetIdQuery(query));
 	}
 
 
