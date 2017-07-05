@@ -195,7 +195,7 @@ echo ""
 
 
 # build and deploy the release
-$MVN -DperformRelease=true clean deploy || rollback_and_die_with "Build/Deploy failure. Release failed."
+$MVN -DperformRelease=true clean deploy -pl "!service-manager/host-agent, !service-manager/service-manager, !user-manager/service, !service-manager/configuration" || rollback_and_die_with "Build/Deploy failure. Release failed."
 
 # tag the release (N.B. should this be before perform the release?)
 git tag "v${RELEASE_VERSION}" || die_with "Failed to create tag ${RELEASE_VERSION}! Release has been deployed, however"
