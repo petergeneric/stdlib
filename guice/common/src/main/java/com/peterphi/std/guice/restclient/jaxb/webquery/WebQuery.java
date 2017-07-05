@@ -483,6 +483,7 @@ public class WebQuery
 						break;
 					case LOG_SQL:
 						def.logSQL(parseBoolean(entry.getValue().get(0)));
+						break;
 					case EXPAND:
 						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
 						break;
