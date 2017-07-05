@@ -284,7 +284,7 @@ public class DynamicQueryTest
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
 		assertNotNull(resultset.getSql());
-		assertTrue("Hibernate must have prepared at least one statement", resultset.getSql().size() >= 1);
+		assertEquals("Number of SQL statements executed", 3, resultset.getSql().size());
 	}
 
 
