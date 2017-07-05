@@ -228,6 +228,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private void makeReadWrite(final Session session)
 	{
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_WRITE);
+		session.setFlushMode(FlushMode.AUTO);
 	}
 
 

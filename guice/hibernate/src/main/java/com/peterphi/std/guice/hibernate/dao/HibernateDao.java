@@ -33,6 +33,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 /**
@@ -428,15 +429,33 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
+	@Override
+	public ConstrainedResultSet<ID> findIdsByUriQuery(final WebQuery query)
+	{
+		return findByUriQuery(query, q -> getIdList(query));
+	}
+
+
+	@Override
+	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
+	{
+		return findByUriQuery(query, q -> getList(q));
+	}
+
+
 	/**
+	 * Execute a WebQuery as HQL, using the supplied function to turn the generated HQL into a List of some result type<br />
+	 * This implements logic (if requested by the WebQuery) for logging SQL as well as computing size of resultset. This allows
+	 * the projection (in Java) of the query results to a different Java class
+	 *
 	 * @param query
-	 * 		the criteria
+	 * @param resultSupplier
+	 * @param <X>
 	 *
 	 * @return
 	 */
 	@Transactional(readOnly = true)
-	@Override
-	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
+	public <X> ConstrainedResultSet<X> findByUriQuery(final WebQuery query, Function<Query, List<X>> resultSupplier)
 	{
 		final HibernateSQLLogger statementLog;
 
@@ -466,13 +485,13 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 			// Now fetch back the data
-			final ConstrainedResultSet<T> resultset;
+			final ConstrainedResultSet<X> resultset;
 			{
 				if (total == null || total > 0)
 				{
 					final Query criteria = createQuery(query);
 
-					final List<T> results = getList(criteria);
+					final List<X> results = resultSupplier.apply(criteria);
 
 					resultset = new ConstrainedResultSet<>(query, results);
 				}

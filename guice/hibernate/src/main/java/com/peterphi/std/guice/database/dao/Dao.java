@@ -25,7 +25,17 @@ public interface Dao<T, ID extends Serializable>
 	public Class<T> getEntityType();
 
 	/**
-	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet
+	 * Given a query, return the IDs of the matching entities, returning the result as a ConstrainedResultSet of this entity's id
+	 * type
+	 *
+	 * @param query
+	 *
+	 * @return
+	 */
+	ConstrainedResultSet<ID> findIdsByUriQuery(WebQuery query);
+
+	/**
+	 * Execute a Dynamic query using the specified constraints, returning the result as a ConstrainedResultSet of this entity type
 	 *
 	 * @param constraints
 	 * 		the constraints to apply
@@ -33,6 +43,7 @@ public interface Dao<T, ID extends Serializable>
 	 * @return a resultset containing the requested number of results
 	 */
 	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
+
 
 	/**
 	 * Retrieve every object accessible through this DAO
