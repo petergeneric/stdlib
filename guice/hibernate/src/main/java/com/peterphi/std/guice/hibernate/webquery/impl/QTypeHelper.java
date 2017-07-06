@@ -33,6 +33,10 @@ class QTypeHelper
 		{
 			return WQDataType.NUMERIC;
 		}
+		else if (clazz == Float.class || clazz == float.class)
+		{
+			return WQDataType.NUMERIC;
+		}
 		else if (clazz == Short.class || clazz == short.class)
 		{
 			return WQDataType.NUMERIC;
