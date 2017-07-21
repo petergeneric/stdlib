@@ -38,6 +38,8 @@ public interface UserLogin extends CurrentUser
 		return hasRole(ROLE_ADMIN);
 	}
 
+	boolean isLocal();
+
 	@Override
 	String getName();
 

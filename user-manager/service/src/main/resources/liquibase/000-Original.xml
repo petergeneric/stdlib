@@ -227,7 +227,7 @@
 		<!-- service.owner_id -->
 		<addForeignKeyConstraint baseColumnNames="owner_id" baseTableName="oauth_service"
 		                         constraintName="FK__oauth_service__user_id" deferrable="false"
-		                         initiallyDeferred="false"  onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
 		                         referencedTableName="user_account"/>
 		<!-- session_context.service_id -->
 		<addForeignKeyConstraint baseColumnNames="service_id" baseTableName="oauth_session_context"
@@ -245,5 +245,13 @@
 		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
 		                         referencedTableName="oauth_session_context"/>
 
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="create_user_is_local">
+		<addColumn tableName="user_account">
+			<column name="is_local" type="BOOLEAN" defaultValueBoolean="true">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
 	</changeSet>
 </databaseChangeLog>

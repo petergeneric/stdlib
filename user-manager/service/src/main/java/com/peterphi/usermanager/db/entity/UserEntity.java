@@ -18,6 +18,8 @@ public class UserEntity
 {
 	private Integer id;
 
+	private boolean local = true;
+
 	/**
 	 * User's real name
 	 */
@@ -48,7 +50,7 @@ public class UserEntity
 	 */
 	private String sessionReconnectKey;
 
-	private DateTime created;
+	private DateTime created=DateTime.now();
 
 	private DateTime lastLogin;
 
@@ -66,6 +68,18 @@ public class UserEntity
 	public void setId(Integer id)
 	{
 		this.id = id;
+	}
+
+	@Column(name="is_local",nullable=false)
+	public boolean isLocal()
+	{
+		return local;
+	}
+
+
+	public void setLocal(final boolean local)
+	{
+		this.local = local;
 	}
 
 

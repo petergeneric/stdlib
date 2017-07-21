@@ -18,6 +18,7 @@ class UserLoginImpl implements UserLogin
 	private String name;
 	private String email;
 	private DateTimeFormatter dateFormatter = CurrentUser.DEFAULT_DATE_FORMAT;
+	private boolean local;
 
 	private Set<String> roles = Collections.emptySet();
 
@@ -44,6 +45,7 @@ class UserLoginImpl implements UserLogin
 			name = "Anonymous";
 			email = "anonymous@localhost";
 			roles = Collections.emptySet();
+			local = true;
 
 			dateFormatter = CurrentUser.DEFAULT_DATE_FORMAT;
 		}
@@ -53,10 +55,18 @@ class UserLoginImpl implements UserLogin
 			name = account.getName();
 			email = account.getEmail();
 			roles = account.getRoles().stream().map(r -> r.getId()).collect(Collectors.toSet());
+			local = account.isLocal();
 
 			dateFormatter = DateTimeFormat.forPattern(account.getDateFormat())
 			                              .withZone(DateTimeZone.forID(account.getTimeZone()));
 		}
+	}
+
+
+	@Override
+	public boolean isLocal()
+	{
+		return local;
 	}
 
 

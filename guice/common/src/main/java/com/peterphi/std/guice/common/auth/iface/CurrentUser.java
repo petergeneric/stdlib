@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common.auth.iface;
 
 import org.joda.time.DateTime;
+import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -14,7 +15,10 @@ import java.util.Set;
 
 public interface CurrentUser
 {
-	DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern("YYYY-MM-dd HH:mm:ss zzz").withZoneUTC();
+	String DEFAULT_DATE_FORMAT_STRING = "YYYY-MM-dd HH:mm:ss zzz";
+	String DEFAULT_TIMEZONE = "Europe/London";
+
+	DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT_STRING).withZone(DateTimeZone.forID(DEFAULT_TIMEZONE));
 
 	/**
 	 * Special role string indicating that the user is logged in

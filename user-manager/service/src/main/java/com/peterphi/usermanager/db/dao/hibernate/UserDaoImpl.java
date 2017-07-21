@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.db.dao.hibernate;
 
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.google.inject.Singleton;
 import com.peterphi.std.crypto.BCrypt;
@@ -23,7 +24,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	{
 		final UserEntity account = getUserByEmail(email);
 
-		if (account != null)
+		if (account != null && account.isLocal())
 		{
 			final boolean correct = BCrypt.verify(account.getPassword(), password.toCharArray());
 
@@ -39,7 +40,15 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	}
 
 
-	protected UserEntity getUserByEmail(String email)
+	public boolean isUserLocal(final String email)
+	{
+		UserEntity record = getUserByEmail(email);
+
+		return (record != null && record.isLocal());
+	}
+
+
+	public UserEntity getUserByEmail(String email)
 	{
 		final Criteria criteria = createCriteria();
 
@@ -55,6 +64,9 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null)
 		{
+			if (!account.isLocal())
+				throw new IllegalArgumentException("Cannot change password: user is authenticated by remote service!");
+
 			account.setPassword(hashPassword(newPassword));
 
 			update(account);
@@ -80,25 +92,21 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 
 	@Transactional
-	public int register(String name,
-	                    String email,
-	                    String password,
-	                    final String dateFormat,
-	                    final String timeZone)
+	public int register(String name, String email, String password, final String dateFormat, final String timeZone)
 	{
 		if (userExists(email))
-			throw new IllegalArgumentException("User with e-mail address " + email + " already exists!");
+			throw new IllegalArgumentException("User '" + email + "' already exists!");
 		if (password.isEmpty())
 			throw new IllegalArgumentException("Must supply a password!");
 
 		final UserEntity account = new UserEntity();
 
+		account.setLocal(true);
 		account.setName(name);
 		account.setEmail(email);
 		account.setPassword(hashPassword(password));
 		account.setDateFormat(dateFormat);
 		account.setTimeZone(timeZone);
-		account.setCreated(new DateTime());
 		account.setSessionReconnectKey(UUID.randomUUID().toString());
 
 		return save(account);
@@ -106,7 +114,27 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 
 	@Transactional
-	protected boolean userExists(String email)
+	public int registerRemote(final String username, final String fullName)
+	{
+		if (userExists(username))
+			throw new IllegalArgumentException("User '" + username + "' already exists!");
+
+		final UserEntity account = new UserEntity();
+		account.setLocal(false);
+		account.setEmail(username);
+		account.setName(fullName);
+		account.setPassword("NONE"); // Won't allow password logins anyway, but we also set a value that won't match any BCrypt hash
+		account.setSessionReconnectKey(null);
+
+		account.setTimeZone(CurrentUser.DEFAULT_TIMEZONE);
+		account.setDateFormat(CurrentUser.DEFAULT_DATE_FORMAT_STRING);
+
+		return save(account);
+	}
+
+
+	@Transactional
+	public boolean userExists(String email)
 	{
 		final UserEntity account = getUserByEmail(email);
 
@@ -119,6 +147,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	{
 		final Criteria criteria = createCriteria();
 
+		criteria.add(Restrictions.eq("local", true));
 		criteria.add(Restrictions.eq("sessionReconnectKey", key));
 
 		criteria.setMaxResults(1);
@@ -144,14 +173,22 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null)
 		{
-			account.setSessionReconnectKey(UUID.randomUUID().toString());
+			if (account.isLocal())
+				account.setSessionReconnectKey(UUID.randomUUID().toString());
+			else
+				account.setSessionReconnectKey(null);
+
 			update(account);
 		}
 	}
 
 
 	@Transactional
-	public UserEntity changeProfile(final int id, final String name, final String email, final String dateFormat, final String timeZone)
+	public UserEntity changeProfile(final int id,
+	                                final String name,
+	                                final String email,
+	                                final String dateFormat,
+	                                final String timeZone)
 	{
 		final UserEntity account = getById(id);
 

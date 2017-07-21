@@ -23,7 +23,7 @@
 	<h1 th:text="${user.email}"></h1>
 
 	<ul class="nav nav-pills">
-		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#chpassModal" data-toggle="modal">Change
+		<li th:if="${user.isLocal() and (session.login.isAdmin() or (session.login.getId() == user.id))}"><a href="#chpassModal" data-toggle="modal">Change
 			Password</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#impersonateModal" data-toggle="modal">Impersonate</a></li>
@@ -132,6 +132,15 @@
 			</div>
 		</div>
 
+		<!-- isLocal -->
+		<div class="control-group">
+			<label class="control-label" for="view_lastLogin">local user</label>
+
+			<div class="controls">
+				<input type="text" disabled="disabled" id="view_isLocal" th:value="${user.isLocal()}"/>
+			</div>
+		</div>
+
 		<!-- lastLogin -->
 		<div class="control-group">
 			<label class="control-label" for="view_lastLogin">last login</label>
@@ -217,7 +226,7 @@
 			<label class="control-label" for="input_roles">Roles</label>
 
 			<div class="controls">
-				<th:block th:if="${session.login.isAdmin()}">
+				<th:block th:if="${user.isLocal() and session.login.isAdmin()}">
 					<select th:readonly="${!session.login.isAdmin()}" multiple="multiple" id="input_roles" name="roles"
 					        class="chosen-select span10">
 						<option data-placeholder="Choose some roles (optional)" th:each="role: ${roles}" th:value="${role.id}"
@@ -225,7 +234,7 @@
 						        th:selected="${entityRoleIds.contains(role.id)}"></option>
 					</select>
 				</th:block>
-				<th:block th:unless="${session.login.isAdmin()}">
+				<th:block th:unless="${user.isLocal() and session.login.isAdmin()}">
 					<ul>
 						<li th:each="role: ${user.roles}" th:text="${role.caption}"></li>
 					</ul>
