@@ -40,7 +40,17 @@ public enum WQUriControlField
 	 * Set to <code>entity</code> (the default) or <code>id</code> to fetch back the entity or just the entity primary key. This
 	 * is handled after the query completes and the results are being serialised
 	 */
-	FETCH("_fetch");
+	FETCH("_fetch"),
+	/**
+	 * Controls which relationships are eagerly fetched during the database query. <strong>N.B. the more relationships that are
+	 * eagerly fetched the larger the db result set and therefore the slower the query will perform - strike a balance and take
+	 * account of the value of <code>expand</code></strong>
+	 */
+	DBFETCH("_dbfetch"),
+	/**
+	 * An optional name for the query, to allow server-side optimisation/hinting
+	 */
+	NAME("_name");
 
 	private final String name;
 

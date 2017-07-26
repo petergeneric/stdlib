@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.hqlchildcount;
 
+import com.google.common.base.Objects;
+
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -8,7 +10,8 @@ import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.OneToMany;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity(name = "Q")
 class ParentEntity
@@ -21,7 +24,7 @@ class ParentEntity
 	private Integer capacity;
 
 	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
-	private List<ChildEntity> children;
+	private Set<ChildEntity> children = new HashSet<>();
 
 
 	public Long getId()
@@ -48,14 +51,21 @@ class ParentEntity
 	}
 
 
-	public List<ChildEntity> getChildren()
+	public Set<ChildEntity> getChildren()
 	{
 		return children;
 	}
 
 
-	public void setChildren(final List<ChildEntity> children)
+	public void setChildren(final Set<ChildEntity> children)
 	{
 		this.children = children;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return Objects.toStringHelper(this).add("id", id).toString();
 	}
 }

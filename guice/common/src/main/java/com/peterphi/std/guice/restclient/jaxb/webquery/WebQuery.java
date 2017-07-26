@@ -29,10 +29,24 @@ import java.util.stream.Collectors;
 public class WebQuery
 {
 	/**
-	 * What to fetch - the entity or the primary key
+	 * An optional name for the query, to allow server-side optimisation/hinting
+	 */
+	@XmlAttribute
+	public String name;
+
+	/**
+	 * What to fetch: should be "entity" or "id".
 	 */
 	@XmlAttribute
 	public String fetch = "entity";
+
+	/**
+	 * Comma-separated list of relations to fetch from the database as part of the query
+	 */
+	@XmlAttribute
+	public String dbfetch;
+
+
 	/**
 	 * What relationships to expand (by default, all relationships are expanded)
 	 */
@@ -209,6 +223,25 @@ public class WebQuery
 	public WebQuery logSQL(final boolean enabled)
 	{
 		this.logSQL = enabled;
+
+		return this;
+	}
+
+
+	public WebQuery dbfetch(final String... relations)
+	{
+		if (relations == null || relations.length == 0)
+			this.dbfetch = null;
+		else
+			this.dbfetch = StringUtils.join(relations, ',');
+
+		return this;
+	}
+
+
+	public WebQuery name(final String name)
+	{
+		this.name = name;
 
 		return this;
 	}
@@ -491,8 +524,14 @@ public class WebQuery
 						def.orderings = entry.getValue().stream().map(WQOrder:: parseLegacy).collect(Collectors.toList());
 						break;
 					case FETCH:
-						// Ordinarily we'd expect a single value here, but allow for multiple values to be provied as a comma-separated list
-						def.fetch(entry.getValue().stream().collect(Collectors.joining(",")));
+						// Ordinarily we'd expect a single value here, but allow for multiple values to be provided as a comma-separated list
+						def.fetch = entry.getValue().stream().collect(Collectors.joining(","));
+						break;
+					case DBFETCH:
+						def.dbfetch = entry.getValue().stream().collect(Collectors.joining(","));
+						break;
+					case NAME:
+						def.name(entry.getValue().get(0));
 						break;
 					default:
 						throw new IllegalArgumentException("Unknown query field: " +

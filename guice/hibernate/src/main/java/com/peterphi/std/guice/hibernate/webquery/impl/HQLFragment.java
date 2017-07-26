@@ -9,12 +9,6 @@ public class HQLFragment
 	private final String expr;
 
 
-	public static void main(String[] args) throws Exception
-	{
-		new HQLFragment("SELECT x FROM SomeClass x;");
-	}
-
-
 	public HQLFragment(final String expr)
 	{
 		this.expr = expr;

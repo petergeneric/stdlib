@@ -272,7 +272,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return getSession().createQuery(hql);
 	}
 
-
 	/**
 	 * Execute a Criteria search, returning the results as a checked list
 	 *

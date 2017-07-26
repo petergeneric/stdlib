@@ -10,7 +10,6 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -50,7 +49,6 @@ public class HqlChildCountTest
 	}
 
 
-
 	@Test
 	public void testChildHQL() throws Exception
 	{
@@ -60,25 +58,33 @@ public class HqlChildCountTest
 	}
 
 
-
-	@Transactional
+	//@Transactional
 	public void criteria()
 	{
 		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery()
+				                                                                        .dbfetch("children", "children.parent")
 				                                                                        .eq("children.flag", true)
 				                                                                        .logSQL(true));
 
 		System.out.println("SQL: " + resultset.getSql());
+		System.out.println("SQL Statements: " + resultset.getSql().size());
 
 		List<ParentEntity> results = resultset.getList();
+
+		System.out.println(results);
 
 		for (ParentEntity result : results)
 		{
 			System.out.println(result.getId() +
 			                   " - children " +
 			                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+
+			assertEquals("each parent should have 3 children", 3, result.getChildren().size());
 		}
+
+		assertEquals("should be 2 parent entities", 2, results.size());
 	}
+
 
 	@Transactional
 	public void load()
@@ -86,7 +92,6 @@ public class HqlChildCountTest
 		{
 			// TODO populate db
 			ParentEntity p1 = new ParentEntity();
-			p1.setChildren(new ArrayList<>());
 			p1.setCapacity(2);
 			p1.setId(dao.save(p1));
 
@@ -110,7 +115,6 @@ public class HqlChildCountTest
 		{
 			// TODO populate db
 			ParentEntity p2 = new ParentEntity();
-			p2.setChildren(new ArrayList<>());
 			p2.setCapacity(2);
 			p2.setId(dao.save(p2));
 
@@ -137,14 +141,17 @@ public class HqlChildCountTest
 	{
 
 		final List<ParentEntity> results = dao.getByQuery(
-				"SELECT DISTINCT parent FROM Q parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.id = 2");
+				"SELECT DISTINCT parent FROM Q parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.flag = true");
 
 		for (ParentEntity result : results)
 		{
 			System.out.println(result.getId() +
 			                   " - children " +
 			                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+			assertEquals(3, result.getChildren().size());
 		}
+
+		assertEquals(2, results.size());
 	}
 
 

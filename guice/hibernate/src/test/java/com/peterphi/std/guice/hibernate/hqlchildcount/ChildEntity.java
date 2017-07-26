@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.hqlchildcount;
 
+import com.google.common.base.Objects;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -57,5 +59,12 @@ class ChildEntity
 	public void setFlag(final boolean flag)
 	{
 		this.flag = flag;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return Objects.toStringHelper(this).add("id", id).toString();
 	}
 }

@@ -34,9 +34,15 @@ public class HQLBuilder implements HQLEncodingContext
 	private QEntity entity;
 
 	/**
+	 * The joins for constraining things
 	 * N.B. Uses {@link LinkedHashMap} to maintain the insertion order (because joins can depend on subsequent joins)
 	 */
 	private final LinkedHashMap<QPath, HQLJoin> joins = new LinkedHashMap<>();
+	/**
+	 * The joins for the purpose of eager fetching relationships
+	 * N.B. Uses {@link LinkedHashMap} to maintain the insertion order (because joins can depend on subsequent joins)
+	 */
+	private final LinkedHashMap<QPath, HQLJoin> fetchJoins = new LinkedHashMap<>();
 	private final List<HQLFragment> conditions = new ArrayList<>();
 	private final List<HQLFragment> orders = new ArrayList<>();
 	private final List<HQLFragment> groupings = new ArrayList<>();
@@ -151,14 +157,26 @@ public class HQLBuilder implements HQLEncodingContext
 
 
 		// Append the JOIN statements
-		if (joins.size() > 0)
 		{
-			sb.append(joins
-					          .values()
-					          .stream()
-					          .map(c -> c.getJoinExpr().toHsqlString(expansions))
-					          .collect(Collectors.joining(" ")));
-			sb.append(' '); // make sure we end on a space for chaining further statements
+			if (!fetchJoins.isEmpty())
+			{
+				sb.append(fetchJoins
+						          .values()
+						          .stream()
+						          .map(c -> c.getJoinExpr().toHsqlString(expansions))
+						          .collect(Collectors.joining(" ")));
+				sb.append(' '); // make sure we end on a space for chaining further statements
+			}
+			
+			if (!joins.isEmpty())
+			{
+				sb.append(joins
+						          .values()
+						          .stream()
+						          .map(c -> c.getJoinExpr().toHsqlString(expansions))
+						          .collect(Collectors.joining(" ")));
+				sb.append(' '); // make sure we end on a space for chaining further statements
+			}
 		}
 
 		// Append the conditions
@@ -209,6 +227,8 @@ public class HQLBuilder implements HQLEncodingContext
 
 		if (this.orderColumns.size() > 0 && (projection == HQLProjection.ENTITIES || projection == HQLProjection.IDS))
 			query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+		else if (projection == HQLProjection.ENTITIES && (fetchJoins.size() > 0 || joins.size() > 0))
+			query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY); // If there are joins then we could end up with multiple root entities being returned (see HqlChildCountTest.testChildCriteria for example)
 
 		if (limit != null)
 			query.setMaxResults(limit);
@@ -406,11 +426,30 @@ public class HQLBuilder implements HQLEncodingContext
 
 	public QPropertyRef getProperty(final String path)
 	{
-		return new QPropertyRef(getPath(path));
+		return new QPropertyRef(getPath(path, true));
 	}
 
 
-	public QPath getPath(final String path)
+	/**
+	 * Creates a fetch join to the specified path, creating any necessary bridging fetch joins
+	 *
+	 * @param path
+	 */
+	public void createFetchJoin(final String path)
+	{
+		getPath(path, false);
+	}
+
+
+	/**
+	 * @param path
+	 * @param forConstraint
+	 * 		if true, sets up a JOIN that could be used for a constraint, otherwise sets up a join that is only useful for fetching
+	 * 		back data
+	 *
+	 * @return
+	 */
+	public QPath getPath(final String path, final boolean forConstraint)
 	{
 		final LinkedList<String> segments = new LinkedList<>(Arrays.asList(StringUtils.split(path, '.')));
 
@@ -422,13 +461,31 @@ public class HQLBuilder implements HQLEncodingContext
 
 			if (builtPath.getRelation() != null) // && builtPath.getRelation().isCollection())
 			{
-				final String alias = createJoin(builtPath);
+				final String alias = forConstraint ? createJoin(builtPath) : createFetchJoin(builtPath);
 
 				builtPath.setHsqlAlias(alias);
 			}
 		}
 
 		return builtPath;
+	}
+
+
+	private String createFetchJoin(final QPath path)
+	{
+		HQLJoin join = fetchJoins.get(path);
+
+		// Lazy-create the join if necessary
+		if (join == null)
+		{
+			final String alias = "fj" + fetchJoins.size();
+
+			join = new HQLJoin(path, alias, true);
+
+			fetchJoins.put(path, join);
+		}
+
+		return join.getAlias();
 	}
 
 
@@ -440,9 +497,8 @@ public class HQLBuilder implements HQLEncodingContext
 		if (join == null)
 		{
 			final String alias = "j" + joins.size();
-			final HQLFragment expr = new HQLFragment("LEFT OUTER JOIN " + path.toHsqlPath() + " " + alias);
 
-			join = new HQLJoin(path, alias, expr);
+			join = new HQLJoin(path, alias, false);
 
 			joins.put(path, join);
 		}
@@ -473,6 +529,15 @@ public class HQLBuilder implements HQLEncodingContext
 
 		offset(query.getOffset());
 		limit(query.getLimit());
+
+		// Create fetch joins as requested by the user
+		if (StringUtils.isNotBlank(query.dbfetch))
+		{
+			for (String path : StringUtils.split(query.dbfetch, ','))
+			{
+				createFetchJoin(path);
+			}
+		}
 
 		if (query.orderings.size() > 0)
 		{

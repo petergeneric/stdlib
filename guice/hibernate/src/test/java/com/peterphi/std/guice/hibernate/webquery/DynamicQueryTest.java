@@ -120,6 +120,21 @@ public class DynamicQueryTest
 
 
 	@Test
+	public void testDbFetchWorks() throws Exception
+	{
+		ParentEntity obj = new ParentEntity();
+		obj.setName("Name");
+		obj.setOtherObject(new ChildEntity());
+		obj.getOtherObject().setName("Name");
+
+		childDao.save(obj.getOtherObject());
+		dao.save(obj);
+
+		dao.findByUriQuery(new WebQuery().logSQL(true).dbfetch("otherObject.parent").eq("otherObject.parent.name", "x"));
+	}
+
+
+	@Test
 	public void testEqRefReturnsValue() throws Exception
 	{
 		ParentEntity obj = new ParentEntity();
