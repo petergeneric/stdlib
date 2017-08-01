@@ -18,7 +18,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.SortedMap;
 
-class MetricSerialiser
+public class MetricSerialiser
 {
 	public MetricsHistogram serialise(String name, Histogram histo)
 	{
