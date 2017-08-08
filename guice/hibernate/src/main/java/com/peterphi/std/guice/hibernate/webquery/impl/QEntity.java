@@ -194,12 +194,30 @@ public class QEntity
 
 					if (plural.getElementType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE)
 					{
-						final EmbeddableType<?> ct = (EmbeddableType<?>)plural.getElementType();
+						final EmbeddableType<?> ct = (EmbeddableType<?>) plural.getElementType();
 
-						relation = new QRelation(this, prefix, name, entityFactory.getEmbeddable(ct.getJavaType(), ct), nullable, isCollection);
+						relation = new QRelation(this,
+						                         prefix,
+						                         name,
+						                         entityFactory.getEmbeddable(ct.getJavaType(), ct),
+						                         nullable,
+						                         isCollection);
+					}
+					else if (plural.getElementType().getPersistenceType() == Type.PersistenceType.BASIC)
+					{
+						// Ignore this altogether. We should probably come up with a way of querying this relationship in the future
+						relation = null;
+
+						log.debug("Ignoring BASIC ElementCollection " +
+						          plural.getCollectionType() +
+						          " of " +
+						          plural.getElementType().getJavaType() +
+						          " " +
+						          plural.getName());
 					}
 					else
 					{
+
 						throw new IllegalArgumentException("Cannot handle ElementCollection of " +
 						                                   plural.getElementType().getJavaType() +
 						                                   " - type " +
