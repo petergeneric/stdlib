@@ -141,7 +141,7 @@ public class HqlChildCountTest
 	{
 
 		final List<ParentEntity> results = dao.getByQuery(
-				"SELECT DISTINCT parent FROM Q parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.flag = true");
+				"SELECT DISTINCT parent FROM parent_entity parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.flag = true");
 
 		for (ParentEntity result : results)
 		{
@@ -207,7 +207,8 @@ public class HqlChildCountTest
 
 		// Now none should match again
 
-		ids = dao.getIdsByQuery("SELECT q.id FROM parent_entity q WHERE q.capacity > (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=true) AND (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=false) <> 0");
+		ids = dao.getIdsByQuery(
+				"SELECT q.id FROM parent_entity q WHERE q.capacity > (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=true) AND (SELECT COUNT(r.id) FROM child_entity r WHERE r.parent=q.id AND r.flag=false) <> 0");
 
 		assertEquals(0, ids.size());
 	}

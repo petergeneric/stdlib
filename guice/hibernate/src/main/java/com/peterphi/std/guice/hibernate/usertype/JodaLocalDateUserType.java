@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import org.joda.time.LocalDate;
 
@@ -61,7 +61,7 @@ public class JodaLocalDateUserType implements UserType, Comparator
 	@Override
 	public LocalDate nullSafeGet(final ResultSet resultSet,
 	                             final String[] names,
-	                             final SessionImplementor session,
+	                             final SharedSessionContractImplementor session,
 	                             final Object owner) throws HibernateException, SQLException
 	{
 		final java.sql.Date encoded = resultSet.getDate(names[0]);
@@ -79,7 +79,7 @@ public class JodaLocalDateUserType implements UserType, Comparator
 	public void nullSafeSet(final PreparedStatement statement,
 	                        final Object value,
 	                        final int index,
-	                        final SessionImplementor session) throws HibernateException, SQLException
+	                        final SharedSessionContractImplementor session) throws HibernateException, SQLException
 	{
 		if (value == null)
 		{

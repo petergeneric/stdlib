@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 
@@ -60,7 +60,7 @@ public class DateUserType implements UserType, UserVersionType, Comparator
 	@Override
 	public Object nullSafeGet(final ResultSet resultSet,
 	                          final String[] names,
-	                          final SessionImplementor session,
+	                          final SharedSessionContractImplementor session,
 	                          final Object owner) throws HibernateException, SQLException
 	{
 		final long timestamp = resultSet.getLong(names[0]);
@@ -76,7 +76,7 @@ public class DateUserType implements UserType, UserVersionType, Comparator
 	public void nullSafeSet(final PreparedStatement statement,
 	                        final Object value,
 	                        final int index,
-	                        final SessionImplementor session) throws HibernateException, SQLException
+	                        final SharedSessionContractImplementor session) throws HibernateException, SQLException
 	{
 		if (value == null)
 		{
@@ -134,14 +134,14 @@ public class DateUserType implements UserType, UserVersionType, Comparator
 
 
 	@Override
-	public Date seed(final SessionImplementor session)
+	public Date seed(final SharedSessionContractImplementor session)
 	{
 		return new Date();
 	}
 
 
 	@Override
-	public Date next(final Object current, final SessionImplementor session)
+	public Date next(final Object current, final SharedSessionContractImplementor session)
 	{
 		return seed(session);
 	}
@@ -152,4 +152,5 @@ public class DateUserType implements UserType, UserVersionType, Comparator
 	{
 		return ((Date) a).compareTo((Date) b);
 	}
+
 }
