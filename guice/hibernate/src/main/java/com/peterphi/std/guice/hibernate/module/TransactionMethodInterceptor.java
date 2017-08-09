@@ -35,6 +35,7 @@ import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Method;
 
 /**
@@ -100,7 +101,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						{
 							return createTransactionAndExecuteMethod(invocation, annotation);
 						}
-						catch (LockAcquisitionException | StaleStateException | GenericJDBCException e)
+						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
 							log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
 
