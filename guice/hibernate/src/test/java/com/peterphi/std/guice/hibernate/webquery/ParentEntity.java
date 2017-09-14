@@ -15,7 +15,6 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
@@ -42,7 +41,7 @@ class ParentEntity
 	private ChildEntity otherObject;
 
 	@OneToMany(mappedBy = "parent")
-	private List<ChildEntity> children;
+	private Set<ChildEntity> children;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "parent_friends", joinColumns = @JoinColumn(name = "parent_id"))
@@ -109,13 +108,13 @@ class ParentEntity
 	}
 
 
-	public List<ChildEntity> getChildren()
+	public Set<ChildEntity> getChildren()
 	{
 		return children;
 	}
 
 
-	public void setChildren(final List<ChildEntity> children)
+	public void setChildren(final Set<ChildEntity> children)
 	{
 		this.children = children;
 	}

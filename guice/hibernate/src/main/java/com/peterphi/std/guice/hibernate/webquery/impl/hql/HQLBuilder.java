@@ -1,7 +1,8 @@
-package com.peterphi.std.guice.hibernate.webquery.impl;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
-import com.peterphi.std.guice.hibernate.webquery.impl.functions.QFunctionFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.functions.QFunctionFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;

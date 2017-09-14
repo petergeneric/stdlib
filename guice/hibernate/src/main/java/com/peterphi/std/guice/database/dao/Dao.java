@@ -44,6 +44,7 @@ public interface Dao<T, ID extends Serializable>
 	 */
 	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
 
+	ConstrainedResultSet<T> find(WebQuery constraints);
 
 	/**
 	 * Retrieve every object accessible through this DAO

@@ -12,10 +12,11 @@ import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLBuilder;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLProjection;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.HQLBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.HQLProjection;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
@@ -272,6 +273,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return getSession().createQuery(hql);
 	}
 
+
 	/**
 	 * Execute a Criteria search, returning the results as a checked list
 	 *
@@ -431,14 +433,84 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Override
 	public ConstrainedResultSet<ID> findIdsByUriQuery(final WebQuery query)
 	{
-		return findByUriQuery(query, q -> getIdList(query));
+		return findIds(query);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
-		return findByUriQuery(query, q -> getList(q));
+		//return findByUriQuery(query, q -> getList(q));
+		return find(query);
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	public ConstrainedResultSet<T> find(final WebQuery constraints)
+	{
+		JPAQueryBuilder builder = new JPAQueryBuilder(getSession(), getQEntity());
+
+		builder.forWebQuery(constraints);
+
+		// Get the desired entity results
+		Long total = null;
+		List<T> list;
+
+		if (isLargeTable)
+		{
+			List<ID> ids = getIdList(builder.selectIDs());
+
+			// If we need to compute a total resultset size then do so; we can only reuse the JPAQueryBuilder with the original constraints
+			if (constraints.isComputeSize())
+			{
+				total = builder.selectCount().uniqueResult();
+			}
+
+			builder = new JPAQueryBuilder(getSession(), getQEntity());
+
+			builder.forIDs(constraints, ids);
+
+			list = getList(builder.selectEntity());
+		}
+		else
+		{
+			list = getList(builder.selectEntity());
+
+			// If we need to compute a total resultset size then do so; we can only reuse the JPAQueryBuilder with the original constraints
+			if (constraints.isComputeSize())
+			{
+				total = builder.selectCount().uniqueResult();
+			}
+		}
+
+		ConstrainedResultSet<T> resultset = new ConstrainedResultSet<>(constraints, list);
+
+		resultset.setTotal(total);
+
+		return resultset;
+	}
+
+
+	@Transactional(readOnly = true)
+	public ConstrainedResultSet<ID> findIds(final WebQuery constraints)
+	{
+		JPAQueryBuilder builder = new JPAQueryBuilder(getSession(), getQEntity());
+
+		builder.forWebQuery(constraints);
+
+		// Get the desired entity results
+		List<ID> list = getIdList(builder.selectIDs());
+
+		ConstrainedResultSet<ID> resultset = new ConstrainedResultSet<>(constraints, list);
+
+		// If we need to compute a total resultset size then do so; we can only reuse the JPAQueryBuilder with the original constraints
+		if (constraints.isComputeSize())
+		{
+			resultset.setTotal(builder.selectCount().uniqueResult());
+		}
+
+		return resultset;
 	}
 
 

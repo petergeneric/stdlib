@@ -1,4 +1,7 @@
-package com.peterphi.std.guice.hibernate.webquery.impl;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql;
+
+import com.peterphi.std.guice.hibernate.webquery.impl.QProperty;
+import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
 
 /**
  * A special type of property that refers to the size of a collection

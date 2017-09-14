@@ -1,8 +1,8 @@
-package com.peterphi.std.guice.hibernate.webquery.impl.functions;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLFragment;
-import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.HQLFragment;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QFunction;
 
 import java.util.ArrayList;
 import java.util.List;

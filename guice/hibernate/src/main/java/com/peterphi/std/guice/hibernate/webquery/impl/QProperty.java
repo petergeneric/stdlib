@@ -58,7 +58,7 @@ public class QProperty
 		obj.name = this.getName();
 		obj.nullable = this.isNullable();
 		obj.relation = null;
-		obj.type = QTypeHelper.translate(getClazz());
+		obj.type = WQTypeHelper.translate(getClazz());
 
 		if (obj.type == WQDataType.ENUM)
 		{

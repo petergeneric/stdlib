@@ -1,7 +1,7 @@
-package com.peterphi.std.guice.hibernate.webquery.impl.functions;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql.functions;
 
-import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
-import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QFunction;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QPropertyRef;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 
 import java.util.ArrayList;

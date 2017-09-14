@@ -1,6 +1,9 @@
-package com.peterphi.std.guice.hibernate.webquery.impl;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql;
 
 import com.google.common.base.Objects;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.QProperty;
+import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
 
 import java.util.ArrayList;
 import java.util.Collections;

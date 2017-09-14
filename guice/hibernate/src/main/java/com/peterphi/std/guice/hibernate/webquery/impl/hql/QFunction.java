@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.hibernate.webquery.impl;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
 

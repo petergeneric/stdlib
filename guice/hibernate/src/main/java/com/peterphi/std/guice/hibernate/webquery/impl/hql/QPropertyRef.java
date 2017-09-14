@@ -1,4 +1,7 @@
-package com.peterphi.std.guice.hibernate.webquery.impl;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql;
+
+import com.peterphi.std.guice.hibernate.webquery.impl.QProperty;
+import com.peterphi.std.guice.hibernate.webquery.impl.WQTypeHelper;
 
 public class QPropertyRef
 {
@@ -28,7 +31,7 @@ public class QPropertyRef
 
 	public Object parseValue(String value)
 	{
-		return QTypeHelper.parse(getProperty().getClazz(), value);
+		return WQTypeHelper.parse(getProperty().getClazz(), value);
 	}
 
 

@@ -1,23 +1,17 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
-import org.hibernate.SessionFactory;
 import org.joda.time.DateTime;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
-import javax.persistence.metamodel.Attribute;
-import javax.persistence.metamodel.EntityType;
-import javax.persistence.metamodel.ManagedType;
-import javax.persistence.metamodel.Metamodel;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,38 +38,6 @@ public class DynamicQueryTest
 	@Inject
 	QEntityFactory entityFactory;
 
-	@Inject
-	Provider<SessionFactory> sessionFactoryProvider;
-
-	@Test
-	public void testMetaModel()
-	{
-		Metamodel model = sessionFactoryProvider.get().getMetamodel();
-
-		System.out.println(model.toString());
-
-		for (ManagedType<?> type : model.getManagedTypes())
-		{
-			System.out.println();
-			System.out.println();
-			System.out.println(type.getJavaType());
-			System.out.println("----------------------------");
-			for (Attribute<?, ?> attribute : type.getAttributes())
-			{
-				System.out.println(attribute.getName() +
-				                   " - " +
-				                   attribute.getPersistentAttributeType() +
-				                   " - " +
-				                   attribute.getJavaType());
-				System.out.println("\t" + attribute);
-			}
-
-			if (type instanceof EntityType) {
-				EntityType<?> entity = (EntityType<?>) type;
-				System.out.println(entity.getIdType().getPersistenceType());
-			}
-		}
-	}
 
 	@Transactional
 	@Before

@@ -1,9 +1,9 @@
-package com.peterphi.std.guice.hibernate.webquery.impl.functions;
+package com.peterphi.std.guice.hibernate.webquery.impl.hql.functions;
 
 import com.peterphi.std.guice.hibernate.webquery.HQLEncodingContext;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLFragment;
-import com.peterphi.std.guice.hibernate.webquery.impl.QFunction;
-import com.peterphi.std.guice.hibernate.webquery.impl.QPropertyRef;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.HQLFragment;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QFunction;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QPropertyRef;
 
 /**
  * A {@link QFunction} that operates on two function references

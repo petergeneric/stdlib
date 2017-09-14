@@ -3,12 +3,14 @@ package com.peterphi.std.guice.hibernate.largetable;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -24,6 +26,32 @@ public class LargeTableQueryTest
 
 	@Inject
 	HibernateDao<LargeTableComplexPKEntity, SomePrimaryKey> complexPKdao;
+
+
+	/**
+	 * Test that searching works with a simple primary key
+	 */
+	@Test
+	@Transactional
+	public void testSearchForPrimaryKeyWorks()
+	{
+		dao.save(new LargeTableSimplePKEntity("Alice"));
+		dao.save(new LargeTableSimplePKEntity("Bob"));
+		dao.save(new LargeTableSimplePKEntity("Carol"));
+		dao.save(new LargeTableSimplePKEntity("Dave"));
+		dao.save(new LargeTableSimplePKEntity("Eve"));
+
+		// Try a regular query
+		assertEquals("custom-coded count should return 2", 2, dao.countWithAInName());
+
+		// Now try a web query
+		final ConstrainedResultSet<Long> result = dao.findIdsByUriQuery(new WebQuery().computeSize(true).contains("name", "a"));
+
+		assertEquals("total results for generic query should be 2", Long.valueOf(2), result.getTotal());
+		assertEquals("generic get IDs should return 2 results",
+		             new ArrayList<>(Arrays.asList(3L, 4L)),
+		             new ArrayList<>(result.getList()));
+	}
 
 
 	/**
@@ -87,5 +115,26 @@ public class LargeTableQueryTest
 		complexPKdao.save(new LargeTableComplexPKEntity("Eve"));
 
 		assertEquals(2, complexPKdao.findByUriQuery(new WebQuery().contains("name", "a")).getList().size());
+	}
+
+
+	/**
+	 * Test that searching for IDs works even with a complex primary key
+	 */
+	@Test
+	@Transactional
+	public void testSearchComplexPKIDs()
+	{
+		complexPKdao.save(new LargeTableComplexPKEntity("Alice"));
+		complexPKdao.save(new LargeTableComplexPKEntity("Bob"));
+		complexPKdao.save(new LargeTableComplexPKEntity("Carol"));
+		complexPKdao.save(new LargeTableComplexPKEntity("Dave"));
+		complexPKdao.save(new LargeTableComplexPKEntity("Eve"));
+
+		final List<SomePrimaryKey> results = complexPKdao.findIdsByUriQuery(new WebQuery().contains("name", "a")).getList();
+
+		assertEquals("expect 2 results", 2, results.size());
+		assertEquals("expect results to be of id type", SomePrimaryKey.class, results.get(0).getClass());
+		assertEquals("expect results to be of id type", SomePrimaryKey.class, results.get(1).getClass());
 	}
 }

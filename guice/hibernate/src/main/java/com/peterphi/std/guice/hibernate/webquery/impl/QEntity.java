@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
+import com.peterphi.std.guice.hibernate.webquery.impl.hql.QSizeProperty;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -39,6 +40,7 @@ public class QEntity
 
 	private List<QEntity> descendants = Collections.emptyList();
 
+	private EntityType<?> metamodelEntity;
 
 	public QEntity(Class<?> clazz)
 	{
@@ -52,8 +54,14 @@ public class QEntity
 	}
 
 
+	public EntityType<?> getMetamodelEntity()
+	{
+		return this.metamodelEntity;
+	}
+
 	void parse(QEntityFactory entityFactory, EntityType<?> metadata, SessionFactoryImplementor sessionFactory)
 	{
+		this.metamodelEntity = metadata;
 		this.name = metadata.getName();
 
 		for (Attribute<?, ?> attribute : metadata.getAttributes())
