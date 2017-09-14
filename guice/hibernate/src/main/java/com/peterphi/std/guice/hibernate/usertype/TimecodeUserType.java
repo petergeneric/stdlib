@@ -2,7 +2,7 @@ package com.peterphi.std.guice.hibernate.usertype;
 
 import com.peterphi.std.types.Timecode;
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 
 import java.io.Serializable;
@@ -60,7 +60,7 @@ public class TimecodeUserType implements UserType
 	@Override
 	public Timecode nullSafeGet(final ResultSet resultSet,
 	                            final String[] names,
-	                            final SessionImplementor session,
+	                            final SharedSessionContractImplementor session,
 	                            final Object owner) throws HibernateException, SQLException
 	{
 		final String encoded = resultSet.getString(names[0]);
@@ -76,7 +76,7 @@ public class TimecodeUserType implements UserType
 	public void nullSafeSet(final PreparedStatement statement,
 	                        final Object value,
 	                        final int index,
-	                        final SessionImplementor session) throws HibernateException, SQLException
+	                        final SharedSessionContractImplementor session) throws HibernateException, SQLException
 	{
 		if (value == null)
 		{

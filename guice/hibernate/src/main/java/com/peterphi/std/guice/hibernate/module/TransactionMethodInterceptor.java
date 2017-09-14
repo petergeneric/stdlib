@@ -33,7 +33,9 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
+import javax.persistence.OptimisticLockException;
 import java.lang.reflect.Method;
 
 /**
@@ -70,7 +72,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		try
 		{
-			if (sessionProvider.get().getTransaction().isActive())
+			if (sessionProvider.get().getTransaction().getStatus() == TransactionStatus.ACTIVE)
 			{
 				// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
 				if (log.isTraceEnabled())
@@ -99,7 +101,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						{
 							return createTransactionAndExecuteMethod(invocation, annotation);
 						}
-						catch (LockAcquisitionException | StaleStateException | GenericJDBCException e)
+						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
 							log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
 
@@ -228,7 +230,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private void makeReadWrite(final Session session)
 	{
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_WRITE);
-		session.setFlushMode(FlushMode.AUTO);
+		session.setHibernateFlushMode(FlushMode.AUTO);
 	}
 
 
@@ -240,7 +242,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private void makeReadOnly(final Session session)
 	{
 		session.setDefaultReadOnly(true);
-		session.setFlushMode(FlushMode.MANUAL);
+		session.setHibernateFlushMode(FlushMode.MANUAL);
 
 		// Make the Connection read only
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);

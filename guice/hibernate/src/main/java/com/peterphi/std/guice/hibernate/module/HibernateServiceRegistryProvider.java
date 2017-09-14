@@ -2,14 +2,15 @@ package com.peterphi.std.guice.hibernate.module;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
+import org.hibernate.boot.registry.StandardServiceRegistry;
+import org.hibernate.boot.registry.StandardServiceRegistryBuilder;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
-import org.hibernate.service.ServiceRegistryBuilder;
 
 class HibernateServiceRegistryProvider implements Provider<ServiceRegistry>
 {
 	private final Configuration config;
-	private ServiceRegistry registry;
+	private StandardServiceRegistry registry;
 
 
 	@Inject
@@ -19,11 +20,11 @@ class HibernateServiceRegistryProvider implements Provider<ServiceRegistry>
 	}
 
 
-	public synchronized ServiceRegistry get()
+	public synchronized StandardServiceRegistry get()
 	{
 		if (this.registry == null)
 		{
-			this.registry = new ServiceRegistryBuilder().applySettings(config.getProperties()).buildServiceRegistry();
+			this.registry = new StandardServiceRegistryBuilder().applySettings(config.getProperties()).build();
 		}
 
 		return this.registry;

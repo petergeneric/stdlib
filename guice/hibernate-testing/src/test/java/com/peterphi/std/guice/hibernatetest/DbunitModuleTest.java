@@ -9,7 +9,7 @@ import com.peterphi.std.guice.hibernate.module.TransactionHelper;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.dbunit.assertion.DbUnitAssert;
-import org.dbunit.database.QueryDataSet;
+import org.dbunit.dataset.IDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSet;
 import org.dbunit.dataset.xml.FlatXmlDataSetBuilder;
 import org.junit.Test;
@@ -31,7 +31,7 @@ public class DbunitModuleTest
 	TransactionHelper txutils;
 
 	@Inject
-	Provider<QueryDataSet> dataset;
+	Provider<IDataSet> dataset;
 
 
 	@Test

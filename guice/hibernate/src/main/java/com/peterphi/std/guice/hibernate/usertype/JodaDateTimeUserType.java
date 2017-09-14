@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
 import org.hibernate.HibernateException;
-import org.hibernate.engine.spi.SessionImplementor;
+import org.hibernate.engine.spi.SharedSessionContractImplementor;
 import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 import org.joda.time.DateTime;
@@ -65,7 +65,7 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 	@Override
 	public DateTime nullSafeGet(final ResultSet resultSet,
 	                            final String[] names,
-	                            final SessionImplementor session,
+	                            final SharedSessionContractImplementor session,
 	                            final Object owner) throws HibernateException, SQLException
 	{
 		final long encoded = resultSet.getLong(names[0]);
@@ -83,7 +83,7 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 	public void nullSafeSet(final PreparedStatement statement,
 	                        final Object value,
 	                        final int index,
-	                        final SessionImplementor session) throws HibernateException, SQLException
+	                        final SharedSessionContractImplementor session) throws HibernateException, SQLException
 	{
 		if (value == null)
 		{
@@ -144,14 +144,14 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public DateTime seed(final SessionImplementor session)
+	public DateTime seed(final SharedSessionContractImplementor session)
 	{
 		return DateTime.now();
 	}
 
 
 	@Override
-	public DateTime next(final Object current, final SessionImplementor session)
+	public DateTime next(final Object current, final SharedSessionContractImplementor session)
 	{
 		return seed(session);
 	}

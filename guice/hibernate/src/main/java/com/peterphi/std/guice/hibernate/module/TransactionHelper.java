@@ -5,14 +5,16 @@ import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.BaseSessionEventListener;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
+import org.hibernate.SessionEventListener;
 import org.hibernate.Transaction;
+import org.hibernate.resource.transaction.spi.TransactionStatus;
 
-import javax.transaction.Status;
-import javax.transaction.Synchronization;
 import java.io.File;
 import java.util.Collection;
+import java.util.concurrent.Callable;
 
 /**
  * Provides transaction helper methods
@@ -54,17 +56,56 @@ public class TransactionHelper
 	}
 
 
-	public void addAction(Synchronization synchronisation) throws HibernateException
+	/**
+	 * Execute the provided {@link Callable} within a transaction, committing if no exceptions are thrown and returning the result
+	 * of the Callable
+	 *
+	 * @param statements
+	 * @param <T>
+	 *
+	 * @return
+	 *
+	 * @throws Exception
+	 */
+	public <T> T execute(Callable<T> statements) throws Exception
 	{
-		if (synchronisation == null)
-			return; // ignore null actions
+		try (HibernateTransaction tx = start().withAutoRollback())
+		{
+			final T ret = statements.call();
 
-		final Transaction tx = get();
+			// Success, perform a TX commit
+			tx.commit();
 
-		if (!tx.isActive())
+			return ret;
+		}
+	}
+
+
+	/**
+	 * Execute the provided Runnable within a transaction, committing if no exceptions are thrown
+	 *
+	 * @param statements
+	 */
+	public void execute(Runnable statements)
+	{
+		try (HibernateTransaction tx = start().withAutoRollback())
+		{
+			statements.run();
+
+			// Success, perform a TX commit
+			tx.commit();
+		}
+	}
+
+
+	void addAction(SessionEventListener... listeners) throws HibernateException
+	{
+		final Session session = sessionProvider.get();
+
+		if (session.getTransaction().getStatus() != TransactionStatus.ACTIVE)
 			throw new IllegalStateException("Cannot add transaction action with no active transaction!");
 
-		tx.registerSynchronization(synchronisation);
+		session.addEventListeners(listeners);
 	}
 
 
@@ -80,19 +121,12 @@ public class TransactionHelper
 		if (action == null)
 			return; // ignore null actions
 
-		addAction(new Synchronization()
+		addAction(new BaseSessionEventListener()
 		{
 			@Override
-			public void beforeCompletion()
+			public void transactionCompletion(final boolean successful)
 			{
-				// no action required
-			}
-
-
-			@Override
-			public void afterCompletion(final int status)
-			{
-				if (status == Status.STATUS_COMMITTED)
+				if (successful)
 					action.run();
 			}
 		});
@@ -111,19 +145,12 @@ public class TransactionHelper
 		if (action == null)
 			return; // ignore null actions
 
-		addAction(new Synchronization()
+		addAction(new BaseSessionEventListener()
 		{
 			@Override
-			public void beforeCompletion()
+			public void transactionCompletion(final boolean successful)
 			{
-				// no action required
-			}
-
-
-			@Override
-			public void afterCompletion(final int status)
-			{
-				if (status == Status.STATUS_ROLLEDBACK)
+				if (!successful)
 					action.run();
 			}
 		});

@@ -230,9 +230,9 @@ public class HQLBuilder implements HQLEncodingContext
 		else if (projection == HQLProjection.ENTITIES && (fetchJoins.size() > 0 || joins.size() > 0))
 			query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY); // If there are joins then we could end up with multiple root entities being returned (see HqlChildCountTest.testChildCriteria for example)
 
-		if (limit != null)
+		if (limit != null && limit > 0)
 			query.setMaxResults(limit);
-		if (offset != null)
+		if (offset != null && offset > 0)
 			query.setFirstResult(offset);
 	}
 

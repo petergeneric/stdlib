@@ -5,15 +5,16 @@ import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.CollectionType;
-import org.hibernate.type.ComponentType;
-import org.hibernate.type.CompositeType;
-import org.hibernate.type.Type;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
 import javax.persistence.Table;
+import javax.persistence.metamodel.Attribute;
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
+import javax.persistence.metamodel.PluralAttribute;
+import javax.persistence.metamodel.SingularAttribute;
+import javax.persistence.metamodel.Type;
 import java.lang.reflect.Modifier;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,19 +52,39 @@ public class QEntity
 	}
 
 
-	void parse(QEntityFactory entityFactory, ClassMetadata metadata, SessionFactoryImplementor sessionFactory)
+	void parse(QEntityFactory entityFactory, EntityType<?> metadata, SessionFactoryImplementor sessionFactory)
 	{
-		this.name = metadata.getEntityName();
+		this.name = metadata.getName();
 
-		final boolean[] nullability = metadata.getPropertyNullability();
-		final String[] names = metadata.getPropertyNames();
-		final Type[] types = metadata.getPropertyTypes();
+		for (Attribute<?, ?> attribute : metadata.getAttributes())
+		{
+			parseFields(entityFactory, sessionFactory, null, attribute);
+		}
 
 		// Parse top-level properties
-		parseFields(entityFactory, sessionFactory, null, nullability, names, types);
 
 		// Add identifier property
 		{
+			if (!metadata.hasSingleIdAttribute())
+				throw new IllegalArgumentException("@IdClass Entity not supported! " + metadata.getJavaType());
+
+			Type idType = metadata.getIdType();
+
+			switch (idType.getPersistenceType())
+			{
+				case BASIC:
+					break; // No action necessary, will be processed like a normal field
+				case EMBEDDABLE:
+				{
+					EmbeddableType<?> emb = (EmbeddableType<?>) idType;
+
+					parseEmbeddable(entityFactory, sessionFactory, "id", emb);
+					break;
+				}
+				default:
+					throw new IllegalArgumentException("Cannot handle id type: " + idType.getPersistenceType() + ": " + idType);
+			}
+/*
 			final String name = metadata.getIdentifierPropertyName();
 			final Type type = metadata.getIdentifierType();
 			final Class<?> clazz = type.getReturnedClass();
@@ -79,7 +100,7 @@ public class QEntity
 			{
 				// The identifier is not a composite type, so just add the field directly
 				properties.put(name, new QProperty(this, null, name, clazz, false));
-			}
+			}*/
 		}
 
 		// Add field aliases defined on the class
@@ -98,119 +119,153 @@ public class QEntity
 	}
 
 
-	private void parseFields(final QEntityFactory entityFactory,
-	                         final SessionFactoryImplementor sessionFactory,
-	                         final String prefix,
-	                         final CompositeType composite)
-	{
-		parseFields(entityFactory,
-		            sessionFactory,
-		            prefix,
-		            composite.getPropertyNullability(),
-		            composite.getPropertyNames(),
-		            composite.getSubtypes());
-	}
-
-
-	public void parseEmbeddable(final QEntityFactory qEntityFactory,
+	public void parseEmbeddable(final QEntityFactory entityFactory,
 	                            final SessionFactoryImplementor sessionFactory,
-	                            final ComponentType ct)
+	                            final String prefix,
+	                            final EmbeddableType<?> type)
 	{
-		final String[] names = ct.getPropertyNames();
-		final Type[] types = ct.getSubtypes();
-		final boolean[] nullable = ct.getPropertyNullability();
+		// Make sure the entity factory sees this embeddable
+		entityFactory.getEmbeddable(type.getJavaType(), type);
 
-		// unknown what to do...
-		parseFields(qEntityFactory, sessionFactory, null, nullable, names, types);
+		for (Attribute<?, ?> attribute : type.getAttributes())
+		{
+			parseFields(entityFactory, sessionFactory, prefix, attribute);
+		}
 	}
 
 
 	private void parseFields(final QEntityFactory entityFactory,
 	                         final SessionFactoryImplementor sessionFactory,
 	                         final String prefix,
-	                         final boolean[] nullability,
-	                         final String[] names,
-	                         final Type[] types)
+	                         final Attribute<?, ?> attribute)
 	{
-		for (int i = 0; i < names.length; i++)
+		final String name = attribute.getName();
+		//final javax.persistence.metamodel.Type<?> type;
+		final Class<?> clazz;
+		final boolean isCollection;
+		final boolean nullable;
+
+		// Transparently unwrap collections
+		if (attribute.isCollection())
 		{
-			final Type type;
-			final boolean isCollection;
+			isCollection = true;
+			nullable = false;
 
-			// Transparently unwrap collections
-			if (types[i].isCollectionType())
-			{
-				final CollectionType collectionType = (CollectionType) types[i];
-				type = collectionType.getElementType(sessionFactory);
+			//type = ((PluralAttribute<?, ?, ?>) attribute).getElementType();
+			clazz = ((PluralAttribute<?, ?, ?>) attribute).getElementType().getJavaType();
+		}
+		else
+		{
+			isCollection = false;
+			//type = attribute.getDeclaringType();
+			nullable = (attribute instanceof SingularAttribute) ? ((SingularAttribute) attribute).isOptional() : false;
+			clazz = attribute.getJavaType();
+		}
 
-				isCollection = true;
-			}
+		// TODO is it also meaningful to add the parent composite type as a field too?
+		// TODO if not we should have this as a separate if condition
+		if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED && !isCollection)
+		{
+			final String newPrefix;
+
+			if (prefix != null)
+				newPrefix = prefix + ":" + name;
 			else
+				newPrefix = name;
+
+			SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
+			EmbeddableType<?> ct = (EmbeddableType<?>) attr.getType();
+
+			parseEmbeddable(entityFactory, sessionFactory, prefix, ct);
+		}
+		else if (isCollection || attribute.isAssociation())
+		{
+			final QRelation relation;
+			if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED &&
+			    attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC)
 			{
-				type = types[i];
-				isCollection = false;
-			}
-
-			final String name = names[i];
-			final Class<?> clazz = type.getReturnedClass();
-			final boolean nullable = nullability[i];
-
-			// TODO is it also meaningful to add the parent composite type as a field too?
-			// TODO if not we should have this as a separate if condition
-			if (types[i].isComponentType() && !isCollection)
-			{
-				CompositeType composite = (CompositeType) types[i];
-
-				final String newPrefix;
-
-				if (prefix != null)
-					newPrefix = prefix + ":" + name;
-				else
-					newPrefix = name;
-
-				// This is a composite type, so add the composite types instead
-				parseFields(entityFactory, sessionFactory, newPrefix, composite);
-			}
-			else if (type.isEntityType() || isCollection)
-			{
-				final QRelation relation;
-				if (type.isEntityType())
+				if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION)
 				{
 					relation = new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection);
 				}
-				else if (isCollection && type instanceof ComponentType)
-				{
-					ComponentType ct = (ComponentType) type;
-
-					relation = new QRelation(this, prefix, name, entityFactory.getEmbeddable(clazz, ct), nullable, isCollection);
-				}
 				else
 				{
-					log.warn("Unknown Collection type: " + type + " with name " + name + " within " + clazz + " - ignoring");
-					relation = null;
-				}
+					PluralAttribute<?, ?, ?> plural = (PluralAttribute<?, ?, ?>) attribute;
 
-				if (relation != null)
-				{
-					relations.put(name, relation);
+					if (plural.getElementType().getPersistenceType() == Type.PersistenceType.EMBEDDABLE)
+					{
+						final EmbeddableType<?> ct = (EmbeddableType<?>) plural.getElementType();
 
-					// Set up a special property to allow constraining the collection size
-					if (isCollection)
-						properties.put(name + ":size", new QSizeProperty(relations.get(name)));
+						relation = new QRelation(this,
+						                         prefix,
+						                         name,
+						                         entityFactory.getEmbeddable(ct.getJavaType(), ct),
+						                         nullable,
+						                         isCollection);
+					}
+					else if (plural.getElementType().getPersistenceType() == Type.PersistenceType.BASIC)
+					{
+						// Ignore this altogether. We should probably come up with a way of querying this relationship in the future
+						relation = null;
+
+						log.debug("Ignoring BASIC ElementCollection " +
+						          plural.getCollectionType() +
+						          " of " +
+						          plural.getElementType().getJavaType() +
+						          " " +
+						          plural.getName());
+					}
+					else
+					{
+
+						throw new IllegalArgumentException("Cannot handle ElementCollection of " +
+						                                   plural.getElementType().getJavaType() +
+						                                   " - type " +
+						                                   plural.getElementType().getPersistenceType());
+					}
 				}
+			}
+			else if (isCollection && attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED)
+			{
+				SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
+				EmbeddableType<?> ct = (EmbeddableType<?>) attr.getType();
+
+				relation = new QRelation(this, prefix, name, entityFactory.getEmbeddable(clazz, ct), nullable, isCollection);
 			}
 			else
 			{
-				final String newPrefix;
-
-				if (prefix != null)
-					newPrefix = prefix + ":" + name;
-				else
-					newPrefix = name;
-
-
-				properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
+				log.warn("Unknown Collection type: " +
+				         attribute.getPersistentAttributeType() +
+				         " " +
+				         attribute +
+				         " with name " +
+				         name +
+				         " within " +
+				         clazz +
+				         " - ignoring");
+				relation = null;
 			}
+
+			if (relation != null)
+			{
+				relations.put(name, relation);
+
+				// Set up a special property to allow constraining the collection size
+				if (isCollection)
+					properties.put(name + ":size", new QSizeProperty(relations.get(name)));
+			}
+		}
+		else
+		{
+			final String newPrefix;
+
+			if (prefix != null)
+				newPrefix = prefix + ":" + name;
+			else
+				newPrefix = name;
+
+
+			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
 		}
 	}
 
