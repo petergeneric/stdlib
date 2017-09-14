@@ -55,7 +55,6 @@ public class LoginUIServiceImpl implements LoginUIService
 
 			call.set("returnTo", returnTo);
 			call.set("errorText", errorText);
-			call.set("nonce", nonceStore.allocate());
 
 			return call.process();
 		}
