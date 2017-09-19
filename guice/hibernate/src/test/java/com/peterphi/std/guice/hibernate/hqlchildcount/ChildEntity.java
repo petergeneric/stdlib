@@ -22,6 +22,10 @@ class ChildEntity
 	@JoinColumn(nullable = false)
 	private ParentEntity parent;
 
+	@ManyToOne(optional = true, fetch = FetchType.LAZY)
+	@JoinColumn(nullable = true)
+	private ParentEntity friend;
+
 	@Column(nullable = false)
 	private boolean flag;
 
@@ -47,6 +51,18 @@ class ChildEntity
 	public void setParent(final ParentEntity parent)
 	{
 		this.parent = parent;
+	}
+
+
+	public ParentEntity getFriend()
+	{
+		return friend;
+	}
+
+
+	public void setFriend(final ParentEntity friend)
+	{
+		this.friend = friend;
 	}
 
 

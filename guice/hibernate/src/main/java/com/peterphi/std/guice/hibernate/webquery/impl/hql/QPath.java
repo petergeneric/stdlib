@@ -51,9 +51,6 @@ class QPath
 		else
 			entity = parent.getRelation().getEntity();
 
-		// Resolve any aliases at this entity level
-		entity.fixupPathUsingAliases(segments);
-
 		final String expr = segments.removeFirst();
 
 		final String name;
@@ -81,7 +78,6 @@ class QPath
 		{
 			final Set<String> expected = new HashSet<>(entity.getPropertyNames());
 			expected.addAll(entity.getRelationNames());
-			expected.addAll(entity.getAliasNames());
 
 			throw new IllegalArgumentException("Relationship path error: got " +
 			                                   expr +

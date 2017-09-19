@@ -2,6 +2,8 @@ package com.peterphi.std.guice.hibernate.webquery.impl.jpa;
 
 import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
 import com.peterphi.std.guice.hibernate.webquery.impl.WQTypeHelper;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions.JPAJoin;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions.WQPath;
@@ -11,16 +13,22 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
+import javax.persistence.EntityGraph;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
+import javax.persistence.criteria.Fetch;
+import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
+import javax.persistence.criteria.Selection;
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -28,12 +36,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class JPAQueryBuilder
 {
+	private static final Logger log = Logger.getLogger(JPAQueryBuilder.class);
+
 	private final Session session;
 	private final CriteriaBuilder criteriaBuilder;
 
+	private QEntityFactory entityFactory;
 	private QEntity entity;
 	private Root root;
 
@@ -46,6 +59,11 @@ public class JPAQueryBuilder
 	private Integer limit;
 	private Integer offset;
 
+	// If specified, fetchGraph overrides loadGraph
+	private Set<String> fetches;
+	private EntityGraph fetchGraph;
+	private EntityGraph loadGraph;
+
 
 	public JPAQueryBuilder(final Session session, final QEntity entity)
 	{
@@ -54,9 +72,17 @@ public class JPAQueryBuilder
 		this.entity = entity;
 	}
 
-	// TODO
-	// TODO broad query execution plan (i.e. query to get primary key, then requery with this EntityGraph, populate these collections/relationships afterwards,
-	// TODO build a method that takes a WebQuery
+
+	public boolean hasCollectionJoin()
+	{
+		for (JPAJoin join : joins.values())
+		{
+			if (join.isCollection())
+				return true;
+		}
+
+		return false;
+	}
 
 
 	void addFrom(final String subclasses)
@@ -83,6 +109,9 @@ public class JPAQueryBuilder
 			if (classes.size() > 1)
 				this.conditions.add(root.type().in(classes));
 		}
+
+		// Set up a basic empty loadgraph (so we pick up EAGER / LAZY from annotations)
+		this.loadGraph = session.createEntityGraph(root.getJavaType());
 	}
 
 
@@ -167,7 +196,7 @@ public class JPAQueryBuilder
 	private JPAJoin getOrCreateJoin(final WQPath path)
 	{
 		if (path == null)
-			return new JPAJoin(criteriaBuilder, entity, root);
+			return new JPAJoin(criteriaBuilder, entity, root, false);
 
 		if (!joins.containsKey(path.getPath()))
 		{
@@ -222,19 +251,15 @@ public class JPAQueryBuilder
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
 			case RANGE:
-				return criteriaBuilder.between(property,
-				                               line.value,
-				                               line.value2); // TODO can we do this for numbers/dates or do we need to parse to a value?
+				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
 			case GE:
-				return criteriaBuilder.greaterThanOrEqualTo(property,
-				                                            (Expression) criteriaBuilder.literal(parse(property, line.value)));
+				return criteriaBuilder.greaterThanOrEqualTo(property, parse(property, line.value));
 			case GT:
-				return criteriaBuilder.greaterThan(property, (Expression) criteriaBuilder.literal(parse(property, line.value)));
+				return criteriaBuilder.greaterThan(property, parse(property, line.value));
 			case LE:
-				return criteriaBuilder.lessThanOrEqualTo(property,
-				                                         (Expression) criteriaBuilder.literal(parse(property, line.value)));
+				return criteriaBuilder.lessThanOrEqualTo(property, parse(property, line.value));
 			case LT:
-				return criteriaBuilder.lessThan(property, (Expression) criteriaBuilder.literal(parse(property, line.value)));
+				return criteriaBuilder.lessThan(property, parse(property, line.value));
 			case EQ_REF:
 				return criteriaBuilder.equal(property, getProperty(new WQPath(line.value)));
 			case NEQ_REF:
@@ -253,11 +278,11 @@ public class JPAQueryBuilder
 	}
 
 
-	private Object parse(final Expression property, final String value)
+	private Expression parse(final Expression property, final String value)
 	{
 		final Class clazz = property.getJavaType();
 
-		return WQTypeHelper.parse(clazz, value);
+		return criteriaBuilder.literal(WQTypeHelper.parse(clazz, value));
 	}
 
 
@@ -279,11 +304,8 @@ public class JPAQueryBuilder
 
 	public void forWebQuery(final WebQuery query)
 	{
-		// TODO know the result type:
-		// 1. Entity
-		// 2. Primary Key (how?)
-		// 3. Custom Projection
-		this.generated = criteriaBuilder.createQuery(); // TODO entity.getEntityClass for type 1. Is this relevant? TODO also consider subclass for type 1
+		this.generated = criteriaBuilder.createQuery();
+		this.generated.distinct(false);
 
 		// Add FROM (N.B. adding support for subclass queries)
 		addFrom(query.constraints.subclass);
@@ -294,12 +316,45 @@ public class JPAQueryBuilder
 		limit(query.getLimit());
 
 		addOrders(query.orderings);
+
+		addExpandAndFetches(query);
+	}
+
+
+	private void addExpandAndFetches(final WebQuery query)
+	{
+		// Clear all fetches and graphs first
+		this.fetches = null;
+		this.fetchGraph = null;
+		this.loadGraph = null;
+
+		if (StringUtils.equals(query.fetch, "id"))
+		{
+			// Only wants the ID, so set up a fetch graph with nothing else in it
+			this.fetchGraph = session.createEntityGraph(root.getJavaType());
+		}
+		else
+		{
+			// Special-case only fetching ID
+			Set<String> expand = query.getExpand();
+
+			// Ignore certain special-case values
+			expand.remove("all");
+			expand.remove("-idcollections");
+			expand.remove("-collections");
+
+			if (expand.size() > 0)
+			{
+				this.fetches = expand;
+			}
+		}
 	}
 
 
 	public void forIDs(final WebQuery original, final List<?> ids)
 	{
 		this.generated = criteriaBuilder.createQuery();
+		this.generated.distinct(false);
 
 		if (original != null)
 		{
@@ -307,6 +362,9 @@ public class JPAQueryBuilder
 
 			// Re-state the order (so intra-page order is still correct, since otherwise it'll be whatever order the database decides to return)
 			addOrders(original.orderings);
+
+			// Make sure we eagerly fetch what's requested
+			addExpandAndFetches(original);
 
 			offset(original.getOffset());
 			limit(original.getLimit());
@@ -329,7 +387,42 @@ public class JPAQueryBuilder
 	}
 
 
-	public Query<Long> selectCount()
+	public Long selectCount()
+	{
+		Query<Long> query = createSelectCount();
+
+		return query.getSingleResult();
+	}
+
+
+	public <ID> List<ID> selectIDs()
+	{
+		Query query = createSelectIDs();
+
+		List<?> results = query.getResultList();
+
+		if (results.isEmpty())
+			return Collections.emptyList();
+		else if (results.get(0).getClass().isArray())
+		{
+			return results.stream().map(r -> Array.get(r, 0)).map(id -> (ID) id).collect(Collectors.toList());
+		}
+		else
+		{
+			return (List<ID>) results;
+		}
+	}
+
+
+	public List<?> selectEntity()
+	{
+		final Query<?> query = createSelectEntity();
+
+		return query.getResultList();
+	}
+
+
+	public Query<Long> createSelectCount()
 	{
 		generated.orderBy(Collections.emptyList()); // Order is not meaningful for a count query
 
@@ -337,14 +430,30 @@ public class JPAQueryBuilder
 	}
 
 
-	public Query<?> selectIDs()
+	public Query<?> createSelectIDs()
 	{
+		this.generated.distinct(true);
+
+		generated.orderBy(orders); // Make sure we return the results in the correct order
+
+		List<Selection<?>> selects = new ArrayList<>();
+
 		if (root.getModel().hasSingleIdAttribute())
 		{
-			generated.select(root.get(root.getModel().getId(root.getModel().getIdType().getJavaType())));
+			selects.add(root.get(root.getModel().getId(root.getModel().getIdType().getJavaType())));
 		}
 		else
 			throw new NotImplementedException("Cannot handle ID selection with IdClass!");
+
+		if (!orders.isEmpty())
+		{
+			for (Order order : orders)
+			{
+				selects.add(order.getExpression());
+			}
+		}
+
+		generated.multiselect(selects);
 
 		final Query query = session.createQuery(generated);
 
@@ -357,19 +466,16 @@ public class JPAQueryBuilder
 	}
 
 
-	public Query<?> selectEntity()
+	public Query<?> createSelectEntity()
 	{
 		generated.select(root);
 
-		// TODO now build the fetch graph
-		/*
-		final EntityGraph<ParentEntity> graph = session.createEntityGraph(ParentEntity.class);
-		graph.addAttributeNodes("children", "friends", "otherObject");
-		graph.addSubgraph("otherObject", ChildEntity.class).addAttributeNodes("parent");
+		if (fetches != null)
+		{
+			addFetches(fetches);
+		}
 
-
-		return session.createQuery(select).setHint("javax.persistence.fetchgraph", graph).list();
-		//*/
+		generated.orderBy(orders); // Make sure we return the results in the correct order
 
 		final Query query = session.createQuery(generated);
 
@@ -378,7 +484,106 @@ public class JPAQueryBuilder
 		if (limit != null)
 			query.getQueryOptions().setMaxRows(limit);
 
+		if (fetches != null)
+		{
+			// we populate fetches differently from fetchgraph/loadgraph but don't use both at the same time
+		}
+		else if (fetchGraph != null)
+		{
+			log.trace("Set FetchGraph hint on entity query");
+			query.setHint("javax.persistence.fetchgraph", fetchGraph);
+		}
+		else if (loadGraph != null)
+		{
+			log.trace("Set LoadGraph hint on entity query");
+			query.setHint("javax.persistence.loadgraph", loadGraph);
+		}
+		else
+		{
+			// Set up a default loadgraph based on EAGER/LAZY annotations
+			log.trace("Set default LoadGraph");
+			query.setHint("javax.persistence.loadgraph", session.createEntityGraph(root.getJavaType()));
+		}
+
 		return query;
+	}
+
+
+	/**
+	 * Returns true if one of the fetches specified will result in a collection being pulled back
+	 **/
+	public boolean hasCollectionFetch()
+	{
+		if (fetches != null)
+			for (String fetch : fetches)
+			{
+				QEntity parent = entity;
+
+				final String[] parts = StringUtils.split(fetch, '.');
+
+				for (int i = 0; i < parts.length; i++)
+				{
+					// QEntity doesn't have a complete picture of all relations, so
+					if (!parent.hasRelation(parts[i]))
+					{
+						log.warn("Encountered relation " +
+						         parts[i] +
+						         " on " +
+						         parent.getName() +
+						         " as part of path " +
+						         fetch +
+						         ". Assuming QEntity simply does not know this entity. Assuming worst case scenario (collection join is involved)");
+						return true;
+					}
+
+					final QRelation relation = parent.getRelation(parts[i]);
+
+					parent = relation.getEntity();
+
+					if (relation.isCollection())
+						return true;
+				}
+			}
+
+		return false;
+	}
+
+
+	private void addFetches(Collection<String> fetches)
+	{
+		Map<String, Fetch> created = new HashMap<>();
+
+		for (String fetch : fetches)
+		{
+			Fetch parent = null;
+
+			final String[] parts = StringUtils.split(fetch, '.');
+
+			for (int i = 0; i < parts.length; i++)
+			{
+				final String path = StringUtils.join(parts, '.', 0, i);
+
+				Fetch existing = created.get(path);
+
+				if (existing == null)
+				{
+					if (parent == null)
+					{
+						// attribute of root
+						existing = root.fetch(parts[i], JoinType.LEFT);
+					}
+					else
+					{
+						// attribute of parent
+						existing = parent.fetch(parts[i], JoinType.LEFT);
+					}
+
+					created.put(path, existing);
+				}
+
+				parent = existing;
+			}
+		}
 	}
 
 

@@ -1,6 +1,5 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
 import com.peterphi.std.guice.hibernate.webquery.impl.hql.QSizeProperty;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
@@ -17,11 +16,9 @@ import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
 import java.lang.reflect.Modifier;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -35,12 +32,12 @@ public class QEntity
 	private String name;
 
 	private Map<String, QProperty> properties = new HashMap<>();
-	private Map<String, String> aliases = new HashMap<>(0);
 	private Map<String, QRelation> relations = new HashMap<>();
 
 	private List<QEntity> descendants = Collections.emptyList();
 
 	private EntityType<?> metamodelEntity;
+
 
 	public QEntity(Class<?> clazz)
 	{
@@ -58,6 +55,7 @@ public class QEntity
 	{
 		return this.metamodelEntity;
 	}
+
 
 	void parse(QEntityFactory entityFactory, EntityType<?> metadata, SessionFactoryImplementor sessionFactory)
 	{
@@ -92,29 +90,6 @@ public class QEntity
 				default:
 					throw new IllegalArgumentException("Cannot handle id type: " + idType.getPersistenceType() + ": " + idType);
 			}
-/*
-			final String name = metadata.getIdentifierPropertyName();
-			final Type type = metadata.getIdentifierType();
-			final Class<?> clazz = type.getReturnedClass();
-
-			// If the identifier is a composite primary key then we should add the composite fields
-			if (type.isComponentType())
-			{
-				CompositeType composite = (CompositeType) type;
-
-				parseFields(entityFactory, sessionFactory, name, composite);
-			}
-			else
-			{
-				// The identifier is not a composite type, so just add the field directly
-				properties.put(name, new QProperty(this, null, name, clazz, false));
-			}*/
-		}
-
-		// Add field aliases defined on the class
-		for (SearchFieldAlias alias : clazz.getAnnotationsByType(SearchFieldAlias.class))
-		{
-			aliases.put(alias.name(), alias.aliasOf());
 		}
 
 		// Add links to descendants
@@ -315,50 +290,9 @@ public class QEntity
 	}
 
 
-	public Set<String> getAliasNames()
-	{
-		return Collections.unmodifiableSet(this.aliases.keySet());
-	}
-
-
 	public boolean hasProperty(String name)
 	{
 		return properties.containsKey(name);
-	}
-
-
-	/**
-	 * Modify a list of segments by replacing any defined alias on this entity. If there is no such destination alias then does
-	 * nothing<br />
-	 * This is designed to allow underlying database schema changes without changing the query API exposed to users
-	 *
-	 * @param segments
-	 * 		some path optionally including an aliased name (e.g. "asset.parentId")
-	 *
-	 * @return some new path (e.g. "asset.parent.id")
-	 */
-	public void fixupPathUsingAliases(final LinkedList<String> segments)
-	{
-		if (aliases.isEmpty())
-			return; // No transformation necessary or possible
-
-		final String remainingPath = segments.stream().collect(Collectors.joining("."));
-
-		for (Map.Entry<String, String> entry : aliases.entrySet())
-		{
-			final String from = entry.getKey();
-			final String to = entry.getValue();
-
-			if (StringUtils.equals(remainingPath, from) || StringUtils.startsWith(remainingPath, from + "."))
-			{
-				final String newPath = to + remainingPath.substring(from.length());
-
-				segments.clear();
-				segments.addAll(Arrays.asList(StringUtils.split(newPath, '.')));
-
-				return;
-			}
-		}
 	}
 
 
@@ -447,8 +381,6 @@ public class QEntity
 		       properties.values() +
 		       ", relations=" +
 		       relations.values() +
-		       ", aliases=" +
-		       aliases.values() +
 		       '}';
 	}
 

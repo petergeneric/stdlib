@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.database.dao;
 
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
 import java.io.Serializable;
@@ -44,7 +45,7 @@ public interface Dao<T, ID extends Serializable>
 	 */
 	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
 
-	ConstrainedResultSet<T> find(WebQuery constraints);
+	ConstrainedResultSet<T> find(WebQuery constraints, JPASearchStrategy strategy);
 
 	/**
 	 * Retrieve every object accessible through this DAO

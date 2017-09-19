@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -18,8 +16,6 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-@SearchFieldAlias(name = "otherObjectParentName", aliasOf = "otherObject.parent.name")
-@SearchFieldAlias(name = "otherObjectParent", aliasOf = "otherObject.parent")
 class ParentEntity
 {
 	@Id

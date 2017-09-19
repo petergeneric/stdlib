@@ -62,7 +62,7 @@ public class HqlChildCountTest
 	public void criteria()
 	{
 		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery()
-				                                                                        .dbfetch("children", "children.parent")
+				                                                                        .expand("children", "children.friend")
 				                                                                        .eq("children.flag", true)
 				                                                                        .logSQL(true));
 

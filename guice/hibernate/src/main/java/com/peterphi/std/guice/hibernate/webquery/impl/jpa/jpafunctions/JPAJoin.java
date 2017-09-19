@@ -15,21 +15,27 @@ public class JPAJoin
 	private final CriteriaBuilder builder;
 	private final QEntity entity;
 	private final From<?, ?> root;
+	private final boolean collection;
 
 
-	public JPAJoin(final CriteriaBuilder builder, final QEntity entity, final From<?, ?> root)
+	public JPAJoin(final CriteriaBuilder builder, final QEntity entity, final From<?, ?> root, final boolean collection)
 	{
 		this.builder = builder;
 		this.entity = entity;
 		this.root = root;
+		this.collection = collection;
 	}
 
 
-	public JPAJoin(final CriteriaBuilder builder, final QRelation relation, final Join<?, ?> join)
+	public JPAJoin(final CriteriaBuilder builder, final QRelation relation, final Join<?, ?> join, final boolean collection)
 	{
-		this.builder = builder;
-		this.entity = relation.getEntity();
-		this.root = join;
+		this(builder, relation.getEntity(), join, collection);
+	}
+
+
+	public boolean isCollection()
+	{
+		return collection;
 	}
 
 
@@ -45,7 +51,9 @@ public class JPAJoin
 		else
 			joinType = JoinType.LEFT;
 
-		return new JPAJoin(builder, rel, root.join(relation, joinType));
+		final Join<Object, Object> join = root.join(relation, joinType);
+
+		return new JPAJoin(builder, rel, join, rel.isCollection());
 	}
 
 
