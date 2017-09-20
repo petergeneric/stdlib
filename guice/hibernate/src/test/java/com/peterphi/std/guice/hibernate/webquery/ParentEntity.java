@@ -16,7 +16,7 @@ import java.util.HashSet;
 import java.util.Set;
 
 @Entity
-class ParentEntity
+public class ParentEntity
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)

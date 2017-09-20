@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
@@ -91,6 +93,7 @@ public class DynamicQueryTest
 		dao.findByUriQuery(new WebQuery().orderAsc("otherObject.name"));
 	}
 
+
 	@Test
 	public void testPropertyRefWorks() throws Exception
 	{
@@ -103,7 +106,7 @@ public class DynamicQueryTest
 
 
 	@Test
-	public void testDbFetchWorks() throws Exception
+	public void testEntityWrappedId() throws Exception
 	{
 		ParentEntity obj = new ParentEntity();
 		obj.setName("Name");
@@ -113,7 +116,11 @@ public class DynamicQueryTest
 		childDao.save(obj.getOtherObject());
 		dao.save(obj);
 
-		dao.findByUriQuery(new WebQuery().logSQL(true).dbfetch("otherObject.parent").eq("otherObject.parent.name", "x"));
+		final ConstrainedResultSet<ParentEntity> results = dao.find(new WebQuery(), JPASearchStrategy.ENTITY_WRAPPED_ID);
+
+		assertEquals(1, results.list.size());
+		assertNotNull(results.uniqueResult().getId()); // should be populated
+		assertNull(results.uniqueResult().getName()); // should not be populated
 	}
 
 

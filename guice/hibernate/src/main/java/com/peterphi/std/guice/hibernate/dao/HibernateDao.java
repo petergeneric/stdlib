@@ -9,7 +9,6 @@ import com.peterphi.std.guice.database.annotation.LargeTable;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.database.dao.Dao;
 import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
-import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
@@ -58,12 +57,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
 	boolean performSeparateIdQueryForLargeTables = true;
 
-	@Inject
-	HibernateObservingInterceptor hibernateObserver;
-
 	protected Class<T> clazz;
 
 	protected boolean isLargeTable = false;
+
+	@Inject
+	public JPASearchExecutor searchExecutor;
 
 
 	public HibernateDao()
@@ -93,6 +92,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		this.clazz = (Class<T>) clazz.getRawType();
 
 		isLargeTable = this.clazz.isAnnotationPresent(LargeTable.class);
+	}
+
+
+	public JPAQueryBuilder<T, ID> createQueryBuilder()
+	{
+		return new JPAQueryBuilder<>(getSession(), getQEntity());
 	}
 
 
@@ -429,6 +434,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return (ConstrainedResultSet<ID>) find(query, JPASearchStrategy.ID);
 	}
 
+
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
@@ -440,15 +446,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public ConstrainedResultSet<T> find(final WebQuery constraints, JPASearchStrategy strategy)
 	{
-		JPASearchExecutor executor = new JPASearchExecutor(() -> new JPAQueryBuilder(getSession(), getQEntity()),
-		                                                   hibernateObserver);
-
 		// If necessary, swap the AUTO strategy for ID_THEN_QUERY_ENTITY if this entity is annotated with @LargeTable
 		// TODO replace this annotation with something that allows forcing the strategy on a per-entity basis?
 		if (performSeparateIdQueryForLargeTables && isLargeTable && (strategy == null || strategy == JPASearchStrategy.AUTO))
 			strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 
-		return executor.find(constraints, strategy, null);
+		return searchExecutor.find(this :: createQueryBuilder, getQEntity(), constraints, strategy, null);
 	}
 
 

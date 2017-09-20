@@ -1,9 +1,11 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.jpa;
 
+import com.google.inject.Inject;
 import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 
@@ -14,31 +16,33 @@ import java.util.stream.Collectors;
 
 public class JPASearchExecutor
 {
-	private final HibernateObservingInterceptor hibernateObserver;
-	private final Supplier<JPAQueryBuilder> queryBuilderProvider;
+	protected final HibernateObservingInterceptor hibernateObserver;
 
 
-	public JPASearchExecutor(final Supplier<JPAQueryBuilder> queryBuilderProvider,
-	                         HibernateObservingInterceptor hibernateObserver)
+	@Inject
+	public JPASearchExecutor(HibernateObservingInterceptor hibernateObserver)
 	{
-		this.queryBuilderProvider = queryBuilderProvider;
 		this.hibernateObserver = hibernateObserver;
 	}
 
 
-	// TODO some way to record the strategy?
-	// Strategies:
-	//   - Fetch ID
-	//   - Fetch Entity-wrapped ID (for easier serialisation)
-	//   - Fetch Entity
-	//   - Fetch ID and then retrieve Entity
-	// Options:
-	//  - Compute total
-	//  - Log SQL
-	//  - Pass through serialiser
-
-
-	public <T> ConstrainedResultSet<T> find(final WebQuery query, JPASearchStrategy strategy, final Function<?, ?> serialiser)
+	/**
+	 * Execute a search, returning a ConstrainedResultSet populated with the desired data (ID or Entity) with each piece of data
+	 * optionally serialised using the supplied serialiser
+	 *
+	 * @param query
+	 * 		the query to execute (including options like offset/limit, )
+	 * @param strategy
+	 * @param serialiser
+	 * @param <T>
+	 *
+	 * @return
+	 */
+	public <T> ConstrainedResultSet<T> find(Supplier<JPAQueryBuilder> queryBuilderProvider,
+	                                        final QEntity entity,
+	                                        final WebQuery query,
+	                                        JPASearchStrategy strategy,
+	                                        Function<?, ?> serialiser)
 	{
 		final HibernateSQLLogger statementLog;
 
@@ -52,7 +56,7 @@ public class JPASearchExecutor
 		builder.forWebQuery(query);
 
 
-		// TODO be smart about what strategy to use based on not just whether there are query collection joins but whether the fetch strategy includes collection joins
+		// If the auto strategy is in play, take into account what's being fetched back as well as whether there are any explicit collection joins or fetches
 		if (strategy == null || strategy == JPASearchStrategy.AUTO)
 		{
 			if (StringUtils.equals(query.getFetch(), "id"))
@@ -76,14 +80,24 @@ public class JPASearchExecutor
 		List list;
 		switch (strategy)
 		{
-			case ENTITY_WRAPPED_ID:
-				throw new NotImplementedException("Cannot currently construct Entity-wrapped ID select!");
 			case ID:
 			{
 				list = builder.selectIDs();
 
 				if (query.isComputeSize())
 					total = builder.selectCount();
+
+				break;
+			}
+			case ENTITY_WRAPPED_ID:
+			{
+				list = builder.selectIDs();
+
+				if (query.isComputeSize())
+					total = builder.selectCount();
+
+				// Transform the IDs into entity objects with the ID field populated
+				list = (List) list.stream().map(entity:: newInstanceWithId).collect(Collectors.toList());
 
 				break;
 			}

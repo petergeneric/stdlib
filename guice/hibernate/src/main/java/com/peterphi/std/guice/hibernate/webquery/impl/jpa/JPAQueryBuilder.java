@@ -2,7 +2,6 @@ package com.peterphi.std.guice.hibernate.webquery.impl.jpa;
 
 import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
-import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
 import com.peterphi.std.guice.hibernate.webquery.impl.WQTypeHelper;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions.JPAJoin;
@@ -39,14 +38,13 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class JPAQueryBuilder
+public class JPAQueryBuilder<T, ID>
 {
 	private static final Logger log = Logger.getLogger(JPAQueryBuilder.class);
 
 	private final Session session;
 	private final CriteriaBuilder criteriaBuilder;
 
-	private QEntityFactory entityFactory;
 	private QEntity entity;
 	private Root root;
 
@@ -414,9 +412,9 @@ public class JPAQueryBuilder
 	}
 
 
-	public List<?> selectEntity()
+	public List<T> selectEntity()
 	{
-		final Query<?> query = createSelectEntity();
+		final Query<T> query = createSelectEntity();
 
 		return query.getResultList();
 	}
@@ -430,7 +428,30 @@ public class JPAQueryBuilder
 	}
 
 
-	public Query<?> createSelectIDs()
+	public <C> List<C> selectCustom(JPAQueryCustomiser customiser)
+	{
+		Query<C> query = createSelectCustom(customiser);
+
+		return query.getResultList();
+	}
+
+
+	public <C> Query<C> createSelectCustom(JPAQueryCustomiser customiser)
+	{
+		customiser.apply(criteriaBuilder, generated, root);
+
+		final Query query = session.createQuery(generated);
+
+		if (offset != null)
+			query.getQueryOptions().setFirstRow(offset);
+		if (limit != null)
+			query.getQueryOptions().setMaxRows(limit);
+
+		return query;
+	}
+
+
+	public Query createSelectIDs()
 	{
 		this.generated.distinct(true);
 
@@ -445,15 +466,15 @@ public class JPAQueryBuilder
 		else
 			throw new NotImplementedException("Cannot handle ID selection with IdClass!");
 
-		if (!orders.isEmpty())
+		for (Order order : orders)
 		{
-			for (Order order : orders)
-			{
-				selects.add(order.getExpression());
-			}
+			selects.add(order.getExpression());
 		}
 
-		generated.multiselect(selects);
+		if (selects.size() == 1)
+			generated.select(selects.get(0));
+		else
+			generated.multiselect(selects);
 
 		final Query query = session.createQuery(generated);
 
@@ -466,7 +487,7 @@ public class JPAQueryBuilder
 	}
 
 
-	public Query<?> createSelectEntity()
+	public Query<T> createSelectEntity()
 	{
 		generated.select(root);
 
@@ -477,7 +498,7 @@ public class JPAQueryBuilder
 
 		generated.orderBy(orders); // Make sure we return the results in the correct order
 
-		final Query query = session.createQuery(generated);
+		final Query<T> query = session.createQuery(generated);
 
 		if (offset != null)
 			query.getQueryOptions().setFirstRow(offset);

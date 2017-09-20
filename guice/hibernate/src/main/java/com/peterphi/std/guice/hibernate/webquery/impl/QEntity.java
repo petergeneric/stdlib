@@ -8,6 +8,7 @@ import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.Entity;
+import javax.persistence.Id;
 import javax.persistence.Table;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -15,6 +16,8 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.lang.reflect.Field;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.Collection;
 import java.util.Collections;
@@ -37,6 +40,11 @@ public class QEntity
 	private List<QEntity> descendants = Collections.emptyList();
 
 	private EntityType<?> metamodelEntity;
+
+	// Populated to let us get/set the ID of an entity dynamically
+	private Field idField;
+	private Method idSetMethod;
+	private Method idGetMethod;
 
 
 	public QEntity(Class<?> clazz)
@@ -98,6 +106,100 @@ public class QEntity
 
 			if (!descendants.isEmpty())
 				this.descendants = descendants;
+		}
+
+		// Figure out the id method/field
+		findReflectionIdFieldOrMethods();
+	}
+
+
+	/**
+	 * Use reflection to find the Field or Methods for getting and setting the id property ({@link Id} annotated) of this entity
+	 */
+	private void findReflectionIdFieldOrMethods()
+	{
+		try
+		{
+			Field idField = null;
+
+			for (Field field : clazz.getDeclaredFields())
+			{
+				if (field.isAnnotationPresent(Id.class))
+				{
+					idField = field;
+					break;
+				}
+			}
+
+			if (idField != null)
+			{
+				if (idField.isAccessible() ||
+				    (Modifier.isPublic(idField.getModifiers()) && !Modifier.isFinal(idField.getModifiers())))
+				{
+					this.idField = idField;
+				}
+				else
+				{
+					final String getterName = "get" + idField.getName();
+					final String setterName = "set" + idField.getName();
+
+					if (log.isTraceEnabled())
+					{
+						log.trace("Looking for getter with name: " + getterName);
+						log.trace("Looking for setter with name: " + setterName);
+					}
+
+					for (Method method : clazz.getMethods())
+					{
+						if (this.idGetMethod == null &&  StringUtils.equalsIgnoreCase(method.getName(), getterName))
+						{
+							this.idGetMethod = method;
+						}
+						else if (this.idSetMethod == null && StringUtils.equalsIgnoreCase(method.getName(), setterName))
+						{
+							this.idSetMethod = method;
+						}
+					}
+
+					if (idGetMethod == null || idSetMethod == null)
+						throw new RuntimeException("Field " +
+						                           idField.toGenericString() +
+						                           " exists and is annotated with @Id but is not accessible and could not resolve getter and setter methods by the same name");
+				}
+			}
+
+			if (this.idField == null && this.idGetMethod == null && this.idSetMethod == null)
+			{
+				for (Method method : clazz.getMethods())
+				{
+					if (method.isAnnotationPresent(Id.class))
+					{
+						this.idGetMethod = method;
+						break;
+					}
+				}
+
+				if (idGetMethod != null)
+				{
+					final String setMethodName = idGetMethod.getName().replaceFirst("^get", "set");
+
+					for (Method method : clazz.getMethods())
+					{
+						if (StringUtils.equals(setMethodName, method.getName()))
+						{
+							this.idSetMethod = method;
+							break;
+						}
+					}
+				}
+
+				if (idGetMethod == null || idSetMethod == null)
+					throw new IllegalArgumentException("Could not find a public getter and setter annotated with @Id!");
+			}
+		}
+		catch (Throwable t)
+		{
+			log.warn("Could not find Id field/methods for entity class " + clazz, t);
 		}
 	}
 
@@ -299,6 +401,47 @@ public class QEntity
 	public boolean hasRelation(String name)
 	{
 		return relations.containsKey(name);
+	}
+
+
+	/**
+	 * Create a new instance of this entity, setting only the ID field
+	 *
+	 * @param id
+	 *
+	 * @return
+	 */
+	public Object newInstanceWithId(final Object id)
+	{
+		try
+		{
+			final Object o = clazz.newInstance();
+
+			if (idField != null)
+			{
+				idField.set(o, id);
+			}
+			else if (idSetMethod != null)
+			{
+				idSetMethod.invoke(o, id);
+			}
+			else
+			{
+				throw new RuntimeException("No id field/setter method found!");
+			}
+
+			return o;
+		}
+		catch (Throwable e)
+		{
+			throw new RuntimeException("Cannot create new instance of " +
+			                           clazz +
+			                           " with ID " +
+			                           id +
+			                           " (of type " +
+			                           id.getClass() +
+			                           ") populated!", e);
+		}
 	}
 
 
