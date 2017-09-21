@@ -19,6 +19,8 @@ import javax.persistence.metamodel.Type;
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
@@ -113,6 +115,20 @@ public class QEntity
 	}
 
 
+	private List<Field> getAllFields(Class clazz)
+	{
+		List<Field> fields = new ArrayList<>();
+
+		while (clazz != null)
+		{
+			fields.addAll(Arrays.asList(clazz.getDeclaredFields()));
+			clazz = clazz.getSuperclass();
+		}
+
+		return fields;
+	}
+
+
 	/**
 	 * Use reflection to find the Field or Methods for getting and setting the id property ({@link Id} annotated) of this entity
 	 */
@@ -122,7 +138,7 @@ public class QEntity
 		{
 			Field idField = null;
 
-			for (Field field : clazz.getDeclaredFields())
+			for (Field field : getAllFields(clazz))
 			{
 				if (field.isAnnotationPresent(Id.class))
 				{
@@ -151,7 +167,7 @@ public class QEntity
 
 					for (Method method : clazz.getMethods())
 					{
-						if (this.idGetMethod == null &&  StringUtils.equalsIgnoreCase(method.getName(), getterName))
+						if (this.idGetMethod == null && StringUtils.equalsIgnoreCase(method.getName(), getterName))
 						{
 							this.idGetMethod = method;
 						}
