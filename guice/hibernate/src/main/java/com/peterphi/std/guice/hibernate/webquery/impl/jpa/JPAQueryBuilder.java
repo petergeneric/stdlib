@@ -15,6 +15,7 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
@@ -473,13 +474,10 @@ public class JPAQueryBuilder<T, ID>
 		if (results.isEmpty())
 			return Collections.emptyList();
 		else if (results.get(0).getClass().isArray())
-		{
+			// N.B. we explicitly do not remove duplicates because the only case of duplicates appearing should be if ordering by a collection
 			return results.stream().map(r -> Array.get(r, 0)).map(id -> (ID) id).collect(Collectors.toList());
-		}
 		else
-		{
 			return (List<ID>) results;
-		}
 	}
 
 
@@ -596,6 +594,8 @@ public class JPAQueryBuilder<T, ID>
 			log.trace("Set default LoadGraph");
 			query.setHint("javax.persistence.loadgraph", session.createEntityGraph(root.getJavaType()));
 		}
+
+		query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
 		return query;
 	}
