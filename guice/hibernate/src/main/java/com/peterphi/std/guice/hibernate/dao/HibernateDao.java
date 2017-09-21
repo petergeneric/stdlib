@@ -18,16 +18,18 @@ import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * The default implementation of a Dao for Hibernate; often it is necessary to extend this to produce richer queries<br />
@@ -113,6 +115,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Deprecated
 	protected String idProperty()
 	{
 		return getSessionFactory().getClassMetadata(clazz).getIdentifierPropertyName();
@@ -131,9 +134,21 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	public List<T> getListById(final Collection<ID> ids)
 	{
 		if (ids.isEmpty())
-			return new ArrayList<>();
+			return Collections.emptyList();
 
-		return getList(createCriteria().add(Restrictions.in(idProperty(), ids)));
+		if (ids instanceof List)
+			return getListById((List<ID>) ids);
+		else
+			return getListById(new ArrayList<>(ids));
+	}
+
+
+	public List<T> getListById(final List<ID> ids)
+	{
+		if (ids.isEmpty())
+			return Collections.emptyList();
+		else
+			return getSession().byMultipleIds(clazz).multiLoad(ids);
 	}
 
 
@@ -144,7 +159,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		if (id == null)
 			throw new IllegalArgumentException("Must supply an id to retrieve!");
 
-		return clazz.cast(getSession().get(clazz, id));
+		return getSession().get(clazz, id);
 	}
 
 
@@ -152,7 +167,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<T> getAll()
 	{
-		return getList(createCriteria().setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY));
+		return getList(new WebQuery());
 	}
 
 
@@ -251,10 +266,50 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * Create a {@link Criteria} instance for the entity type of this DAO, matching this entity and any subclasses/implementors
 	 *
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated use JPA2 Criteria with {@link #createCriteriaQuery()}, Hibernate has deprecated their old criteria query and it
+	 * will produce runtime warnings
 	 */
+	@Deprecated
 	protected Criteria createCriteria()
 	{
 		return getSession().createCriteria(clazz);
+	}
+
+
+	/**
+	 * Create a JPA2 CriteriaQuery, which should have constraints generated using {@link #getCriteriaBuilder()}
+	 *
+	 * @param <O>
+	 * 		the return type of the query
+	 *
+	 * @return
+	 */
+	protected <O> CriteriaQuery<O> createCriteriaQuery()
+	{
+		return (CriteriaQuery) getCriteriaBuilder().createQuery();
+	}
+
+
+	/**
+	 * Create a JPA2 CriteriaQuery, which should have constraints generated using the methods in {@link #getCriteriaBuilder()}
+	 *
+	 * @param <O>
+	 * 		the return type of the query
+	 * @param clazz
+	 * 		the return type of the query
+	 *
+	 * @return
+	 */
+	protected <O> CriteriaQuery<O> createCriteriaQuery(Class<O> clazz)
+	{
+		return getCriteriaBuilder().createQuery(clazz);
+	}
+
+
+	protected CriteriaBuilder getCriteriaBuilder()
+	{
+		return getSession().getCriteriaBuilder();
 	}
 
 
@@ -309,20 +364,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected T uniqueResult(WebQuery query)
 	{
-		final ConstrainedResultSet<T> results = findByUriQuery(query);
+		final ConstrainedResultSet<T> results = find(query);
 
-		if (results.getList().size() == 0)
-		{
-			return null;
-		}
-		else if (results.getList().size() == 1)
-		{
-			return clazz.cast(results.getList().get(0));
-		}
-		else
-		{
-			throw new IllegalStateException("Expected 0 or 1 result, got " + results.getList().size());
-		}
+		return results.uniqueResult();
 	}
 
 
@@ -346,7 +390,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected List<T> getList(WebQuery query)
 	{
-		return findByUriQuery(query).getList();
+		return find(query).getList();
 	}
 
 
@@ -371,7 +415,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<ID> getIdList(WebQuery query)
 	{
-		return findIdsByUriQuery(query).getList();
+		return findIds(query).getList();
 	}
 
 
@@ -438,20 +482,41 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
+		return find(query);
+	}
+
+
+	@Override
+	public ConstrainedResultSet<T> find(final WebQuery query)
+	{
 		return find(query, JPASearchStrategy.AUTO);
 	}
 
 
 	@Override
+	public ConstrainedResultSet<T> find(final WebQuery query, JPASearchStrategy strategy)
+	{
+		return find(query, strategy, null);
+	}
+
+
+	@Override
+	public ConstrainedResultSet<ID> findIds(final WebQuery query)
+	{
+		return find(query, JPASearchStrategy.ID, null);
+	}
+
+
+	@Override
 	@Transactional(readOnly = true)
-	public ConstrainedResultSet<T> find(final WebQuery constraints, JPASearchStrategy strategy)
+	public <RT> ConstrainedResultSet<RT> find(final WebQuery query, JPASearchStrategy strategy, Function<?, RT> serialiser)
 	{
 		// If necessary, swap the AUTO strategy for ID_THEN_QUERY_ENTITY if this entity is annotated with @LargeTable
 		// TODO replace this annotation with something that allows forcing the strategy on a per-entity basis?
 		if (performSeparateIdQueryForLargeTables && isLargeTable && (strategy == null || strategy == JPASearchStrategy.AUTO))
 			strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 
-		return searchExecutor.find(this :: createQueryBuilder, getQEntity(), constraints, strategy, null);
+		return searchExecutor.find(this :: createQueryBuilder, getQEntity(), query, strategy, serialiser);
 	}
 
 
