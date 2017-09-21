@@ -8,7 +8,9 @@ import com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions.JPAJoin;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions.WQPath;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraint;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQConstraintLine;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
@@ -301,16 +303,70 @@ public class JPAQueryBuilder<T, ID>
 
 	private Predicate parseConstraint(final WQGroup group)
 	{
-		List<Predicate> contents = parseConstraint(group.constraints);
-
-		switch (group.operator)
+		// If we can't optimise this group into an IN criteria...
+		if (group.operator == WQGroupType.AND || !shouldBeInCriteria(group))
 		{
-			case AND:
-				return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
-			case OR:
-				return criteriaBuilder.or(contents.toArray(new Predicate[conditions.size()]));
-			default:
-				throw new IllegalArgumentException("Unknown group operator: " + group.operator);
+			List<Predicate> contents = parseConstraint(group.constraints);
+
+			if (contents.size() == 1)
+				return contents.get(0);
+
+			switch (group.operator)
+			{
+				case AND:
+					return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
+				case OR:
+					return criteriaBuilder.or(contents.toArray(new Predicate[conditions.size()]));
+				default:
+					throw new IllegalArgumentException("Unknown group operator: " + group.operator);
+			}
+		}
+		else
+		{
+			// We can optimise this group into an IN criteria
+			final String field = ((WQConstraint) group.constraints.get(0)).field;
+
+			final Expression property = getProperty(field);
+
+			return property.in(group.constraints
+					                   .stream()
+					                   .map(l -> parse(property, ((WQConstraint) l).value))
+					                   .collect(Collectors.toList()));
+		}
+	}
+
+
+	private boolean shouldBeInCriteria(final WQGroup group)
+	{
+		if (group.operator == WQGroupType.OR && group.constraints.size() > 1)
+		{
+			String property = null;
+
+			for (WQConstraintLine line : group.constraints)
+			{
+				if (line instanceof WQConstraint)
+				{
+					WQConstraint constraint = (WQConstraint) line;
+
+					if (constraint.function != WQFunctionType.EQ)
+						return false; // function must be EQ
+					else if (property == null)
+						property = constraint.field; // record to check all other properties have the same name
+					else if (!StringUtils.equals(property, constraint.field))
+						return false; // property name varies
+				}
+				else
+				{
+					return false; // must only have simple constraints
+				}
+			}
+
+			// No mismatches
+			return true;
+		}
+		else
+		{
+			return false;
 		}
 	}
 
