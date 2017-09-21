@@ -2,11 +2,14 @@ package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
-import java.util.Objects;
+import java.io.Serializable;
+import java.util.Collection;
+import java.util.Date;
 
 /**
  * Defines an individual field constraint to apply
@@ -58,20 +61,22 @@ public class WQConstraint extends WQConstraintLine
 	{
 		if (function.hasBinaryParam())
 			return "QConstraint{" +
-			       "'" + field + '\'' +
-			       " " + function +
-			       " value='" + value + '\'' +
-			       " value2='" + value2 + '\'' +
+			       "'" +
+			       field +
+			       '\'' +
+			       " " +
+			       function +
+			       " value='" +
+			       value +
+			       '\'' +
+			       " value2='" +
+			       value2 +
+			       '\'' +
 			       "}";
 		else if (function.hasParam())
-			return "QConstraint{" +
-			       "'" + field + '\'' +
-			       " " + function +
-			       " '" + value + "'}";
+			return "QConstraint{" + "'" + field + '\'' + " " + function + " '" + value + "'}";
 		else
-			return "QConstraint{" +
-			       "'" + field + '\'' +
-			       " " + function + '}';
+			return "QConstraint{" + "'" + field + '\'' + " " + function + '}';
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +119,7 @@ public class WQConstraint extends WQConstraintLine
 		if (value == null)
 			return isNull(field);
 		else
-			return new WQConstraint(field, WQFunctionType.EQ, Objects.toString(value));
+			return new WQConstraint(field, WQFunctionType.EQ, toString(value));
 	}
 
 
@@ -123,7 +128,7 @@ public class WQConstraint extends WQConstraintLine
 		if (value == null)
 			return isNotNull(field);
 		else
-			return new WQConstraint(field, WQFunctionType.NEQ, Objects.toString(value));
+			return new WQConstraint(field, WQFunctionType.NEQ, toString(value));
 	}
 
 
@@ -141,43 +146,43 @@ public class WQConstraint extends WQConstraintLine
 
 	public static WQConstraint lt(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.LT, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.LT, toString(value));
 	}
 
 
 	public static WQConstraint le(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.LE, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.LE, toString(value));
 	}
 
 
 	public static WQConstraint gt(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.GT, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.GT, toString(value));
 	}
 
 
 	public static WQConstraint ge(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.GE, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.GE, toString(value));
 	}
 
 
 	public static WQConstraint contains(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.CONTAINS, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.CONTAINS, toString(value));
 	}
 
 
 	public static WQConstraint startsWith(final String field, final Object value)
 	{
-		return new WQConstraint(field, WQFunctionType.STARTS_WITH, Objects.toString(value));
+		return new WQConstraint(field, WQFunctionType.STARTS_WITH, toString(value));
 	}
 
 
 	public static WQConstraint range(final String field, final Object from, final Object to)
 	{
-		return new WQConstraint(field, WQFunctionType.RANGE, Objects.toString(from), Objects.toString(to));
+		return new WQConstraint(field, WQFunctionType.RANGE, toString(from), toString(to));
 	}
 
 
@@ -277,12 +282,7 @@ public class WQConstraint extends WQConstraintLine
 	public String toQueryFragment()
 	{
 		if (function.hasBinaryParam())
-			return field +
-			       " " +
-			       function +
-			       " " + escape(value) +
-			       "\" TO " +
-			       escape(value2);
+			return field + " " + function + " " + escape(value) + "\" TO " + escape(value2);
 		else if (function.hasParam())
 			return field + " " + function + " " + escape(value);
 		else
@@ -298,5 +298,23 @@ public class WQConstraint extends WQConstraintLine
 			return val; // Don't quote numbers
 		else
 			return "\"" + StringEscapeUtils.escapeJava(val) + "\""; // Quote all strings
+	}
+
+
+	private static String toString(final Object value)
+	{
+		if (value == null)
+			throw new IllegalArgumentException("Cannot convert a null value to string in WQConstraint!");
+		else if (value instanceof Collection)
+			throw new IllegalArgumentException("Cannot convert a Collection to a string in WQConstraint! " + value);
+		else if (value instanceof Date)
+			return new DateTime(((Date) value)).toString();
+		else if (value instanceof Serializable)
+			return value.toString();
+		else
+			throw new IllegalArgumentException("Do not know how to convert value to a WQConstraint string representation: " +
+			                                   value.getClass() +
+			                                   " for " +
+			                                   value);
 	}
 }
