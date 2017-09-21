@@ -29,6 +29,8 @@ import java.util.stream.Collectors;
 @Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")
 public class WebQuery
 {
+	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
+
 	/**
 	 * An optional name for the query, to allow server-side optimisation/hinting
 	 */
@@ -519,6 +521,9 @@ public class WebQuery
 	public WebQuery decode(Map<String, List<String>> map)
 	{
 		WebQuery def = new WebQuery();
+
+		// incoming queries from a map get a default limit set
+		def.limit(QUERY_STRING_DEFAULT_LIMIT);
 
 		boolean hasConstraints = false;
 
