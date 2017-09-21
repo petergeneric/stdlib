@@ -625,13 +625,19 @@ public class JPAQueryBuilder<T, ID>
 
 	public void offset(int offset)
 	{
-		this.offset = offset;
+		if (offset <= 0)
+			this.offset = null;
+		else
+			this.offset = offset;
 	}
 
 
 	public void limit(int limit)
 	{
-		this.limit = limit;
+		if (limit <= 0)
+			this.limit = null;
+		else
+			this.limit = limit;
 	}
 
 
