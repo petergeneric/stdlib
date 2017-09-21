@@ -232,7 +232,6 @@ public class JPAQueryBuilder<T, ID>
 	private <T> Predicate parseConstraint(final WQConstraint line)
 	{
 		final Expression property = getProperty(new WQPath(line.field));
-		final Expression<? extends Comparable<? super T>> gProperty = property;
 
 		switch (line.function)
 		{
@@ -249,15 +248,15 @@ public class JPAQueryBuilder<T, ID>
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
 			case RANGE:
-				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
+				return criteriaBuilder.between(property, parseGeneric(property, line.value), parseGeneric(property, line.value2));
 			case GE:
-				return criteriaBuilder.greaterThanOrEqualTo(property, parse(property, line.value));
+				return criteriaBuilder.greaterThanOrEqualTo(property, parseGeneric(property, line.value));
 			case GT:
-				return criteriaBuilder.greaterThan(property, parse(property, line.value));
+				return criteriaBuilder.greaterThan(property, parseGeneric(property, line.value));
 			case LE:
-				return criteriaBuilder.lessThanOrEqualTo(property, parse(property, line.value));
+				return criteriaBuilder.lessThanOrEqualTo(property, parseGeneric(property, line.value));
 			case LT:
-				return criteriaBuilder.lessThan(property, parse(property, line.value));
+				return criteriaBuilder.lessThan(property, parseGeneric(property, line.value));
 			case EQ_REF:
 				return criteriaBuilder.equal(property, getProperty(new WQPath(line.value)));
 			case NEQ_REF:
@@ -276,11 +275,27 @@ public class JPAQueryBuilder<T, ID>
 	}
 
 
-	private Expression parse(final Expression property, final String value)
+	/**
+	 * N.B. the odd function signature is so that the return of this method will correctly match against methods like {@link
+	 * CriteriaBuilder#lessThan(Expression, Comparable)} (since there is a similar generic overload that takes an Expression)
+	 *
+	 * @param property
+	 * @param value
+	 * @param <Y>
+	 *
+	 * @return
+	 */
+	private <Y extends Comparable<? super Y>> Y parseGeneric(final Expression<? extends T> property, final String value)
+	{
+		return (Y) parse(property, value);
+	}
+
+
+	private Object parse(final Expression property, final String value)
 	{
 		final Class clazz = property.getJavaType();
 
-		return criteriaBuilder.literal(WQTypeHelper.parse(clazz, value));
+		return WQTypeHelper.parse(clazz, value);
 	}
 
 
