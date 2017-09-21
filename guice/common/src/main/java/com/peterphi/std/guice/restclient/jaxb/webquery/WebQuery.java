@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -286,6 +287,33 @@ public class WebQuery
 		}
 
 		return this;
+	}
+
+
+	/**
+	 * Assert that a field equals one of the provided values. Implicitly creates a new OR group if multiple values are supplied.
+	 * At least one value must be supplied.
+	 *
+	 * @param field
+	 * @param values
+	 *
+	 * @return
+	 */
+	public WebQuery eq(final String field, final Collection<?> values)
+	{
+		if (values == null)
+			throw new IllegalArgumentException("Must supply at least one value to .eq when passing a Collection");
+		else if (values.size() == 0)
+			return eq(field, values.stream().findFirst().get());
+		else
+		{
+			final WQGroup or = or();
+
+			for (Object value : values)
+				or.eq(field, value);
+
+			return this;
+		}
 	}
 
 
