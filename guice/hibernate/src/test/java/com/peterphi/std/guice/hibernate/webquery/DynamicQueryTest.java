@@ -289,7 +289,9 @@ public class DynamicQueryTest
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
 		assertNotNull(resultset.getSql());
-		assertEquals("Number of SQL statements executed", 3, resultset.getSql().size());
+
+		System.out.println(resultset.getSql());
+		assertEquals("Number of SQL statements executed", 2, resultset.getSql().size());
 	}
 
 

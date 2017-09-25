@@ -4,9 +4,12 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
@@ -24,6 +27,18 @@ public class HqlChildCountTest
 
 	@Inject
 	HibernateDao<ChildEntity, Long> rDao;
+
+	@Inject
+	QEntityFactory factory;
+
+
+	@Test
+	public void testGetEagerFetchs()
+	{
+		for (QEntity entity: factory.getAll()) {
+			System.out.println(entity.getEntityClass() + " -> " + entity.getEagerFetch());
+		}
+	}
 
 
 	/**
@@ -45,7 +60,94 @@ public class HqlChildCountTest
 	{
 		load();
 
-		criteria();
+		// N.B. not in a Transaction, so whatever's returned from the find call can't be filled in any further
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().eq("children.flag", true).logSQL(true));
+
+			System.out.println("SQL: " + resultset.getSql());
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			List<ParentEntity> results = resultset.getList();
+
+			System.out.println(results);
+
+			assertEquals("Should only need 2 SQL statements", 2, resultset.getSql().size());
+
+			for (ParentEntity result : results)
+			{
+				System.out.println(result.getId() +
+				                   " - children " +
+				                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+
+				assertEquals("each parent should have 3 children", 3, result.getChildren().size());
+			}
+
+			assertEquals("should be 2 parent entities", 2, results.size());
+		}
+	}
+
+
+	@Test
+	public void testLoadGraphWorksWithNoConstraints() throws Exception
+	{
+		load();
+
+		// N.B. not in a Transaction, so whatever's returned from the find call is final
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), "\n"));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			List<ParentEntity> results = resultset.getList();
+
+			System.out.println(results);
+
+			assertEquals("Should only need 2 SQL statements (get matching IDs, get entities)", 2, resultset.getSql().size());
+
+			for (ParentEntity result : results)
+			{
+				System.out.println(result.getId() +
+				                   " - children " +
+				                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+
+				assertEquals("each parent should have 3 children", 3, result.getChildren().size());
+			}
+
+			assertEquals("should be 2 parent entities", 2, results.size());
+		}
+	}
+
+
+	@Test
+	public void testLoadGraphWorksWithConstraints() throws Exception
+	{
+		load();
+
+		// N.B. not in a Transaction, so whatever's returned from the find call is final
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().eq("children.flag", true).logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), "\n"));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			List<ParentEntity> results = resultset.getList();
+
+			System.out.println(results);
+
+			assertEquals("Should only need 2 SQL statements", 2, resultset.getSql().size());
+
+			for (ParentEntity result : results)
+			{
+				System.out.println(result.getId() +
+				                   " - children " +
+				                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+
+				assertEquals("each parent should have 3 children", 3, result.getChildren().size());
+			}
+
+			assertEquals("should be 2 parent entities", 2, results.size());
+		}
 	}
 
 
@@ -54,35 +156,18 @@ public class HqlChildCountTest
 	{
 		load();
 
-		query();
-	}
-
-
-	//@Transactional
-	public void criteria()
-	{
-		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery()
-				                                                                        .expand("children", "children.friend")
-				                                                                        .eq("children.flag", true)
-				                                                                        .logSQL(true));
-
-		System.out.println("SQL: " + resultset.getSql());
-		System.out.println("SQL Statements: " + resultset.getSql().size());
-
-		List<ParentEntity> results = resultset.getList();
-
-		System.out.println(results);
+		final List<ParentEntity> results = dao.getByQuery(
+				"SELECT DISTINCT parent FROM parent_entity parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.flag = true");
 
 		for (ParentEntity result : results)
 		{
 			System.out.println(result.getId() +
 			                   " - children " +
 			                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
-
-			assertEquals("each parent should have 3 children", 3, result.getChildren().size());
+			assertEquals(3, result.getChildren().size());
 		}
 
-		assertEquals("should be 2 parent entities", 2, results.size());
+		assertEquals(2, results.size());
 	}
 
 
@@ -90,7 +175,6 @@ public class HqlChildCountTest
 	public void load()
 	{
 		{
-			// TODO populate db
 			ParentEntity p1 = new ParentEntity();
 			p1.setCapacity(2);
 			p1.setId(dao.save(p1));
@@ -113,7 +197,6 @@ public class HqlChildCountTest
 
 
 		{
-			// TODO populate db
 			ParentEntity p2 = new ParentEntity();
 			p2.setCapacity(2);
 			p2.setId(dao.save(p2));
@@ -133,25 +216,6 @@ public class HqlChildCountTest
 			c3.setFlag(false);
 			c3.setId(rDao.save(c3));
 		}
-	}
-
-
-	@Transactional
-	public void query()
-	{
-
-		final List<ParentEntity> results = dao.getByQuery(
-				"SELECT DISTINCT parent FROM parent_entity parent JOIN FETCH parent.children children JOIN parent.children child WHERE child.flag = true");
-
-		for (ParentEntity result : results)
-		{
-			System.out.println(result.getId() +
-			                   " - children " +
-			                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
-			assertEquals(3, result.getChildren().size());
-		}
-
-		assertEquals(2, results.size());
 	}
 
 

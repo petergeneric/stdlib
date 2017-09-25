@@ -19,7 +19,6 @@ import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import javax.persistence.EntityGraph;
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
 import javax.persistence.criteria.Expression;
@@ -36,6 +35,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -60,10 +60,8 @@ public class JPAQueryBuilder<T, ID>
 	private Integer limit;
 	private Integer offset;
 
-	// If specified, fetchGraph overrides loadGraph
+	// If specified, overrides the default fetches
 	private Set<String> fetches;
-	private EntityGraph fetchGraph;
-	private EntityGraph loadGraph;
 
 
 	public JPAQueryBuilder(final Session session, final QEntity entity)
@@ -110,9 +108,6 @@ public class JPAQueryBuilder<T, ID>
 			if (classes.size() > 1)
 				this.conditions.add(root.type().in(classes));
 		}
-
-		// Set up a basic empty loadgraph (so we pick up EAGER / LAZY from annotations)
-		this.loadGraph = session.createEntityGraph(root.getJavaType());
 	}
 
 
@@ -395,27 +390,44 @@ public class JPAQueryBuilder<T, ID>
 	{
 		// Clear all fetches and graphs first
 		this.fetches = null;
-		this.fetchGraph = null;
-		this.loadGraph = null;
 
 		if (StringUtils.equals(query.fetch, "id"))
 		{
 			// Only wants the ID, so set up a fetch graph with nothing else in it
-			this.fetchGraph = session.createEntityGraph(root.getJavaType());
+			this.fetches = new HashSet<>();
 		}
 		else
 		{
-			// Special-case only fetching ID
-			Set<String> expand = query.getExpand();
+			final Set<String> queryFetch = query.getDBFetch();
+			final Set<String> queryExpand = query.getExpand();
 
-			// Ignore certain special-case values
-			expand.remove("all");
-			expand.remove("-idcollections");
-			expand.remove("-collections");
-
-			if (expand.size() > 0)
+			// If dbfetch is specified then use that first
+			if (queryFetch != null)
 			{
-				this.fetches = expand;
+				this.fetches = queryFetch;
+
+				// Allow a special value of "none" to be used
+				this.fetches.remove("none");
+			}
+			// Fall back on expand
+			else if (queryExpand != null)
+			{
+				this.fetches = queryExpand;
+
+				// Allow a special values of "-idcollections" and "-collections" to be used (ignored here currently, but usable in serialisers)
+				this.fetches.remove("-idcollections");
+				this.fetches.remove("-collections");
+
+				// Treat expand=all (coming from older API clients) as if expand was not specified
+				if (this.fetches.size() == 1 && this.fetches.contains("all"))
+					this.fetches = null;
+			}
+
+
+			// Fall back on entity default if a fetch/expand is unspecified, or if it is set to _default
+			if (this.fetches == null || (this.fetches.size() == 1 && this.fetches.contains("_default")))
+			{
+				this.fetches = entity.getEagerFetch();
 			}
 		}
 	}
@@ -436,8 +448,9 @@ public class JPAQueryBuilder<T, ID>
 			// Make sure we eagerly fetch what's requested
 			addExpandAndFetches(original);
 
-			offset(original.getOffset());
-			limit(original.getLimit());
+			// Don't set an offset or limit when selecting specific IDs
+			this.offset=null;
+			this.limit=null;
 		}
 		else
 		{
@@ -574,27 +587,6 @@ public class JPAQueryBuilder<T, ID>
 		if (limit != null)
 			query.getQueryOptions().setMaxRows(limit);
 
-		if (fetches != null)
-		{
-			// we populate fetches differently from fetchgraph/loadgraph but don't use both at the same time
-		}
-		else if (fetchGraph != null)
-		{
-			log.trace("Set FetchGraph hint on entity query");
-			query.setHint("javax.persistence.fetchgraph", fetchGraph);
-		}
-		else if (loadGraph != null)
-		{
-			log.trace("Set LoadGraph hint on entity query");
-			query.setHint("javax.persistence.loadgraph", loadGraph);
-		}
-		else
-		{
-			// Set up a default loadgraph based on EAGER/LAZY annotations
-			log.trace("Set default LoadGraph");
-			query.setHint("javax.persistence.loadgraph", session.createEntityGraph(root.getJavaType()));
-		}
-
 		query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
 		return query;
@@ -653,7 +645,7 @@ public class JPAQueryBuilder<T, ID>
 
 			for (int i = 0; i < parts.length; i++)
 			{
-				final String path = StringUtils.join(parts, '.', 0, i);
+				final String path = StringUtils.join(parts, '.', 0, i+1);
 
 				Fetch existing = created.get(path);
 

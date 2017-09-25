@@ -22,7 +22,7 @@ class ChildEntity
 	@JoinColumn(nullable = false)
 	private ParentEntity parent;
 
-	@ManyToOne(optional = true, fetch = FetchType.LAZY)
+	@ManyToOne(optional = true, fetch = FetchType.EAGER)
 	@JoinColumn(nullable = true)
 	private ParentEntity friend;
 

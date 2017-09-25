@@ -23,7 +23,7 @@ class ParentEntity
 	@Column(nullable = false)
 	private Integer capacity;
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
+	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 	private Set<ChildEntity> children = new HashSet<>();
 
 

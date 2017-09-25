@@ -7,8 +7,14 @@ import org.apache.log4j.Logger;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import javax.persistence.DiscriminatorValue;
+import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.Id;
+import javax.persistence.ManyToMany;
+import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
+import javax.persistence.OneToOne;
 import javax.persistence.Table;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -16,7 +22,9 @@ import javax.persistence.metamodel.EntityType;
 import javax.persistence.metamodel.PluralAttribute;
 import javax.persistence.metamodel.SingularAttribute;
 import javax.persistence.metamodel.Type;
+import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
+import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -24,9 +32,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.Stack;
 import java.util.stream.Collectors;
 
 public class QEntity
@@ -47,6 +57,9 @@ public class QEntity
 	private Field idField;
 	private Method idSetMethod;
 	private Method idGetMethod;
+
+	private Set<String> defaultExpand;
+	private Set<String> eagerRelations = new HashSet<>(0);
 
 
 	public QEntity(Class<?> clazz)
@@ -235,6 +248,83 @@ public class QEntity
 	}
 
 
+	protected boolean isEagerFetch(Attribute<?, ?> attribute)
+	{
+		if (attribute.isCollection() || attribute.isAssociation())
+		{
+			Member member = attribute.getJavaMember();
+
+			if (member instanceof AnnotatedElement)
+			{
+				final AnnotatedElement el = (AnnotatedElement) member;
+
+				final FetchType fetchType;
+				if (el.isAnnotationPresent(OneToMany.class))
+					fetchType = el.getAnnotation(OneToMany.class).fetch();
+				else if (el.isAnnotationPresent(ManyToOne.class))
+					fetchType = el.getAnnotation(ManyToOne.class).fetch();
+				else if (el.isAnnotationPresent(OneToOne.class))
+					fetchType = el.getAnnotation(OneToOne.class).fetch();
+				else if (el.isAnnotationPresent(ElementCollection.class))
+					fetchType = el.getAnnotation(ElementCollection.class).fetch();
+				else if (el.isAnnotationPresent(ManyToMany.class))
+					fetchType = el.getAnnotation(ManyToMany.class).fetch();
+				else
+					return false;
+
+				return (fetchType == FetchType.EAGER);
+			}
+		}
+
+		return false;
+	}
+
+
+	public Set<String> getEagerFetch()
+	{
+		if (this.defaultExpand == null)
+		{
+			Set<String> populate = new HashSet<>();
+
+			getEagerFetch(new HashSet<>(), new Stack<>(), populate);
+
+			this.defaultExpand = Collections.unmodifiableSet(populate);
+		}
+
+		return this.defaultExpand;
+	}
+
+
+	protected void getEagerFetch(Set<QEntity> visited, Stack<String> path, Set<String> populate)
+	{
+		if (visited.contains(this))
+			return;
+		else
+			visited.add(this);
+
+		for (String eagerRelation : eagerRelations)
+		{
+			// Always add the relation, even if it's not a part of the QEntity parse structure (e.g. may be a Map or some other ElementCollection)
+			if (path.isEmpty())
+				populate.add(eagerRelation);
+			else
+				populate.add(StringUtils.join(path, '.') + "." + eagerRelation);
+
+			// If this is a known relation then expand it further
+			if (hasRelation(eagerRelation))
+			{
+				path.push(eagerRelation);
+
+				final QEntity entity = getRelation(eagerRelation).getEntity();
+
+				entity.getEagerFetch(visited, path, populate);
+
+				path.pop();
+			}
+		}
+	}
+
+
 	private void parseFields(final QEntityFactory entityFactory,
 	                         final SessionFactoryImplementor sessionFactory,
 	                         final String prefix,
@@ -267,13 +357,6 @@ public class QEntity
 		// TODO if not we should have this as a separate if condition
 		if (attribute.getPersistentAttributeType() == Attribute.PersistentAttributeType.EMBEDDED && !isCollection)
 		{
-			final String newPrefix;
-
-			if (prefix != null)
-				newPrefix = prefix + ":" + name;
-			else
-				newPrefix = name;
-
 			SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
 			EmbeddableType<?> ct = (EmbeddableType<?>) attr.getType();
 
@@ -281,13 +364,16 @@ public class QEntity
 		}
 		else if (isCollection || attribute.isAssociation())
 		{
+			final boolean isEagerFetch = isEagerFetch(attribute);
+
 			final QRelation relation;
 			if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.EMBEDDED &&
 			    attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.BASIC)
 			{
 				if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION)
 				{
-					relation = new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isCollection);
+
+					relation = new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isEagerFetch, isCollection);
 				}
 				else
 				{
@@ -302,6 +388,7 @@ public class QEntity
 						                         name,
 						                         entityFactory.getEmbeddable(ct.getJavaType(), ct),
 						                         nullable,
+						                         isEagerFetch,
 						                         isCollection);
 					}
 					else if (plural.getElementType().getPersistenceType() == Type.PersistenceType.BASIC)
@@ -331,7 +418,13 @@ public class QEntity
 				SingularAttribute<?, ?> attr = (SingularAttribute<?, ?>) attribute;
 				EmbeddableType<?> ct = (EmbeddableType<?>) attr.getType();
 
-				relation = new QRelation(this, prefix, name, entityFactory.getEmbeddable(clazz, ct), nullable, isCollection);
+				relation = new QRelation(this,
+				                         prefix,
+				                         name,
+				                         entityFactory.getEmbeddable(clazz, ct),
+				                         nullable,
+				                         isEagerFetch,
+				                         isCollection);
 			}
 			else
 			{
@@ -354,6 +447,11 @@ public class QEntity
 				// Set up a special property to allow constraining the collection size
 				if (isCollection)
 					properties.put(name + ":size", new QSizeProperty(relations.get(name)));
+			}
+
+			if (isEagerFetch)
+			{
+				this.eagerRelations.add(attribute.getName());
 			}
 		}
 		else

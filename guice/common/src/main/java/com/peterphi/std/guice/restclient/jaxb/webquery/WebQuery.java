@@ -54,7 +54,7 @@ public class WebQuery
 	 * What relationships to expand (by default, all relationships are expanded)
 	 */
 	@XmlAttribute
-	public String expand = "all";
+	public String expand;
 
 	@XmlAttribute
 	public boolean logSQL = false;
@@ -97,9 +97,21 @@ public class WebQuery
 	}
 
 
+	public Set<String> getDBFetch()
+	{
+		if (this.dbfetch == null)
+			return null;
+		else
+			return new HashSet<>(Arrays.asList(this.dbfetch.split(",")));
+	}
+
+
 	public Set<String> getExpand()
 	{
-		return new HashSet<>(Arrays.asList(expand.split(",")));
+		if (this.expand == null || this.expand.isEmpty())
+			return null;
+		else
+			return new HashSet<>(Arrays.asList(expand.split(",")));
 	}
 
 
