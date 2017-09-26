@@ -35,7 +35,8 @@ public class HqlChildCountTest
 	@Test
 	public void testGetEagerFetchs()
 	{
-		for (QEntity entity: factory.getAll()) {
+		for (QEntity entity : factory.getAll())
+		{
 			System.out.println(entity.getEntityClass() + " -> " + entity.getEagerFetch());
 		}
 	}
@@ -83,6 +84,23 @@ public class HqlChildCountTest
 			}
 
 			assertEquals("should be 2 parent entities", 2, results.size());
+		}
+	}
+
+
+	@Test
+	public void testLoadGraphCorrectlyIdentifiesNoCollectionJoins() throws Exception
+	{
+		load();
+
+		// N.B. not in a Transaction, so whatever's returned from the find call is final
+		{
+			// Expand a non-collection join
+			final ConstrainedResultSet<ChildEntity> resultset = rDao.find(new WebQuery().dbfetch("friend").logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), "\n"));
+
+			assertEquals("should be 1 query", 1, resultset.getSql().size());
 		}
 	}
 

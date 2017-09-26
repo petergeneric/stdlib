@@ -8,6 +8,7 @@ import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import java.util.List;
 import java.util.function.Function;
@@ -16,6 +17,8 @@ import java.util.stream.Collectors;
 
 public class JPASearchExecutor
 {
+	private static final Logger log = Logger.getLogger(JPASearchExecutor.class);
+
 	protected final HibernateObservingInterceptor hibernateObserver;
 
 

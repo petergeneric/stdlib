@@ -449,8 +449,8 @@ public class JPAQueryBuilder<T, ID>
 			addExpandAndFetches(original);
 
 			// Don't set an offset or limit when selecting specific IDs
-			this.offset=null;
-			this.limit=null;
+			this.offset = null;
+			this.limit = null;
 		}
 		else
 		{
@@ -625,7 +625,12 @@ public class JPAQueryBuilder<T, ID>
 					parent = relation.getEntity();
 
 					if (relation.isCollection())
+					{
+						if (log.isTraceEnabled())
+							log.trace("Encountered fetch " + fetch + ". This resolves to " + relation + " which is a collection");
+
 						return true;
+					}
 				}
 			}
 
@@ -645,7 +650,7 @@ public class JPAQueryBuilder<T, ID>
 
 			for (int i = 0; i < parts.length; i++)
 			{
-				final String path = StringUtils.join(parts, '.', 0, i+1);
+				final String path = StringUtils.join(parts, '.', 0, i + 1);
 
 				Fetch existing = created.get(path);
 

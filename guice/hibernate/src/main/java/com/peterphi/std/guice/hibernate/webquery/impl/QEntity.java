@@ -635,9 +635,11 @@ public class QEntity
 		       name +
 		       '\'' +
 		       ", properties=" +
-		       properties.values() +
+		       properties.keySet() +
 		       ", relations=" +
-		       relations.values() +
+		       relations.keySet() +
+		       ", defaultFetch=" +
+		       defaultExpand +
 		       '}';
 	}
 
