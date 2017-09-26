@@ -61,6 +61,8 @@ public class QEntity
 	private Set<String> defaultExpand;
 	private Set<String> eagerRelations = new HashSet<>(0);
 
+	private Map<String, Attribute> nonEntityRelations = new HashMap<>(0);
+
 
 	public QEntity(Class<?> clazz)
 	{
@@ -372,7 +374,6 @@ public class QEntity
 			{
 				if (attribute.getPersistentAttributeType() != Attribute.PersistentAttributeType.ELEMENT_COLLECTION)
 				{
-
 					relation = new QRelation(this, prefix, name, entityFactory.get(clazz), nullable, isEagerFetch, isCollection);
 				}
 				else
@@ -396,16 +397,19 @@ public class QEntity
 						// Ignore this altogether. We should probably come up with a way of querying this relationship in the future
 						relation = null;
 
-						log.debug("Ignoring BASIC ElementCollection " +
-						          plural.getCollectionType() +
-						          " of " +
-						          plural.getElementType().getJavaType() +
-						          " " +
-						          plural.getName());
+						// Record the relation so we can use it in the future to determine if a relation is a collection for query optimisation
+						nonEntityRelations.put(name, attribute);
+
+						if (log.isDebugEnabled())
+							log.debug("Ignoring BASIC ElementCollection " +
+							          plural.getCollectionType() +
+							          " of " +
+							          plural.getElementType().getJavaType() +
+							          " " +
+							          plural.getName());
 					}
 					else
 					{
-
 						throw new IllegalArgumentException("Cannot handle ElementCollection of " +
 						                                   plural.getElementType().getJavaType() +
 						                                   " - type " +
@@ -428,16 +432,23 @@ public class QEntity
 			}
 			else
 			{
-				log.warn("Unknown Collection type: " +
-				         attribute.getPersistentAttributeType() +
-				         " " +
-				         attribute +
-				         " with name " +
-				         name +
-				         " within " +
-				         clazz +
-				         " - ignoring");
+				// N.B. this fallback catches collections we don't natively support but that we have some support for (i.e. for fetch joining against)
+				// As result, we will not be able to record them as a QRelation, but we can record them as a non-entity relation
 				relation = null;
+
+				// Record the relation so we can use it in the future to determine if a relation is a collection for query optimisation
+				nonEntityRelations.put(name, attribute);
+
+				if (log.isDebugEnabled())
+					log.debug("Unknown Collection type: " +
+					          attribute.getPersistentAttributeType() +
+					          " " +
+					          attribute +
+					          " with name " +
+					          name +
+					          " within " +
+					          clazz +
+					          " - ignoring");
 			}
 
 			if (relation != null)
@@ -515,6 +526,21 @@ public class QEntity
 	public boolean hasRelation(String name)
 	{
 		return relations.containsKey(name);
+	}
+
+
+	public boolean hasNonEntityRelation(final String name)
+	{
+		return nonEntityRelations.containsKey(name);
+	}
+
+
+	public boolean isNonEntityRelationCollection(final String name)
+	{
+		if (!hasNonEntityRelation(name))
+			throw new IllegalArgumentException("No such non-entity relation: " + name + " on " + this);
+		else
+			return nonEntityRelations.get(name).isCollection();
 	}
 
 

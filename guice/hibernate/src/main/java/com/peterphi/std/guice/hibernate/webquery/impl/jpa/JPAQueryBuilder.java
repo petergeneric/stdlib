@@ -607,8 +607,32 @@ public class JPAQueryBuilder<T, ID>
 
 				for (int i = 0; i < parts.length; i++)
 				{
-					// QEntity doesn't have a complete picture of all relations, so
-					if (!parent.hasRelation(parts[i]))
+					// If this is a fully supported relation then continue checking
+					if (parent.hasRelation(parts[i]))
+					{
+						final QRelation relation = parent.getRelation(parts[i]);
+
+						parent = relation.getEntity();
+
+						if (relation.isCollection())
+						{
+							if (log.isTraceEnabled())
+								log.trace("Encountered fetch " +
+								          fetch +
+								          ". This resolves to " +
+								          relation +
+								          " which is a collection");
+
+							return true;
+						}
+					}
+					// This covers partially-supported things like Map and other basic collections that don't have a QRelation description
+					else if (parent.hasNonEntityRelation(parts[i]))
+					{
+						if (parent.isNonEntityRelationCollection(parts[i]))
+							return true;
+					}
+					else
 					{
 						log.warn("Encountered relation " +
 						         parts[i] +
@@ -616,19 +640,7 @@ public class JPAQueryBuilder<T, ID>
 						         parent.getName() +
 						         " as part of path " +
 						         fetch +
-						         ". Assuming QEntity simply does not know this entity. Assuming worst case scenario (collection join is involved)");
-						return true;
-					}
-
-					final QRelation relation = parent.getRelation(parts[i]);
-
-					parent = relation.getEntity();
-
-					if (relation.isCollection())
-					{
-						if (log.isTraceEnabled())
-							log.trace("Encountered fetch " + fetch + ". This resolves to " + relation + " which is a collection");
-
+						         ". Assuming QEntity simply does not know this relation. Assuming worst case scenario (collection join is involved)");
 						return true;
 					}
 				}
