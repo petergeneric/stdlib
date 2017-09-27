@@ -285,7 +285,7 @@ public class DynamicQueryTest
 		obj2.setName("Name2");
 		dao.save(obj2);
 
-		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("id").logSQL(true));
+		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("id").limit(1000).logSQL(true));
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
 		assertNotNull(resultset.getSql());

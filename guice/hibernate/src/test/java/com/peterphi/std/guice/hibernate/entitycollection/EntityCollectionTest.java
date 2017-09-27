@@ -48,7 +48,10 @@ public class EntityCollectionTest
 
 		// N.B. not in a Transaction, so whatever's returned from the find call can't be filled in any further
 		{
-			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().eq("children.flag", true).logSQL(true));
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children.flag", true)
+					                                                              .limit(1000)
+					                                                              .logSQL(true));
 
 			System.out.println("SQL: " + resultset.getSql());
 			System.out.println("SQL Statements: " + resultset.getSql().size());
@@ -85,7 +88,8 @@ public class EntityCollectionTest
 					                                                              .or(or -> or
 							                                                                        .isNull("children[b].friend.id")
 							                                                                        .neq("children[b].friend.id",
-							                                                                             1234)).logSQL(true));
+							                                                                             1234)).limit(1000)
+					                                                              .logSQL(true));
 
 			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
 			System.out.println("SQL Statements: " + resultset.getSql().size());
@@ -113,6 +117,7 @@ public class EntityCollectionTest
 							                                                                        .isNull("children[a].friend.id")
 							                                                                        .neq("children[a].friend.id",
 							                                                                             1234))
+					                                                              .limit(1000)
 					                                                              .logSQL(true));
 
 			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
@@ -141,6 +146,7 @@ public class EntityCollectionTest
 							                                                                        .isNull("children.friend.id")
 							                                                                        .neq("children.friend.id",
 							                                                                             1234))
+					                                                              .limit(1000)
 					                                                              .logSQL(true));
 
 			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
@@ -174,7 +180,7 @@ public class EntityCollectionTest
 
 
 	@Test
-	public void testLoadGraphWorksWithNoConstraints() throws Exception
+	public void testFetchingWorksWithNoConstraints() throws Exception
 	{
 		load();
 
@@ -189,7 +195,7 @@ public class EntityCollectionTest
 
 			System.out.println(results);
 
-			assertEquals("Should only need 2 SQL statements (get matching IDs, get entities)", 2, resultset.getSql().size());
+			assertEquals("Should only need 1 SQL statement (get entities)", 1, resultset.getSql().size());
 
 			for (ParentEntity result : results)
 			{
@@ -206,7 +212,7 @@ public class EntityCollectionTest
 
 
 	@Test
-	public void testLoadGraphWorksWithConstraints() throws Exception
+	public void testLoadGraphWorksWithConstraintsAndNoLimit() throws Exception
 	{
 		load();
 
@@ -221,7 +227,42 @@ public class EntityCollectionTest
 
 			System.out.println(results);
 
-			assertEquals("Should only need 2 SQL statements", 2, resultset.getSql().size());
+			assertEquals("Should only need 1 SQL statement", 1, resultset.getSql().size());
+
+			for (ParentEntity result : results)
+			{
+				System.out.println(result.getId() +
+				                   " - children " +
+				                   result.getChildren().stream().map(c -> c.getId().toString()).collect(Collectors.joining(",")));
+
+				assertEquals("each parent should have 3 children", 3, result.getChildren().size());
+			}
+
+			assertEquals("should be 2 parent entities", 2, results.size());
+		}
+	}
+
+
+	@Test
+	public void testLoadGraphWorksWithConstraintsAndLimit() throws Exception
+	{
+		load();
+
+		// N.B. not in a Transaction, so whatever's returned from the find call is final
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children.flag", true)
+					                                                              .limit(1000)
+					                                                              .logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), "\n"));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			List<ParentEntity> results = resultset.getList();
+
+			System.out.println(results);
+
+			assertEquals("Should only need 2 SQL statements (get IDs, get entities)", 2, resultset.getSql().size());
 
 			for (ParentEntity result : results)
 			{

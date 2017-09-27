@@ -68,7 +68,10 @@ public class JPASearchExecutor
 			}
 			else
 			{
-				if (builder.hasCollectionJoin() || builder.hasCollectionFetch())
+				// If we're constraining by (or fetching) a collection AND we have a limit/offset, first get PKs for the entities and then fetch the entities
+				// This is necessary for correct pagination because the SQL resultset will have more than one row per entity, and our offset/limit is based on entity
+				if ((query.getLimit() > 0 || query.getOffset() > 0) &&
+				    (builder.hasCollectionJoin() || builder.hasCollectionFetch()))
 				{
 					strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 				}
