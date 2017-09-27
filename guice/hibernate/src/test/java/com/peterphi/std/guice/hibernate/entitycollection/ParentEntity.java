@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.hibernate.hqlchildcount;
+package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.common.base.Objects;
 

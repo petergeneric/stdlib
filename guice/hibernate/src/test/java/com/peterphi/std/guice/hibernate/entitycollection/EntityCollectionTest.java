@@ -1,11 +1,9 @@
-package com.peterphi.std.guice.hibernate.hqlchildcount;
+package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
-import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
@@ -20,26 +18,13 @@ import static org.junit.Assert.assertEquals;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = ParentEntity.class)
-public class HqlChildCountTest
+public class EntityCollectionTest
 {
 	@Inject
 	ParentDao dao;
 
 	@Inject
 	HibernateDao<ChildEntity, Long> rDao;
-
-	@Inject
-	QEntityFactory factory;
-
-
-	@Test
-	public void testGetEagerFetchs()
-	{
-		for (QEntity entity : factory.getAll())
-		{
-			System.out.println(entity.getEntityClass() + " -> " + entity.getEagerFetch());
-		}
-	}
 
 
 	/**
@@ -84,6 +69,89 @@ public class HqlChildCountTest
 			}
 
 			assertEquals("should be 2 parent entities", 2, results.size());
+		}
+	}
+
+
+	@Test
+	public void testMultipleAliases() throws Exception
+	{
+		load();
+
+		// Test fetching with multiple aliases
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children[a].flag", true)
+					                                                              .or(or -> or
+							                                                                        .isNull("children[b].friend.id")
+							                                                                        .neq("children[b].friend.id",
+							                                                                             1234)).logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			assertEquals("Should have 2 result match", 2, resultset.getList().size());
+			assertEquals("Should need 2 SQL statements", 2, resultset.getSql().size());
+
+			assertEquals("constraining query should have 2 independent joins to Child",
+			             2,
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
+		}
+	}
+
+
+	@Test
+	public void testOneExplicitAlias() throws Exception
+	{
+		load();
+
+		// Test fetching with multiple aliases
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children[a].flag", true)
+					                                                              .or(or -> or
+							                                                                        .isNull("children[a].friend.id")
+							                                                                        .neq("children[a].friend.id",
+							                                                                             1234))
+					                                                              .logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			assertEquals("Should have 2 result match", 2, resultset.getList().size());
+			assertEquals("Should need 2 SQL statements", 2, resultset.getSql().size());
+
+			assertEquals("constraining query should have 1 join to Child",
+			             1,
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
+		}
+	}
+
+
+	@Test
+	public void testImplicitAliases() throws Exception
+	{
+		load();
+
+		// Test fetching with multiple aliases
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children.flag", true)
+					                                                              .or(or -> or
+							                                                                        .isNull("children.friend.id")
+							                                                                        .neq("children.friend.id",
+							                                                                             1234))
+					                                                              .logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), '\n'));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			assertEquals("Should have 2 result match", 2, resultset.getList().size());
+			assertEquals("Should need 2 SQL statements", 2, resultset.getSql().size());
+
+			assertEquals("constraining query should have 1 join to Child",
+			             1,
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
 		}
 	}
 
