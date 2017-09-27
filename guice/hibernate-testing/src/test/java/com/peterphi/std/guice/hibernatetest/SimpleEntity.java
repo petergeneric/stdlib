@@ -20,7 +20,7 @@ class SimpleEntity
 	@Column
 	public String name;
 
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "simple_entity_join_table",
 	           joinColumns = @JoinColumn(name = "simple_id", referencedColumnName = "id", nullable = false, updatable = false),
 	           inverseJoinColumns = @JoinColumn(name = "group_id",

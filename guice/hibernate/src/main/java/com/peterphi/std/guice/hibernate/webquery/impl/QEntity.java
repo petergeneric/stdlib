@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -148,6 +149,7 @@ public class QEntity
 	 */
 	private void findReflectionIdFieldOrMethods()
 	{
+		// TODO replace with metamodelEntity OGNL? Could allow for easier customisation too
 		try
 		{
 			Field idField = null;
@@ -170,6 +172,7 @@ public class QEntity
 				}
 				else
 				{
+					// Annotation is on field, but field is not visible. We need to find the equivalent getter
 					final String getterName = "get" + idField.getName();
 					final String setterName = "set" + idField.getName();
 
@@ -249,18 +252,20 @@ public class QEntity
 	}
 
 
-	protected boolean isEagerFetch(Attribute<?, ?> attribute)
+	protected boolean isEagerFetch(final Attribute<?, ?> attribute)
 	{
 		if (attribute.isCollection() || attribute.isAssociation())
 		{
-			Member member = attribute.getJavaMember();
+			final Member member = attribute.getJavaMember();
 
 			if (member instanceof AnnotatedElement)
 			{
 				final AnnotatedElement el = (AnnotatedElement) member;
 
 				final FetchType fetchType;
-				if (el.isAnnotationPresent(OneToMany.class))
+				if (el.isAnnotationPresent(EagerFetch.class))
+					fetchType = FetchType.EAGER;
+				else if (el.isAnnotationPresent(OneToMany.class))
 					fetchType = el.getAnnotation(OneToMany.class).fetch();
 				else if (el.isAnnotationPresent(ManyToOne.class))
 					fetchType = el.getAnnotation(ManyToOne.class).fetch();

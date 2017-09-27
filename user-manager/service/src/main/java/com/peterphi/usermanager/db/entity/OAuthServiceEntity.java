@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.db.entity;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.types.SimpleId;
 import org.joda.time.DateTime;
 
@@ -34,7 +35,8 @@ public class OAuthServiceEntity
 	}
 
 
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@EagerFetch
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "owner_id", nullable = false)
 	public UserEntity getOwner()
 	{

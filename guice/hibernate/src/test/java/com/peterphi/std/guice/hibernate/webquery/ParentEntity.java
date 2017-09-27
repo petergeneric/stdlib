@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
+
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -32,14 +34,15 @@ public class ParentEntity
 	@Lob
 	private byte[] someBytes = "some bytes".getBytes();
 
-	@ManyToOne(optional = true, fetch = FetchType.LAZY)
-	@JoinColumn(name = "other_object_id", nullable = true)
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "other_object_id")
 	private ChildEntity otherObject;
 
 	@OneToMany(mappedBy = "parent")
 	private Set<ChildEntity> children;
 
-	@ElementCollection(fetch = FetchType.EAGER)
+	@EagerFetch
+	@ElementCollection
 	@CollectionTable(name = "parent_friends", joinColumns = @JoinColumn(name = "parent_id"))
 	private Set<HumanEmbeddedEntity> friends = new HashSet<>();
 

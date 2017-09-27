@@ -52,7 +52,7 @@ public class RoleEntity
 
 
 	@OrderBy("id DESC")
-	@ManyToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "user_has_role", //
 			joinColumns = {@JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false, updatable = false)}, inverseJoinColumns = {@JoinColumn(name = "user_id", referencedColumnName = "id", nullable = false, updatable = false)}, uniqueConstraints = {@UniqueConstraint(columnNames = {"user_id",
 			                                                                                                                                                                                                                                                                                               "role_id"})})

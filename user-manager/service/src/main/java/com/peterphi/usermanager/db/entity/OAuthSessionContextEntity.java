@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.db.entity;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;
@@ -34,7 +35,8 @@ public class OAuthSessionContextEntity
 	}
 
 
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@EagerFetch
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	public UserEntity getUser()
 	{
@@ -42,7 +44,8 @@ public class OAuthSessionContextEntity
 	}
 
 
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@EagerFetch
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "service_id", nullable = false)
 	public OAuthServiceEntity getService()
 	{

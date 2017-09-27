@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.common.base.Objects;
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -22,8 +23,9 @@ class ChildEntity
 	@JoinColumn(nullable = false)
 	private ParentEntity parent;
 
-	@ManyToOne(optional = true, fetch = FetchType.EAGER)
-	@JoinColumn(nullable = true)
+	@EagerFetch
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn
 	private ParentEntity friend;
 
 	@Column(nullable = false)

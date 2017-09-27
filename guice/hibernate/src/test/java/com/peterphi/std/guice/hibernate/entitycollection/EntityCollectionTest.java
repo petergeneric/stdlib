@@ -244,6 +244,25 @@ public class EntityCollectionTest
 
 
 	@Test
+	public void testExpandOnlyPullsBackRequestedData() throws Exception
+	{
+		load();
+
+		{
+			final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery()
+					                                                              .eq("children.flag", true)
+					                                                              .dbfetch("none")
+					                                                              .logSQL(true));
+
+			System.out.println("SQL: " + StringUtils.join(resultset.getSql(), "\n"));
+			System.out.println("SQL Statements: " + resultset.getSql().size());
+
+			assertEquals("Should only need 1 SQL statement", 1, resultset.getSql().size());
+		}
+	}
+
+
+	@Test
 	public void testLoadGraphWorksWithConstraintsAndLimit() throws Exception
 	{
 		load();

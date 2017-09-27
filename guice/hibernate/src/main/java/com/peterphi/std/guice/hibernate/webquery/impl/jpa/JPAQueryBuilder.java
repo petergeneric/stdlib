@@ -71,6 +71,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		this.entity = entity;
 	}
 
+
 	void addFrom(final String subclasses)
 	{
 		if (StringUtils.isEmpty(subclasses))
@@ -596,6 +597,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	/**
 	 * Returns true if one of the non-fetch joins specified will result in a collection being pulled back
+	 *
 	 * @return
 	 */
 	public boolean hasCollectionJoin()
@@ -608,7 +610,6 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 		return false;
 	}
-
 
 
 	/**

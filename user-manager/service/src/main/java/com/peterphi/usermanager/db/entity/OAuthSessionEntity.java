@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.db.entity;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;
@@ -39,7 +40,8 @@ public class OAuthSessionEntity
 	}
 
 
-	@ManyToOne(optional = false, fetch = FetchType.EAGER)
+	@EagerFetch
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(name = "context_id", nullable = false)
 	public OAuthSessionContextEntity getContext()
 	{

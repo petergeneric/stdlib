@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
+
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
@@ -19,8 +21,9 @@ class ChildEntity
 	@Column(name = "obj_name")
 	private String name;
 
-	@ManyToOne(optional = true, fetch = FetchType.EAGER)
-	@JoinColumn(name = "parent_id", nullable = true)
+	@EagerFetch
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_id")
 	private ParentEntity parent;
 
 
