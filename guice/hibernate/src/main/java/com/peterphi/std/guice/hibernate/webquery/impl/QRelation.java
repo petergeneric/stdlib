@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.google.common.base.Objects;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQDataType;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntityProperty;
 
@@ -9,10 +10,17 @@ public class QRelation
 	private final String name;
 	private final QEntity entity;
 	private final boolean nullable;
+	private final boolean eager;
 	private final boolean collection;
 
 
-	public QRelation(final QEntity owner, final String prefix, final String name, final QEntity entity, final boolean nullable, final boolean collection)
+	public QRelation(final QEntity owner,
+	                 final String prefix,
+	                 final String name,
+	                 final QEntity entity,
+	                 final boolean nullable,
+	                 final boolean eager,
+	                 final boolean collection)
 	{
 		this.owner = owner;
 
@@ -23,7 +31,8 @@ public class QRelation
 
 		this.entity = entity;
 		this.nullable = nullable;
-		this.collection=collection;
+		this.eager = eager;
+		this.collection = collection;
 	}
 
 
@@ -71,6 +80,12 @@ public class QRelation
 	}
 
 
+	public boolean isEager()
+	{
+		return eager;
+	}
+
+
 	public boolean isCollection()
 	{
 		return collection;
@@ -80,13 +95,15 @@ public class QRelation
 	@Override
 	public String toString()
 	{
-		return "QRelation{" +
-		       "owner=" + owner.getName() +
-		       ", name='" + name + '\'' +
-		       ", entity=" + entity.getName() +
-		       ", nullable=" + nullable +
-		       ", collection=" + collection+
-		       '}';
+		return Objects
+				       .toStringHelper(this)
+				       .add("owner", owner)
+				       .add("name", name)
+				       .add("entity", entity)
+				       .add("nullable", nullable)
+				       .add("eager", eager)
+				       .add("collection", collection)
+				       .toString();
 	}
 
 

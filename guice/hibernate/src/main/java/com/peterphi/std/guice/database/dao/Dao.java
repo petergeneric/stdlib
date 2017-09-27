@@ -1,11 +1,13 @@
 package com.peterphi.std.guice.database.dao;
 
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.function.Function;
 
 /**
  * An abstraction over the store/retrieve semantics of hibernate to allow a higher-level pattern of access
@@ -44,6 +46,36 @@ public interface Dao<T, ID extends Serializable>
 	 */
 	ConstrainedResultSet<T> findByUriQuery(WebQuery constraints);
 
+	/**
+	 * Execute a query, returning entities
+	 * @param constraints
+	 * @return
+	 */
+	ConstrainedResultSet<T> find(WebQuery constraints);
+
+	/**
+	 * Execute a query, using the named strategy (defaults to AUTO if null)
+	 * @param constraints
+	 * @param strategy strategy, or null to default to AUTO
+	 * @return
+	 */
+	ConstrainedResultSet<T> find(WebQuery constraints, JPASearchStrategy strategy);
+
+	/**
+	 * Execute a query, using the ID strategy
+	 * @param constraints
+	 * @return
+	 */
+	ConstrainedResultSet<ID> findIds(WebQuery constraints);
+
+	/**
+	 * Execute a query, using the named strategy (defaults to AUTO if null) and optionally serialising the resulting rows using the provided serialiser
+	 * @param constraints
+	 * @param strategy strategy, or null to default to AUTO
+	 *                 @param serialiser the serialiser function to use to convert each row returned to the resulting resultset
+	 * @return
+	 */
+	<RT> ConstrainedResultSet<RT> find(WebQuery constraints, JPASearchStrategy strategy, Function<?,RT> serialiser);
 
 	/**
 	 * Retrieve every object accessible through this DAO

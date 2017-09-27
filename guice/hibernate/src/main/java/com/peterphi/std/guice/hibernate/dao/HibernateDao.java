@@ -9,32 +9,27 @@ import com.peterphi.std.guice.database.annotation.LargeTable;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.database.dao.Dao;
 import com.peterphi.std.guice.hibernate.exception.ReadOnlyTransactionException;
-import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
-import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLBuilder;
-import com.peterphi.std.guice.hibernate.webquery.impl.HQLProjection;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
-import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
-import org.hibernate.Query;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.criterion.CriteriaSpecification;
-import org.hibernate.criterion.Restrictions;
+import org.hibernate.query.Query;
 
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
 import java.io.Serializable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 
 /**
  * The default implementation of a Dao for Hibernate; often it is necessary to extend this to produce richer queries<br />
@@ -64,12 +59,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Doc("If true then URI queries on @LargeTable annotated entities will result in a query to retrieve ids followed by a query to retrieve data. This provides a massive speedup with some databases (e.g. 43x with SQL Server) on large tables when using joins (default true)")
 	boolean performSeparateIdQueryForLargeTables = true;
 
-	@Inject
-	HibernateObservingInterceptor hibernateObserver;
-
 	protected Class<T> clazz;
 
 	protected boolean isLargeTable = false;
+
+	@Inject
+	public JPASearchExecutor searchExecutor;
 
 
 	public HibernateDao()
@@ -102,6 +97,12 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	public JPAQueryBuilder<T, ID> createQueryBuilder()
+	{
+		return new JPAQueryBuilder<>(getSession(), getQEntity());
+	}
+
+
 	public Class<T> getEntityType()
 	{
 		return clazz;
@@ -114,6 +115,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Deprecated
 	protected String idProperty()
 	{
 		return getSessionFactory().getClassMetadata(clazz).getIdentifierPropertyName();
@@ -132,9 +134,21 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	public List<T> getListById(final Collection<ID> ids)
 	{
 		if (ids.isEmpty())
-			return new ArrayList<>();
+			return Collections.emptyList();
 
-		return getList(createCriteria().add(Restrictions.in(idProperty(), ids)));
+		if (ids instanceof List)
+			return getListById((List<ID>) ids);
+		else
+			return getListById(new ArrayList<>(ids));
+	}
+
+
+	public List<T> getListById(final List<ID> ids)
+	{
+		if (ids.isEmpty())
+			return Collections.emptyList();
+		else
+			return getSession().byMultipleIds(clazz).multiLoad(ids);
 	}
 
 
@@ -145,7 +159,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		if (id == null)
 			throw new IllegalArgumentException("Must supply an id to retrieve!");
 
-		return clazz.cast(getSession().get(clazz, id));
+		return getSession().get(clazz, id);
 	}
 
 
@@ -153,7 +167,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<T> getAll()
 	{
-		return getList(createCriteria().setResultTransformer(CriteriaSpecification.DISTINCT_ROOT_ENTITY));
+		return getList(new WebQuery());
 	}
 
 
@@ -252,10 +266,50 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 * Create a {@link Criteria} instance for the entity type of this DAO, matching this entity and any subclasses/implementors
 	 *
 	 * @return The criteria instance for manipulation and execution
+	 *
+	 * @deprecated use JPA2 Criteria with {@link #createCriteriaQuery()}, Hibernate has deprecated their old criteria query and it
+	 * will produce runtime warnings
 	 */
+	@Deprecated
 	protected Criteria createCriteria()
 	{
 		return getSession().createCriteria(clazz);
+	}
+
+
+	/**
+	 * Create a JPA2 CriteriaQuery, which should have constraints generated using {@link #getCriteriaBuilder()}
+	 *
+	 * @param <O>
+	 * 		the return type of the query
+	 *
+	 * @return
+	 */
+	protected <O> CriteriaQuery<O> createCriteriaQuery()
+	{
+		return (CriteriaQuery) getCriteriaBuilder().createQuery();
+	}
+
+
+	/**
+	 * Create a JPA2 CriteriaQuery, which should have constraints generated using the methods in {@link #getCriteriaBuilder()}
+	 *
+	 * @param <O>
+	 * 		the return type of the query
+	 * @param clazz
+	 * 		the return type of the query
+	 *
+	 * @return
+	 */
+	protected <O> CriteriaQuery<O> createCriteriaQuery(Class<O> clazz)
+	{
+		return getCriteriaBuilder().createQuery(clazz);
+	}
+
+
+	protected CriteriaBuilder getCriteriaBuilder()
+	{
+		return getSession().getCriteriaBuilder();
 	}
 
 
@@ -271,6 +325,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		return getSession().createQuery(hql);
 	}
+
 
 	/**
 	 * Execute a Criteria search, returning the results as a checked list
@@ -309,20 +364,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected T uniqueResult(WebQuery query)
 	{
-		final ConstrainedResultSet<T> results = findByUriQuery(query);
+		final ConstrainedResultSet<T> results = find(query);
 
-		if (results.getList().size() == 0)
-		{
-			return null;
-		}
-		else if (results.getList().size() == 1)
-		{
-			return clazz.cast(results.getList().get(0));
-		}
-		else
-		{
-			throw new IllegalStateException("Expected 0 or 1 result, got " + results.getList().size());
-		}
+		return results.uniqueResult();
 	}
 
 
@@ -346,7 +390,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected List<T> getList(WebQuery query)
 	{
-		return findByUriQuery(query).getList();
+		return find(query).getList();
 	}
 
 
@@ -371,7 +415,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<ID> getIdList(WebQuery query)
 	{
-		return getIdList(toGetIdQuery(query));
+		return findIds(query).getList();
 	}
 
 
@@ -431,168 +475,48 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Override
 	public ConstrainedResultSet<ID> findIdsByUriQuery(final WebQuery query)
 	{
-		return findByUriQuery(query, q -> getIdList(query));
+		return (ConstrainedResultSet<ID>) find(query, JPASearchStrategy.ID);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
-		return findByUriQuery(query, q -> getList(q));
+		return find(query);
 	}
 
 
-	/**
-	 * Execute a WebQuery as HQL, using the supplied function to turn the generated HQL into a List of some result type<br />
-	 * This implements logic (if requested by the WebQuery) for logging SQL as well as computing size of resultset. This allows
-	 * the projection (in Java) of the query results to a different Java class
-	 *
-	 * @param query
-	 * @param resultSupplier
-	 * @param <X>
-	 *
-	 * @return
-	 */
+	@Override
+	public ConstrainedResultSet<T> find(final WebQuery query)
+	{
+		return find(query, JPASearchStrategy.AUTO);
+	}
+
+
+	@Override
+	public ConstrainedResultSet<T> find(final WebQuery query, JPASearchStrategy strategy)
+	{
+		return find(query, strategy, null);
+	}
+
+
+	@Override
+	public ConstrainedResultSet<ID> findIds(final WebQuery query)
+	{
+		return find(query, JPASearchStrategy.ID, null);
+	}
+
+
+	@Override
 	@Transactional(readOnly = true)
-	public <X> ConstrainedResultSet<X> findByUriQuery(final WebQuery query, Function<Query, List<X>> resultSupplier)
+	public <RT> ConstrainedResultSet<RT> find(final WebQuery query, JPASearchStrategy strategy, Function<?, RT> serialiser)
 	{
-		final HibernateSQLLogger statementLog;
+		// If necessary, swap the AUTO strategy for ID_THEN_QUERY_ENTITY if this entity is annotated with @LargeTable
+		// TODO replace this annotation with something that allows forcing the strategy on a per-entity basis?
+		if (performSeparateIdQueryForLargeTables && isLargeTable && (strategy == null || strategy == JPASearchStrategy.AUTO))
+			strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 
-		if (query.isLogSQL())
-			statementLog = hibernateObserver.startSQLLogger();
-		else
-			statementLog = null;
-
-
-		try
-		{
-			// Optionally execute the count query
-			final Long total;
-			if (query.constraints.computeSize)
-			{
-				// Re-run the query to obtain the size
-				final Query countQuery = toRowCountQuery(query);
-
-				final Number size = (Number) countQuery.uniqueResult();
-
-				total = size.longValue();
-			}
-			else
-			{
-				total = null;
-			}
-
-
-			// Now fetch back the data
-			final ConstrainedResultSet<X> resultset;
-			{
-				if (total == null || total > 0)
-				{
-					final Query criteria = createQuery(query);
-
-					final List<X> results = resultSupplier.apply(criteria);
-
-					resultset = new ConstrainedResultSet<>(query, results);
-				}
-				else
-				{
-					// We know there were no results because the collection size was computed
-					resultset = new ConstrainedResultSet<>(query, Collections.emptyList());
-				}
-			}
-
-			resultset.setTotal(total);
-
-			// If we have an active statement log then expose the statements that have been prepared
-			if (statementLog != null)
-			{
-				resultset.setSql(statementLog.getAllStatements());
-			}
-
-			return resultset;
-		}
-		finally
-		{
-			if (statementLog != null)
-				statementLog.close();
-		}
-	}
-
-
-	/**
-	 * Convert a WebQuery to a Criteria, automatically indirecting through an id query if the entity is annotated with {@link
-	 * LargeTable}
-	 *
-	 * @param constraints
-	 * 		the constraints to apply.
-	 *
-	 * @return
-	 */
-	@Transactional(readOnly = true)
-	protected Query createQuery(WebQuery constraints)
-	{
-		// Optionally treat large tables differently (works around a SQL Server performance issue)
-		// See documentation on toGetByIdCriteria for more detail
-		if (isLargeTable && performSeparateIdQueryForLargeTables)
-			return toGetByIdQuery(constraints);
-		else
-			return toSimpleQuery(constraints);
-	}
-
-
-	/**
-	 * SQL Server Performance Workaround
-	 * <p>
-	 * Given a normal query, execute the search component <strong>but not the data retrieval</strong>, instead retrieving only
-	 * the Primary Keys of the entities to return (paginated and in the correct order).
-	 * <p>
-	 * This is to side-step an issue in SQL Server where it expands all the joins against a large table into a temporary table
-	 * before then applying filtering to that temporary table (not applying any of the filters to the original table) - this
-	 * results in a massive temporary table being created and then almost immediately being filtered down to a very small number
-	 * of rows.
-	 * <p>
-	 * If the initial query is only asking for Primary Keys then SQL Server is able to optimise the query correctly. N.B. this
-	 * could also be implemented as a subquery to avoid a double-query however it'd be necessary to be able to convert a WebQuery
-	 * into a DetachedCriteria in order to do this (and support is not yet written for this)
-	 *
-	 * @param constraints
-	 *
-	 * @return
-	 */
-	protected Query toGetByIdQuery(WebQuery constraints)
-	{
-		// Retrieve the primary keys separately from the data
-		final Collection<ID> ids = getIds(constraints);
-
-		if (ids.size() > 0)
-		{
-			final HQLBuilder byIdBuilder = toCriteriaBuilder(constraints);
-
-			// N.B. we do not need the constraints / pagination because we have already evaluated them
-			byIdBuilder.clearConstraints();
-			byIdBuilder.clearPagination();
-
-			// Re-apply subclass constraints if defined
-			if (StringUtils.isNotEmpty(constraints.constraints.subclass))
-				byIdBuilder.addClassConstraint(Arrays.asList(constraints.constraints.subclass.split(",")));
-
-			// Add a custom constraint that the ID must be one of the values we've already determined
-			byIdBuilder.addIdInConstraint(ids);
-
-			return byIdBuilder.toHQL(this :: createQuery);
-		}
-		else
-		{
-			final HQLBuilder emptyQueryBuilder = toCriteriaBuilder(new WebQuery());
-
-			// There were no results for this query, hibernate can't handle Restrictions.in(empty) so we must make sure no results come back
-			emptyQueryBuilder.addAlwaysFalseConstraint();
-
-			// Hint that we don't want any results
-			emptyQueryBuilder.limit(0);
-
-			return emptyQueryBuilder.toHQL(this :: createQuery);
-		}
+		return searchExecutor.find(this :: createQueryBuilder, getQEntity(), query, strategy, serialiser);
 	}
 
 
@@ -605,82 +529,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	 */
 	public Collection<ID> getIds(final WebQuery constraints)
 	{
-		final List ret = toGetIdQuery(constraints).list();
-
-		if (ret.isEmpty())
-			return Collections.emptyList(); // Empty list
-		else if (ret.get(0).getClass().isArray())
-		{
-			// In the case where there are ORDER BY statements and the database needs ORDER BYs to be SELECTed, we may be returned a bunch of data in addition to the IDs
-			// List of columns, we only care about the first column in each row
-			return (List<ID>) ret.stream().map(r -> Array.get(r, 0)).map(id -> (ID) id).collect(Collectors.toList());
-		}
-		else
-		{
-			// Simple list of IDs
-			return (List<ID>) ret;
-		}
-	}
-
-
-	protected Query toGetIdQuery(WebQuery query)
-	{
-		// Encode the WebQuery and add the constraints
-		final HQLBuilder builder = toCriteriaBuilder(query);
-
-		builder.setProjection(HQLProjection.IDS);
-
-		return builder.toHQL(this :: createQuery);
-	}
-
-
-	protected Query toRowCountQuery(WebQuery constraints)
-	{
-		// Encode the WebQuery and add the constraints
-		final HQLBuilder builder = toCriteriaBuilder(constraints).clearPagination().clearOrder();
-
-		builder.setProjection(HQLProjection.COUNT);
-
-		Query hql = builder.toHQL(this :: createQuery);
-
-		// Discount offset/limit
-		hql.setFirstResult(0);
-		hql.setMaxResults(Integer.MAX_VALUE);
-
-		return hql;
-	}
-
-
-	/**
-	 * Create a straight conversion of the provided ResultSetConstraint.
-	 *
-	 * @param query
-	 * 		the constraints (optional, if null then no restrictions will be appended to the base criteria)
-	 *
-	 * @return
-	 */
-	protected Query toSimpleQuery(WebQuery query)
-	{
-		// Encode the WebQuery and add the constraints
-		final HQLBuilder builder = toCriteriaBuilder(query);
-
-		return builder.toHQL(this :: createQuery);
-	}
-
-
-	/**
-	 * Convert a WebQuery to a QCriteriaBuilder representing the same query
-	 *
-	 * @param query
-	 *
-	 * @return
-	 */
-	protected HQLBuilder toCriteriaBuilder(final WebQuery query)
-	{
-		HQLBuilder builder = new HQLBuilder(getQEntity());
-
-		builder.addWebQuery(query);
-
-		return builder;
+		return (Collection<ID>) find(constraints, JPASearchStrategy.ID).getList();
 	}
 }

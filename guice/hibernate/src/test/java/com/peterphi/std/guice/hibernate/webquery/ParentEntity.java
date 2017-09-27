@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
-import com.peterphi.std.guice.database.annotation.SearchFieldAlias;
-
 import javax.persistence.CollectionTable;
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
@@ -15,13 +13,10 @@ import javax.persistence.Lob;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 @Entity
-@SearchFieldAlias(name = "otherObjectParentName", aliasOf = "otherObject.parent.name")
-@SearchFieldAlias(name = "otherObjectParent", aliasOf = "otherObject.parent")
-class ParentEntity
+public class ParentEntity
 {
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -42,7 +37,7 @@ class ParentEntity
 	private ChildEntity otherObject;
 
 	@OneToMany(mappedBy = "parent")
-	private List<ChildEntity> children;
+	private Set<ChildEntity> children;
 
 	@ElementCollection(fetch = FetchType.EAGER)
 	@CollectionTable(name = "parent_friends", joinColumns = @JoinColumn(name = "parent_id"))
@@ -109,13 +104,13 @@ class ParentEntity
 	}
 
 
-	public List<ChildEntity> getChildren()
+	public Set<ChildEntity> getChildren()
 	{
 		return children;
 	}
 
 
-	public void setChildren(final List<ChildEntity> children)
+	public void setChildren(final Set<ChildEntity> children)
 	{
 		this.children = children;
 	}

@@ -81,7 +81,7 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 	{
 		if (StringUtils.isNotEmpty(shutdownSql))
 		{
-			sessionFactory.getCurrentSession().createSQLQuery(shutdownSql).executeUpdate();
+			sessionFactory.getCurrentSession().createNativeQuery(shutdownSql).executeUpdate();
 		}
 	}
 }

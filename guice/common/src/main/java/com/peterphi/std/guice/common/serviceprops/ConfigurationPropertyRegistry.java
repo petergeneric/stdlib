@@ -50,17 +50,8 @@ public class ConfigurationPropertyRegistry
 		{
 			if (!properties.containsKey(site.getName()))
 			{
-				log.debug("Discovered new property: " + site.getName());
-
 				properties.put(site.getName(), new ConfigurationProperty(this, configuration, site.getName()));
 			}
-
-			log.trace("Discovered new binding for property " +
-			          site.getName() +
-			          " of type " +
-			          site.getType() +
-			          " in " +
-			          site.getOwner());
 
 			properties.get(site.getName()).add(site);
 		}

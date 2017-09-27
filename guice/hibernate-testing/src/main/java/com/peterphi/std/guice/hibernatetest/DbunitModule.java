@@ -3,12 +3,13 @@ package com.peterphi.std.guice.hibernatetest;
 import com.google.inject.AbstractModule;
 import com.google.inject.Provides;
 import com.peterphi.std.guice.hibernatetest.dbunit.HibernateDatabaseTester;
-import com.peterphi.std.util.ListUtility;
 import org.dbunit.IDatabaseTester;
 import org.dbunit.database.AmbiguousTableNameException;
-import org.dbunit.database.QueryDataSet;
+import org.dbunit.dataset.IDataSet;
+import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
-import org.hibernate.mapping.Table;
+
+import java.sql.SQLException;
 
 public class DbunitModule extends AbstractModule
 {
@@ -30,17 +31,17 @@ public class DbunitModule extends AbstractModule
 	 * @throws AmbiguousTableNameException
 	 */
 	@Provides
-	public QueryDataSet getDatabaseDataSet(HibernateDatabaseTester tester,
-	                                       Configuration config) throws AmbiguousTableNameException
+	public IDataSet getDatabaseDataSet(HibernateDatabaseTester tester,
+	                                   SessionFactory fac,
+	                                   Configuration config) throws AmbiguousTableNameException
 	{
-
-		final QueryDataSet dataset = new QueryDataSet(tester.getConnection());
-
-		for (Table table : ListUtility.iterate(config.getTableMappings()))
+		try
 		{
-			dataset.addTable(table.getName());
+			return tester.getConnection().createDataSet();
 		}
-
-		return dataset;
+		catch (SQLException e)
+		{
+			throw new RuntimeException("Failed to create dataset", e);
+		}
 	}
 }

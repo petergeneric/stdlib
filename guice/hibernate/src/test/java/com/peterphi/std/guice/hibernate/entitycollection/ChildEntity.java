@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.hibernate.hqlchildcount;
+package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.common.base.Objects;
 
@@ -11,7 +11,7 @@ import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
-@Entity(name = "R")
+@Entity(name = "child_entity")
 class ChildEntity
 {
 	@Id
@@ -21,6 +21,10 @@ class ChildEntity
 	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	@JoinColumn(nullable = false)
 	private ParentEntity parent;
+
+	@ManyToOne(optional = true, fetch = FetchType.EAGER)
+	@JoinColumn(nullable = true)
+	private ParentEntity friend;
 
 	@Column(nullable = false)
 	private boolean flag;
@@ -47,6 +51,18 @@ class ChildEntity
 	public void setParent(final ParentEntity parent)
 	{
 		this.parent = parent;
+	}
+
+
+	public ParentEntity getFriend()
+	{
+		return friend;
+	}
+
+
+	public void setFriend(final ParentEntity friend)
+	{
+		this.friend = friend;
 	}
 
 

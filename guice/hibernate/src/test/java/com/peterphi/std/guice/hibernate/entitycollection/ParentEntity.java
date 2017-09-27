@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.hibernate.hqlchildcount;
+package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.common.base.Objects;
 
@@ -13,7 +13,7 @@ import javax.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
 
-@Entity(name = "Q")
+@Entity(name = "parent_entity")
 class ParentEntity
 {
 	@Id
@@ -23,7 +23,7 @@ class ParentEntity
 	@Column(nullable = false)
 	private Integer capacity;
 
-	@OneToMany(fetch = FetchType.LAZY, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
+	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 	private Set<ChildEntity> children = new HashSet<>();
 
 

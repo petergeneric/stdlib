@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
@@ -20,6 +21,7 @@ import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotNull;
+import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
@@ -93,22 +95,6 @@ public class DynamicQueryTest
 
 
 	@Test
-	public void testAliasedNestedAssociatorConstraintWorks() throws Exception
-	{
-		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-		dao.findByUriQuery(new WebQuery().eq("otherObjectParentName", "Alice"));
-	}
-
-
-	@Test
-	public void testPartiallyAliasedNestedAssociatorConstraintWorks() throws Exception
-	{
-		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
-		dao.findByUriQuery(new WebQuery().eq("otherObjectParent.name", "Alice"));
-	}
-
-
-	@Test
 	public void testPropertyRefWorks() throws Exception
 	{
 		// We'd get a org.hibernate.QueryException if Hibernate doesn't understand
@@ -120,7 +106,7 @@ public class DynamicQueryTest
 
 
 	@Test
-	public void testDbFetchWorks() throws Exception
+	public void testEntityWrappedId() throws Exception
 	{
 		ParentEntity obj = new ParentEntity();
 		obj.setName("Name");
@@ -130,7 +116,11 @@ public class DynamicQueryTest
 		childDao.save(obj.getOtherObject());
 		dao.save(obj);
 
-		dao.findByUriQuery(new WebQuery().logSQL(true).dbfetch("otherObject.parent").eq("otherObject.parent.name", "x"));
+		final ConstrainedResultSet<ParentEntity> results = dao.find(new WebQuery(), JPASearchStrategy.ENTITY_WRAPPED_ID);
+
+		assertEquals(1, results.list.size());
+		assertNotNull(results.uniqueResult().getId()); // should be populated
+		assertNull(results.uniqueResult().getName()); // should not be populated
 	}
 
 
@@ -299,7 +289,9 @@ public class DynamicQueryTest
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
 		assertNotNull(resultset.getSql());
-		assertEquals("Number of SQL statements executed", 3, resultset.getSql().size());
+
+		System.out.println(resultset.getSql());
+		assertEquals("Number of SQL statements executed", 2, resultset.getSql().size());
 	}
 
 
@@ -341,18 +333,33 @@ public class DynamicQueryTest
 		}
 
 
-		ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(new WebQuery()
-				                                                                .computeSize(true)
-				                                                                .orderDesc("name")
-				                                                                .limit(2));
+		final WebQuery query = new WebQuery().orderDesc("name").limit(2);
 
-		// Must have correct total size
-		assertEquals("must have computed total size", Long.valueOf(3), results.getTotal());
+		// First, test that the correct results are returned with computeSize=false
+		{
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(query);
 
-		// Must still honour limit
-		assertEquals(2, results.getList().size());
-		assertEquals(Arrays.asList("Name3", "Name2"),
-		             results.getList().stream().map(e -> e.getName()).collect(Collectors.toList()));
+			// Must honour limit
+			assertEquals("without computeSize; must only have returned 2 results", 2, results.getList().size());
+			assertEquals("without computeSize; must have returned right 2 entities",
+			             Arrays.asList("Name3", "Name2"),
+			             results.getList().stream().map(e -> e.getName()).collect(Collectors.toList()));
+		}
+
+		// Next, test that we get the same results with computeSize=true (ensures the order is still present after size is computed)
+		query.computeSize(true);
+		{
+			ConstrainedResultSet<ParentEntity> results = dao.findByUriQuery(query);
+
+			// Must have correct total size
+			assertEquals("with computeSize; must have computed correct total size", Long.valueOf(3), results.getTotal());
+
+			// Must honour limit
+			assertEquals("with computeSize; must only have returned 2 results", 2, results.getList().size());
+			assertEquals("with computeSize; must have returned right 2 entities",
+			             Arrays.asList("Name3", "Name2"),
+			             results.getList().stream().map(e -> e.getName()).collect(Collectors.toList()));
+		}
 	}
 
 

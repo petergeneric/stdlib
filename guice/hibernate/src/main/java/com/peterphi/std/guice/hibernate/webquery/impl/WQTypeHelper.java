@@ -13,7 +13,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
-class QTypeHelper
+public class WQTypeHelper
 {
 	public static WQDataType translate(Class<?> clazz)
 	{

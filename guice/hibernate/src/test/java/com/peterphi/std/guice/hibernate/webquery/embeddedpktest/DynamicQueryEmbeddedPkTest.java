@@ -2,7 +2,6 @@ package com.peterphi.std.guice.hibernate.webquery.embeddedpktest;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
-import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
@@ -18,9 +17,6 @@ public class DynamicQueryEmbeddedPkTest
 {
 	@Inject
 	EmbeddedPkDaoImpl dao;
-
-	@Inject
-	QEntityFactory entityFactory;
 
 	/**
 	 * Test that searching by timestamp alone works

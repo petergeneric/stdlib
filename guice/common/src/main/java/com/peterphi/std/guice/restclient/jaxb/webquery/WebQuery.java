@@ -12,6 +12,7 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
@@ -28,6 +29,8 @@ import java.util.stream.Collectors;
 @Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")
 public class WebQuery
 {
+	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
+
 	/**
 	 * An optional name for the query, to allow server-side optimisation/hinting
 	 */
@@ -51,7 +54,7 @@ public class WebQuery
 	 * What relationships to expand (by default, all relationships are expanded)
 	 */
 	@XmlAttribute
-	public String expand = "all";
+	public String expand;
 
 	@XmlAttribute
 	public boolean logSQL = false;
@@ -94,9 +97,21 @@ public class WebQuery
 	}
 
 
+	public Set<String> getDBFetch()
+	{
+		if (this.dbfetch == null)
+			return null;
+		else
+			return new HashSet<>(Arrays.asList(this.dbfetch.split(",")));
+	}
+
+
 	public Set<String> getExpand()
 	{
-		return new HashSet<>(Arrays.asList(expand.split(",")));
+		if (this.expand == null || this.expand.isEmpty())
+			return null;
+		else
+			return new HashSet<>(Arrays.asList(expand.split(",")));
 	}
 
 
@@ -286,6 +301,33 @@ public class WebQuery
 		}
 
 		return this;
+	}
+
+
+	/**
+	 * Assert that a field equals one of the provided values. Implicitly creates a new OR group if multiple values are supplied.
+	 * At least one value must be supplied.
+	 *
+	 * @param field
+	 * @param values
+	 *
+	 * @return
+	 */
+	public WebQuery eq(final String field, final Collection<?> values)
+	{
+		if (values == null)
+			throw new IllegalArgumentException("Must supply at least one value to .eq when passing a Collection");
+		else if (values.size() == 0)
+			return eq(field, values.stream().findFirst().get());
+		else
+		{
+			final WQGroup or = or();
+
+			for (Object value : values)
+				or.eq(field, value);
+
+			return this;
+		}
 	}
 
 
@@ -491,6 +533,9 @@ public class WebQuery
 	public WebQuery decode(Map<String, List<String>> map)
 	{
 		WebQuery def = new WebQuery();
+
+		// incoming queries from a map get a default limit set
+		def.limit(QUERY_STRING_DEFAULT_LIMIT);
 
 		boolean hasConstraints = false;
 

@@ -31,10 +31,19 @@ class WebQueryToQueryStringConverter
 		MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
 
 		map.putSingle(WQUriControlField.FETCH.getName(), query.fetch);
-		map.put(WQUriControlField.EXPAND.getName(), list(query.expand));
+
+		if (query.dbfetch != null)
+			map.putSingle(WQUriControlField.DBFETCH.getName(), query.dbfetch);
+
+		if (query.expand != null)
+			map.put(WQUriControlField.EXPAND.getName(), list(query.expand));
+
 		map.put(WQUriControlField.ORDER.getName(),
 		        query.orderings.stream().map(WQOrder:: toLegacyForm).collect(Collectors.toList()));
-		map.putSingle(WQUriControlField.OFFSET.getName(), String.valueOf(query.getOffset()));
+
+		if (query.getOffset() > 0)
+			map.putSingle(WQUriControlField.OFFSET.getName(), String.valueOf(query.getOffset()));
+
 		map.putSingle(WQUriControlField.LIMIT.getName(), String.valueOf(query.getLimit()));
 
 		if (query.constraints.computeSize)
@@ -66,16 +75,18 @@ class WebQueryToQueryStringConverter
 					throw new IllegalArgumentException("Can only convert OR groups to legacy ResultSetConstraint type!");
 				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint))
 					throw new IllegalArgumentException("Can only convert un-nested groups to legacy ResultSetConstraint type!");
-				else if (g.constraints.stream()
-				                      .map(l -> ((WQConstraint) l).field)
-				                      .distinct()
-				                      .collect(Collectors.toList())
-				                      .size() > 1)
+				else if (g.constraints
+						         .stream()
+						         .map(l -> ((WQConstraint) l).field)
+						         .distinct()
+						         .collect(Collectors.toList())
+						         .size() > 1)
 					throw new IllegalArgumentException("Can only convert OR groups containing same field name to legacy ResultSetConstraint type! Fields: " +
-					                                   g.constraints.stream()
-					                                                .map(l -> ((WQConstraint) l).field)
-					                                                .distinct()
-					                                                .collect(Collectors.toList()));
+					                                   g.constraints
+							                                   .stream()
+							                                   .map(l -> ((WQConstraint) l).field)
+							                                   .distinct()
+							                                   .collect(Collectors.toList()));
 
 				// Add all the constraints
 				g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));

@@ -6,9 +6,9 @@ import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQSchemas;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
-import org.hibernate.metadata.ClassMetadata;
-import org.hibernate.type.ComponentType;
 
+import javax.persistence.metamodel.EmbeddableType;
+import javax.persistence.metamodel.EntityType;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -23,7 +23,7 @@ public class QEntityFactory
 
 	private final Map<Class<?>, QEntity> entities = new HashMap<>();
 	private final SessionFactoryImplementor sessionFactory;
-
+	private final Map<Class<?>, EmbeddableType<?>> embeddableTypeMap = new HashMap<>();
 
 	@Inject
 	public QEntityFactory(final SessionFactory sessionFactory)
@@ -31,12 +31,13 @@ public class QEntityFactory
 		this.sessionFactory = (SessionFactoryImplementor) sessionFactory;
 
 		if (log.isDebugEnabled())
-			log.debug("Known entities: " + sessionFactory.getAllClassMetadata().keySet());
+			log.debug("Known entities: " +
+			          sessionFactory.getMetamodel().getEntities().stream().map(e -> e.getName()).collect(Collectors.toList()));
 
 		// Pre-construct the QEntity instances for all known entities
-		for (ClassMetadata metadata : sessionFactory.getAllClassMetadata().values())
+		for (EntityType<?> entityType : sessionFactory.getMetamodel().getEntities())
 		{
-			final Class clazz = metadata.getMappedClass();
+			final Class clazz = entityType.getJavaType();
 
 			if (clazz != null && !Modifier.isAbstract(clazz.getModifiers()))
 				get(clazz);
@@ -48,9 +49,9 @@ public class QEntityFactory
 	{
 		List<QEntity> subclasses = new ArrayList<>();
 
-		for (ClassMetadata meta : sessionFactory.getAllClassMetadata().values())
+		for (EntityType<?> entityType : sessionFactory.getMetamodel().getEntities())
 		{
-			final Class<?> clazz = meta.getMappedClass();
+			final Class<?> clazz = entityType.getJavaType();
 
 			if (clazz != null && !Modifier.isAbstract(clazz.getModifiers()) && superclass.isAssignableFrom(clazz))
 				subclasses.add(get(clazz));
@@ -60,12 +61,12 @@ public class QEntityFactory
 	}
 
 
-	public QEntity get(Class<?> clazz)
+	public <T> QEntity get(Class<T> clazz)
 	{
 		if (!entities.containsKey(clazz))
 		{
 			log.debug("Begin create QEntity " + clazz);
-			final ClassMetadata metadata = sessionFactory.getClassMetadata(clazz);
+			final EntityType<T> metadata = sessionFactory.getMetamodel().entity(clazz);
 
 			if (metadata == null)
 				throw new IllegalArgumentException("Hibernate has no ClassMetadata for: " +
@@ -84,18 +85,18 @@ public class QEntityFactory
 	}
 
 
-	public QEntity getEmbeddable(final Class clazz, final ComponentType ct)
+	public QEntity getEmbeddable(final Class clazz, final EmbeddableType ct)
 	{
 		if (!entities.containsKey(clazz))
 		{
-			log.debug("Begin create QEntity " + clazz + " from ComponentType " + ct);
+			log.debug("Begin create QEntity " + clazz + " from EmbeddableType " + ct);
 
 			QEntity entity = new QEntity(clazz);
 			entities.put(clazz, entity);
 
-			entity.parseEmbeddable(this, sessionFactory, ct);
+			entity.parseEmbeddable(this, sessionFactory,null, ct);
 
-			log.debug("End create QEntity " + clazz + " from ComponentType " + ct);
+			log.debug("End create QEntity " + clazz + " from EmbeddableType " + ct);
 		}
 
 		return entities.get(clazz);
@@ -115,7 +116,7 @@ public class QEntityFactory
 	public List<QEntity> getAll()
 	{
 		// Pre-emptively process all entities
-		sessionFactory.getAllClassMetadata().values().stream().map(ClassMetadata:: getMappedClass).forEach(this :: get);
+		sessionFactory.getMetamodel().getEntities().stream().map(EntityType:: getJavaType).forEach(this :: get);
 
 		return new ArrayList<>(entities.values());
 	}

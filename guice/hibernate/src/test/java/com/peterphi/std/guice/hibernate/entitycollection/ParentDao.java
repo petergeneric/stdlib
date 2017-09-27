@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.hibernate.hqlchildcount;
+package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;

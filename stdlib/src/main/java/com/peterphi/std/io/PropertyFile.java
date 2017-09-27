@@ -593,9 +593,6 @@ public class PropertyFile
 
 	public boolean containsKey(final String name)
 	{
-		if (log.isTraceEnabled())
-			log.trace("{containsKey} key=" + name);
-
 		return _contains(name);
 	}
 
@@ -608,14 +605,6 @@ public class PropertyFile
 
 	public String get(final String name, final String defaultValue)
 	{
-		if (log.isTraceEnabled())
-			log.trace("{get} key=" +
-			          name +
-			          "; default=" +
-			          defaultValue +
-			          "; storedValue=" +
-			          _get_core(name, null));
-
 		return _get(name, defaultValue);
 	}
 
@@ -800,9 +789,6 @@ public class PropertyFile
 
 	public String set(final String name, final String value)
 	{
-		if (log.isTraceEnabled())
-			log.trace("{set} key=" + name + "; value=" + value);
-
 		return _set(name, value);
 	}
 
@@ -835,9 +821,6 @@ public class PropertyFile
 
 	public void remove(final String name)
 	{
-		if (log.isTraceEnabled())
-			log.trace("{remove} key=" + name);
-
 		_rm(name);
 	}
 
