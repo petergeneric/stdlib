@@ -6,5 +6,6 @@ import javax.persistence.criteria.Root;
 
 public interface JPAQueryCustomiser
 {
-	void apply(CriteriaBuilder cb, CriteriaQuery query, Root root);
+	void apply(CriteriaBuilder cb, CriteriaQuery query, Root root, JPAQueryBuilderInternal builder);
+
 }

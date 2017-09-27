@@ -41,7 +41,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
-public class JPAQueryBuilder<T, ID>
+public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 {
 	private static final Logger log = Logger.getLogger(JPAQueryBuilder.class);
 
@@ -70,19 +70,6 @@ public class JPAQueryBuilder<T, ID>
 		this.criteriaBuilder = session.getCriteriaBuilder();
 		this.entity = entity;
 	}
-
-
-	public boolean hasCollectionJoin()
-	{
-		for (JPAJoin join : joins.values())
-		{
-			if (join.isCollection())
-				return true;
-		}
-
-		return false;
-	}
-
 
 	void addFrom(final String subclasses)
 	{
@@ -149,7 +136,19 @@ public class JPAQueryBuilder<T, ID>
 	}
 
 
-	void addConstraints(List<WQConstraintLine> constraints)
+	@Override
+	public void addConstraints(final Predicate... predicates)
+	{
+		for (Predicate predicate : predicates)
+			this.conditions.add(predicate);
+
+		// Add the constraints to the query
+		generated.where(criteriaBuilder.and(conditions.toArray(new Predicate[conditions.size()])));
+	}
+
+
+	@Override
+	public void addConstraints(List<WQConstraintLine> constraints)
 	{
 		for (Predicate predicate : parseConstraint(constraints))
 		{
@@ -174,6 +173,7 @@ public class JPAQueryBuilder<T, ID>
 	 *
 	 * @return
 	 */
+	@Override
 	public Expression<?> getProperty(final WQPath path)
 	{
 		final JPAJoin join = getOrCreateJoin(path.getTail());
@@ -189,7 +189,8 @@ public class JPAQueryBuilder<T, ID>
 	 *
 	 * @return
 	 */
-	private JPAJoin getOrCreateJoin(final WQPath path)
+	@Override
+	public JPAJoin getOrCreateJoin(final WQPath path)
 	{
 		if (path == null)
 			return new JPAJoin(criteriaBuilder, entity, root, false);
@@ -520,7 +521,7 @@ public class JPAQueryBuilder<T, ID>
 
 	public <C> Query<C> createSelectCustom(JPAQueryCustomiser customiser)
 	{
-		customiser.apply(criteriaBuilder, generated, root);
+		customiser.apply(criteriaBuilder, generated, root, this);
 
 		final Query query = session.createQuery(generated);
 
@@ -591,6 +592,23 @@ public class JPAQueryBuilder<T, ID>
 
 		return query;
 	}
+
+
+	/**
+	 * Returns true if one of the non-fetch joins specified will result in a collection being pulled back
+	 * @return
+	 */
+	public boolean hasCollectionJoin()
+	{
+		for (JPAJoin join : joins.values())
+		{
+			if (join.isCollection())
+				return true;
+		}
+
+		return false;
+	}
+
 
 
 	/**
