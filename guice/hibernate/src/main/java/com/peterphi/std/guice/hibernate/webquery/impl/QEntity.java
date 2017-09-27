@@ -1,6 +1,5 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.peterphi.std.guice.hibernate.webquery.impl.hql.QSizeProperty;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;

@@ -1,7 +1,4 @@
-package com.peterphi.std.guice.hibernate.webquery.impl.hql;
-
-import com.peterphi.std.guice.hibernate.webquery.impl.QProperty;
-import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
+package com.peterphi.std.guice.hibernate.webquery.impl;
 
 /**
  * A special type of property that refers to the size of a collection
@@ -16,16 +13,6 @@ public class QSizeProperty extends QProperty
 		super(relation.getEntity(), null, relation.getName(), Integer.class, false);
 
 		this.relation = relation;
-	}
-
-
-	public String toHqlPath(final QPath path)
-	{
-		final String rawPath = path.toHsqlPath();
-
-		final String collectionPath = rawPath.replace(":size", "");
-
-		return "SIZE(" + collectionPath + ")";
 	}
 
 
