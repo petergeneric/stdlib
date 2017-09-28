@@ -54,18 +54,33 @@ public class QEntity
 
 	private List<QEntity> descendants = Collections.emptyList();
 
+	// Only one of the following should be populated
 	private EntityType<?> metamodelEntity;
+	private EmbeddableType<?> metamodelEmbeddable;
 
 	// Populated to let us get/set the ID of an entity dynamically
 	private Field idField;
 	private Method idSetMethod;
 	private Method idGetMethod;
 
-	private Set<String> defaultExpand;
-	private EntityGraph defaultExpandGraph;
-
+	/**
+	 * Relations that are marked as having an eager fetch
+	 */
 	private Set<String> eagerRelations = new HashSet<>(0);
 
+	/**
+	 * A full list of the default relations (including child relations) to expand
+	 */
+	private Set<String> defaultExpand;
+	/**
+	 * A JPA2.1 EntityGraph version of defaultExpand
+	 */
+	private EntityGraph defaultExpandGraph;
+
+
+	/**
+	 * Relations that don't have a QRelation (because they're not to an @Entity or @Embeddable)
+	 */
 	private Map<String, Attribute> nonEntityRelations = new HashMap<>(0);
 
 
@@ -87,6 +102,13 @@ public class QEntity
 	}
 
 
+	/**
+	 * Parse an Entity
+	 *
+	 * @param entityFactory
+	 * @param metadata
+	 * @param sessionFactory
+	 */
 	void parse(QEntityFactory entityFactory, EntityType<?> metadata, SessionFactoryImplementor sessionFactory)
 	{
 		this.metamodelEntity = metadata;
@@ -132,6 +154,30 @@ public class QEntity
 
 		// Figure out the id method/field
 		findReflectionIdFieldOrMethods();
+	}
+
+
+	/**
+	 * Parse an @Embeddable
+	 *
+	 * @param entityFactory
+	 * @param sessionFactory
+	 * @param prefix
+	 * @param type
+	 */
+	public void parseEmbeddable(final QEntityFactory entityFactory,
+	                            final SessionFactoryImplementor sessionFactory,
+	                            final String prefix,
+	                            final EmbeddableType<?> type)
+	{
+		this.metamodelEmbeddable = type;
+		// Make sure the entity factory sees this embeddable
+		entityFactory.getEmbeddable(type.getJavaType(), type);
+
+		for (Attribute<?, ?> attribute : type.getAttributes())
+		{
+			parseFields(entityFactory, sessionFactory, prefix, attribute);
+		}
 	}
 
 
@@ -238,21 +284,6 @@ public class QEntity
 		catch (Throwable t)
 		{
 			log.warn("Could not find Id field/methods for entity class " + clazz, t);
-		}
-	}
-
-
-	public void parseEmbeddable(final QEntityFactory entityFactory,
-	                            final SessionFactoryImplementor sessionFactory,
-	                            final String prefix,
-	                            final EmbeddableType<?> type)
-	{
-		// Make sure the entity factory sees this embeddable
-		entityFactory.getEmbeddable(type.getJavaType(), type);
-
-		for (Attribute<?, ?> attribute : type.getAttributes())
-		{
-			parseFields(entityFactory, sessionFactory, prefix, attribute);
 		}
 	}
 
@@ -747,6 +778,7 @@ public class QEntity
 
 	/**
 	 * Creates an EntityGraph representing the
+	 *
 	 * @param graph
 	 * @param fetches
 	 */
@@ -756,13 +788,16 @@ public class QEntity
 
 		for (String fetch : fetches)
 		{
-			Subgraph<?> parent = null;
-
 			final String[] parts = StringUtils.split(fetch, '.');
 
+			// Starts of null (meaning parent is the root graph), updated as we go through path segments to refer to the last path segment
+			Subgraph<?> parent = null;
+
+			// Iterate over the path segments, adding attributes subgraphs
 			for (int i = 0; i < parts.length; i++)
 			{
 				final String path = StringUtils.join(parts, '.', 0, i + 1);
+				final boolean isLeaf = (i == parts.length - 1);
 
 				final Subgraph<?> existing = created.get(path);
 
@@ -770,19 +805,53 @@ public class QEntity
 				{
 					if (parent == null)
 					{
-						// Relation under root
-						graph.addAttributeNodes(parts[i]);
-						parent = graph.addSubgraph(parts[i]);
+						try
+						{
+							// Relation under root
+							graph.addAttributeNodes(parts[i]);
 
+							// Only set up a subgraph if this is not a leaf node
+							// This prevents us trying to add a Subgraph for a List of Embeddable
+							if (!isLeaf)
+								parent = graph.addSubgraph(parts[i]);
+						}
+						catch (IllegalArgumentException e)
+						{
+							throw new IllegalArgumentException("Error adding graph member " +
+							                                   parts[i] +
+							                                   " with isLeaf=" +
+							                                   isLeaf +
+							                                   " to root as part of " +
+							                                   fetch, e);
+						}
 					}
 					else
 					{
-						// Relation under parent
-						parent.addAttributeNodes(parts[i]);
-						parent = parent.addSubgraph(parts[i]);
+						try
+						{
+							// Relation under parent
+							parent.addAttributeNodes(parts[i]);
+
+							// Only set up a subgraph if this is not a leaf node
+							// This prevents us trying to add a Subgraph for a List of Embeddable
+							if (!isLeaf)
+								parent = parent.addSubgraph(parts[i]);
+						}
+						catch (IllegalArgumentException e)
+						{
+							throw new IllegalArgumentException("Error adding graph member " +
+							                                   parts[i] +
+							                                   " with isLeaf=" +
+							                                   isLeaf +
+							                                   " as part of " +
+							                                   fetch +
+							                                   " with parent.class=" +
+							                                   parent.getClassType(), e);
+						}
 					}
 
-					created.put(path, parent);
+					if (!isLeaf)
+						created.put(path, parent);
 				}
 				else
 				{
