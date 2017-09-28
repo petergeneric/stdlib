@@ -103,7 +103,7 @@ public class QEntity
 
 
 	/**
-	 * Parse an Entity
+	 * Parse an @Entity
 	 *
 	 * @param entityFactory
 	 * @param metadata
@@ -298,10 +298,10 @@ public class QEntity
 			{
 				final AnnotatedElement el = (AnnotatedElement) member;
 
+				final boolean hasEagerFetch = el.isAnnotationPresent(EagerFetch.class);
+
 				final FetchType fetchType;
-				if (el.isAnnotationPresent(EagerFetch.class))
-					fetchType = FetchType.EAGER;
-				else if (el.isAnnotationPresent(OneToMany.class))
+				if (el.isAnnotationPresent(OneToMany.class))
 					fetchType = el.getAnnotation(OneToMany.class).fetch();
 				else if (el.isAnnotationPresent(ManyToOne.class))
 					fetchType = el.getAnnotation(ManyToOne.class).fetch();
@@ -314,7 +314,20 @@ public class QEntity
 				else
 					return false;
 
-				return (fetchType == FetchType.EAGER);
+				if (hasEagerFetch && fetchType == FetchType.EAGER)
+					log.warn(
+							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: " +
+							clazz +
+							" " +
+							member.toString());
+				else if (!hasEagerFetch && fetchType == FetchType.EAGER)
+					log.warn(
+							"ENTITY HAS JPA fetch=EAGER annotation instead of @EagerFetch - will not be able to instruct Hibernate to suppress fetching this relation: " +
+							clazz +
+							" " +
+							member.toString());
+
+				return (hasEagerFetch || fetchType == FetchType.EAGER);
 			}
 		}
 
