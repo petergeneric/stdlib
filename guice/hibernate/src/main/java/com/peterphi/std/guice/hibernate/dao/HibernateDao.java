@@ -20,15 +20,19 @@ import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
+import org.hibernate.annotations.QueryHints;
 import org.hibernate.query.Query;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Path;
+import javax.persistence.criteria.Predicate;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Function;
 
 /**
@@ -143,12 +147,39 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Transactional(readOnly = true)
 	public List<T> getListById(final List<ID> ids)
 	{
 		if (ids.isEmpty())
 			return Collections.emptyList();
+		else if (ids.size() == 1)
+			return Collections.singletonList(getById(ids.get(0))); // Optimise getting one entity so it's more cache friendly
 		else
-			return getSession().byMultipleIds(clazz).multiLoad(ids);
+		{
+			// Build a query so that we can get all entities and their eager fetches in one go
+			// N.B. this is necessary because multifetch doesn't support Entity Graphs
+			final JPAQueryBuilder<T, ID> builder = createQueryBuilder();
+
+			builder.forWebQuery(new WebQuery());
+
+			return builder.selectCustom((cb, criteriaQuery, root, qb) -> {
+				criteriaQuery.select(root);
+
+				final Path idProperty = root.get(root.getModel().getId(root.getModel().getIdType().getJavaType()));
+
+				// Convert the ID list into a list of ID matching Predicates
+				final Predicate[] predicates = new Predicate[ids.size()];
+				int i = 0;
+				for (ID id : ids)
+					predicates[i++] = cb.equal(idProperty, id);
+
+				// OR them together and set them as the conditional
+				criteriaQuery.where(getCriteriaBuilder().or(predicates));
+
+				// Apply all default fetch joins for this entity
+				qb.applyFetches();
+			});
+		}
 	}
 
 
@@ -159,7 +190,9 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		if (id == null)
 			throw new IllegalArgumentException("Must supply an id to retrieve!");
 
-		return getSession().get(clazz, id);
+		Map<String, Object> hints = Collections.singletonMap(QueryHints.FETCHGRAPH, getQEntity().getDefaultGraph(getSession()));
+
+		return getSession().find(clazz, id, hints);
 	}
 
 

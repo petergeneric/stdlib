@@ -1,11 +1,11 @@
 package com.peterphi.std.guice.hibernate.entitycollection;
 
 import com.google.common.base.Objects;
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.GenerationType;
 import javax.persistence.Id;
@@ -23,7 +23,8 @@ class ParentEntity
 	@Column(nullable = false)
 	private Integer capacity;
 
-	@OneToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
+	@EagerFetch
+	@OneToMany(cascade = CascadeType.ALL, orphanRemoval = true, mappedBy = "parent")
 	private Set<ChildEntity> children = new HashSet<>();
 
 

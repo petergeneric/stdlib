@@ -1,11 +1,13 @@
 package com.peterphi.servicemanager.service.db.entity;
 
 import com.peterphi.servicemanager.service.rest.resource.type.ResourceInstanceState;
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import org.joda.time.DateTime;
 
 import javax.persistence.Column;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.FetchType;
 import javax.persistence.GeneratedValue;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
@@ -44,8 +46,9 @@ public class ResourceInstanceEntity
 	}
 
 
+	@EagerFetch
 	@JoinColumn(name = "template_id", nullable = false)
-	@ManyToOne(optional = false)
+	@ManyToOne(optional = false, fetch = FetchType.LAZY)
 	public ResourceTemplateEntity getTemplate()
 	{
 		return template;
@@ -87,6 +90,7 @@ public class ResourceInstanceEntity
 	}
 
 
+	@EagerFetch
 	@ElementCollection
 	@JoinTable(name = "resource_instance_metadata", joinColumns = @JoinColumn(name = "resource_instance_id"))
 	@MapKeyColumn(name = "meta_name")

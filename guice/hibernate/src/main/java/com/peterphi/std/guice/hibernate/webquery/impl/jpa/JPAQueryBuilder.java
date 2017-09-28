@@ -71,6 +71,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		this.entity = entity;
 	}
 
+
 	void addFrom(final String subclasses)
 	{
 		if (StringUtils.isEmpty(subclasses))
@@ -574,10 +575,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	{
 		generated.select(root);
 
-		if (fetches != null)
-		{
-			addFetches(fetches);
-		}
+		applyFetches();
 
 		generated.orderBy(orders); // Make sure we return the results in the correct order
 
@@ -594,8 +592,17 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
+	@Override
+	public void applyFetches()
+	{
+		if (fetches != null)
+			addFetches(fetches);
+	}
+
+
 	/**
 	 * Returns true if one of the non-fetch joins specified will result in a collection being pulled back
+	 *
 	 * @return
 	 */
 	public boolean hasCollectionJoin()
@@ -608,7 +615,6 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 		return false;
 	}
-
 
 
 	/**

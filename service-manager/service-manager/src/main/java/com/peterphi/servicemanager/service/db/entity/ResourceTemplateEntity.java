@@ -48,7 +48,7 @@ public class ResourceTemplateEntity
 	}
 
 
-	@OneToMany(mappedBy = "template", cascade = CascadeType.ALL, fetch = FetchType.LAZY, orphanRemoval = true)
+	@OneToMany(mappedBy = "template", cascade = CascadeType.ALL, orphanRemoval = true)
 	@OrderBy("state")
 	public List<ResourceInstanceEntity> getInstances()
 	{

@@ -1,19 +1,23 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
+import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EntityGraph;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Subgraph;
 import javax.persistence.Table;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -50,16 +54,33 @@ public class QEntity
 
 	private List<QEntity> descendants = Collections.emptyList();
 
+	// Only one of the following should be populated
 	private EntityType<?> metamodelEntity;
+	private EmbeddableType<?> metamodelEmbeddable;
 
 	// Populated to let us get/set the ID of an entity dynamically
 	private Field idField;
 	private Method idSetMethod;
 	private Method idGetMethod;
 
-	private Set<String> defaultExpand;
+	/**
+	 * Relations that are marked as having an eager fetch
+	 */
 	private Set<String> eagerRelations = new HashSet<>(0);
 
+	/**
+	 * A full list of the default relations (including child relations) to expand
+	 */
+	private Set<String> defaultExpand;
+	/**
+	 * A JPA2.1 EntityGraph version of defaultExpand
+	 */
+	private EntityGraph defaultExpandGraph;
+
+
+	/**
+	 * Relations that don't have a QRelation (because they're not to an @Entity or @Embeddable)
+	 */
 	private Map<String, Attribute> nonEntityRelations = new HashMap<>(0);
 
 
@@ -81,6 +102,13 @@ public class QEntity
 	}
 
 
+	/**
+	 * Parse an @Entity
+	 *
+	 * @param entityFactory
+	 * @param metadata
+	 * @param sessionFactory
+	 */
 	void parse(QEntityFactory entityFactory, EntityType<?> metadata, SessionFactoryImplementor sessionFactory)
 	{
 		this.metamodelEntity = metadata;
@@ -129,6 +157,30 @@ public class QEntity
 	}
 
 
+	/**
+	 * Parse an @Embeddable
+	 *
+	 * @param entityFactory
+	 * @param sessionFactory
+	 * @param prefix
+	 * @param type
+	 */
+	public void parseEmbeddable(final QEntityFactory entityFactory,
+	                            final SessionFactoryImplementor sessionFactory,
+	                            final String prefix,
+	                            final EmbeddableType<?> type)
+	{
+		this.metamodelEmbeddable = type;
+		// Make sure the entity factory sees this embeddable
+		entityFactory.getEmbeddable(type.getJavaType(), type);
+
+		for (Attribute<?, ?> attribute : type.getAttributes())
+		{
+			parseFields(entityFactory, sessionFactory, prefix, attribute);
+		}
+	}
+
+
 	private List<Field> getAllFields(Class clazz)
 	{
 		List<Field> fields = new ArrayList<>();
@@ -148,6 +200,7 @@ public class QEntity
 	 */
 	private void findReflectionIdFieldOrMethods()
 	{
+		// TODO replace with metamodelEntity OGNL? Could allow for easier customisation too
 		try
 		{
 			Field idField = null;
@@ -170,6 +223,7 @@ public class QEntity
 				}
 				else
 				{
+					// Annotation is on field, but field is not visible. We need to find the equivalent getter
 					final String getterName = "get" + idField.getName();
 					final String setterName = "set" + idField.getName();
 
@@ -234,30 +288,17 @@ public class QEntity
 	}
 
 
-	public void parseEmbeddable(final QEntityFactory entityFactory,
-	                            final SessionFactoryImplementor sessionFactory,
-	                            final String prefix,
-	                            final EmbeddableType<?> type)
-	{
-		// Make sure the entity factory sees this embeddable
-		entityFactory.getEmbeddable(type.getJavaType(), type);
-
-		for (Attribute<?, ?> attribute : type.getAttributes())
-		{
-			parseFields(entityFactory, sessionFactory, prefix, attribute);
-		}
-	}
-
-
-	protected boolean isEagerFetch(Attribute<?, ?> attribute)
+	protected boolean isEagerFetch(final Attribute<?, ?> attribute)
 	{
 		if (attribute.isCollection() || attribute.isAssociation())
 		{
-			Member member = attribute.getJavaMember();
+			final Member member = attribute.getJavaMember();
 
 			if (member instanceof AnnotatedElement)
 			{
 				final AnnotatedElement el = (AnnotatedElement) member;
+
+				final boolean hasEagerFetch = el.isAnnotationPresent(EagerFetch.class);
 
 				final FetchType fetchType;
 				if (el.isAnnotationPresent(OneToMany.class))
@@ -273,7 +314,20 @@ public class QEntity
 				else
 					return false;
 
-				return (fetchType == FetchType.EAGER);
+				if (hasEagerFetch && fetchType == FetchType.EAGER)
+					log.warn(
+							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: " +
+							clazz +
+							" " +
+							member.toString());
+				else if (!hasEagerFetch && fetchType == FetchType.EAGER)
+					log.warn(
+							"ENTITY HAS JPA fetch=EAGER annotation instead of @EagerFetch - will not be able to instruct Hibernate to suppress fetching this relation: " +
+							clazz +
+							" " +
+							member.toString());
+
+				return (hasEagerFetch || fetchType == FetchType.EAGER);
 			}
 		}
 
@@ -706,5 +760,118 @@ public class QEntity
 
 		// Found no more specific subclass
 		return this;
+	}
+
+
+	/**
+	 * Build or return the default Entity Graph that represents defaultExpand
+	 *
+	 * @param session
+	 *
+	 * @return
+	 */
+	public EntityGraph getDefaultGraph(final Session session)
+	{
+		if (this.defaultExpandGraph == null)
+		{
+			final EntityGraph<?> graph = session.createEntityGraph(clazz);
+
+			populateGraph(graph, getEagerFetch());
+
+			this.defaultExpandGraph = graph;
+
+			return graph;
+		}
+		else
+		{
+			return this.defaultExpandGraph;
+		}
+	}
+
+
+	/**
+	 * Creates an EntityGraph representing the
+	 *
+	 * @param graph
+	 * @param fetches
+	 */
+	private void populateGraph(final EntityGraph<?> graph, final Set<String> fetches)
+	{
+		Map<String, Subgraph<?>> created = new HashMap<>();
+
+		for (String fetch : fetches)
+		{
+			final String[] parts = StringUtils.split(fetch, '.');
+
+			// Starts of null (meaning parent is the root graph), updated as we go through path segments to refer to the last path segment
+			Subgraph<?> parent = null;
+
+			// Iterate over the path segments, adding attributes subgraphs
+			for (int i = 0; i < parts.length; i++)
+			{
+				final String path = StringUtils.join(parts, '.', 0, i + 1);
+				final boolean isLeaf = (i == parts.length - 1);
+
+				final Subgraph<?> existing = created.get(path);
+
+				if (existing == null)
+				{
+					if (parent == null)
+					{
+						try
+						{
+							// Relation under root
+							graph.addAttributeNodes(parts[i]);
+
+							// Only set up a subgraph if this is not a leaf node
+							// This prevents us trying to add a Subgraph for a List of Embeddable
+							if (!isLeaf)
+								parent = graph.addSubgraph(parts[i]);
+						}
+						catch (IllegalArgumentException e)
+						{
+							throw new IllegalArgumentException("Error adding graph member " +
+							                                   parts[i] +
+							                                   " with isLeaf=" +
+							                                   isLeaf +
+							                                   " to root as part of " +
+							                                   fetch, e);
+						}
+					}
+					else
+					{
+						try
+						{
+							// Relation under parent
+							parent.addAttributeNodes(parts[i]);
+
+							// Only set up a subgraph if this is not a leaf node
+							// This prevents us trying to add a Subgraph for a List of Embeddable
+							if (!isLeaf)
+								parent = parent.addSubgraph(parts[i]);
+						}
+						catch (IllegalArgumentException e)
+						{
+							throw new IllegalArgumentException("Error adding graph member " +
+							                                   parts[i] +
+							                                   " with isLeaf=" +
+							                                   isLeaf +
+							                                   " as part of " +
+							                                   fetch +
+							                                   " with parent.class=" +
+							                                   parent.getClassType(), e);
+						}
+					}
+
+					if (!isLeaf)
+						created.put(path, parent);
+				}
+				else
+				{
+					// Already seen this graph node before
+					parent = existing;
+				}
+			}
+		}
 	}
 }
