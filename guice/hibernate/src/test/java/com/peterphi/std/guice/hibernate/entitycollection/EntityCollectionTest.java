@@ -29,6 +29,9 @@ public class EntityCollectionTest
 	@Inject
 	HibernateDao<ChildEntity, Long> rDao;
 
+	@Inject
+	HibernateDao<AlternateIdReferencingEntity, Long> altDao;
+
 
 	/**
 	 * Simple test that using HQL works
@@ -41,6 +44,13 @@ public class EntityCollectionTest
 		List<Long> ids = dao.getIdsByQuery("select q.id FROM parent_entity q");
 
 		assertEquals(0, ids.size());
+	}
+
+
+	@Test
+	public void testRetrieveEmbeddable()
+	{
+		altDao.getById(1L);
 	}
 
 
