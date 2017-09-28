@@ -8,13 +8,16 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.apache.commons.lang.StringUtils;
+import org.hibernate.Hibernate;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 @RunWith(GuiceUnit.class)
 @GuiceConfig(config = "hibernate-tests-in-memory-hsqldb.properties", classPackages = ParentEntity.class)
@@ -318,8 +321,10 @@ public class EntityCollectionTest
 
 
 	@Transactional
-	public void load()
+	public List<Long> load()
 	{
+		List<Long> parentIds = new ArrayList<>();
+
 		{
 			ParentEntity p1 = new ParentEntity();
 			p1.setCapacity(2);
@@ -339,6 +344,8 @@ public class EntityCollectionTest
 			c3.setParent(p1);
 			c3.setFlag(false);
 			c3.setId(rDao.save(c3));
+
+			parentIds.add(p1.getId());
 		}
 
 
@@ -361,6 +368,45 @@ public class EntityCollectionTest
 			c3.setParent(p2);
 			c3.setFlag(false);
 			c3.setId(rDao.save(c3));
+
+			parentIds.add(p2.getId());
+		}
+
+		return parentIds;
+	}
+
+
+	@Test
+	public void testGetById() throws Exception
+	{
+		List<Long> ids = load();
+
+		final ParentEntity entity = dao.getById(ids.get(0));
+
+		assertTrue("Parent should be initialised", Hibernate.isInitialized(entity));
+		assertTrue("Parent.Children should be initialised", Hibernate.isInitialized(entity.getChildren()));
+		for (ChildEntity childEntity : entity.getChildren())
+		{
+			assertTrue("ChildEntity should be initialised", Hibernate.isInitialized(childEntity));
+		}
+	}
+
+
+	@Test
+	public void testGetListByIds() throws Exception
+	{
+		List<Long> ids = load();
+
+		final List<ParentEntity> entities = dao.getListById(ids);
+
+		for (ParentEntity entity : entities)
+		{
+			assertTrue("Parent should be initialised", Hibernate.isInitialized(entity));
+			assertTrue("Parent.Children should be initialised", Hibernate.isInitialized(entity.getChildren()));
+			for (ChildEntity childEntity : entity.getChildren())
+			{
+				assertTrue("ChildEntity should be initialised", Hibernate.isInitialized(childEntity));
+			}
 		}
 	}
 

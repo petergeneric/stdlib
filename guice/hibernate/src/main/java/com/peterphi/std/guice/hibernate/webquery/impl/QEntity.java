@@ -4,17 +4,20 @@ import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
+import javax.persistence.EntityGraph;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
+import javax.persistence.Subgraph;
 import javax.persistence.Table;
 import javax.persistence.metamodel.Attribute;
 import javax.persistence.metamodel.EmbeddableType;
@@ -59,6 +62,8 @@ public class QEntity
 	private Method idGetMethod;
 
 	private Set<String> defaultExpand;
+	private EntityGraph defaultExpandGraph;
+
 	private Set<String> eagerRelations = new HashSet<>(0);
 
 	private Map<String, Attribute> nonEntityRelations = new HashMap<>(0);
@@ -711,5 +716,80 @@ public class QEntity
 
 		// Found no more specific subclass
 		return this;
+	}
+
+
+	/**
+	 * Build or return the default Entity Graph that represents defaultExpand
+	 *
+	 * @param session
+	 *
+	 * @return
+	 */
+	public EntityGraph getDefaultGraph(final Session session)
+	{
+		if (this.defaultExpandGraph == null)
+		{
+			final EntityGraph<?> graph = session.createEntityGraph(clazz);
+
+			populateGraph(graph, getEagerFetch());
+
+			this.defaultExpandGraph = graph;
+
+			return graph;
+		}
+		else
+		{
+			return this.defaultExpandGraph;
+		}
+	}
+
+
+	/**
+	 * Creates an EntityGraph representing the
+	 * @param graph
+	 * @param fetches
+	 */
+	private void populateGraph(final EntityGraph<?> graph, final Set<String> fetches)
+	{
+		Map<String, Subgraph<?>> created = new HashMap<>();
+
+		for (String fetch : fetches)
+		{
+			Subgraph<?> parent = null;
+
+			final String[] parts = StringUtils.split(fetch, '.');
+
+			for (int i = 0; i < parts.length; i++)
+			{
+				final String path = StringUtils.join(parts, '.', 0, i + 1);
+
+				final Subgraph<?> existing = created.get(path);
+
+				if (existing == null)
+				{
+					if (parent == null)
+					{
+						// Relation under root
+						graph.addAttributeNodes(parts[i]);
+						parent = graph.addSubgraph(parts[i]);
+
+					}
+					else
+					{
+						// Relation under parent
+						parent.addAttributeNodes(parts[i]);
+						parent = parent.addSubgraph(parts[i]);
+					}
+
+					created.put(path, parent);
+				}
+				else
+				{
+					// Already seen this graph node before
+					parent = existing;
+				}
+			}
+		}
 	}
 }

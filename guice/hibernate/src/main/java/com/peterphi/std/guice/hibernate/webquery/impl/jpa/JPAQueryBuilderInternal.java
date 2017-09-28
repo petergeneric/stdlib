@@ -12,13 +12,16 @@ public interface JPAQueryBuilderInternal
 {
 	/**
 	 * Add new Predicates which will be ANDed together with the top-level constraints specified in the WebQuery
+	 *
 	 * @param predicates
 	 * 		the predicate(s) to add
 	 */
 	void addConstraints(Predicate... predicates);
 
 	/**
-	 * Add new constraints as if they'd been defined at the top level of the WebQuery (N.B. will be ANDed together with all other constraints
+	 * Add new constraints as if they'd been defined at the top level of the WebQuery (N.B. will be ANDed together with all other
+	 * constraints
+	 *
 	 * @param constraints
 	 */
 	void addConstraints(List<WQConstraintLine> constraints);
@@ -40,4 +43,9 @@ public interface JPAQueryBuilderInternal
 	 * @return
 	 */
 	JPAJoin getOrCreateJoin(final WQPath path);
+
+	/**
+	 * Set up fetch joins as specified by the dbfetch/expand/default EAGER fetch annotations
+	 */
+	void applyFetches();
 }

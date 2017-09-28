@@ -575,10 +575,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	{
 		generated.select(root);
 
-		if (fetches != null)
-		{
-			addFetches(fetches);
-		}
+		applyFetches();
 
 		generated.orderBy(orders); // Make sure we return the results in the correct order
 
@@ -592,6 +589,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
 		return query;
+	}
+
+
+	@Override
+	public void applyFetches()
+	{
+		if (fetches != null)
+			addFetches(fetches);
 	}
 
 
