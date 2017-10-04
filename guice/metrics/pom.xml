@@ -37,7 +37,7 @@
 
 		<!-- metrics -->
 		<dependency>
-			<groupId>com.codahale.metrics</groupId>
+			<groupId>io.dropwizard.metrics</groupId>
 			<artifactId>metrics-json</artifactId>
 			<version>${metrics.version}</version>
 		</dependency>

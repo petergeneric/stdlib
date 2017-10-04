@@ -43,7 +43,7 @@
 		
 		<guice.version>3.2.6</guice.version>
 <!--		<guice.version>4.1.0</guice.version> -->
-		<metrics.version>3.0.2</metrics.version>
+		<metrics.version>3.2.3</metrics.version>
 		<resteasy.version>3.1.4.Final</resteasy.version>
 		<javassist.version>3.19.0-GA</javassist.version>
 		<hibernate.version>5.2.11.Final</hibernate.version>
