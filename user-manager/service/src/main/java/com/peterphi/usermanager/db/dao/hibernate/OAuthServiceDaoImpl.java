@@ -2,11 +2,10 @@ package com.peterphi.usermanager.db.dao.hibernate;
 
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 import java.util.Arrays;
 import java.util.List;
@@ -56,8 +55,13 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 				return entity; // If there's no redirectUri supplied then allow it
 
 			// N.B. database can have \r\n so we need to normalise this
-			final List<String> endpoints = Arrays.stream(StringUtils.trimToEmpty(entity.getEndpoints()).replace('\r','\n').split("\n")).map(
-					StringUtils:: trimToEmpty).filter(s -> s.length() > 0).collect(Collectors.toList());
+			final List<String> endpoints = Arrays
+					                               .stream(StringUtils
+							                                       .trimToEmpty(entity.getEndpoints())
+							                                       .replace('\r', '\n')
+							                                       .split("\n")).map(StringUtils:: trimToEmpty)
+					                               .filter(s -> s.length() > 0)
+					                               .collect(Collectors.toList());
 
 			if (log.isDebugEnabled())
 				log.debug("Check endpoint " + redirectUri + " against " + Arrays.asList(endpoints));
@@ -96,13 +100,10 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 
 	public OAuthServiceEntity getByClientIdAndSecretAndEndpoint(final String id, final String secret, final String redirectUri)
 	{
-		final Criteria criteria = createCriteria();
-
-		criteria.add(Restrictions.eq("id", id));
-		criteria.add(Restrictions.eq("enabled", true));
-		criteria.add(Restrictions.eq("clientSecret", secret));
-
-		final OAuthServiceEntity entity = uniqueResult(criteria);
+		final OAuthServiceEntity entity = uniqueResult(new WebQuery()
+				                                               .eq("id", id)
+				                                               .eq("enabled", true)
+				                                               .eq("clientSecret", secret));
 
 		return filterByEndpoint(entity, redirectUri);
 	}

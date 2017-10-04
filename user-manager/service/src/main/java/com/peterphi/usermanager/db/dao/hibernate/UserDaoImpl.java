@@ -1,14 +1,13 @@
 package com.peterphi.usermanager.db.dao.hibernate;
 
-import com.peterphi.std.guice.common.auth.iface.CurrentUser;
-import com.peterphi.usermanager.db.entity.UserEntity;
 import com.google.inject.Singleton;
 import com.peterphi.std.crypto.BCrypt;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.usermanager.db.entity.UserEntity;
 import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -50,11 +49,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 	public UserEntity getUserByEmail(String email)
 	{
-		final Criteria criteria = createCriteria();
-
-		criteria.add(Restrictions.eq("email", email));
-
-		return uniqueResult(criteria);
+		return uniqueResult(new WebQuery().eq("email", email));
 	}
 
 
@@ -145,14 +140,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	@Transactional
 	public UserEntity loginBySessionReconnectKey(String key)
 	{
-		final Criteria criteria = createCriteria();
-
-		criteria.add(Restrictions.eq("local", true));
-		criteria.add(Restrictions.eq("sessionReconnectKey", key));
-
-		criteria.setMaxResults(1);
-
-		final UserEntity account = uniqueResult(criteria);
+		final UserEntity account = uniqueResult(new WebQuery().eq("local", true).eq("sessionReconnectKey", key));
 
 		if (account != null)
 		{

@@ -1,6 +1,7 @@
 package com.peterphi.usermanager.db.dao;
 
 import com.google.inject.Inject;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthServiceDaoImpl;
@@ -39,5 +40,12 @@ public class CreateDatabaseSchemaTest
 		serviceDao.getAll();
 		sessionDao.getAll();
 		contextDao.getAll();
+	}
+
+
+	@Test
+	public void test()
+	{
+		sessionDao.find(new WebQuery().eq("active",true).eq("service.id","123"));
 	}
 }

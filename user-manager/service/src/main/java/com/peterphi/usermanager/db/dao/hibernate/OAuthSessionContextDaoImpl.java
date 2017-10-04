@@ -3,12 +3,11 @@ package com.peterphi.usermanager.db.dao.hibernate;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 
 @Singleton
 public class OAuthSessionContextDaoImpl extends HibernateDao<OAuthSessionContextEntity, Integer>
@@ -16,14 +15,11 @@ public class OAuthSessionContextDaoImpl extends HibernateDao<OAuthSessionContext
 	@Transactional(readOnly = true)
 	public OAuthSessionContextEntity get(final int userId, final String serviceId, final String scope)
 	{
-		Criteria criteria = createCriteria();
-
-		criteria.add(Restrictions.eq("user.id", userId));
-		criteria.add(Restrictions.eq("service.id", serviceId));
-		criteria.add(Restrictions.eq("scope", StringUtils.trimToEmpty(scope)));
-		criteria.add(Restrictions.eq("active", true));
-
-		return uniqueResult(criteria);
+		return uniqueResult(new WebQuery()
+				                    .eq("user.id", userId)
+				                    .eq("service.id", serviceId)
+				                    .eq("scope", StringUtils.trimToEmpty(scope))
+				                    .eq("active", true));
 	}
 
 

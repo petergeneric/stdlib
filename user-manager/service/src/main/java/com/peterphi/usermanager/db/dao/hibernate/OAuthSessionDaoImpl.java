@@ -3,12 +3,11 @@ package com.peterphi.usermanager.db.dao.hibernate;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
-import org.hibernate.Criteria;
-import org.hibernate.criterion.Restrictions;
 import org.joda.time.DateTime;
 
 @Singleton
@@ -37,15 +36,11 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	                                                          final String refreshToken,
 	                                                          final DateTime newExpires)
 	{
-		Criteria criteria = createCriteria();
-
-		criteria.createAlias("context.service", "service");
-		criteria.add(Restrictions.eq("id", refreshToken));
-		criteria.add(Restrictions.isNotNull("token"));
-		criteria.add(Restrictions.eq("alive", true));
-		criteria.add(Restrictions.eq("service.id", service.getId()));
-
-		final OAuthSessionEntity session = uniqueResult(criteria);
+		final OAuthSessionEntity session = uniqueResult(new WebQuery()
+				                                                .eq("id", refreshToken)
+				                                                .isNotNull("token")
+				                                                .eq("alive", true)
+				                                                .eq("context.service.id", service.getId()));
 
 		if (session == null)
 			return null;
@@ -62,15 +57,11 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	@Transactional
 	public OAuthSessionEntity exchangeCodeForToken(final OAuthServiceEntity service, final String authorisationCode)
 	{
-		Criteria criteria = createCriteria();
-
-		criteria.createAlias("context.service", "service");
-		criteria.add(Restrictions.eq("authorisationCode", authorisationCode));
-		criteria.add(Restrictions.isNull("token"));
-		criteria.add(Restrictions.eq("alive", true));
-		criteria.add(Restrictions.eq("service.id", service.getId()));
-
-		final OAuthSessionEntity session = uniqueResult(criteria);
+		final OAuthSessionEntity session = uniqueResult(new WebQuery()
+				                                                .eq("authorisationCode", authorisationCode)
+				                                                .isNull("token")
+				                                                .eq("alive", true)
+				                                                .eq("context.service.id", service.getId()));
 
 		if (session == null)
 			return null;
@@ -106,12 +97,6 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	@Transactional(readOnly = true)
 	public OAuthSessionEntity getByToken(final String token)
 	{
-		Criteria criteria = createCriteria();
-
-		criteria.add(Restrictions.eq("token", token));
-		criteria.add(Restrictions.eq("alive", true));
-		criteria.add(Restrictions.gt("expires", DateTime.now()));
-
-		return uniqueResult(criteria);
+		return uniqueResult(new WebQuery().eq("token", token).eq("alive", true).eq("expires", DateTime.now()));
 	}
 }
