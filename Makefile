@@ -29,11 +29,14 @@ endif
 
 all: install
 
-hagent:
+hagent: clean
 	$(MVN) package -am --projects service-manager/host-agent
 
-sman:
+sman: clean
 	$(MVN) package -am --projects service-manager/service-manager
+
+uman: clean
+	$(MVN) package -DskipTests=true -am --projects user-manager/service
 
 sman-full: sman
 ifndef host
@@ -54,8 +57,7 @@ pwconfig-service-full:
 	$(MVN) package -DskipTests=true -am --projects service-manager/configuration
 	rsync -avzr --progress service-manager/configuration/target/*.war /opt/tomcat/webapps/config.war
 
-pwuman:
-	$(MVN) package -DskipTests=true -am --projects user-manager/service
+pwuman: uman
 	rsync -avzr --progress user-manager/service/target/*.war /opt/tomcat/webapps/user-manager.war
 
 pwsman:
