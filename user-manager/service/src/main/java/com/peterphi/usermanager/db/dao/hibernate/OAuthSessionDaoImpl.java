@@ -97,6 +97,6 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	@Transactional(readOnly = true)
 	public OAuthSessionEntity getByToken(final String token)
 	{
-		return uniqueResult(new WebQuery().eq("token", token).eq("alive", true).eq("expires", DateTime.now()));
+		return uniqueResult(new WebQuery().eq("token", token).eq("alive", true).gt("expires", DateTime.now()));
 	}
 }
