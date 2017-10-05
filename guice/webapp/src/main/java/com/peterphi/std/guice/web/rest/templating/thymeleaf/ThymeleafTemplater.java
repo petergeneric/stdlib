@@ -85,7 +85,7 @@ public class ThymeleafTemplater implements Templater
 	 *
 	 * @return
 	 */
-	private IContext makeContext()
+	protected IContext makeContext()
 	{
 		final HttpCallContext http = HttpCallContext.peek();
 
