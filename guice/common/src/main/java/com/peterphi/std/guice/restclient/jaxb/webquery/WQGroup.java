@@ -185,7 +185,7 @@ public class WQGroup extends WQConstraintLine
 
 
 	/**
-	 * Construct a new AND group and return it for method chaining
+	 * Construct a new OR group and return it for method chaining
 	 *
 	 * @return
 	 */
@@ -206,11 +206,11 @@ public class WQGroup extends WQConstraintLine
 	 */
 	public WQGroup or()
 	{
-		final WQGroup and = WQGroup.newAnd();
+		final WQGroup or = WQGroup.newOr();
 
-		add(and);
+		add(or);
 
-		return and;
+		return or;
 	}
 
 

@@ -454,11 +454,11 @@ public class WebQuery
 	 */
 	public WQGroup or()
 	{
-		final WQGroup and = WQGroup.newOr();
+		final WQGroup or = WQGroup.newOr();
 
-		add(and);
+		add(or);
 
-		return and;
+		return or;
 	}
 
 
