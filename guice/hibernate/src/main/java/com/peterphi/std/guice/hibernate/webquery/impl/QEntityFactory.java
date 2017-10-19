@@ -25,6 +25,7 @@ public class QEntityFactory
 	private final SessionFactoryImplementor sessionFactory;
 	private final Map<Class<?>, EmbeddableType<?>> embeddableTypeMap = new HashMap<>();
 
+
 	@Inject
 	public QEntityFactory(final SessionFactory sessionFactory)
 	{
@@ -65,7 +66,9 @@ public class QEntityFactory
 	{
 		if (!entities.containsKey(clazz))
 		{
-			log.debug("Begin create QEntity " + clazz);
+			if (log.isDebugEnabled())
+				log.debug("Begin create QEntity " + clazz);
+
 			final EntityType<T> metadata = sessionFactory.getMetamodel().entity(clazz);
 
 			if (metadata == null)
@@ -78,7 +81,8 @@ public class QEntityFactory
 
 			entity.parse(this, metadata, sessionFactory);
 
-			log.debug("End create QEntity " + clazz);
+			if (log.isDebugEnabled())
+				log.debug("End create QEntity " + clazz);
 		}
 
 		return entities.get(clazz);
@@ -89,14 +93,16 @@ public class QEntityFactory
 	{
 		if (!entities.containsKey(clazz))
 		{
-			log.debug("Begin create QEntity " + clazz + " from EmbeddableType " + ct);
+			if (log.isDebugEnabled())
+				log.debug("Begin create QEntity " + clazz + " from EmbeddableType " + ct);
 
 			QEntity entity = new QEntity(clazz);
 			entities.put(clazz, entity);
 
-			entity.parseEmbeddable(this, sessionFactory,null, ct);
+			entity.parseEmbeddable(this, sessionFactory, null, ct);
 
-			log.debug("End create QEntity " + clazz + " from EmbeddableType " + ct);
+			if (log.isDebugEnabled())
+				log.debug("End create QEntity " + clazz + " from EmbeddableType " + ct);
 		}
 
 		return entities.get(clazz);
