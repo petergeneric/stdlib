@@ -25,6 +25,7 @@ import javax.persistence.criteria.Expression;
 import javax.persistence.criteria.Fetch;
 import javax.persistence.criteria.JoinType;
 import javax.persistence.criteria.Order;
+import javax.persistence.criteria.ParameterExpression;
 import javax.persistence.criteria.Path;
 import javax.persistence.criteria.Predicate;
 import javax.persistence.criteria.Root;
@@ -62,6 +63,8 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	// If specified, overrides the default fetches
 	private Set<String> fetches;
+
+	private Map<ParameterExpression, Object> params = new HashMap<>();
 
 
 	public JPAQueryBuilder(final Session session, final QEntity entity)
@@ -248,15 +251,15 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
 			case RANGE:
-				return criteriaBuilder.between(property, parseGeneric(property, line.value), parseGeneric(property, line.value2));
+				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
 			case GE:
-				return criteriaBuilder.greaterThanOrEqualTo(property, parseGeneric(property, line.value));
+				return criteriaBuilder.greaterThanOrEqualTo(property, parse(property, line.value));
 			case GT:
-				return criteriaBuilder.greaterThan(property, parseGeneric(property, line.value));
+				return criteriaBuilder.greaterThan(property, parse(property, line.value));
 			case LE:
-				return criteriaBuilder.lessThanOrEqualTo(property, parseGeneric(property, line.value));
+				return criteriaBuilder.lessThanOrEqualTo(property, parse(property, line.value));
 			case LT:
-				return criteriaBuilder.lessThan(property, parseGeneric(property, line.value));
+				return criteriaBuilder.lessThan(property, parse(property, line.value));
 			case EQ_REF:
 				return criteriaBuilder.equal(property, getProperty(new WQPath(line.value)));
 			case NEQ_REF:
@@ -275,26 +278,15 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	/**
-	 * N.B. the odd function signature is so that the return of this method will correctly match against methods like {@link
-	 * CriteriaBuilder#lessThan(Expression, Comparable)} (since there is a similar generic overload that takes an Expression)
-	 *
-	 * @param property
-	 * @param value
-	 * @param <Y>
-	 *
-	 * @return
-	 */
-	private <Y extends Comparable<? super Y>> Y parseGeneric(final Expression<? extends T> property, final String value)
+	private ParameterExpression parse(final Expression property, final String value)
 	{
-		return (Y) parse(property, value);
+		return param(parseValue(property, value));
 	}
 
 
-	private Object parse(final Expression property, final String value)
+	private Object parseValue(final Expression property, final String value)
 	{
 		final Class clazz = property.getJavaType();
-
 		return WQTypeHelper.parse(clazz, value);
 	}
 
@@ -326,11 +318,24 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 			final Expression property = getProperty(field);
 
-			return property.in(group.constraints
-					                   .stream()
-					                   .map(l -> parse(property, ((WQConstraint) l).value))
-					                   .collect(Collectors.toList()));
+			final List<Object> ids = group.constraints
+					                         .stream()
+					                         .map(l -> parseValue(property, ((WQConstraint) l).value))
+					                         .collect(Collectors.toList());
+			return property.in(param(ids));
 		}
+	}
+
+
+	private <T> ParameterExpression<T> param(final T value)
+	{
+		final Class<T> clazz = (Class<T>) value.getClass();
+
+		final ParameterExpression<T> param = criteriaBuilder.parameter(clazz);
+
+		params.put(param, value);
+
+		return param;
 	}
 
 
@@ -371,6 +376,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public void forWebQuery(final WebQuery query)
 	{
+		this.params.clear();
 		this.generated = criteriaBuilder.createQuery();
 		this.generated.distinct(false);
 
@@ -437,6 +443,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public void forIDs(final WebQuery original, final List<?> ids)
 	{
+		this.params.clear();
 		this.generated = criteriaBuilder.createQuery();
 		this.generated.distinct(false);
 
@@ -461,9 +468,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 		if (root.getModel().hasSingleIdAttribute())
 		{
-			final Path id = root.get(root.getModel().getId(root.getModel().getIdType().getJavaType()));
+			final Class idClass = root.getModel().getIdType().getJavaType();
 
-			generated.where(id.in(ids));
+			final Path id = root.get(root.getModel().getId(idClass));
+
+			generated.where(id.in(param(ids)));
 		}
 		else
 		{
@@ -531,6 +540,12 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		if (limit != null)
 			query.getQueryOptions().setMaxRows(limit);
 
+		// Set all the parameters
+		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
+		{
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
+
 		return query;
 	}
 
@@ -567,6 +582,12 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		if (limit != null)
 			query.getQueryOptions().setMaxRows(limit);
 
+		// Set all the parameters
+		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
+		{
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
+
 		return query;
 	}
 
@@ -587,6 +608,12 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			query.getQueryOptions().setMaxRows(limit);
 
 		query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+
+		// Set all the parameters
+		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
+		{
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
 
 		return query;
 	}
