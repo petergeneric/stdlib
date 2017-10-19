@@ -549,7 +549,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		if (performSeparateIdQueryForLargeTables && isLargeTable && (strategy == null || strategy == JPASearchStrategy.AUTO))
 			strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 
-		return searchExecutor.find(this :: createQueryBuilder, getQEntity(), query, strategy, serialiser);
+		return searchExecutor.find(getQEntity(), query, strategy, serialiser);
 	}
 
 

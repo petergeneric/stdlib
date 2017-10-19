@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.jpa;
 
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor;
 import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
@@ -9,24 +10,22 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.SessionFactory;
 
 import java.util.List;
 import java.util.function.Function;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
+@Singleton
 public class JPASearchExecutor
 {
 	private static final Logger log = Logger.getLogger(JPASearchExecutor.class);
 
-	protected final HibernateObservingInterceptor hibernateObserver;
-
+	@Inject
+	HibernateObservingInterceptor hibernateObserver;
 
 	@Inject
-	public JPASearchExecutor(HibernateObservingInterceptor hibernateObserver)
-	{
-		this.hibernateObserver = hibernateObserver;
-	}
+	SessionFactory sessionFactory;
 
 
 	/**
@@ -41,8 +40,7 @@ public class JPASearchExecutor
 	 *
 	 * @return
 	 */
-	public <T> ConstrainedResultSet<T> find(Supplier<JPAQueryBuilder> queryBuilderProvider,
-	                                        final QEntity entity,
+	public <T> ConstrainedResultSet<T> find(final QEntity entity,
 	                                        final WebQuery query,
 	                                        JPASearchStrategy strategy,
 	                                        Function<?, ?> serialiser)
@@ -55,7 +53,7 @@ public class JPASearchExecutor
 			statementLog = null;
 
 		// Build a view of the query based on
-		JPAQueryBuilder builder = queryBuilderProvider.get();
+		JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
 		builder.forWebQuery(query);
 
 
@@ -128,7 +126,7 @@ public class JPASearchExecutor
 					total = builder.selectCount();
 
 				// Now re-query to retrieve the entities
-				builder = queryBuilderProvider.get();
+				builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
 				builder.forIDs(query, list);
 
 				if (!list.isEmpty())
