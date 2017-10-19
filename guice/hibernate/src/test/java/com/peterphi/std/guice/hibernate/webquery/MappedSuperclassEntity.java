@@ -15,4 +15,16 @@ public class MappedSuperclassEntity extends AbstractEntity
 
 	@Column(name = "obj_name")
 	private String name;
+
+
+	public Long getId()
+	{
+		return id;
+	}
+
+
+	public String getName()
+	{
+		return name;
+	}
 }
