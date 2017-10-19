@@ -12,8 +12,8 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.Context;
-import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.WebContext;
 
 import java.util.HashMap;
@@ -70,11 +70,11 @@ public class ThymeleafTemplater implements Templater
 
 	public ThymeleafCall template(final String name)
 	{
-		final IContext ctx = makeContext();
+		final AbstractContext ctx = makeContext();
 
 		// Expose the service configuration
-		ctx.getVariables().put("config", configuration);
-		ctx.getVariables().putAll(data);
+		ctx.setVariable("config", configuration);
+		ctx.setVariables(data);
 
 		return new ThymeleafCall(engine, ctx, name, calls, failures);
 	}
@@ -85,7 +85,7 @@ public class ThymeleafTemplater implements Templater
 	 *
 	 * @return
 	 */
-	protected IContext makeContext()
+	protected AbstractContext makeContext()
 	{
 		final HttpCallContext http = HttpCallContext.peek();
 
