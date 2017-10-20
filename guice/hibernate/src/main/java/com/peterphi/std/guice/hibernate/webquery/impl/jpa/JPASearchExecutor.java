@@ -52,104 +52,110 @@ public class JPASearchExecutor
 		else
 			statementLog = null;
 
-		// Build a view of the query based on
-		JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
-		builder.forWebQuery(query);
-
-
-		// If the auto strategy is in play, take into account what's being fetched back as well as whether there are any explicit collection joins or fetches
-		if (strategy == null || strategy == JPASearchStrategy.AUTO)
+		try
 		{
-			if (StringUtils.equals(query.getFetch(), "id"))
+
+			// Build a view of the query based on
+			JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+			builder.forWebQuery(query);
+
+
+			// If the auto strategy is in play, take into account what's being fetched back as well as whether there are any explicit collection joins or fetches
+			if (strategy == null || strategy == JPASearchStrategy.AUTO)
 			{
-				strategy = JPASearchStrategy.ENTITY_WRAPPED_ID;
-			}
-			else
-			{
-				// If we're constraining by (or fetching) a collection AND we have a limit/offset, first get PKs for the entities and then fetch the entities
-				// This is necessary for correct pagination because the SQL resultset will have more than one row per entity, and our offset/limit is based on entity
-				if ((query.getLimit() > 0 || query.getOffset() > 0) &&
-				    (builder.hasCollectionJoin() || builder.hasCollectionFetch()))
+				if (StringUtils.equals(query.getFetch(), "id"))
 				{
-					strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
+					strategy = JPASearchStrategy.ENTITY_WRAPPED_ID;
 				}
 				else
 				{
-					strategy = JPASearchStrategy.ENTITY;
+					// If we're constraining by (or fetching) a collection AND we have a limit/offset, first get PKs for the entities and then fetch the entities
+					// This is necessary for correct pagination because the SQL resultset will have more than one row per entity, and our offset/limit is based on entity
+					if ((query.getLimit() > 0 || query.getOffset() > 0) && (builder.hasCollectionJoin() || builder.hasCollectionFetch()))
+					{
+						strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
+					}
+					else
+					{
+						strategy = JPASearchStrategy.ENTITY;
+					}
 				}
 			}
-		}
 
-		Long total = null;
-		List list;
-		switch (strategy)
-		{
-			case ID:
+			Long total = null;
+			List list;
+			switch (strategy)
 			{
-				list = builder.selectIDs();
+				case ID:
+				{
+					list = builder.selectIDs();
 
-				if (query.isComputeSize())
-					total = builder.selectCount();
+					if (query.isComputeSize())
+						total = builder.selectCount();
 
-				break;
-			}
-			case ENTITY_WRAPPED_ID:
-			{
-				list = builder.selectIDs();
+					break;
+				}
+				case ENTITY_WRAPPED_ID:
+				{
+					list = builder.selectIDs();
 
-				if (query.isComputeSize())
-					total = builder.selectCount();
+					if (query.isComputeSize())
+						total = builder.selectCount();
 
-				// Transform the IDs into entity objects with the ID field populated
-				list = (List) list.stream().map(entity:: newInstanceWithId).collect(Collectors.toList());
+					// Transform the IDs into entity objects with the ID field populated
+					list = (List) list.stream().map(entity:: newInstanceWithId).collect(Collectors.toList());
 
-				break;
-			}
-			case ENTITY:
-			{
-				// First, query for the total results (if desired)
-				if (query.isComputeSize())
-					total = builder.selectCount();
+					break;
+				}
+				case ENTITY:
+				{
+					// First, query for the total results (if desired)
+					if (query.isComputeSize())
+						total = builder.selectCount();
 
-				// TODO could we use ScrollableResults if there are collection joins? pagination would be tricky
+					// TODO could we use ScrollableResults if there are collection joins? pagination would be tricky
 
-				list = builder.selectEntity();
-
-				break;
-			}
-			case ID_THEN_QUERY_ENTITY:
-			{
-				// First, query for the IDs (and the total results if desired)
-				list = builder.selectIDs();
-
-				if (query.isComputeSize())
-					total = builder.selectCount();
-
-				// Now re-query to retrieve the entities
-				builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
-				builder.forIDs(query, list);
-
-				if (!list.isEmpty())
 					list = builder.selectEntity();
 
-				break;
+					break;
+				}
+				case ID_THEN_QUERY_ENTITY:
+				{
+					// First, query for the IDs (and the total results if desired)
+					list = builder.selectIDs();
+
+					if (query.isComputeSize())
+						total = builder.selectCount();
+
+					// Now re-query to retrieve the entities
+					builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+					builder.forIDs(query, list);
+
+					if (!list.isEmpty())
+						list = builder.selectEntity();
+
+					break;
+				}
+				default:
+					throw new NotImplementedException("Search Strategy " + strategy + " not yet implemented");
 			}
-			default:
-				throw new NotImplementedException("Search Strategy " + strategy + " not yet implemented");
+
+			// If a serialiser has been supplied,
+			if (serialiser != null)
+				list = (List) list.stream().map(serialiser).collect(Collectors.toList());
+
+			ConstrainedResultSet resultset = new ConstrainedResultSet<>(query, list);
+
+			if (statementLog != null)
+				resultset.setSql(statementLog.getAllStatements());
+
+			if (total != null)
+				resultset.setTotal(total);
+
+			return (ConstrainedResultSet<T>) resultset;
 		}
-
-		// If a serialiser has been supplied,
-		if (serialiser != null)
-			list = (List) list.stream().map(serialiser).collect(Collectors.toList());
-
-		ConstrainedResultSet resultset = new ConstrainedResultSet<>(query, list);
-
-		if (statementLog != null)
-			resultset.setSql(statementLog.getAllStatements());
-
-		if (total != null)
-			resultset.setTotal(total);
-
-		return (ConstrainedResultSet<T>) resultset;
+		finally {
+			statementLog.close();
+		}
 	}
 }
