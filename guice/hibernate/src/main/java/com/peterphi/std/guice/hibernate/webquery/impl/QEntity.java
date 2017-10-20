@@ -227,12 +227,6 @@ public class QEntity
 							clazz +
 							" " +
 							member.toString());
-				else if (!hasEagerFetch && fetchType == FetchType.EAGER)
-					log.warn(
-							"ENTITY HAS JPA fetch=EAGER annotation instead of @EagerFetch - will not be able to instruct Hibernate to suppress fetching this relation: " +
-							clazz +
-							" " +
-							member.toString());
 
 				return (hasEagerFetch || fetchType == FetchType.EAGER);
 			}
