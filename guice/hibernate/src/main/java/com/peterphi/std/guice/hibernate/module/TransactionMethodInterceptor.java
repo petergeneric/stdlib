@@ -26,6 +26,7 @@ import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
+import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
@@ -33,9 +34,11 @@ import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
+import org.hibernate.exception.SQLGrammarException;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import javax.persistence.OptimisticLockException;
+import javax.persistence.PersistenceException;
 import java.lang.reflect.Method;
 
 /**
@@ -283,7 +286,75 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 */
 	private boolean shouldRollback(Transactional annotation, Exception e)
 	{
-		return isInstanceOf(e, annotation.rollbackOn()) && !isInstanceOf(e, annotation.exceptOn());
+		return isInstanceOf(e, annotation.rollbackOn()) && !isInstanceOf(e, annotation.exceptOn()) ||
+		       isSqlServerSnapshotConflictError(e);
+	}
+
+
+	/**
+	 * Special-case for SQL Server SNAPSHOT isolation level: transaction conflicts result in an exception that hibernate is not properly aware of and cannot catch.<br />
+	 * It looks like this:
+	 * <pre>javax.persistence.PersistenceException: org.hibernate.exception.SQLGrammarException: could not execute statement
+	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:149)
+	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:157)
+	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:164)
+	 at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1443)
+	 at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:493)
+	 at org.hibernate.internal.SessionImpl.flushBeforeTransactionCompletion(SessionImpl.java:3207)
+	 at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:2413)
+	 at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:467)
+	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:156)
+	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.access$100(JdbcResourceLocalTransactionCoordinatorImpl.java:38)
+	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:231)
+	 at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:68)
+	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.complete(TransactionMethodInterceptor.java:316)
+	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.createTransactionAndExecuteMethod(TransactionMethodInterceptor.java:196)
+	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.invoke(TransactionMethodInterceptor.java:102)
+	 Caused by: org.hibernate.exception.SQLGrammarException: could not execute statement
+	 at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:106)
+	 at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:42)
+	 at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:111)
+	 at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:97)
+	 at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:178)
+	 at org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch.addToBatch(NonBatchingBatch.java:45)
+	 at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3198)
+	 at org.hibernate.persister.entity.AbstractEntityPersister.updateOrInsert(AbstractEntityPersister.java:3077)
+	 at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3457)
+	 at org.hibernate.action.internal.EntityUpdateAction.execute(EntityUpdateAction.java:145)
+	 at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:589)
+	 at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:463)
+	 at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:337)
+	 at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:39)
+	 at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1437)
+	 ... 14 more
+	 Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: Snapshot isolation transaction aborted due to update conflict. You cannot use snapshot isolation to access table 'table_name' directly or indirectly in database 'database_name' to update, delete, or insert the row that has been modified or deleted by another transaction. Retry the transaction or change the isolation level for the update/delete statement.
+	 at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDatabaseError(SQLServerException.java:217)
+	 at com.microsoft.sqlserver.jdbc.SQLServerStatement.getNextResult(SQLServerStatement.java:1655)
+	 at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement.doExecutePreparedStatement(SQLServerPreparedStatement.java:440)
+	 at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement$PrepStmtExecCmd.doExecute(SQLServerPreparedStatement.java:385)
+	 at com.microsoft.sqlserver.jdbc.TDSCommand.execute(IOBuffer.java:7505)</pre>
+	 * @param e
+	 * @return
+	 */
+	private boolean isSqlServerSnapshotConflictError(Throwable e)
+	{
+		// Looking for PersistenceException, wrapping a SQLGrammarException, wrapping a SQLServerException with text "Snapshot isolation transaction aborted due to update conflict"
+		if (e != null && e instanceof PersistenceException)
+		{
+			e = e.getCause();
+
+			if (e != null && e instanceof SQLGrammarException)
+			{
+				e = e.getCause();
+
+				if (e != null && StringUtils.equals(e.getClass().getName(), "com.microsoft.sqlserver.jdbc.SQLServerException")) {
+					return (StringUtils.startsWith(e.getMessage(), "Snapshot isolation transaction aborted due to update conflict"));
+				}
+			}
+		}
+
+		// Does not appear to match
+		return false;
 	}
 
 
