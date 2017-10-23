@@ -152,8 +152,6 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			// no transaction already started, so start one and enforce its semantics
 			final Transaction tx = session.beginTransaction();
 
-			session.createNativeQuery("SET TRANSACTION ISOLATION LEVEL SNAPSHOT;");
-
 			if (readOnly)
 				makeReadOnly(session);
 			else
