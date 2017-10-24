@@ -155,7 +155,8 @@ public class JPASearchExecutor
 			return (ConstrainedResultSet<T>) resultset;
 		}
 		finally {
-			statementLog.close();
+			if (statementLog != null)
+				statementLog.close();
 		}
 	}
 }
