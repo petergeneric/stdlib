@@ -425,6 +425,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				// Allow a special values of "-idcollections" and "-collections" to be used (ignored here currently, but usable in serialisers)
 				this.fetches.remove("-idcollections");
 				this.fetches.remove("-collections");
+				this.fetches.remove("none"); // Allow a special value of "none" to be used
 
 				// Treat expand=all (coming from older API clients) as if expand was not specified
 				if (this.fetches.size() == 1 && this.fetches.contains("all"))
@@ -433,10 +434,10 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 
 			// Fall back on entity default if a fetch/expand is unspecified, or if it is set to _default
-			if (this.fetches == null || (this.fetches.size() == 1 && this.fetches.contains("_default")))
-			{
+			if (this.fetches == null)
 				this.fetches = entity.getEagerFetch();
-			}
+			else if (this.fetches.contains("_default"))
+				this.fetches.addAll(entity.getEagerFetch());
 		}
 	}
 
