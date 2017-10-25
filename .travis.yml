@@ -9,7 +9,7 @@ before_cache:
   - rm -f $HOME/.m2/repository/com/peterphi
   
 jdk:
-  - oraclejdk8
+  - oraclejdk9
 
 env:
   global:

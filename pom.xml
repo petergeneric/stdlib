@@ -40,9 +40,7 @@
 		<junit.version>4.12</junit.version>
 		<httpclient.version>4.5.3</httpclient.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
-		
-		<guice.version>3.2.6</guice.version>
-<!--		<guice.version>4.1.0</guice.version> -->
+		<guice.version>4.2.0</guice.version>
 		<metrics.version>4.0.2</metrics.version>
 		<resteasy.version>3.1.4.Final</resteasy.version>
 		<javassist.version>3.19.0-GA</javassist.version>
@@ -114,6 +112,16 @@
 
 	<dependencies>
 		<dependency>
+			<groupId>javax.xml.bind</groupId>
+			<artifactId>jaxb-api</artifactId>
+			<version>2.3.0</version>
+		</dependency>
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.moxy</artifactId>
+			<version>2.7.0</version>
+		</dependency>
+		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>${slf4j.version}</version>
@@ -132,7 +140,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>3.1.0</version>
                     <!-- Write the build number and maven artifact info to the war manifest -->
                     <configuration>
                         <archive>
@@ -153,7 +161,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>2.6</version>
+                    <version>3.0.2</version>
 
                     <!-- Write the build number and maven artifact info to the jar manifest -->
                     <configuration>
@@ -184,7 +192,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.19</version>
+				<version>2.20.1</version>
 				<configuration>
 					<excludes>
 						<exclude>**/TestUtils.java</exclude>
@@ -198,10 +206,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.3</version>
+				<version>3.7.0</version>
 				<configuration>
-					<source>1.8</source>
-					<target>1.8</target>
+					<source>1.9</source>
+					<target>1.9</target>
 					<encoding>UTF-8</encoding>
 				</configuration>
 			</plugin>
