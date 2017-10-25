@@ -435,9 +435,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 			// Fall back on entity default if a fetch/expand is unspecified, or if it is set to _default
 			if (this.fetches == null)
+			{
 				this.fetches = entity.getEagerFetch();
+			}
 			else if (this.fetches.contains("_default"))
+			{
+				this.fetches.remove("_default");
 				this.fetches.addAll(entity.getEagerFetch());
+			}
 		}
 	}
 
