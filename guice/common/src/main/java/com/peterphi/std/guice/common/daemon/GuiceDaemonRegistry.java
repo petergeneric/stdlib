@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.daemon;
 
 import com.google.inject.Singleton;
 
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -29,6 +30,7 @@ public final class GuiceDaemonRegistry
 	{
 		return daemons.stream()
 		              .filter(d -> !(d instanceof GuiceRecurringDaemon))
+		              .sorted(Comparator.comparing(GuiceDaemon::getName))
 		              .collect(Collectors.toList());
 	}
 
@@ -43,6 +45,7 @@ public final class GuiceDaemonRegistry
 		return daemons.stream()
 		              .filter(d -> d instanceof GuiceRecurringDaemon)
 		              .map(d -> (GuiceRecurringDaemon) d)
+		              .sorted(Comparator.comparing(GuiceDaemon::getName))
 		              .collect(Collectors.toList());
 	}
 }
