@@ -174,6 +174,7 @@ class LiquibaseCore
 		else if (changeLogFile == null)
 			throw new RuntimeException("Cannot run Liquibase: " + GuiceProperties.LIQUIBASE_CHANGELOG + " is not set");
 
+		int storedTransactionIsolation = Integer.MIN_VALUE;
 		Connection connection = null;
 		Database database = null;
 		try
@@ -216,10 +217,24 @@ class LiquibaseCore
 					if (log.isDebugEnabled())
 						log.debug("Create JDBC Connection directly: " + jdbcUrl);
 
-					// TODO do we need to call Class.forName on the JDBC Driver URL?
-					// TODO JDBC drivers should expose themselves using the service provider interface nowadays so this shouldn't be necessary
+					// N.B. do we need to call Class.forName on the JDBC Driver URL?
+					// JDBC drivers should expose themselves using the service provider interface nowadays so this shouldn't be necessary
 
 					connection = DriverManager.getConnection(jdbcUrl, jdbcUsername, jdbcPassword);
+				}
+
+				// Allow changing the transaction isolation away from the default for liquibase
+				// This is a hack inserted for SQL Server where the SNAPSHOT isolation is being used
+				// because in this mode it refuses to execute certain DDL statements because of metadata not being versioned
+				{
+					storedTransactionIsolation = connection.getTransactionIsolation();
+
+					// Special-case SQL Server's SNAPSHOT isolation (magic value 4096)
+					// In this case we change to READ UNCOMMITTED for the duration of the liquibase run
+					if (storedTransactionIsolation == 4096)
+					{
+						connection.setTransactionIsolation(Connection.TRANSACTION_READ_COMMITTED);
+					}
 				}
 
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
@@ -281,6 +296,15 @@ class LiquibaseCore
 		}
 		finally
 		{
+			// Restore the transaction isolation value to the Connection (if the previous isolation was known and we changed it).
+			// This is just in case the Connection we get is actually a wrapper around a longer-lived Connection whose isolation
+			// isn't changed to the desired value when being returned from a connection pool
+			// N.B. we don't return to isolations < 0 (isolation at db defaults)
+			if (connection != null && connection.getTransactionIsolation() != storedTransactionIsolation && storedTransactionIsolation >= 0)
+			{
+				connection.setTransactionIsolation(storedTransactionIsolation);
+			}
+
 			if (database != null)
 				database.close();
 			else if (connection != null)
