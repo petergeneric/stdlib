@@ -106,19 +106,19 @@
 			</tr>
 			</thead>
 			<tbody>
-			<tr th:each="param: ${resource.parameters}">
-				<td th:unless="${param.entity}" th:text="${param.name}"></td>
-				<td th:if="${param.entity}">Request Body</td>
-				<td th:text="${param.type}"></td>
-				<td><span style="white-space: pre-line;" th:text="${param.description}"></span>
-					<th:block th:unless="${#lists.isEmpty(param.seeAlsoURLs)}">
+			<tr th:each="parm: ${resource.parameters}">
+				<td th:unless="${parm.entity}" th:text="${parm.name}"></td>
+				<td th:if="${parm.entity}">Request Body</td>
+				<td th:text="${parm.type}"></td>
+				<td><span style="white-space: pre-line;" th:text="${parm.description}"></span>
+					<th:block th:unless="${#lists.isEmpty(parm.seeAlsoURLs)}">
 						(See
-						<sup th:each="seeAlsoURL,seeAlsoStat: ${param.seeAlsoURLs}"><a th:href="${seeAlsoURL}"
+						<sup th:each="seeAlsoURL,seeAlsoStat: ${parm.seeAlsoURLs}"><a th:href="${seeAlsoURL}"
 						                                                               th:text="${seeAlsoStat.index}"></a> </sup>
 						)
 					</th:block>
 
-					<p th:if="${param.defaultValue}">Default Value: <span th:text="${param.defaultValue}"></span></p>
+					<p th:if="${parm.defaultValue}">Default Value: <span th:text="${parm.defaultValue}"></span></p>
 				</td>
 			</tr>
 			</tbody>
