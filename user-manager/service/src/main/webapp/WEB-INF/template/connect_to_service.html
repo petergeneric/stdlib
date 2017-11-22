@@ -11,10 +11,10 @@
 <!--<![endif]-->
 <head>
 	<title>User Manager: Log in to remote service</title>
-	<link th:substituteby="includes :: htmlhead"/>
+	<link th:replace="includes :: htmlhead"/>
 </head>
 <body>
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 
 <div class="container">
 	<h2>An application would like to connect to your account</h2>
@@ -46,10 +46,10 @@
 		</form>
 	</div>
 
-	<footer th:substituteby="includes :: footer"></footer>
+	<footer th:replace="includes :: footer"></footer>
 </div>
 <!-- /container -->
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

@@ -1,13 +1,13 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta th:substituteby="includes :: htmlhead"/>
+	<meta th:replace="includes :: htmlhead"/>
 	<title>Service Manager - Tail Logs</title>
 	<script th:src="@{/vendor/logui-SNAPSHOT/logui.js}"></script>
 </head>
 
 <body>
-<span th:substituteby="includes :: navbar (page='logtail')"></span>
+<span th:replace="includes :: navbar (page='logtail')"></span>
 <div class="ui fluid container">
 	<h1 class="ui header" style="padding-left: 1em;">Log Tail</h1>
 
@@ -81,10 +81,10 @@
 		</table>
 	</div>
 
-	<p th:substituteby="includes :: footer"/>
+	<p th:replace="includes :: footer"/>
 </div>
 
-<p th:substituteby="includes :: htmlfoot"/>
+<p th:replace="includes :: htmlfoot"/>
 <script th:inline="javascript">/*<![CDATA[*/
 var tailURL = /*[[@{/logs/tail.do}]]*/ '';
 var searchURL = /*[[@{/logs/search.do}]]*/ '';

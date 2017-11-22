@@ -13,11 +13,11 @@
 <!--/*@thymesVar id="users" type="java.util.List<com.peterphi.usermanager.db.entity.UserEntity>"*/-->
 <head>
 	<title th:text="'User Manager: Service '+${entity.name}">User Manager: Service XYZ</title>
-	<link th:substituteby="includes :: htmlhead"/>
-	<link th:substituteby="includes :: htmlhead_chosen"/>
+	<link th:replace="includes :: htmlhead"/>
+	<link th:replace="includes :: htmlhead_chosen"/>
 </head>
 <body>
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 <div class="container">
 	<h1 th:text="${entity.name}"></h1>
 
@@ -107,10 +107,10 @@
 		</th:block>
 	</dl>
 
-	<footer th:substituteby="includes :: footer"></footer>
+	<footer th:replace="includes :: footer"></footer>
 </div>
 <!-- /container -->
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

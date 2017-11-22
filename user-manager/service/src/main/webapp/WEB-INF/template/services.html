@@ -11,10 +11,10 @@
 <!--<![endif]-->
 <head>
 	<title>User Manager: User Accounts</title>
-	<link th:substituteby="includes :: htmlhead"/>
+	<link th:replace="includes :: htmlhead"/>
 </head>
 <body>
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 
 <div class="container">
 	<div th:fragment="services">
@@ -85,10 +85,10 @@
 		</tbody>
 	</table>
 
-	<footer th:substituteby="includes :: footer"></footer>
+	<footer th:replace="includes :: footer"></footer>
 </div>
 <!-- /container -->
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

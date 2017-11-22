@@ -1,12 +1,12 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta th:substituteby="includes :: htmlhead"/>
+	<meta th:replace="includes :: htmlhead"/>
 	<title>Service Manager - Template</title>
 </head>
 
 <body th:with="page='resources'">
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 
 <!-- Main Body -->
 <div>
@@ -71,9 +71,9 @@
 		</tbody>
 	</table>
 
-	<p th:substituteby="includes :: footer"/>
+	<p th:replace="includes :: footer"/>
 </div>
 
-<p th:substituteby="includes :: htmlfoot"/>
+<p th:replace="includes :: htmlfoot"/>
 </body>
 </html>

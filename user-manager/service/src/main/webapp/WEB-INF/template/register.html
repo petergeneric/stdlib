@@ -11,11 +11,11 @@
 <!--<![endif]-->
 <head>
 	<title>User Manager: Create New User</title>
-	<link th:substituteby="includes :: htmlhead"/>
-	<link th:substituteby="includes :: htmlhead_chosen"/>
+	<link th:replace="includes :: htmlhead"/>
+	<link th:replace="includes :: htmlhead_chosen"/>
 </head>
 <body th:with="page='register'">
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 
 <div class="container">
 	<h1>New User</h1>
@@ -85,9 +85,9 @@
 		});
 	</script>
 
-	<footer th:substituteby="includes :: footer"></footer>
+	<footer th:replace="includes :: footer"></footer>
 </div>
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

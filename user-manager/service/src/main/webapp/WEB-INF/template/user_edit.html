@@ -11,11 +11,11 @@
 <!--<![endif]-->
 <head>
 	<title>User Manager: Edit User</title>
-	<link th:substituteby="includes :: htmlhead"/>
-	<link th:substituteby="includes :: htmlhead_chosen"/>
+	<link th:replace="includes :: htmlhead"/>
+	<link th:replace="includes :: htmlhead_chosen"/>
 </head>
 <body>
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 <!--/*@thymesVar id="user" type="com.peterphi.usermanager.db.entity.UserEntity"*/-->
 <!--/*@thymesVar id="timezones" type="java.util.List<java.lang.String>"*/-->
 <!--/*@thymesVar id="roles" type="java.util.List<com.peterphi.usermanager.db.entity.RoleEntity>"*/-->
@@ -263,10 +263,10 @@
 		</div>
 	</form>
 
-	<footer th:substituteby="includes :: footer"></footer>
+	<footer th:replace="includes :: footer"></footer>
 </div>
 <!-- /container -->
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

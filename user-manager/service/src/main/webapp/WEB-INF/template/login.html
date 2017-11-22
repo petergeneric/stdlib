@@ -7,10 +7,10 @@
 <!--<![endif]-->
 <head>
     <title>User Manager: Login</title>
-    <link th:substituteby="includes :: htmlhead"/>
+    <link th:replace="includes :: htmlhead"/>
 </head>
 <body th:with="page='login'">
-<span th:substituteby="includes :: navbar"></span>
+<span th:replace="includes :: navbar"></span>
 
 <div class="container">
     <h1>Login</h1>
@@ -46,9 +46,9 @@
             </div>
         </div>
     </form>
-    <footer th:substituteby="includes :: footer"></footer>
+    <footer th:replace="includes :: footer"></footer>
 </div>
 <!-- Include jquery etc -->
-<div th:substituteby="includes :: htmlfoot"></div>
+<div th:replace="includes :: htmlfoot"></div>
 </body>
 </html>

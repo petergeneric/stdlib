@@ -1,7 +1,7 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-	<meta th:substituteby="includes :: htmlhead"/>
+	<meta th:replace="includes :: htmlhead"/>
 
 	<title th:text="'config:/'+${path}">config:path</title>
 </head>
@@ -532,9 +532,9 @@
 		});
 	</script>
 
-	<p th:substituteby="includes :: footer"/>
+	<p th:replace="includes :: footer"/>
 </div>
 
-<p th:substituteby="includes :: htmlfoot"/>
+<p th:replace="includes :: htmlfoot"/>
 </body>
 </html>

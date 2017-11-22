@@ -3,7 +3,7 @@
 <head>
 	<title>Service Configuration</title>
 
-	<link th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
 
 <!--@thymesVar id="configRegistry" type="com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry"-->
@@ -13,7 +13,7 @@
 <!--@thymesVar id="allowReconfigure" type="java.lang.Boolean"-->
 
 <body id="top">
-<div class="navbar" th:substituteby="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
 
 
 <div class="container">
