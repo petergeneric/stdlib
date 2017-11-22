@@ -48,6 +48,11 @@ endif
 
 
 #
+# Local Targets
+#
+-include Makefile.local
+
+#
 #
 # PW Targets
 #
