@@ -1,14 +1,5 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<!--[if lt IE 7]>
-<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>
-<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>
-<html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!-->
-<html class="no-js" xmlns="http://www.w3.org/1999/xhtml"
-      xmlns:th="http://www.thymeleaf.org">
-<!--<![endif]-->
+<html xmlns:th="http://www.thymeleaf.org">
 <head>
 	<title>User Manager: User Accounts</title>
 	<link th:replace="includes :: htmlhead"/>
@@ -17,7 +8,7 @@
 <span th:replace="includes :: navbar"></span>
 
 <div class="container">
-	<div th:fragment="services">
+	<div>
 		<h1>Services</h1>
 	</div>
 
@@ -26,9 +17,7 @@
 	</ul>
 
 	<!-- Create service modal -->
-	<form id="addServiceModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
-	      aria-labelledby="addServiceModalLabel" aria-hidden="true" method="POST" autocomplete="off"
-	      th:action="@{'/services/create'}">
+	<form id="addServiceModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog" aria-labelledby="addServiceModalLabel" aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/services/create'}">
 		<div class="modal-header">
 			<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
 			<h3 id="addServiceModalLabel">Add Service</h3>
@@ -39,10 +28,7 @@
 				<label class="control-label" for="input_name">Name</label>
 
 				<div class="controls">
-					<input
-							type="text"
-							id="input_name"
-							name="name" value="" placeholder="Name of your service"/>
+					<input type="text" id="input_name" name="name" value="" placeholder="Name of your service"/>
 				</div>
 			</div>
 
@@ -51,12 +37,7 @@
 				<label class="control-label" for="input_endpoints">Endpoints</label>
 
 				<div class="controls">
-					<textarea style="width: 95%" cols="5"
-							type="text"
-							id="input_endpoints"
-							name="endpoints"
-							placeholder="Endpoint prefixes (one per line)"
-							value=""/>
+					<textarea style="width: 95%" cols="5" type="text" id="input_endpoints" name="endpoints" placeholder="Endpoint prefixes (one per line)" value=""></textarea>
 
 					<!-- Help / Warning text -->
 					<span class="help-inline"></span>
@@ -85,7 +66,7 @@
 		</tbody>
 	</table>
 
-	<footer th:replace="includes :: footer"></footer>
+	<footer th:replace="includes :: footer" />
 </div>
 <!-- /container -->
 <!-- Include jquery etc -->

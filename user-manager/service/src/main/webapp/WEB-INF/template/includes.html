@@ -1,4 +1,4 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd"> 
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
     <head>
 		<meta th:fragment="htmlhead" charset="utf-8" />
@@ -6,7 +6,7 @@
 		<meta th:fragment="htmlhead" name="description" content="" />
 		<meta th:fragment="htmlhead" name="viewport" content="width=device-width" />
 		<link th:fragment="htmlhead" rel="stylesheet" th:href="@{/vendor/bootstrap/css/bootstrap.min.css}" />
-		<style th:fragment="htmlhead" >
+		<style th:fragment="htmlhead">
             body {
                 padding-top: 60px;
                 padding-bottom: 40px;
@@ -69,10 +69,6 @@
         	<p>content goes here</p>
         	
             <hr th:fragment="footer" />
-            
-       	    <footer th:fragment="footer">
-            </footer>
-			
         </div> <!-- /container -->
 		<script th:fragment="htmlfoot" th:src="@{/vendor/bootstrap/js/bootstrap.min.js}"></script>
 		<script th:fragment="htmlfoot" th:src="@{/js/main.js}"></script>
