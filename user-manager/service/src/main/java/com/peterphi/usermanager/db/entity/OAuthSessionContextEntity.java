@@ -28,7 +28,7 @@ public class OAuthSessionContextEntity
 
 
 	@Id
-	@GeneratedValue
+	@GeneratedValue(strategy = javax.persistence.GenerationType.IDENTITY)
 	public Integer getId()
 	{
 		return id;
