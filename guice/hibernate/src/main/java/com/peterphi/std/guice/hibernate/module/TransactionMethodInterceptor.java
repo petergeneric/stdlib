@@ -1,22 +1,22 @@
 package com.peterphi.std.guice.hibernate.module;
 
-/*
- * Based on warp-persist HibernateLocalTxnInterceptor which is originally
- * 
- * Copyright (C) 2008 Wideplay Interactive.
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- * http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
+		/*
+		 * Based on warp-persist HibernateLocalTxnInterceptor which is originally
+		 *
+		 * Copyright (C) 2008 Wideplay Interactive.
+		 *
+		 * Licensed under the Apache License, Version 2.0 (the "License");
+		 * you may not use this file except in compliance with the License.
+		 * You may obtain a copy of the License at
+		 *
+		 * http://www.apache.org/licenses/LICENSE-2.0
+		 *
+		 * Unless required by applicable law or agreed to in writing, software
+		 * distributed under the License is distributed on an "AS IS" BASIS,
+		 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+		 * See the License for the specific language governing permissions and
+		 * limitations under the License.
+		 */
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -119,6 +119,30 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 							// Increase backoff for the next exception
 							backoff *= multiplier;
+						}
+						catch (PersistenceException e)
+						{
+							// Handle generic exception (usually one that wraps another exception)
+							if (e.getCause() != null && (isSqlServerSnapshotConflictError(e) || isDeadlockError(e)))
+							{
+								log.warn("@Transactional caught exception PersistenceException wrapping " + e.getCause().getClass().getSimpleName() + "; retrying...", e);
+
+								try
+								{
+									Thread.sleep(backoff);
+								}
+								catch (InterruptedException ie)
+								{
+									throw new RuntimeException("Interrupted while attempting a @Transactional retry!", ie);
+								}
+
+								// Increase backoff for the next exception
+								backoff *= multiplier;
+							}
+							else
+							{
+								throw e; // rethrow because we won't handle this
+							}
 						}
 					}
 				}
@@ -284,8 +308,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 */
 	private boolean shouldRollback(Transactional annotation, Exception e)
 	{
-		return isInstanceOf(e, annotation.rollbackOn()) && !isInstanceOf(e, annotation.exceptOn()) ||
-		       isSqlServerSnapshotConflictError(e);
+		return isInstanceOf(e, annotation.rollbackOn()) && !isInstanceOf(e, annotation.exceptOn());
 	}
 
 
@@ -293,45 +316,47 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * Special-case for SQL Server SNAPSHOT isolation level: transaction conflicts result in an exception that hibernate is not properly aware of and cannot catch.<br />
 	 * It looks like this:
 	 * <pre>javax.persistence.PersistenceException: org.hibernate.exception.SQLGrammarException: could not execute statement
-	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:149)
-	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:157)
-	 at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:164)
-	 at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1443)
-	 at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:493)
-	 at org.hibernate.internal.SessionImpl.flushBeforeTransactionCompletion(SessionImpl.java:3207)
-	 at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:2413)
-	 at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:467)
-	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:156)
-	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.access$100(JdbcResourceLocalTransactionCoordinatorImpl.java:38)
-	 at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:231)
-	 at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:68)
-	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.complete(TransactionMethodInterceptor.java:316)
-	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.createTransactionAndExecuteMethod(TransactionMethodInterceptor.java:196)
-	 at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.invoke(TransactionMethodInterceptor.java:102)
-	 Caused by: org.hibernate.exception.SQLGrammarException: could not execute statement
-	 at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:106)
-	 at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:42)
-	 at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:111)
-	 at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:97)
-	 at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:178)
-	 at org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch.addToBatch(NonBatchingBatch.java:45)
-	 at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3198)
-	 at org.hibernate.persister.entity.AbstractEntityPersister.updateOrInsert(AbstractEntityPersister.java:3077)
-	 at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3457)
-	 at org.hibernate.action.internal.EntityUpdateAction.execute(EntityUpdateAction.java:145)
-	 at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:589)
-	 at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:463)
-	 at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:337)
-	 at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:39)
-	 at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1437)
-	 ... 14 more
-	 Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: Snapshot isolation transaction aborted due to update conflict. You cannot use snapshot isolation to access table 'table_name' directly or indirectly in database 'database_name' to update, delete, or insert the row that has been modified or deleted by another transaction. Retry the transaction or change the isolation level for the update/delete statement.
-	 at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDatabaseError(SQLServerException.java:217)
-	 at com.microsoft.sqlserver.jdbc.SQLServerStatement.getNextResult(SQLServerStatement.java:1655)
-	 at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement.doExecutePreparedStatement(SQLServerPreparedStatement.java:440)
-	 at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement$PrepStmtExecCmd.doExecute(SQLServerPreparedStatement.java:385)
-	 at com.microsoft.sqlserver.jdbc.TDSCommand.execute(IOBuffer.java:7505)</pre>
+	 * at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:149)
+	 * at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:157)
+	 * at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:164)
+	 * at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1443)
+	 * at org.hibernate.internal.SessionImpl.managedFlush(SessionImpl.java:493)
+	 * at org.hibernate.internal.SessionImpl.flushBeforeTransactionCompletion(SessionImpl.java:3207)
+	 * at org.hibernate.internal.SessionImpl.beforeTransactionCompletion(SessionImpl.java:2413)
+	 * at org.hibernate.engine.jdbc.internal.JdbcCoordinatorImpl.beforeTransactionCompletion(JdbcCoordinatorImpl.java:467)
+	 * at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.beforeCompletionCallback(JdbcResourceLocalTransactionCoordinatorImpl.java:156)
+	 * at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl.access$100(JdbcResourceLocalTransactionCoordinatorImpl.java:38)
+	 * at org.hibernate.resource.transaction.backend.jdbc.internal.JdbcResourceLocalTransactionCoordinatorImpl$TransactionDriverControlImpl.commit(JdbcResourceLocalTransactionCoordinatorImpl.java:231)
+	 * at org.hibernate.engine.transaction.internal.TransactionImpl.commit(TransactionImpl.java:68)
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.complete(TransactionMethodInterceptor.java:316)
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.createTransactionAndExecuteMethod(TransactionMethodInterceptor.java:196)
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.invoke(TransactionMethodInterceptor.java:102)
+	 * Caused by: org.hibernate.exception.SQLGrammarException: could not execute statement
+	 * at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:106)
+	 * at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:42)
+	 * at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:111)
+	 * at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:97)
+	 * at org.hibernate.engine.jdbc.internal.ResultSetReturnImpl.executeUpdate(ResultSetReturnImpl.java:178)
+	 * at org.hibernate.engine.jdbc.batch.internal.NonBatchingBatch.addToBatch(NonBatchingBatch.java:45)
+	 * at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3198)
+	 * at org.hibernate.persister.entity.AbstractEntityPersister.updateOrInsert(AbstractEntityPersister.java:3077)
+	 * at org.hibernate.persister.entity.AbstractEntityPersister.update(AbstractEntityPersister.java:3457)
+	 * at org.hibernate.action.internal.EntityUpdateAction.execute(EntityUpdateAction.java:145)
+	 * at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:589)
+	 * at org.hibernate.engine.spi.ActionQueue.executeActions(ActionQueue.java:463)
+	 * at org.hibernate.event.internal.AbstractFlushingEventListener.performExecutions(AbstractFlushingEventListener.java:337)
+	 * at org.hibernate.event.internal.DefaultFlushEventListener.onFlush(DefaultFlushEventListener.java:39)
+	 * at org.hibernate.internal.SessionImpl.doFlush(SessionImpl.java:1437)
+	 * ... 14 more
+	 * Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: Snapshot isolation transaction aborted due to update conflict. You cannot use snapshot isolation to access table 'table_name' directly or indirectly in database 'database_name' to update, delete, or insert the row that has been modified or deleted by another transaction. Retry the transaction or change the isolation level for the update/delete statement.
+	 * at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDatabaseError(SQLServerException.java:217)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerStatement.getNextResult(SQLServerStatement.java:1655)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement.doExecutePreparedStatement(SQLServerPreparedStatement.java:440)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerPreparedStatement$PrepStmtExecCmd.doExecute(SQLServerPreparedStatement.java:385)
+	 * at com.microsoft.sqlserver.jdbc.TDSCommand.execute(IOBuffer.java:7505)</pre>
+	 *
 	 * @param e
+	 *
 	 * @return
 	 */
 	private boolean isSqlServerSnapshotConflictError(Throwable e)
@@ -345,13 +370,84 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				e = e.getCause();
 
-				if (e != null && StringUtils.equals(e.getClass().getName(), "com.microsoft.sqlserver.jdbc.SQLServerException")) {
-					return (StringUtils.startsWith(e.getMessage(), "Snapshot isolation transaction aborted due to update conflict"));
+				if (e != null && StringUtils.equals(e.getClass().getName(), "com.microsoft.sqlserver.jdbc.SQLServerException"))
+				{
+					return (StringUtils.startsWith(e.getMessage(),
+					                               "Snapshot isolation transaction aborted due to update conflict"));
 				}
 			}
 		}
 
 		// Does not appear to match
+		return false;
+	}
+
+
+	/**
+	 * Special-case for SQL Server deadlock errors, that look like:
+	 * <pre>2017-12-01 07:49:48,504 ERROR Transaction (Process ID 55) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction.
+	 * 2017-12-01 07:49:48,539 ERROR z9ti8f0eai POST /automation/work-orders threw exception:
+	 * javax.persistence.PersistenceException: org.hibernate.exception.LockAcquisitionException: could not execute query
+	 * at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:149)
+	 * at org.hibernate.internal.ExceptionConverterImpl.convert(ExceptionConverterImpl.java:157)
+	 * at org.hibernate.query.internal.AbstractProducedQuery.list(AbstractProducedQuery.java:1423)
+	 * at org.hibernate.query.Query.getResultList(Query.java:146)
+	 * at org.hibernate.query.criteria.internal.compile.CriteriaQueryTypeQueryAdapter.getResultList(CriteriaQueryTypeQueryAdapter.java:72)
+	 * at com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder.selectEntity(JPAQueryBuilder.java:512)
+	 * at com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor.find(JPASearchExecutor.java:118)
+	 * at com.peterphi.std.guice.hibernate.dao.HibernateDao.find(HibernateDao.java:552)
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.invoke(TransactionMethodInterceptor.java:84)
+	 * at com.peterphi.std.guice.hibernate.dao.HibernateDao.find(HibernateDao.java:532)
+	 * at com.peterphi.std.guice.hibernate.dao.HibernateDao.find(HibernateDao.java:525)
+	 * at com.peterphi.std.guice.hibernate.dao.HibernateDao.findByUriQuery(HibernateDao.java:518)
+	 * ...
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.createTransactionAndExecuteMethod(TransactionMethodInterceptor.java:164)
+	 * at com.peterphi.std.guice.hibernate.module.TransactionMethodInterceptor.invoke(TransactionMethodInterceptor.java:105)
+	 * ...
+	 * Caused by: org.hibernate.exception.LockAcquisitionException: could not execute query
+	 * at org.hibernate.exception.internal.SQLStateConversionDelegate.convert(SQLStateConversionDelegate.java:123)
+	 * at org.hibernate.exception.internal.StandardSQLExceptionConverter.convert(StandardSQLExceptionConverter.java:42)
+	 * at org.hibernate.engine.jdbc.spi.SqlExceptionHelper.convert(SqlExceptionHelper.java:111)
+	 * at org.hibernate.loader.Loader.doList(Loader.java:2705)
+	 * at org.hibernate.loader.Loader.doList(Loader.java:2685)
+	 * at org.hibernate.loader.Loader.listIgnoreQueryCache(Loader.java:2517)
+	 * at org.hibernate.loader.Loader.list(Loader.java:2512)
+	 * at org.hibernate.loader.hql.QueryLoader.list(QueryLoader.java:502)
+	 * at org.hibernate.hql.internal.ast.QueryTranslatorImpl.list(QueryTranslatorImpl.java:384)
+	 * at org.hibernate.engine.query.spi.HQLQueryPlan.performList(HQLQueryPlan.java:216)
+	 * at org.hibernate.internal.SessionImpl.list(SessionImpl.java:1490)
+	 * at org.hibernate.query.internal.AbstractProducedQuery.doList(AbstractProducedQuery.java:1445)
+	 * at org.hibernate.query.internal.AbstractProducedQuery.list(AbstractProducedQuery.java:1414)
+	 * ... 44 more
+	 * Caused by: com.microsoft.sqlserver.jdbc.SQLServerException: Transaction (Process ID 55) was deadlocked on lock resources with another process and has been chosen as the deadlock victim. Rerun the transaction.
+	 * at com.microsoft.sqlserver.jdbc.SQLServerException.makeFromDatabaseError(SQLServerException.java:217)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerResultSet$FetchBuffer.nextRow(SQLServerResultSet.java:6357)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerResultSet.fetchBufferNext(SQLServerResultSet.java:1798)
+	 * at com.microsoft.sqlserver.jdbc.SQLServerResultSet.next(SQLServerResultSet.java:1049)
+	 * at org.hibernate.loader.Loader.processResultSet(Loader.java:997)
+	 * at org.hibernate.loader.Loader.doQuery(Loader.java:959)
+	 * at org.hibernate.loader.Loader.doQueryAndInitializeNonLazyCollections(Loader.java:351)
+	 * at org.hibernate.loader.Loader.doList(Loader.java:2702)
+	 * ... 53 more</pre>
+	 *
+	 * @param t
+	 *
+	 * @return
+	 */
+	private boolean isDeadlockError(Throwable e)
+	{
+		// Looking for PersistenceException, wrapping a LockAcquisitionException
+		if (e != null && e instanceof PersistenceException)
+		{
+			e = e.getCause();
+
+			if (e != null && e instanceof LockAcquisitionException)
+			{
+				return true;
+			}
+		}
+
+		// Does not match
 		return false;
 	}
 

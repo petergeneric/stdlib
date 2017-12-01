@@ -31,7 +31,7 @@ public @interface Transactional
 
 	/**
 	 * If true, will automatically retry 5 times (with backoff) if the method throws {@link org.hibernate.StaleStateException}, {@link
-	 * org.hibernate.exception.LockAcquisitionException} or {@link org.hibernate.exception.GenericJDBCException}
+	 * org.hibernate.exception.LockAcquisitionException}, {@link org.hibernate.exception.GenericJDBCException}, or a LockAcquisitionException wrapped in a PersistenceException, or an error that indicates a SQL Server snapshot isolation conflict
 	 *
 	 * @return
 	 */
