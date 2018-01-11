@@ -8,6 +8,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
+import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
 import javax.naming.Context;
@@ -18,7 +19,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
@@ -51,6 +52,13 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	@Inject
 	@Named("ldap.filter")
 	public String ldapFilter;
+
+	/**
+	 * Formatted with 1 argument, the user's DN. Searches for the groups a user is a member of (directly or indirectly)
+	 */
+	@Inject(optional = true)
+	@Named("ldap.find-groups-filter")
+	public String ldapGroupFilter = "(member:1.2.840.113556.1.4.1941:=%s)";
 
 	/**
 	 * The find pattern to use on group DNs. e.g. <code>(?i)^cn=([^,]+),</code>
@@ -174,8 +182,53 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	}
 
 
-	private LDAPUserRecord ldapAuthenticate(final String username, final String password)
+	/**
+	 * Get the groups that a user is a member of (either directly or indirectly)
+	 *
+	 * @param ldap
+	 * @param dn
+	 *
+	 * @return
+	 *
+	 * @throws NamingException
+	 */
+	private List<LDAPGroup> getGroups(final DirContext ldap, final String dn) throws NamingException
 	{
+		// Get the DN of all grouos the user is directly/indirectly a member of
+		final NamingEnumeration<SearchResult> answer;
+		{
+			SearchControls search = new SearchControls();
+
+			search.setSearchScope(SearchControls.SUBTREE_SCOPE);
+			search.setReturningAttributes(new String[]{"dn"});
+
+			final String searchFilter = String.format(this.ldapGroupFilter, dn);
+
+			answer = ldap.search(ldapSearchBase, searchFilter, search);
+		}
+
+		List<LDAPGroup> groups = new ArrayList<>();
+
+		while (answer.hasMoreElements())
+		{
+			SearchResult sr = answer.next();
+
+			final String groupDN = sr.getNameInNamespace();
+
+			groups.add(dnToLdapGroup(groupDN));
+		}
+
+		return groups;
+	}
+
+
+	private LDAPUserRecord ldapAuthenticate(String username, final String password)
+	{
+		// If the user specifies their username as domain-slash-user then we should ignore the domain part for convenience
+		// TODO  if they do this we could extract their domain from the username and use it instead of configured values?
+		if (username.indexOf('\\') > 0)
+			username = StringUtils.split(username, "\\", 2)[1];
+
 		try
 		{
 			DirContext ldapContext = null;
@@ -194,7 +247,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 					SearchControls search = new SearchControls();
 
 					search.setSearchScope(SearchControls.SUBTREE_SCOPE);
-					search.setReturningAttributes(new String[]{"name", "samAccountName", "memberOf"});
+					search.setReturningAttributes(new String[]{"dn", "name", "samAccountName"});
 
 					final String searchFilter = String.format(this.ldapFilter, username);
 
@@ -206,15 +259,12 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 					SearchResult sr = answer.next();
 					Attributes attrs = sr.getAttributes();
 
+					final String dn = sr.getNameInNamespace();
 					final String name = attrs.get("name").get().toString();
 					final String actualUsername = attrs.get("samAccountName").get().toString();
 
-					List<LDAPGroup> groups = Collections
-							                         .list(attrs.get("memberOf").getAll())
-							                         .stream()
-							                         .map(o -> o.toString())
-							                         .map(this :: dnToLdapGroup)
-							                         .collect(Collectors.toList());
+					// Get the direct & indirect group membership data
+					List<LDAPGroup> groups = getGroups(ldapContext, dn);
 
 					return new LDAPUserRecord(actualUsername, name, groups);
 				}
@@ -229,7 +279,9 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 		}
 		catch (NamingException e)
 		{
-			throw new RuntimeException("Error accessing LDAP server", e);
+			throw new RuntimeException(
+					"Error accessing LDAP server (incorrect username/password or server connection issue, please try again)",
+					e);
 		}
 	}
 
