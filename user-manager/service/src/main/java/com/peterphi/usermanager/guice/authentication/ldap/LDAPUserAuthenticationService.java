@@ -2,12 +2,14 @@ package com.peterphi.usermanager.guice.authentication.ldap;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
+import com.peterphi.usermanager.guice.authentication.UserLogin;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
@@ -73,6 +75,27 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	@Inject
 	@Named("ldap.group-regex.replace")
 	public String ldapGroupReplace;
+
+	@Inject(optional = true)
+	@Named("ldap.group.user-manager-admin")
+	@Doc("The group name (after group-regex execution) to treat as builtin group user-manager-admin (ignored if omitted)")
+	public String groupUserManagerAdmin = null;
+
+
+	@Inject(optional = true)
+	@Named("ldap.group.admin")
+	@Doc("The group name (after group-regex execution) to treat as builtin group admin (ignored if omitted)")
+	public String groupAdmin = null;
+
+	@Inject(optional = true)
+	@Named("ldap.group.framework-admin")
+	@Doc("The group name (after group-regex execution) to treat as builtin group framework-admin (ignored if omitted)")
+	public String groupFrameworkAdmin = null;
+
+	@Inject(optional = true)
+	@Named("ldap.group.framework-info")
+	@Doc("The group name (after group-regex execution) to treat as builtin group framework-info (ignored if omitted)")
+	public String groupFrameworkInfo = null;
 
 
 	@Override
@@ -222,12 +245,33 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	}
 
 
-	private LDAPUserRecord ldapAuthenticate(String username, final String password)
+	private LDAPUserRecord ldapAuthenticate(String inputUsername, final String password)
 	{
-		// If the user specifies their username as domain-slash-user then we should ignore the domain part for convenience
-		// TODO  if they do this we could extract their domain from the username and use it instead of configured values?
-		if (username.indexOf('\\') > 0)
-			username = StringUtils.split(username, "\\", 2)[1];
+		// Allow the user to provide domain-slash-user or user@domain in addition to bare "user" with an implied domain
+		final String username;
+		final String fullyQualifiedUsername;
+		if (inputUsername.indexOf('\\') > 0)
+		{
+			final String[] segments = StringUtils.split(inputUsername, "\\", 2);
+
+			final String domain = segments[0];
+			username = segments[1]; // get bare username (discard everything before the slash)
+
+			fullyQualifiedUsername = username + "@" + domain;
+		}
+		else if (inputUsername.indexOf('@') > 0)
+		{
+			fullyQualifiedUsername = inputUsername;
+
+			username = StringUtils.split(inputUsername, '@')[0]; // get bare username (discard everything after the @)
+		}
+		else
+		{
+			// Implied domain
+			fullyQualifiedUsername = inputUsername + "@" + domain;
+
+			username = inputUsername;
+		}
 
 		try
 		{
@@ -238,7 +282,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 				ldapEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 				ldapEnv.put(Context.PROVIDER_URL, ldapEndpoint);
 				ldapEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
-				ldapEnv.put(Context.SECURITY_PRINCIPAL, username + "@" + domain);
+				ldapEnv.put(Context.SECURITY_PRINCIPAL, fullyQualifiedUsername);
 				ldapEnv.put(Context.SECURITY_CREDENTIALS, password);
 				ldapContext = new InitialDirContext(ldapEnv); // N.B. sometimes takes ~10 seconds
 
@@ -288,8 +332,23 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 
 	private LDAPGroup dnToLdapGroup(final String dn)
 	{
-		final String id = dn.replaceAll(ldapGroupFind, ldapGroupReplace);
+		String id = dn.replaceAll(ldapGroupFind, ldapGroupReplace);
+
+		// If configured, substitute known LDAP groups for well-known admin groups
+		id = replaceGroupName(id, groupFrameworkInfo, "framework-info"); // able to see /guice pages
+		id = replaceGroupName(id, groupFrameworkAdmin, "framework-admin"); // able to admin /guice pages
+		id = replaceGroupName(id, groupAdmin, "admin"); // application admin
+		id = replaceGroupName(id, groupUserManagerAdmin, UserLogin.ROLE_ADMIN); // User Manager admin
 
 		return new LDAPGroup(id, dn);
+	}
+
+
+	private static String replaceGroupName(final String input, final String ifInput, final String replacement)
+	{
+		if (ifInput != null && StringUtils.equals(ifInput, input))
+			return replacement;
+		else
+			return input;
 	}
 }
