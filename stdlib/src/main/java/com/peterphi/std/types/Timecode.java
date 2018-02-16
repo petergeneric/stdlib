@@ -126,7 +126,7 @@ public class Timecode
 		                                        minutes,
 		                                        seconds,
 		                                        frames,
-		                                        dropFrame,
+		                                        dropFrame && allowDropFrameRemoval,
 		                                        timebase.getSamplesPerSecond());
 
 		// Flip the sign if negative
@@ -523,32 +523,80 @@ public class Timecode
 
 
 	/**
-	 * Resample this timecode to another timebase
+	 * Resample this timecode to another timebase. If the destination rate is NTSC (29.97) or NTSC_60 (59.94) then it will be resampled to a drop-frame Timecode
 	 *
 	 * @param toRate
 	 * 		the destination rate
 	 *
 	 * @return
 	 */
-	public Timecode resample(final Timebase toRate)
+	public Timecode resample(final Timebase toRate) {
+
+		return resample(toRate, toRate.canBeDropFrame());
+	}
+
+	/**
+	 * Resample this timecode to another timebase.<br />
+	 * <ul>
+	 * <li>If source+destination timecodes are non-drop frame then this is achieved by resampling the frames part of the timecode.</li>
+	 * <li>If either side uses drop-frame then the resample works by converting this timecode into an amount of time (with half-up rounding rules, see {@link Timebase#resample(double, Timebase, Timebase)})</li>
+	 * </ul>
+	 *
+	 * @param toRate
+	 * 		the destination rate
+	 * 	@param toDropFrame if true, resulting Timecode will be marked as drop-frame (N.B. this flag will be checked against canBeDropFrame on the timebase - so if it's not 29.97 or 59.94 then it'll throw an exception
+	 *
+	 * @throws IllegalArgumentException if toDropFrame is set to true but toRate is not on the approved drop-frame list (NTSC and NTSC_60)
+	 * @return a Timecode expressed in toRate
+	 */
+	public Timecode resample(final Timebase toRate, final boolean toDropFrame)
 	{
+		if (toDropFrame && !toRate.canBeDropFrame())
+			throw new IllegalArgumentException(
+					"Resample cannot convert to a drop-frame version of a Timebase that does not support drop frame: " + toRate);
+
 		final Timebase fromRate = getTimebase();
 
 		if (!fromRate.equals(toRate))
 		{
-			// Resample the frames part
-			final long resampled = toRate.resample(this.getFramesPart(), fromRate);
+			// Changing framerate
 
-			// In the event of resample returning < 1 second we can just set the new Timecode's frames field.
-			// In the event of resample returning 1 second (possible if 999@1kHz is resampled down) we should fall back on slow addition
-			if (resampled < toRate.getSamplesPerSecond())
-				return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, dropFrame);
+			if (isDropFrame() || toDropFrame)
+			{
+				final SampleCount samples = getSampleCount().resample(toRate);
+
+				return TimecodeBuilder.fromSamples(samples, toDropFrame).build();
+			}
 			else
-				return new Timecode(negative, days, hours, minutes, seconds, 0, toRate, dropFrame).add(new SampleCount(resampled,
-				                                                                                                       toRate));
+			{
+				// No drop frames to worry about, proceed with simple resample of just the frames part
+
+				// Resample the frames part (N.B. may round up to 1 whole second)
+				final long resampled = toRate.resample(this.getFramesPart(), fromRate);
+
+				// Take the fast approach if the number of samples is < 1 second, otherwise take the slow route
+				if (resampled < toRate.getSamplesPerSecond())
+					return new Timecode(negative, days, hours, minutes, seconds, resampled, toRate, toDropFrame);
+				else
+					return new Timecode(negative,
+					                    days,
+					                    hours,
+					                    minutes,
+					                    seconds,
+					                    0,
+					                    toRate,
+					                    toDropFrame).add(new SampleCount(resampled, toRate));
+			}
+		}
+		else if (toDropFrame != isDropFrame())
+		{
+			// Changing drop frame flag
+
+			return Timecode.getInstance(getSampleCount(), toDropFrame);
 		}
 		else
 		{
+			// Changing nothing
 			return this;
 		}
 	}
@@ -685,7 +733,7 @@ public class Timecode
 	 */
 	public static final Timecode getInstance(long frameNumber, boolean dropFrame, Timebase timebase)
 	{
-		return TimecodeBuilder.fromFrames(frameNumber, timebase).withDropFrame(dropFrame).build();
+		return TimecodeBuilder.fromFrames(frameNumber, timebase, dropFrame).build();
 	}
 
 
@@ -701,9 +749,7 @@ public class Timecode
 	 *
 	 * @return
 	 *
-	 * @deprecated drop frame timecode is not correctly supported currently
 	 */
-	@Deprecated
 	public static final Timecode getInstance(SampleCount samples, boolean dropFrame)
 	{
 		return TimecodeBuilder.fromSamples(samples, dropFrame).build();

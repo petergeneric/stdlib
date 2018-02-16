@@ -43,6 +43,23 @@ public class TimebaseTest
 	}
 
 
+	/**
+	 * A frame of NTSC is longer than a frame of 30Hz video (since there are only 29.97 frames of NTSC a second). Over an hour this gives us 108 fewer frames.<br />
+	 * Make sure that resampling
+	 * @throws Exception
+	 */
+	@Test
+	public void testResampleDropFrame() throws Exception
+	{
+		final double delta = 0;
+
+		assertEquals("1 hour @ 30fps (108000 frames) is the same duration as 107892 frames @ 29.97",
+		             107892D,
+		             Timebase.NTSC.resample(108000, Timebase.HZ_30),
+		             delta);
+		assertEquals("1 hour @ 29.97fps (107892 frames) is 108000 frames in 30fps", 108000D, Timebase.HZ_30.resample(107892, Timebase.NTSC), delta);
+	}
+
 	@Test
 	public void testResample() throws Exception
 	{

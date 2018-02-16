@@ -2,18 +2,24 @@ package com.peterphi.std.types;
 
 import org.apache.log4j.Logger;
 
+import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
+
 /**
  * Describes a timebase, expressed as a rational number. This is primarily designed for timebases where the numerator is 1 (i.e.
  * where the denominator is the number of samples per second)
  */
 public class Timebase
 {
-
 	private static final Logger log = Logger.getLogger(Timebase.class);
+	public static final boolean WARN_ON_PRECISION_LOSS = false;
 
+	public static final Timebase HZ_24 = new Timebase(1, 24);
 	public static final Timebase HZ_25 = new Timebase(1, 25);
 	public static final Timebase HZ_30 = new Timebase(1, 30);
 	public static final Timebase HZ_50 = new Timebase(1, 50);
+	public static final Timebase HZ_60 = new Timebase(1, 60);
 	public static final Timebase HZ_44100 = new Timebase(1, 44100);
 	public static final Timebase HZ_48000 = new Timebase(1, 48000);
 	public static final Timebase HZ_96000 = new Timebase(1, 96000);
@@ -42,9 +48,19 @@ public class Timebase
 	public static final Timebase HZ_1 = new Timebase(1, 1);
 
 	/**
-	 * 29.97 Hz (NTSC)
+	 * 29.97 Hz (<a href="https://en.wikipedia.org/wiki/NTSC#Lines_and_refresh_rate">NTSC</a>. Supports <a href="https://en.wikipedia.org/wiki/SMPTE_timecode#Drop_frame_timecode">drop frame</a> and non-drop-frame)
 	 */
 	public static final Timebase NTSC = new Timebase(1001, 30000);
+
+	/**
+	 * 23.976 Hz (<a href="https://en.wikipedia.org/wiki/24p#23.976p">24p</a>). N.B. does not support drop-frame
+	 */
+	public static final Timebase NTSC_24 = new Timebase(1001, 24000);
+
+	/**
+	 * 59.94 Hz. Supports drop-frame and non-drop-frame
+	 */
+	public static final Timebase NTSC_60 = new Timebase(1001, 60000);
 
 	/**
 	 * The numerator (the top part of the fraction)
@@ -87,20 +103,9 @@ public class Timebase
 	}
 
 
-	public boolean isIntegerRate()
+	public boolean canBeDropFrame()
 	{
-		if (numerator == 1)
-			return true;
-		else if (this.equals(NTSC))
-			return false;
-		else
-			return Math.ceil(getSamplesPerSecond()) == Math.floor(getSamplesPerSecond());
-	}
-
-
-	public boolean isDropFrame()
-	{
-		return !isIntegerRate();
+		return this.equals(Timebase.NTSC) || this.equals(Timebase.NTSC_60);
 	}
 
 
@@ -111,7 +116,11 @@ public class Timebase
 	 */
 	public double getSamplesPerSecond()
 	{
-		return (double) denominator / (double) numerator;
+		if (numerator == 1)
+			return denominator;
+		else
+			// Return the number of samples per second, cut off at 3 decimal places - this ensures that we accurately represent the values that 30000/1001, 24000/1001 and 60000/1001 are trying to represent
+			return Math.floor(((double) denominator / (double) numerator) * 1000) / 1000;
 	}
 
 
@@ -133,7 +142,7 @@ public class Timebase
 	 */
 	public double getSecondsPerSample()
 	{
-		return (double) numerator / (double) denominator;
+		return 1D / getSamplesPerSecond();
 	}
 
 
@@ -209,16 +218,17 @@ public class Timebase
 			}
 			else
 			{
-				log.warn("Resample operation lost precision: " +
-				         samples +
-				         " from " +
-				         oldRate +
-				         " to " +
-				         this +
-				         " produced " +
-				         resampled +
-				         " which will be rounded to " +
-				         rounded);
+				if (WARN_ON_PRECISION_LOSS)
+					log.warn("Resample operation lost precision: " +
+					         samples +
+					         " from " +
+					         oldRate +
+					         " to " +
+					         this +
+					         " produced " +
+					         resampled +
+					         " which will be rounded to " +
+					         rounded);
 			}
 		}
 
@@ -304,23 +314,26 @@ public class Timebase
 	}
 
 
+	/**
+	 * Same as {@link MathContext#DECIMAL64} but with HALF_UP
+	 */
+	private static final MathContext MATH_CONTEXT = new MathContext(16, RoundingMode.HALF_UP);
+
 	static double resample(final double samples, final Timebase source, final Timebase target)
 	{
 		// If both have the same numerator then we should be able to take a path that retains more precision
 		// We only do this for sample counts less than <code>sqrt(Double.MAX_VALUE)</code>
-		if (source.numerator == target.numerator && (samples + target.denominator < FAST_RESAMPLE_PATH_PRODUCT_LIMIT))
+		if (source.numerator == 1 && source.numerator == target.numerator && (samples + target.denominator < FAST_RESAMPLE_PATH_PRODUCT_LIMIT))
 		{
 			return (samples * (double) target.denominator) / (double) source.denominator;
 		}
 		else
 		{
-			// the amount of time represented by the samples
-			final double seconds = (samples * source.getSecondsPerSample());
-
-			// get the number of samples in the target timebase to represent this time
-			final double resampled = seconds * target.getSamplesPerSecond();
-
-			return resampled;
+			return BigDecimal
+					       .valueOf(samples)
+					       .multiply(BigDecimal.valueOf(target.getSamplesPerSecond()), MATH_CONTEXT)
+					       .divide(BigDecimal.valueOf(source.getSamplesPerSecond()), MATH_CONTEXT)
+					       .doubleValue();
 		}
 	}
 
