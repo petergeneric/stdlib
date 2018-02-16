@@ -141,7 +141,8 @@ public class TimecodeBuilder
 	 */
 	public Timecode build()
 	{
-		final boolean dropFrame = (this.dropFrame != null) ? this.dropFrame.booleanValue() : getRate().isDropFrame();
+		// If drop-frame is not specified (and timebase is drop frame capable) default to true
+		final boolean dropFrame = (this.dropFrame != null) ? this.dropFrame.booleanValue() : getRate().canBeDropFrame();
 
 		return new Timecode(negative, days, hours, minutes, seconds, frames, rate, dropFrame);
 	}
@@ -326,18 +327,23 @@ public class TimecodeBuilder
 
 	public static TimecodeBuilder fromSamples(final SampleCount samples, final boolean dropFrame)
 	{
-		return fromFrames(samples.getSamples(), samples.getRate());
+		return fromFrames(samples.getSamples(), samples.getRate(), dropFrame);
 	}
 
 
 	public static TimecodeBuilder fromFrames(final long signedFrameNumber, final Timebase rate)
+	{
+		return fromFrames(signedFrameNumber, rate, rate.canBeDropFrame());
+	}
+
+	public static TimecodeBuilder fromFrames(final long signedFrameNumber, final Timebase rate, final boolean dropFrame)
 	{
 		final boolean negative = signedFrameNumber < 0;
 
 		// Now make it positive
 		long frameNumber = Math.abs(signedFrameNumber);
 
-		if (rate.isDropFrame())
+		if (dropFrame)
 			frameNumber = compensateForDropFrame(frameNumber, rate.getSamplesPerSecond());
 
 		final int fps = rate.getIntSamplesPerSecond();
@@ -349,7 +355,7 @@ public class TimecodeBuilder
 
 		return new TimecodeBuilder()
 				       .withNegative(negative)
-				       .withDropFrame(rate.isDropFrame())
+				       .withDropFrame(dropFrame)
 				       .withDays(days)
 				       .withHours(hours)
 				       .withMinutes(minutes)
