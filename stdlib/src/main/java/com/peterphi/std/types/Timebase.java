@@ -339,6 +339,19 @@ public class Timebase
 
 
 	/**
+	 * @param rate
+	 *
+	 * @return
+	 *
+	 * @deprecated use {@link #valueOf(String)} instead
+	 */
+	@Deprecated
+	public static Timebase getInstance(String rate)
+	{
+		return valueOf(rate);
+	}
+
+	/**
 	 * Parses an encoded timebase.<br
 	 * />
 	 * <p>The following textual representations are valid for time bases:</p>
@@ -361,8 +374,16 @@ public class Timebase
 	 * <td>25:1</td>
 	 * </tr>
 	 * <tr>
-	 * <td>NTSC</td>
+	 * <td>NTSC or 29.97</td>
 	 * <td>30000:1001</td>
+	 * </tr>
+	 * <tr>
+	 * <td>23.976</td>
+	 * <td>24000:1001</td>
+	 * </tr>
+	 * <tr>
+	 * <td>59.94</td>
+	 * <td>60000:1001</td>
 	 * </tr>
 	 * <tr>
 	 * <td>NTSC30</td>
@@ -374,15 +395,23 @@ public class Timebase
 	 *
 	 * @return
 	 */
-	public static Timebase getInstance(String rate)
+	public static Timebase valueOf(String rate)
 	{
 		if (rate.equalsIgnoreCase("PAL"))
 		{
 			return HZ_25;
 		}
-		else if (rate.equalsIgnoreCase("NTSC"))
+		else if (rate.equals("23.976"))
+		{
+			return NTSC_24;
+		}
+		else if (rate.equalsIgnoreCase("NTSC") || rate.equals("29.97"))
 		{
 			return NTSC;
+		}
+		else if (rate.equals("59.94"))
+		{
+			return NTSC_60;
 		}
 		else if (rate.equalsIgnoreCase("NTSC30"))
 		{
