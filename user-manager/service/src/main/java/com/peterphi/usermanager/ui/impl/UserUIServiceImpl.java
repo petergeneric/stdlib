@@ -64,6 +64,7 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional(readOnly = true)
+	@AuthConstraint(role=UserLogin.ROLE_ADMIN)
 	public String getUsers(UriInfo query)
 	{
 		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));

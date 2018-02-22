@@ -12,7 +12,7 @@
 		<h1>User Manager</h1>
 
 
-		<p>
+		<p th:if="${session.login.isAdmin()}">
 			<a class="btn btn-primary btn-large"
 			   th:href="@{/users}">User List &raquo;</a>
 		</p>

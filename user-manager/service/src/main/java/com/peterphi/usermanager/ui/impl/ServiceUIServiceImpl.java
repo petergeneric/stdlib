@@ -4,7 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.retry.annotation.Retry;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -23,6 +23,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
 
+@AuthConstraint(role = UserLogin.ROLE_ADMIN, comment = "Must be user manager admin to view/modify services")
 public class ServiceUIServiceImpl implements ServiceUIService
 {
 	private static final String NONCE_USE = "configui";

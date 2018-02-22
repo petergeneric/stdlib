@@ -39,10 +39,10 @@
                     <div class="nav-collapse collapse">
                         <ul class="nav">
                             <li th:class="(${page} == 'home') ? 'active'"><a th:href="@{/}">Home</a></li>
-	                        <li th:class="(${page} == 'users') ? 'active'"><a th:href="@{/users}">Users</a></li>
-	                        <li th:class="(${page} == 'roles') ? 'active'"><a th:href="@{/roles}">Roles</a></li>
-	                        <li th:class="(${page} == 'services') ? 'active'"><a th:href="@{/services}">Services</a></li>
-                            <li th:class="(${page} == 'register') ? 'active'"><a th:href="@{/register}">New user</a></li>
+	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'users') ? 'active'"><a th:href="@{/users}">Users</a></li>
+	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'roles') ? 'active'"><a th:href="@{/roles}">Roles</a></li>
+	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'services') ? 'active'"><a th:href="@{/services}">Services</a></li>
+                            <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'register') ? 'active'"><a th:href="@{/register}">New user</a></li>
                         </ul>
                     </div><!--/.nav-collapse -->
 
