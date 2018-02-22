@@ -2,6 +2,7 @@ package com.peterphi.usermanager.ui.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.database.annotation.Transactional;
@@ -45,6 +46,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	UserLogin login;
 
 	@Inject(optional = true)
+	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
 	@Named("authentication.allowAnonymousRegistration")
 	@Reconfigurable
 	boolean allowAnonymousRegistration = false;

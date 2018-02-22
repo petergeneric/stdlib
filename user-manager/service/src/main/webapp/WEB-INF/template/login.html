@@ -37,7 +37,9 @@
                 <input type="hidden" name="nonce" th:value="${nonceProvider.get().allocate()}" />
                 <button type="submit" class="btn">Login</button>
                 <br/><br />
+                <th:block th:if="${allowAnonymousRegistration}">
                 Don't have an account? <a th:href="@{/register}">Register</a>
+                </th:block>
             </div>
         </div>
     </form>

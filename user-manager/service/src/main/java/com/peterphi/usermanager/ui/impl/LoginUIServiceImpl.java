@@ -1,7 +1,10 @@
 package com.peterphi.usermanager.ui.impl;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
+import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
@@ -40,6 +43,12 @@ public class LoginUIServiceImpl implements LoginUIService
 	@Inject
 	SessionNonceStore nonceStore;
 
+	@Inject(optional = true)
+	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
+	@Named("authentication.allowAnonymousRegistration")
+	@Reconfigurable
+	boolean allowAnonymousRegistration = false;
+
 
 	@Override
 	@AuthConstraint(skip = true, comment = "login page")
@@ -53,6 +62,7 @@ public class LoginUIServiceImpl implements LoginUIService
 		{
 			TemplateCall call = templater.template("login");
 
+			call.set("allowAnonymousRegistration", allowAnonymousRegistration);
 			call.set("returnTo", returnTo);
 			call.set("errorText", errorText);
 
