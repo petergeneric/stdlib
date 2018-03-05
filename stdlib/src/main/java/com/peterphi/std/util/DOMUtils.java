@@ -8,6 +8,8 @@ import org.xml.sax.SAXException;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Source;
 import javax.xml.transform.Transformer;
 import javax.xml.transform.TransformerConfigurationException;
 import javax.xml.transform.TransformerException;
@@ -28,7 +30,7 @@ import java.lang.ref.SoftReference;
 public class DOMUtils
 {
 	private static SoftReference<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY = new SoftReference<>(null);
-
+	private static final int DEFAULT_INDENT = 2;
 
 	private DOMUtils()
 	{
@@ -218,5 +220,60 @@ public class DOMUtils
 			throw new IllegalArgumentException("Must provide non-null File to serialise to!");
 
 		serialise(n, new StreamResult(file));
+	}
+
+
+	/**
+	 * Serialise the provided Node to a pretty-printed String with the default indent settings
+	 *
+	 * @param source the input Node
+	 *
+	 * @return
+	 */
+	public static String pretty(final Node source)
+	{
+		return pretty(new DOMSource(source));
+	}
+
+
+	/**
+	 * Serialise the provided source to a pretty-printed String with the default indent settings
+	 *
+	 * @param source the input Source
+	 */
+	public static String pretty(final Source source)
+	{
+		StreamResult result = new StreamResult(new StringWriter());
+
+		pretty(source, result);
+
+		return result.getWriter().toString();
+	}
+
+
+	/**
+	 * Serialise the provided source to the provided destination, pretty-printing with the default indent settings
+	 *
+	 * @param input the source
+	 * @param output the destination
+	 */
+	public static void pretty(final Source input, final StreamResult output)
+	{
+		try
+		{
+			// Configure transformer
+			Transformer transformer = TransformerFactory.newInstance().newTransformer();
+
+			transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
+			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
+			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", Integer.toString(DEFAULT_INDENT));
+
+			transformer.transform(input, output);
+		}
+		catch (Throwable t)
+		{
+			throw new RuntimeException("Error during pretty-print operation", t);
+		}
 	}
 }
