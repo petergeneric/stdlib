@@ -26,6 +26,11 @@ public final class GuiceDaemonRegistry
 	}
 
 
+	public synchronized List<GuiceDaemon> getAll()
+	{
+		return daemons.stream().sorted(Comparator.comparing(GuiceDaemon:: getName)).collect(Collectors.toList());
+	}
+
 	public synchronized List<GuiceDaemon> getDaemons()
 	{
 		return daemons.stream()

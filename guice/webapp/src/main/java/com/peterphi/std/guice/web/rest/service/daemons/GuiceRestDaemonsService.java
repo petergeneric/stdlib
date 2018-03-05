@@ -28,4 +28,17 @@ public interface GuiceRestDaemonsService
 	@Produces("text/html")
 	@Doc("Trigger a recurring daemon to run immediately")
 	Response trigger(@FormParam("name") final String name);
+
+
+	@GET
+	@Path("/stacktrace")
+	@Produces("text/html")
+	@Doc("Get a live stack trace")
+	String getStackTrace(@QueryParam("name") final String name);
+
+	@POST
+	@Path("/interrupt")
+	@Produces("text/html")
+	@Doc("Attempt to interrupt the daemon")
+	Response interrupt(@FormParam("name") final String name);
 }

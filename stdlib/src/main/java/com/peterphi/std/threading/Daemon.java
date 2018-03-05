@@ -48,6 +48,13 @@ public abstract class Daemon implements Runnable
 	}
 
 
+	public Thread getThread() {
+		if (thisThread != null && thisThread.isAlive())
+			return thisThread;
+		else
+			return null;
+	}
+
 	/**
 	 * Starts this daemon, creating a new thread for it
 	 *

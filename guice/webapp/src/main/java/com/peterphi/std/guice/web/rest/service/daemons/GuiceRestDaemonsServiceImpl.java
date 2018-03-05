@@ -80,6 +80,83 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 	}
 
 
+	@Override
+	public String getStackTrace(final String name)
+	{
+		final Optional<GuiceDaemon> result = registry
+				                                     .getAll()
+				                                     .stream()
+				                                     .filter(d -> StringUtils.equals(name, d.getName()))
+				                                     .findFirst();
+
+		if (result.isPresent())
+		{
+			final GuiceDaemon daemon = result.get();
+
+			final StackTraceElement[] stack;
+			if (daemon.isThreadRunning() && daemon.getThread() != null)
+			{
+				Thread thread = daemon.getThread();
+
+				stack = thread.getStackTrace();
+			}
+			else
+			{
+				stack = null;
+			}
+
+			final TemplateCall template = templater.template(PREFIX + "daemon_stacktrace.html");
+
+			template.set("stack", stack);
+			template.set("name", daemon.getName());
+			template.set("registry", registry);
+			template.set("daemonDescriber", (Function<GuiceDaemon, String>) this :: getDescription);
+
+			return template.process();
+		}
+		else
+		{
+			throw new IllegalArgumentException("No daemon with name: " + name);
+		}
+	}
+
+
+	@Override
+	public Response interrupt(final String name)
+	{
+		final Optional<GuiceDaemon> result = registry
+				                                     .getAll()
+				                                     .stream()
+				                                     .filter(d -> StringUtils.equals(name, d.getName()))
+				                                     .findFirst();
+
+		if (result.isPresent())
+		{
+			final GuiceDaemon daemon = result.get();
+
+			if (daemon.isThreadRunning() && daemon.getThread() != null)
+			{
+				Thread thread = daemon.getThread();
+
+				thread.interrupt();
+			}
+
+			final String message = "Daemon " + daemon.getName() + " sent interrupt at " + DateTime.now();
+
+			return Response
+					       .seeOther(UriBuilder
+							                 .fromUri(restEndpoint.toString() + "/guice/threads")
+							                 .queryParam("message", message)
+							                 .build())
+					       .build();
+		}
+		else
+		{
+			throw new IllegalArgumentException("No daemon with name: " + name);
+		}
+	}
+
+
 	private String getDescription(GuiceDaemon daemon)
 	{
 		Class<?> clazz = daemon.getClass();

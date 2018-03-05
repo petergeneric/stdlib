@@ -82,6 +82,16 @@
 							<input type="hidden" name="name" th:value="${daemon.name}"/>
 							<input type="submit" value="Run Now"/>
 						</form>
+						<form th:if="${daemon.threadRunning}" method="POST"
+						      th:action="@{|${coreRestPrefix}/guice/threads/interrupt|}">
+							<input type="hidden" name="name" th:value="${daemon.name}"/>
+							<input type="submit" value="Interrupt"/>
+						</form>
+						<form th:if="${daemon.threadRunning}" method="GET"
+						      th:action="@{|${coreRestPrefix}/guice/threads/stacktrace|}">
+							<input type="hidden" name="name" th:value="${daemon.name}"/>
+							<input type="submit" value="Stack"/>
+						</form>
 					</td>
 				</tr>
 				</tbody>
