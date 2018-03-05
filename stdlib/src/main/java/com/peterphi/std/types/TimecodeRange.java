@@ -105,6 +105,17 @@ public class TimecodeRange
 		return new TimecodeRange(newStart, newEnd);
 	}
 
+	public TimecodeRange resample(Timebase timebase)
+	{
+		return resample(timebase, timebase.canBeDropFrame());
+	}
+
+
+	public TimecodeRange resample(Timebase timebase, final boolean toDropFrame)
+	{
+		return new TimecodeRange(start.resample(timebase, toDropFrame), end.resample(timebase, toDropFrame));
+	}
+
 
 	//
 	// Comparison
@@ -180,7 +191,7 @@ public class TimecodeRange
 
 	public String toString()
 	{
-		return "[" + start + " -> " + end + "]";
+		return "[" + start.toEncodedString() + " -> " + end.toEncodedString() + "]";
 	}
 
 
