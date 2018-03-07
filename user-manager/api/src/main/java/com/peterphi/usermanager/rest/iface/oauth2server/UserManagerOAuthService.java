@@ -17,6 +17,13 @@ import javax.ws.rs.core.Response;
 @Doc("Implements the OAuth2 flow")
 public interface UserManagerOAuthService
 {
+	String GRANT_TYPE_AUTHORIZATION_CODE="authorization_code";
+	String GRANT_TYPE_REFRESH_TOKEN="refresh_token";
+	String GRANT_TYPE_TOKEN_EXCHANGE="urn:ietf:params:oauth:grant-type:token-exchange";
+	String GRANT_TYPE_PASSWORD = "password";
+	String GRANT_TYPE_CLIENT_CREDENTIALS = "client_credentials";
+
+
 	@GET
 	@Path("/authorize")
 	Response getAuth(@QueryParam("response_type") @Doc("The response type - N.B. only code supported") String responseType,
@@ -55,7 +62,7 @@ public interface UserManagerOAuthService
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({MediaType.APPLICATION_JSON})
 	public String getToken(@FormParam("grant_type")
-	                       @Doc("One of: authorization_code,refresh_token,password,client_credentials (HTTP BASIC)")
+	                       @Doc("One of: authorization_code,refresh_token,urn:ietf:params:oauth:grant-type:token-exchange,password,client_credentials")
 			                       String grantType, @FormParam("code")
 	                       @Doc("The authorization code from the auth callback (where grant_type is authorization_code)")
 			                       String code,
@@ -65,7 +72,8 @@ public interface UserManagerOAuthService
 	                       @FormParam("refresh_token") @Doc("The refresh token (where grant_type is refresh_token)")
 			                       String refreshToken,
 	                       @FormParam("username") @Doc("The username (where grant_type is password)") String username,
-	                       @FormParam("password") @Doc("The password (where grant_type is password)") String password);
+	                       @FormParam("password") @Doc("The password (where grant_type is password)") String password,
+	                       @FormParam("subject_token") @Doc("The subject_token (where grant_type is urn:ietf:params:oauth:grant-type:token-exchange)") String subjectToken);
 
 
 	/**

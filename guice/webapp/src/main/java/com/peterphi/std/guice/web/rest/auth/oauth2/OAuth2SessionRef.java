@@ -32,7 +32,7 @@ public class OAuth2SessionRef
 	public final UserManagerOAuthService authService;
 	public final String oauthServiceEndpoint;
 
-	@Inject(optional=true)
+	@Inject(optional = true)
 	@Doc("If specified, this value will be used instead of service.oauth2.endpoint when redirecting the client to the oauth2 server (e.g. for separate internal and external endpoints)")
 	@Named("service.oauth2.redirect-endpoint")
 	public String oauthServiceRedirectEndpoint;
@@ -68,9 +68,30 @@ public class OAuth2SessionRef
 		this.clientId = clientId;
 		this.clientSecret = clientSecret;
 		this.localEndpoint = localEndpoint;
+	}
 
-		if (response != null)
-			load(response);
+
+	public synchronized boolean hasBeenInitialised() {
+		return (response != null);
+	}
+
+	/**
+	 * Initialise this session reference by exchanging an API token for an access_token and refresh_token
+	 * @param token
+	 */
+	public synchronized void initialiseFromAPIToken(final String token)
+	{
+		final String responseStr = authService.getToken(UserManagerOAuthService.GRANT_TYPE_TOKEN_EXCHANGE,
+		                                                null,
+		                                                getOwnCallbackUri().toString(),
+		                                                clientId,
+		                                                clientSecret,
+		                                                null,
+		                                                null,
+		                                                null,
+		                                                token);
+
+		loadAuthResponse(responseStr);
 	}
 
 
@@ -116,7 +137,9 @@ public class OAuth2SessionRef
 	 */
 	public URI getAuthFlowStartEndpoint(final String returnTo, final String scope)
 	{
-		final String oauthServiceRoot = (oauthServiceRedirectEndpoint != null) ? oauthServiceRedirectEndpoint : oauthServiceEndpoint;
+		final String oauthServiceRoot = (oauthServiceRedirectEndpoint != null) ?
+		                                oauthServiceRedirectEndpoint :
+		                                oauthServiceEndpoint;
 		final String endpoint = oauthServiceRoot + "/oauth2/authorize";
 
 		UriBuilder builder = UriBuilder.fromUri(endpoint);
@@ -136,7 +159,9 @@ public class OAuth2SessionRef
 
 	/**
 	 * Encode the state value into RFC $648 URL-safe base64
+	 *
 	 * @param src
+	 *
 	 * @return
 	 */
 	private String encodeState(final String src)
@@ -147,7 +172,9 @@ public class OAuth2SessionRef
 
 	/**
 	 * Decode the state value (which should be encoded as RFC 4648 URL-safe base64)
+	 *
 	 * @param src
+	 *
 	 * @return
 	 */
 	private String decodeState(final String src)
@@ -168,7 +195,8 @@ public class OAuth2SessionRef
 		final String[] pieces = decodeState(state).split(" ", 2);
 
 		if (!StringUtils.equals(callbackNonce, pieces[0]))
-			throw new IllegalArgumentException("WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
+			throw new IllegalArgumentException(
+					"WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
 
 		if (pieces.length == 2)
 			return URI.create(pieces[1]);
@@ -210,15 +238,22 @@ public class OAuth2SessionRef
 		this.response = null;
 		this.cachedInfo = null;
 
-		final String responseStr = authService.getToken("refresh_token",
+		final String responseStr = authService.getToken(UserManagerOAuthService.GRANT_TYPE_REFRESH_TOKEN,
 		                                                null,
 		                                                null,
 		                                                clientId,
 		                                                clientSecret,
 		                                                refreshToken,
 		                                                null,
+		                                                null,
 		                                                null);
 
+		loadAuthResponse(responseStr);
+	}
+
+
+	private synchronized void loadAuthResponse(final String responseStr)
+	{
 		final OAuth2TokenResponse response = OAuth2TokenResponse.decode(responseStr);
 
 		load(response);
@@ -260,6 +295,9 @@ public class OAuth2SessionRef
 		else
 		{
 			this.response = response;
+
+			// Proactively obtain user information
+			refreshUserInfo();
 		}
 	}
 }

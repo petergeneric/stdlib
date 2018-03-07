@@ -34,6 +34,16 @@ public class UserEntity
 	private String password;
 
 	/**
+	 * The primary access key (the key all API clients should use for this account). Optional.
+	 */
+	private String accessKey;
+
+	/**
+	 * The secondary access key (allows keys to be rotated out without a big-bang reconfiguration of API users). Optional.
+	 */
+	private String accessKeySecondary;
+
+	/**
 	 * The user's desired date format
 	 */
 	private String dateFormat;
@@ -118,6 +128,42 @@ public class UserEntity
 	public void setPassword(String password)
 	{
 		this.password = password;
+	}
+
+
+	/**
+	 * Access key, allows API clients more easy use of a User Manager User.
+	 *
+	 * @return
+	 */
+	@Column(name = "access_key", nullable = true, length = 100)
+	public String getAccessKey()
+	{
+		return accessKey;
+	}
+
+
+	public void setAccessKey(final String accessKey)
+	{
+		this.accessKey = accessKey;
+	}
+
+
+	/**
+	 * Access key, allows API clients more easy use of a User Manager User.
+	 *
+	 * @return
+	 */
+	@Column(name = "access_key_alt", nullable = true, length = 100)
+	public String getAccessKeySecondary()
+	{
+		return accessKeySecondary;
+	}
+
+
+	public void setAccessKeySecondary(final String accessKeySecondary)
+	{
+		this.accessKeySecondary = accessKeySecondary;
 	}
 
 

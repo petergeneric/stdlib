@@ -254,4 +254,12 @@
 			</column>
 		</addColumn>
 	</changeSet>
+
+
+	<changeSet author="peter@peterphi.com" id="add_user_access_key">
+		<addColumn tableName="user_account">
+			<column name="access_key" type="VARCHAR(100)" />
+			<column name="access_key_alt" type="VARCHAR(100)" />
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

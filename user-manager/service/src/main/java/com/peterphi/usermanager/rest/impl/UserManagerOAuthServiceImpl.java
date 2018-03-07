@@ -283,29 +283,36 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	                       final String secret,
 	                       final String refreshToken,
 	                       final String username,
-	                       final String password)
+	                       final String password,
+	                       final String subjectToken)
 	{
-		final OAuthSessionEntity session;
+		OAuthSessionEntity session;
 
 		switch (grantType)
 		{
-			case "authorization_code":
+			case GRANT_TYPE_AUTHORIZATION_CODE:
 			{
 				final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+
+				if (service == null)
+					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 				session = sessionDao.exchangeCodeForToken(service, code);
 				break;
 			}
-			case "refresh_token":
+			case GRANT_TYPE_REFRESH_TOKEN:
 			{
 				final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+
+				if (service == null)
+					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 				session = sessionDao.exchangeRefreshTokenForNewToken(service,
 				                                                     refreshToken,
 				                                                     new DateTime().plus(tokenRefreshInterval));
 				break;
 			}
-			case "password":
+			case GRANT_TYPE_PASSWORD:
 			{
 				// N.B. Don't expect the clientSecret from this call
 
@@ -318,9 +325,32 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				session = createSession(user.getId(), clientId, redirectUri, "password-to-token", true);
 
 				// Take the authorisation code internally and exchange it for a token
-				sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+				break;
 			}
-			case "client_credentials":
+			case GRANT_TYPE_TOKEN_EXCHANGE:
+			{
+				final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+
+				if (service == null)
+					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+				final UserEntity user = userDao.loginByAccessKey(subjectToken);
+
+				if (user == null)
+					throw new IllegalArgumentException("Access Key not recognised");
+
+				// Accept the use of the service and create a new session
+				// N.B. do not allow token exchange to be used to gain access to a service this user has not explicitly granted
+				session = createSession(user.getId(), clientId, redirectUri, "token-exchange", false);
+
+				// Take the authorisation code internally and exchange it for a token
+				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+				break;
+			}
+			case GRANT_TYPE_CLIENT_CREDENTIALS:
 			default:
 			{
 				throw new IllegalArgumentException("unsupported grant_type: " + grantType);

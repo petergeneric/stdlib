@@ -7,12 +7,16 @@ import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
+import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
+import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
@@ -22,13 +26,22 @@ import java.util.Set;
 import java.util.concurrent.ExecutionException;
 
 @SessionScoped
-public class OAuthUser implements CurrentUser
+public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 {
 	@Inject
 	RedirectToOAuthAccessRefuser accessRefuser;
 
 	@Inject
 	Provider<OAuth2SessionRef> sessionRefProvider;
+
+	/**
+	 * If logged in with an Bearer API Token then use this static session instead of constructing one (this is for API calls, where there'll be a Session per Request)<br />
+	 * If this is null (the default) then getSession will construct a session using {@link #sessionRefProvider}, otherwise if non-null this static value will be used
+	 */
+	private OAuth2SessionRef staticSession;
+
+	@Inject
+	Provider<UserManagerAccessKeyToSessionCache> apiSessionRefCacheProvider;
 
 	Cache<String, DateTimeFormatter> dateFormatCache = CacheBuilder.newBuilder().maximumSize(1).build();
 
@@ -49,7 +62,10 @@ public class OAuthUser implements CurrentUser
 
 	private OAuth2SessionRef getSession()
 	{
-		return sessionRefProvider.get();
+		if (staticSession != null)
+			return staticSession;
+		else
+			return sessionRefProvider.get();
 	}
 
 
@@ -182,5 +198,27 @@ public class OAuthUser implements CurrentUser
 	public AccessRefuser getAccessRefuser()
 	{
 		return accessRefuser;
+	}
+
+
+	@Override
+	public void postConstruct()
+	{
+		// If there's an Authorization: Bearer
+		final HttpCallContext ctx = HttpCallContext.peek();
+
+		if (ctx != null)
+		{
+			final HttpServletRequest request = ctx.getRequest();
+
+			final String header = request.getHeader("Authorization");
+
+			if (UserManagerBearerToken.isUserManagerBearerAuthorizationHeader(header))
+			{
+				final String token = UserManagerBearerToken.getTokenFromBearerAuthorizationHeader(header);
+
+				this.staticSession = apiSessionRefCacheProvider.get().getOrCreateSessionRef(token);
+			}
+		}
 	}
 }
