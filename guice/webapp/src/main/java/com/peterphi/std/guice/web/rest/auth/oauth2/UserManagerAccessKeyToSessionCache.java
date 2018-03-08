@@ -43,7 +43,7 @@ public class UserManagerAccessKeyToSessionCache
 		}
 		catch (ExecutionException e)
 		{
-			throw new RuntimeException("Error allocating session for bearer token", e);
+			throw new RuntimeException("Error allocating session for bearer token", (e.getCause() != null) ? e.getCause() : e);
 		}
 	}
 
