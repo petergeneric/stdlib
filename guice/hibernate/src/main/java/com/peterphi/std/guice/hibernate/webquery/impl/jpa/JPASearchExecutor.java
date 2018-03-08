@@ -21,6 +21,12 @@ public class JPASearchExecutor
 {
 	private static final Logger log = Logger.getLogger(JPASearchExecutor.class);
 
+	/**
+	 * If true, will treat all WebQuery instances as if they had set computeSize to true<br />
+	 * This is mainly present to allow unit tests to check that computeSize works with various different WebQuery calls without having to duplicate
+	 */
+	public static boolean ALWAYS_COMPUTE_SIZE = false;
+
 	@Inject
 	HibernateObservingInterceptor hibernateObserver;
 
@@ -59,6 +65,19 @@ public class JPASearchExecutor
 			JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
 			builder.forWebQuery(query);
 
+			// First, compute the total size if requested
+			final Long total;
+			if (ALWAYS_COMPUTE_SIZE || query.isComputeSize())
+			{
+				JPAQueryBuilder countBuilder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+				countBuilder.forWebQuery(query);
+
+				total = countBuilder.selectCount();
+			}
+			else
+			{
+				total = null;
+			}
 
 			// If the auto strategy is in play, take into account what's being fetched back as well as whether there are any explicit collection joins or fetches
 			if (strategy == null || strategy == JPASearchStrategy.AUTO)
@@ -82,7 +101,6 @@ public class JPASearchExecutor
 				}
 			}
 
-			Long total = null;
 			List list;
 			switch (strategy)
 			{
@@ -90,17 +108,11 @@ public class JPASearchExecutor
 				{
 					list = builder.selectIDs();
 
-					if (query.isComputeSize())
-						total = builder.selectCount();
-
 					break;
 				}
 				case ENTITY_WRAPPED_ID:
 				{
 					list = builder.selectIDs();
-
-					if (query.isComputeSize())
-						total = builder.selectCount();
 
 					// Transform the IDs into entity objects with the ID field populated
 					list = (List) list.stream().map(entity:: newInstanceWithId).collect(Collectors.toList());
@@ -109,10 +121,6 @@ public class JPASearchExecutor
 				}
 				case ENTITY:
 				{
-					// First, query for the total results (if desired)
-					if (query.isComputeSize())
-						total = builder.selectCount();
-
 					// TODO could we use ScrollableResults if there are collection joins? pagination would be tricky
 
 					list = builder.selectEntity();
@@ -123,9 +131,6 @@ public class JPASearchExecutor
 				{
 					// First, query for the IDs (and the total results if desired)
 					list = builder.selectIDs();
-
-					if (query.isComputeSize())
-						total = builder.selectCount();
 
 					// Now re-query to retrieve the entities
 					builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);

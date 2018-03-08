@@ -4,11 +4,13 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.testing.GuiceUnit;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.GuiceConfig;
 import org.joda.time.DateTime;
+import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -45,6 +47,8 @@ public class DynamicQueryTest
 	@Before
 	public void clearDatabaseBeforeTest()
 	{
+		JPASearchExecutor.ALWAYS_COMPUTE_SIZE = true;
+
 		for (ChildEntity obj : childDao.getAll())
 			childDao.delete(obj);
 
@@ -52,6 +56,13 @@ public class DynamicQueryTest
 			dao.delete(obj);
 
 		assertEquals(0, dao.getAll().size());
+	}
+
+
+	@After
+	public void disableAlwaysComputeSize()
+	{
+		JPASearchExecutor.ALWAYS_COMPUTE_SIZE = false;
 	}
 
 
@@ -277,6 +288,9 @@ public class DynamicQueryTest
 	@Test
 	public void testLogSQL() throws Exception
 	{
+		// For this unit test, disable always compute size
+		JPASearchExecutor.ALWAYS_COMPUTE_SIZE = false;
+
 		ParentEntity obj1 = new ParentEntity();
 		obj1.setName("Name1");
 		dao.save(obj1);
@@ -309,6 +323,18 @@ public class DynamicQueryTest
 		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(new WebQuery().orderDesc("id")).getList()));
 	}
 
+
+	@Test
+	public void testConstraintWorksWithComputeSize() throws Exception
+	{
+		assertNotNull(dao.findByUriQuery(new WebQuery().eq("id", "1").computeSize(true)).total);
+	}
+
+	@Test
+	public void testComputeSizeWorks() throws Exception
+	{
+		assertNotNull(dao.findByUriQuery(new WebQuery().computeSize(true)).total);
+	}
 
 	/**
 	 * Tests that computing size while applying ordering and limiting to the resultset still works

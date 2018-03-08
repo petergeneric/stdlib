@@ -523,7 +523,17 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	{
 		generated.orderBy(Collections.emptyList()); // Order is not meaningful for a count query
 
-		return session.createQuery((CriteriaQuery<Long>) generated.select(criteriaBuilder.count(root)));
+		generated.select(criteriaBuilder.count(root));
+
+		final Query<Long> query = session.createQuery(generated);
+
+		// Set all the parameters
+		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
+		{
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
+
+		return query;
 	}
 
 
