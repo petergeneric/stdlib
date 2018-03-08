@@ -45,6 +45,11 @@ public interface UserUIService
 	                         @FormParam("roles") List<String> roles);
 
 	@POST
+	@Path("/user/{user_id}/rotate-access-key")
+	@Produces(MediaType.TEXT_HTML)
+	Response rotateAccessKey(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
+
+	@POST
 	@Path("/user/{user_id}/delete")
 	@Produces(MediaType.TEXT_HTML)
 	Response deleteUser(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);

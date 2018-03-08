@@ -175,6 +175,23 @@ public class UserUIServiceImpl implements UserUIService
 
 
 	@Override
+	public Response rotateAccessKey(final int userId, final String nonce)
+	{
+		nonceStore.validate(NONCE_USE, nonce);
+
+		final int localUser = login.getId();
+
+		if (localUser != userId && !login.isAdmin())
+			throw new AuthenticationFailureException("Only a User Admin can rotate access keys another user!");
+
+		// Change regular account settings
+		accountDao.rotateUserAccessKey(userId);
+
+		return Response.seeOther(URI.create("/user/" + userId)).build();
+	}
+
+
+	@Override
 	@Transactional
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public Response deleteUser(final int userId, final String nonce)

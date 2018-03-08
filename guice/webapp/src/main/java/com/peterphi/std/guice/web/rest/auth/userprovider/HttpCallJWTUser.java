@@ -8,6 +8,7 @@ import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.util.HttpHeaderNames;
@@ -222,7 +223,8 @@ class HttpCallJWTUser implements CurrentUser
 				else
 					return null;
 			}
-			else if (StringUtils.startsWithIgnoreCase(header, "Bearer"))
+			else if (StringUtils.startsWithIgnoreCase(header, "Bearer") &&
+			         !UserManagerBearerToken.isUserManagerBearerAuthorizationHeader(header))
 			{
 				// Bearer token
 				return header.substring("Bearer".length() + 1);

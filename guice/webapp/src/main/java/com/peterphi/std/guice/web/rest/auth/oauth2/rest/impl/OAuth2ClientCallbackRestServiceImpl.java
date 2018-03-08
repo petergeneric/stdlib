@@ -64,11 +64,12 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 
 
 		// Now call to exchange the authorisation code for a token
-		final String responseStr = remote.getToken("authorization_code",
+		final String responseStr = remote.getToken(UserManagerOAuthService.GRANT_TYPE_AUTHORIZATION_CODE,
 		                                           code,
 		                                           sessionRef.getOwnCallbackUri().toString(),
 		                                           clientId,
 		                                           clientSecret,
+		                                           null,
 		                                           null,
 		                                           null,
 		                                           null);

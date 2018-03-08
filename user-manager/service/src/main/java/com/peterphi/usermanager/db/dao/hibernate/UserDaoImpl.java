@@ -6,7 +6,9 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
@@ -36,6 +38,33 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		}
 
 		return null; // User doesn't exist (or password is wrong)
+	}
+
+
+	/**
+	 * Rotate the primary access key -> secondary access key, dropping the old secondary access key and generating a new primary access key
+	 *
+	 * @param id
+	 */
+	@Transactional
+	public void rotateUserAccessKey(final int id)
+	{
+		final UserEntity account = getById(id);
+
+		if (account != null)
+		{
+			// Set the secondary token to the old primary token
+			account.setAccessKeySecondary(account.getAccessKey());
+
+			// Now regenerate the primary token
+			account.setAccessKey(SimpleId.alphanumeric(UserManagerBearerToken.PREFIX, 100));
+
+			update(account);
+		}
+		else
+		{
+			throw new IllegalArgumentException("No such user: " + id);
+		}
 	}
 
 
@@ -151,6 +180,19 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		}
 
 		return account;
+	}
+
+	@Transactional
+	public UserEntity loginByAccessKey(final String key)
+	{
+		final UserEntity account = uniqueResult(new WebQuery().or(or -> or.eq("accessKey", key).eq("accessKeySecondary", key)));
+
+		// N.B. for Access Key logins we don't update the last login timestamp
+		if (account != null)
+			log.debug("Allowed login by Access Key for user: " + account.getEmail());
+
+		return account;
+
 	}
 
 

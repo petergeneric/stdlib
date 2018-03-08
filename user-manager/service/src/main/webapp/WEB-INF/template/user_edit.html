@@ -18,6 +18,7 @@
 			Password</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#impersonateModal" data-toggle="modal">Impersonate</a></li>
+		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#rotateKeyModal" data-toggle="modal"><span th:text="${user.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</a></li>
 	</ul>
 
 	<!-- Change password modal -->
@@ -108,6 +109,27 @@
 				<input class="btn btn-primary" type="submit" value="Impersonate"/>
 			</div>
 		</form>
+
+
+		<!-- Rotate API keys modal -->
+		<form id="rotateKeyModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="rotateKeyModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/user/' + ${user.id} + '/rotate-access-key'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="rotateKeyModalLabel"><span th:text="${user.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</h3>
+			</div>
+			<div class="modal-body">
+				<p>Assign a new API key for this user? If an Access Key is already assigned then a new key will be assigned and the old key will be moved to the Access Key Secondary field (and will continue to work until a subsequent rotation or until that key is revoked). Are you sure?</p>
+				<input type="hidden" name="alter" value="rotateKey"/>
+				<input type="hidden" name="id" th:value="${user.id}"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Rotate"/>
+			</div>
+		</form>
 	</th:block>
 
 	<form class="form-horizontal" method="POST">
@@ -124,7 +146,7 @@
 		</div>
 
 		<!-- isLocal -->
-		<div class="control-group">
+		<div class="control-group" th:if="${session.login.isAdmin()}">
 			<label class="control-label" for="view_lastLogin">local user</label>
 
 			<div class="controls">
@@ -237,6 +259,22 @@
 					$(".chosen-select").chosen({});
 				});
 			</script>
+		</div>
+
+		<div class="control-group" th:if="${(session.login.getId() == user.id) and user.accessKey}">
+			<label class="control-label" for="view_AccessKey">API Access Key</label>
+
+			<div class="controls">
+				<input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" id="view_AccessKey" th:value="${user.accessKey}" alt="Click to copy" title="Click to copy"/><br />
+			</div>
+		</div>
+
+		<div class="control-group" th:if="${(session.login.getId() == user.id) and user.accessKeySecondary}">
+			<label class="control-label" for="view_SecondaryAccessKey">API Access Key (Secondary)</label>
+
+			<div class="controls">
+				<input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" id="view_SecondaryAccessKey" th:value="${user.accessKeySecondary}" alt="Click to copy" title="Click to copy"/>
+			</div>
 		</div>
 
 
