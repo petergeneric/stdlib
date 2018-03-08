@@ -45,14 +45,25 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	private static final String NO_CACHE = "no-cache";
 
 	@Inject(optional = true)
-	@Named("auth.approve-all")
-	@Doc("If true, all OAuth2 /auth calls will be approved without requesting interactive user approval (default false)")
-	boolean autoApproveAll = false;
-
-	@Inject(optional = true)
 	@Named("auth.token.refresh-period")
 	@Doc("The period after which an OAuth2 consumer will have to refresh their access token (default PT30M)")
 	public Period tokenRefreshInterval = Period.parse("PT30M");
+
+	@Inject(optional = true)
+	@Named("auth.all.create-new-session-context-if-necessary")
+	@Doc("If true, access will be permitted automatically to services they have never used before regardless of how the user was authenticated (default false)")
+	public boolean autoGrantAccessToAllServices = false;
+
+	@Inject(optional = true)
+	@Named("auth.interactive.create-new-session-context-if-necessary")
+	@Doc("If true, when used interactively then access will be permitted automatically to services they have never used before without prompting (default false)")
+	boolean autoGrantInteractiveAccessToAllServices = false;
+
+	@Inject(optional = true)
+	@Named("auth.access-key.create-new-session-context-if-necessary")
+	@Doc("If true then when using an Access Key, access will be permitted automatically to services they have never used before (default false)")
+	public boolean autoGrantAccessKeysToAccessAllServices = false;
+
 
 	@Inject
 	Templater templater;
@@ -90,7 +101,8 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	{
 		// Has the current user approved this client+scope before? If so just redirect straight back
 		// Otherwise, bring up the authorisation UI
-		final Response response = createSessionAndRedirect(responseType, clientId, redirectUri, state, scope, autoApproveAll);
+		final Response response = createSessionAndRedirect(responseType, clientId, redirectUri, state, scope,
+		                                                   autoGrantInteractiveAccessToAllServices);
 
 		if (response != null)
 		{
@@ -248,11 +260,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		// Try to create a context for a session to live within (if permitted)
 		if (context == null)
 		{
-			// Not allowed to create an approval so cannot create a session
-			if (!allowCreateApproval)
-				return null;
-
-			context = contextDao.create(userDao.getById(userId), client, scope);
+			if (allowCreateApproval || autoGrantAccessToAllServices)
+				context = contextDao.create(userDao.getById(userId), client, scope);
+			else
+				return null; // Not allowed to create an approval so cannot create a session
 		}
 
 		// Now create a Session
@@ -343,7 +354,13 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 				// Accept the use of the service and create a new session
 				// N.B. do not allow token exchange to be used to gain access to a service this user has not explicitly granted
-				session = createSession(user.getId(), clientId, redirectUri, "token-exchange", false);
+				session = createSession(user.getId(), clientId, redirectUri, GRANT_TYPE_TOKEN_EXCHANGE,
+				                        autoGrantAccessKeysToAccessAllServices);
+
+				if (session == null)
+					throw new IllegalArgumentException("The User associated with this Access Key (" +
+					                                   user.getName() +
+					                                   ") has not approved access to this service yet");
 
 				// Take the authorisation code internally and exchange it for a token
 				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
