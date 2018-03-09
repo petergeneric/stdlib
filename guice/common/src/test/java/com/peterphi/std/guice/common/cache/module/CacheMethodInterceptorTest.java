@@ -23,25 +23,25 @@ public class CacheMethodInterceptorTest
 		//no calls to the test class have been made yet
 		assertEquals(0, test.getRealCalls());
 		//make a call
-		assertEquals(Integer.valueOf(1), test.getValue());
+		test.getValue();
 		//one real call has been made
 		assertEquals(1, test.getRealCalls());
 		//make a call, a cached value should be returned
-		assertEquals(Integer.valueOf(1), test.getValue());
+		test.getValue();
 		//so the number of real calls is still 1
 		assertEquals(1, test.getRealCalls());
 		//wait a while (but not long enough for the result to go stale)
 		Thread.sleep(500l);
 		//make a call, a cached value should be returned
-		assertEquals(Integer.valueOf(1), test.getValue());
+		test.getValue();
 		//so the number of real calls is still 1
 		assertEquals(1, test.getRealCalls());
 		//wait a while longer (long enough for the result to go stale)
-		Thread.sleep(600l);
+		Thread.sleep(2000l);
 		//make a call, a fresh value should be returned
-		assertEquals(Integer.valueOf(1), test.getValue());
+		test.getValue();
 		//so now the number of real calls to the method is 2
-		assertEquals(2, test.getRealCalls());
+		assertEquals("number of real calls to method after longer sleep", 2, test.getRealCalls());
 	}
 
 
@@ -60,7 +60,8 @@ public class CacheMethodInterceptorTest
 		public Integer getValue()
 		{
 			realCalls++;
-			return 1;
+
+			return realCalls;
 		}
 
 
