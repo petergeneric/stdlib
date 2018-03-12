@@ -262,4 +262,16 @@
 			<column name="access_key_alt" type="VARCHAR(100)" />
 		</addColumn>
 	</changeSet>
+
+	<changeSet id="change-oath-enabled-type-field" author="bryce.mcleod@codory.com">
+
+		<dropColumn columnName="is_enabled"
+		            tableName="oauth_service"/>
+
+		<addColumn tableName="oauth_service">
+			<column name="is_enabled" type="boolean">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>
