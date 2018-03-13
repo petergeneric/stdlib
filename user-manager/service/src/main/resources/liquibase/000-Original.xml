@@ -262,4 +262,33 @@
 			<column name="access_key_alt" type="VARCHAR(100)" />
 		</addColumn>
 	</changeSet>
+
+	<changeSet id="change-oath-enabled-type-field" author="bryce.mcleod@codory.com">
+
+		<dropColumn columnName="is_enabled"
+		            tableName="oauth_service"/>
+		<addColumn tableName="oauth_service">
+			<column name="is_enabled" type="boolean" defaultValueBoolean="true">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+
+		<dropColumn columnName="is_active"
+		            tableName="oauth_session_context"/>
+		<addColumn tableName="oauth_session_context">
+			<column name="is_active" type="boolean" defaultValueBoolean="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+
+		<dropColumn columnName="is_active"
+		            tableName="oauth_session"/>
+		<addColumn tableName="oauth_session">
+			<column name="is_active" type="boolean" defaultValueBoolean="false">
+				<constraints nullable="false"/>
+			</column>
+		</addColumn>
+
+	</changeSet>
+
 </databaseChangeLog>
