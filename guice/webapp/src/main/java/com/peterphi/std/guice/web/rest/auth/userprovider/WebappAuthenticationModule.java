@@ -77,7 +77,10 @@ public class WebappAuthenticationModule extends AbstractModule
 			if (user != null)
 			{
 				// Store the user info for logging
-				MDC.put(LoggingMDCConstants.USER_ID, user.getUsername());
+				if (user.getUsername() != null)
+				{
+					MDC.put(LoggingMDCConstants.USER_ID, user.getUsername());
+				}
 
 				return user;
 			}
