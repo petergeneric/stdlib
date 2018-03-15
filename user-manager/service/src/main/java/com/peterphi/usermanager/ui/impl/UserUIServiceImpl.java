@@ -131,8 +131,8 @@ public class UserUIServiceImpl implements UserUIService
 		// Change regular account settings
 		final UserEntity user = accountDao.changeProfile(userId, name, email, dateFormat, timeZone);
 
-		// Change roles (if admin user)
-		if (login.isAdmin())
+		// Change roles (if we're admin and the user is local)
+		if (login.isAdmin() && user.isLocal())
 		{
 			final Set<String> currentRoles = getRoles(user);
 
