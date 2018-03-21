@@ -1,11 +1,10 @@
 package com.peterphi.usermanager.db.entity;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
-import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
 import javax.persistence.JoinTable;
@@ -71,6 +70,6 @@ public class RoleEntity
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("id", id).add("caption", caption).toString();
+		return MoreObjects.toStringHelper(this).add("id", id).add("caption", caption).toString();
 	}
 }

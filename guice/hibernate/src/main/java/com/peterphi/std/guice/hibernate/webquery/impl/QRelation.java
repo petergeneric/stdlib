@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQDataType;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntityProperty;
 
@@ -95,7 +95,7 @@ public class QRelation
 	@Override
 	public String toString()
 	{
-		return Objects
+		return MoreObjects
 				       .toStringHelper(this)
 				       .add("owner", owner)
 				       .add("name", name)

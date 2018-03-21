@@ -1,6 +1,6 @@
 package com.peterphi.usermanager.guice.authentication.ldap;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class LDAPGroup
 {
@@ -38,6 +38,6 @@ public class LDAPGroup
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("id", id).add("dn", dn).toString();
+		return MoreObjects.toStringHelper(this).add("id", id).add("dn", dn).toString();
 	}
 }

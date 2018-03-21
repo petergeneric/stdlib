@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 public class WQPathSegment
 {
@@ -38,6 +38,6 @@ public class WQPathSegment
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("segment", segment).toString();
+		return MoreObjects.toStringHelper(this).add("segment", segment).toString();
 	}
 }

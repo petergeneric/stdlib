@@ -1,7 +1,7 @@
 package com.peterphi.std.guice.common.serviceprops.jaxbref;
 
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 
 import javax.xml.bind.annotation.XmlAttribute;
@@ -55,7 +55,7 @@ class MyType implements GuiceLifecycleListener
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("name", name).add("postConstructCalled", postConstructCalled).toString();
+		return MoreObjects.toStringHelper(this).add("name", name).add("postConstructCalled", postConstructCalled).toString();
 	}
 
 

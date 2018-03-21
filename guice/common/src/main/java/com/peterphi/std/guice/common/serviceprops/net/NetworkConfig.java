@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.common.serviceprops.net;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
@@ -68,7 +68,7 @@ public class NetworkConfig
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("path", path).add("initialRevision", initialRevision).add("properties",
+		return MoreObjects.toStringHelper(this).add("path", path).add("initialRevision", initialRevision).add("properties",
 		                                                                                                  properties).add(
 				"lastLoadedRevision",
 				lastLoadedRevision).toString();

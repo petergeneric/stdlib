@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
@@ -108,6 +108,6 @@ class HttpCallUser implements CurrentUser
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("principal", getName()).toString();
+		return MoreObjects.toStringHelper(this).add("principal", getName()).toString();
 	}
 }

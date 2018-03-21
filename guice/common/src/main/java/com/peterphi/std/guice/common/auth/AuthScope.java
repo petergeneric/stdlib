@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.common.auth;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 
 public class AuthScope
@@ -43,6 +43,6 @@ public class AuthScope
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("name", name).add("role", role).add("skip", skip).toString();
+		return MoreObjects.toStringHelper(this).add("name", name).add("role", role).add("skip", skip).toString();
 	}
 }

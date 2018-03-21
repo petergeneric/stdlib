@@ -1,6 +1,6 @@
 package com.peterphi.servicemanager.service.rest.resource.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
@@ -34,7 +34,7 @@ public class ResourceKVP
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("name", name).add("value", value).toString();
+		return MoreObjects.toStringHelper(this).add("name", name).add("value", value).toString();
 	}
 
 

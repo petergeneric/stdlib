@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.config.rest.types;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlElement;
@@ -26,11 +26,11 @@ public class ConfigPropertyData
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this)
-		              .add("path", path)
-		              .add("revision", revision)
-		              .add("timestamp", timestamp)
-		              .add("properties", properties)
-		              .toString();
+		return MoreObjects.toStringHelper(this)
+		                  .add("path", path)
+		                  .add("revision", revision)
+		                  .add("timestamp", timestamp)
+		                  .add("properties", properties)
+		                  .toString();
 	}
 }
