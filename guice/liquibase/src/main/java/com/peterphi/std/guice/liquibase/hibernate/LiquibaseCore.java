@@ -20,7 +20,6 @@ import liquibase.exception.LiquibaseException;
 import liquibase.logging.LogFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
-import liquibase.resource.FileSystemResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -188,9 +187,8 @@ class LiquibaseCore
 					ResourceAccessor threadClFO = new ClassLoaderResourceAccessor(contextClassLoader);
 
 					ResourceAccessor clFO = new ClassLoaderResourceAccessor();
-					ResourceAccessor fsFO = new FileSystemResourceAccessor();
 
-					composite = new CompositeResourceAccessor(clFO, fsFO, threadClFO);
+					composite = new CompositeResourceAccessor(clFO, threadClFO);
 				}
 
 				// If loading a resource with an absolute path fails, re-try it as a path relative to /
