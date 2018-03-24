@@ -24,6 +24,7 @@ import com.codahale.metrics.Timer;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.database.annotation.Transactional;
+import com.peterphi.std.util.tracing.Tracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
@@ -71,19 +72,21 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
-		Timer.Context callTimer = calls.time();
-
-		try
+		if (sessionProvider.get().getTransaction().getStatus() == TransactionStatus.ACTIVE)
 		{
-			if (sessionProvider.get().getTransaction().getStatus() == TransactionStatus.ACTIVE)
-			{
-				// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
-				if (log.isTraceEnabled())
-					log.trace("Joining existing transaction to call " + invocation.getMethod().toGenericString());
+			// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
+			if (log.isTraceEnabled())
+				log.trace("Joining existing transaction to call " + invocation.getMethod().toGenericString());
 
-				return invocation.proceed();
-			}
-			else
+			return invocation.proceed();
+		}
+		else
+		{
+			Timer.Context callTimer = calls.time();
+
+			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
+
+			try
 			{
 				final Transactional annotation = readAnnotation(invocation);
 
@@ -108,6 +111,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						{
 							log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
 
+							Tracing.logOngoing(tracingId, "TX:exception:retryable", () -> e.getClass().getSimpleName());
+
 							try
 							{
 								Thread.sleep(backoff);
@@ -125,7 +130,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							// Handle generic exception (usually one that wraps another exception)
 							if (e.getCause() != null && (isSqlServerSnapshotConflictError(e) || isDeadlockError(e)))
 							{
-								log.warn("@Transactional caught exception PersistenceException wrapping " + e.getCause().getClass().getSimpleName() + "; retrying...", e);
+								log.warn("@Transactional caught exception PersistenceException wrapping " +
+								         e.getCause().getClass().getSimpleName() +
+								         "; retrying...", e);
+
+								Tracing.logOngoing(tracingId, "TX:exception:retryable:wrapped", () -> e.getCause().getClass().getSimpleName());
 
 								try
 								{
@@ -141,19 +150,22 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							}
 							else
 							{
+								Tracing.logOngoing(tracingId, "TX:exception:fatal", () -> e.getClass().getSimpleName());
 								throw e; // rethrow because we won't handle this
 							}
 						}
 					}
 				}
 
+				Tracing.logOngoing(tracingId, "TX:last-try", null);
 				// Run without further retries
 				return createTransactionAndExecuteMethod(invocation, annotation);
 			}
-		}
-		finally
-		{
-			callTimer.stop();
+			finally
+			{
+				Tracing.logOngoing(tracingId, "TX:quit", null);
+				callTimer.stop();
+			}
 		}
 	}
 
