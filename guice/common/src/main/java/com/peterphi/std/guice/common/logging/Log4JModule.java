@@ -11,6 +11,9 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.LogManager;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PropertyConfigurator;
+import org.apache.log4j.helpers.Loader;
+
+import java.lang.reflect.Field;
 
 /**
  * Reads the <code>log4j.properties</code> value from the service config; if a value is supplied it searches the classpath for
@@ -27,6 +30,40 @@ public class Log4JModule extends AbstractModule implements GuiceConfigChangeObse
 	private GuiceConfig guiceConfig;
 	private MetricRegistry registry;
 
+	static {
+		tryForceNotJava1();
+	}
+
+	/**
+	 * HACK to make MDC work with Java 9 onwards<br />
+	 *
+	 */
+	private static void tryForceNotJava1()
+	{
+		String version = System.getProperty("java.version");
+
+		// N.B. Log4j has issues with JVM versions written like "9" and "10"
+		if (version != null && !version.startsWith("1."))
+		{
+			try
+			{
+				Class<Loader> loader = Loader.class;
+
+				for (Field field : loader.getDeclaredFields())
+				{
+					if (field.getName().equals("java1"))
+					{
+						field.setAccessible(true);
+						field.setBoolean(null, false);
+					}
+				}
+			}
+			catch (Throwable t)
+			{
+				// ignore, we must have been denied access. MDC may not work correctly due to log4j 1.2 limitations
+			}
+		}
+	}
 
 	public Log4JModule(GuiceConfig configuration, MetricRegistry registry)
 	{
