@@ -5,7 +5,7 @@ import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
-import org.apache.log4j.MDC;
+import com.peterphi.std.util.tracing.Tracing;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -36,7 +36,7 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 		try
 		{
 			// Share the call id to log4j
-			MDC.put("call.id", ctx.getLogId());
+			Tracing.start(ctx.getLogId(), ctx.isVerbose());
 
 			// If necessary set up Guice
 			if (!ready.get())
@@ -53,7 +53,8 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 		finally
 		{
 			HttpCallContext.clear();
-			MDC.clear();
+
+			Tracing.clear();
 		}
 	}
 

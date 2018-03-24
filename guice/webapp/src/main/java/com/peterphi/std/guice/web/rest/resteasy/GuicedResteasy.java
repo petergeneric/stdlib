@@ -9,7 +9,6 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyReader;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
@@ -20,6 +19,7 @@ import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.JAXRSExceptionMapper;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
@@ -163,16 +163,16 @@ class GuicedResteasy implements GuiceApplication
 		try
 		{
 			// Share the call id to log4j
-			MDC.put(LoggingMDCConstants.TRACE_ID, ctx.getLogId());
-			MDC.put(LoggingMDCConstants.HTTP_REMOTE_ADDR, ctx.getRequest().getRemoteAddr());
-			MDC.put(LoggingMDCConstants.SERVLET_CONTEXT_PATH, ctx.getServletContext().getContextPath());
-			MDC.put(LoggingMDCConstants.HTTP_REQUEST_URI, ctx.getRequest().getRequestURI());
+			MDC.put(TracingConstants.MDC_TRACE_ID, ctx.getLogId());
+			MDC.put(TracingConstants.MDC_HTTP_REMOTE_ADDR, ctx.getRequest().getRemoteAddr());
+			MDC.put(TracingConstants.MDC_SERVLET_CONTEXT_PATH, ctx.getServletContext().getContextPath());
+			MDC.put(TracingConstants.MDC_HTTP_REQUEST_URI, ctx.getRequest().getRequestURI());
 
 			// Add the session id (if present)
 			final HttpSession session = ctx.getRequest().getSession(false);
 			if (session != null)
 			{
-				MDC.put(LoggingMDCConstants.HTTP_SESSION_ID, session.getId());
+				MDC.put(TracingConstants.MDC_HTTP_SESSION_ID, session.getId());
 			}
 
 			try

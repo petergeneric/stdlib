@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.web;
 
 import com.peterphi.std.types.SimpleId;
+import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.ServletContext;
@@ -16,7 +17,6 @@ public class HttpCallContext
 	 * The number of bytes to use when generating a random trace id
 	 */
 	private static final int TRACE_ID_LENGTH = 10;
-	public static final String HTTP_HEADER_CORRELATION_ID = "X-Correlation-ID";
 	private static ThreadLocal<HttpCallContext> contexts = new ThreadLocal<>();
 
 
@@ -86,7 +86,7 @@ public class HttpCallContext
 	 */
 	private static String generateTraceId(final HttpServletRequest request)
 	{
-		final String existing = request.getHeader(HTTP_HEADER_CORRELATION_ID);
+		final String existing = request.getHeader(TracingConstants.HTTP_HEADER_CORRELATION_ID);
 
 		if (existing == null)
 			return SimpleId.alphanumeric(TRACE_ID_LENGTH);
@@ -152,5 +152,14 @@ public class HttpCallContext
 			return method + " " + uri;
 		else
 			return method + " " + uri + "?" + qs;
+	}
+
+
+	public boolean isVerbose()
+	{
+		final String header = request.getHeader(TracingConstants.HTTP_HEADER_TRACE_VERBOSE);
+
+		// N.B. In the future may need this value to match a config-defined token
+		return (header != null && !header.isEmpty());
 	}
 }

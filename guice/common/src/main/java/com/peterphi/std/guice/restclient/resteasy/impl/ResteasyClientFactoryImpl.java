@@ -4,12 +4,13 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyWriter;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.std.util.tracing.TracingConstants;
+import com.peterphi.std.util.tracing.Tracing;
 import org.apache.http.HttpException;
 import org.apache.http.HttpRequest;
 import org.apache.http.HttpRequestInterceptor;
@@ -32,7 +33,6 @@ import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
-import org.slf4j.MDC;
 
 import java.io.IOException;
 import java.net.ProxySelector;
@@ -288,10 +288,15 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			@Override
 			public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException
 			{
-				final String traceId = MDC.get(LoggingMDCConstants.TRACE_ID);
+				final String traceId = Tracing.log("HTTP:out", () -> request.getRequestLine().toString());
 
 				if (traceId != null)
-					request.addHeader("X-Correlation-ID", traceId);
+				{
+					request.addHeader(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
+
+					if (Tracing.isVerbose())
+						request.addHeader(TracingConstants.HTTP_HEADER_TRACE_VERBOSE, "true");
+				}
 			}
 		});
 

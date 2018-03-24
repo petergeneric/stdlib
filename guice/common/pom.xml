@@ -16,6 +16,11 @@
 	</parent>
 
 	<dependencies>
+		<dependency>
+			<groupId>com.peterphi.std</groupId>
+			<artifactId>stdlib</artifactId>
+			<version>${project.version}</version>
+		</dependency>
 
 		<dependency>
 			<groupId>ognl</groupId>

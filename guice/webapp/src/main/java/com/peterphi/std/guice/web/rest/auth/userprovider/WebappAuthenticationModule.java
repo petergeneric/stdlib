@@ -10,9 +10,9 @@ import com.google.inject.name.Names;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
-import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
+import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.MDC;
 
 import javax.servlet.http.HttpServletRequest;
@@ -79,7 +79,7 @@ public class WebappAuthenticationModule extends AbstractModule
 				// Store the user info for logging
 				if (user.getUsername() != null)
 				{
-					MDC.put(LoggingMDCConstants.USER_ID, user.getUsername());
+					MDC.put(TracingConstants.MDC_USER_ID, user.getUsername());
 				}
 
 				return user;

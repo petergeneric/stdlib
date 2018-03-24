@@ -1,7 +1,8 @@
 package com.peterphi.std.guice.common.logging.appender;
 
-import com.peterphi.std.guice.common.logging.LoggingMDCConstants;
 import com.peterphi.std.guice.common.logging.logreport.LogLine;
+import com.peterphi.std.util.tracing.TracingConstants;
+import com.peterphi.std.util.tracing.Tracing;
 import org.apache.log4j.AppenderSkeleton;
 import org.apache.log4j.Level;
 import org.apache.log4j.spi.LoggingEvent;
@@ -86,7 +87,8 @@ public class ServiceManagerAppender extends AppenderSkeleton
 		line.setMessage(event.getRenderedMessage());
 		line.setWhen(event.getTimeStamp());
 
-		final String traceId = (String) event.getMDC(LoggingMDCConstants.TRACE_ID);
+		final String traceId = Tracing.getTraceId();
+
 		if (traceId != null)
 			line.setTraceId(traceId);
 
@@ -99,7 +101,7 @@ public class ServiceManagerAppender extends AppenderSkeleton
 				line.setCategory(event.getLoggerName().substring(lastDot+1));
 		}
 
-		final String requestUri = (String) event.getMDC(LoggingMDCConstants.HTTP_REQUEST_URI);
+		final String requestUri = (String) event.getMDC(TracingConstants.MDC_HTTP_REQUEST_URI);
 
 		// Log the thread ONLY IF this is not an HTTP call - there's no point logging the thread for an incoming HTTP call
 		// because it will be a member of a threadpool
@@ -112,7 +114,7 @@ public class ServiceManagerAppender extends AppenderSkeleton
 			line.setRequestUri(requestUri);
 
 		// Log the user id (if known)
-		final String userId = (String) event.getMDC(LoggingMDCConstants.USER_ID);
+		final String userId = (String) event.getMDC(TracingConstants.MDC_USER_ID);
 		if (userId != null)
 			line.setUserId(userId);
 
