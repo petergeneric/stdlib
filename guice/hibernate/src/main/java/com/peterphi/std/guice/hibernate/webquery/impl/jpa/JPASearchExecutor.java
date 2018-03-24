@@ -8,6 +8,7 @@ import com.peterphi.std.guice.hibernate.module.logging.HibernateSQLLogger;
 import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.util.tracing.Tracing;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.SessionFactory;
@@ -51,9 +52,11 @@ public class JPASearchExecutor
 	                                        JPASearchStrategy strategy,
 	                                        Function<?, ?> serialiser)
 	{
+		final String traceOperationId = Tracing.log("WebQuery:exec", () -> query.toString());
+
 		final HibernateSQLLogger statementLog;
 
-		if (query.isLogSQL())
+		if (query.isLogSQL() || Tracing.isVerbose())
 			statementLog = hibernateObserver.startSQLLogger();
 		else
 			statementLog = null;
@@ -151,15 +154,23 @@ public class JPASearchExecutor
 
 			ConstrainedResultSet resultset = new ConstrainedResultSet<>(query, list);
 
-			if (statementLog != null)
+			if (statementLog != null && query.isLogSQL())
 				resultset.setSql(statementLog.getAllStatements());
 
 			if (total != null)
 				resultset.setTotal(total);
 
+			Tracing.logOngoing(traceOperationId,
+			                   "WebQuery:exec:result",
+			                   () -> "size=" + resultset.getList().size() + ", total=" + total);
+
 			return (ConstrainedResultSet<T>) resultset;
 		}
 		finally {
+			if (statementLog != null && Tracing.isVerbose()) {
+				Tracing.logOngoing(traceOperationId, "WebQuery:exec:sql ", ()->statementLog.getAllStatements().toString());
+			}
+
 			if (statementLog != null)
 				statementLog.close();
 		}
