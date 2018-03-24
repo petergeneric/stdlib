@@ -7,9 +7,12 @@ import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.restclient.exception.RestExceptionFactory;
 import com.peterphi.std.guice.restclient.exception.RestThrowableConstants;
+import com.peterphi.std.guice.restclient.jaxb.ExceptionInfo;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.io.FileHelper;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
+import com.peterphi.std.util.tracing.Tracing;
+import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 
@@ -58,6 +61,26 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 	@Override
 	public void filter(final ClientRequestContext requestContext, final ClientResponseContext responseContext) throws IOException
 	{
+		final int code = responseContext.getStatus();
+
+		String operationId;
+		if (Tracing.isVerbose())
+		{
+			operationId = requestContext.getHeaderString(TracingConstants.HTTP_HEADER_CORRELATION_ID);
+
+			if (operationId != null)
+				Tracing.logOngoing(operationId, "HTTP:resp", () -> "" + code);
+			else
+				operationId = Tracing.log("HTTP:resp:unexpected", () -> "" + code); // can't find outgoing trace id
+		}
+		else
+		{
+			operationId = null;
+		}
+
+		if (code >= 200 && code <= 299)
+			return; // Do not run if the return code is 2xx
+
 		if (responseContext.getHeaders().containsKey(RestThrowableConstants.HEADER_RICH_EXCEPTION))
 		{
 			try
@@ -95,6 +118,13 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 				else
 				{
 					failure = parseResponse(is);
+				}
+
+				if (Tracing.isVerbose() && failure != null && failure.exception != null)
+				{
+					final ExceptionInfo ei = failure.exception;
+
+					Tracing.logOngoing(operationId, "HTTP:error", () -> ei.shortName + " " + ei.detail);
 				}
 
 				RestException exception = exceptionFactory.build(failure, responseContext);
