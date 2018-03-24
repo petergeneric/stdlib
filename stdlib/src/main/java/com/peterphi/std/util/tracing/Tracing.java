@@ -125,10 +125,7 @@ public final class Tracing
 
 			if (tracing.verbose && name != null)
 			{
-				if (detail != null)
-					log.warn("Trace{" + eventId + "} " + name + " " + detail.get());
-				else
-					log.warn("Trace{" + eventId + "} " + name);
+				logMessage(eventId, name, detail);
 			}
 
 
@@ -138,6 +135,43 @@ public final class Tracing
 		{
 			return null;
 		}
+	}
+
+
+	/**
+	 * Log an additional message about an ongoing operation
+	 *
+	 * @param operationId
+	 * 		the operation id returned by either {@link #log(String, Supplier)} or {@link #newOperationId()}
+	 * @param name
+	 * @param detail
+	 */
+	public static void logOngoing(final String operationId, final String name, final Supplier<String> detail)
+	{
+		if (operationId != null && isVerbose())
+		{
+			logMessage(operationId, name, detail);
+		}
+	}
+
+
+	private static void logMessage(final String operationId, final String name, final Supplier<String> detail)
+	{
+		if (detail != null)
+		{
+			try
+			{
+				log.warn("Trace{" + operationId + "} " + name + " " + detail.get());
+			}
+			catch (Throwable t)
+			{
+				// log the error generating the detail
+				log.warn("Trace{" + operationId + "} " + name + ". (detail generation error)", t);
+			}
+			return;
+		}
+
+		log.warn("Trace{" + operationId + "} " + name);
 	}
 
 
@@ -151,7 +185,9 @@ public final class Tracing
 			return null;
 	}
 
-	public static boolean isVerbose() {
+
+	public static boolean isVerbose()
+	{
 		final Tracing tracing = peek();
 
 		if (tracing != null)
