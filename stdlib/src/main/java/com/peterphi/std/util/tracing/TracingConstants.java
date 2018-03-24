@@ -9,8 +9,9 @@ public final class TracingConstants
 	public static final String MDC_HTTP_REMOTE_ADDR = "servlet.remote_addr";
 	public static final String MDC_HTTP_SESSION_ID = "servlet.session.id";
 
-	public static final String HTTP_HEADER_CORRELATION_ID="X-Correlation-ID";
+	public static final String HTTP_HEADER_CORRELATION_ID = "X-Correlation-ID";
 	public static final String HTTP_HEADER_TRACE_VERBOSE = "X-Trace-Verbose";
+
 
 	private TracingConstants()
 	{
