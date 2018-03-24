@@ -379,7 +379,7 @@ class GuiceFactory
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
-			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, jaxb);
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, null, jaxb);
 
 			try
 			{

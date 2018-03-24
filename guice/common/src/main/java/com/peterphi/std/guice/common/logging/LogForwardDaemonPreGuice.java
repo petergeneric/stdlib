@@ -49,7 +49,7 @@ class LogForwardDaemonPreGuice implements StoppableService
 		// Construct the necessary classes to create resteasy proxy clients.
 		// We must do this independent of the guice creation path because we'll be running as Guice is starting up
 		final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
-		this.clientFactory = new ResteasyClientFactoryImpl(null, null, jaxb);
+		this.clientFactory = new ResteasyClientFactoryImpl(null, null, null, jaxb);
 		ResteasyProxyClientFactoryImpl proxyFactory = new ResteasyProxyClientFactoryImpl(clientFactory, config);
 
 		// Instantiate the services

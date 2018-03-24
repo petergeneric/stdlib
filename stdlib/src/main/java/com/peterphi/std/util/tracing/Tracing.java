@@ -12,9 +12,11 @@ public final class Tracing
 
 	private static ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
 
+	public static boolean DEFAULT_VERBOSE = false;
+
 	public String id;
 	public int ops = 0;
-	public boolean verbose = false;
+	public boolean verbose = DEFAULT_VERBOSE;
 
 
 	private Tracing()
@@ -68,6 +70,12 @@ public final class Tracing
 	{
 		THREAD_LOCAL.remove();
 		MDC.clear();
+	}
+
+
+	public static void start(final String id)
+	{
+		start(id, DEFAULT_VERBOSE);
 	}
 
 

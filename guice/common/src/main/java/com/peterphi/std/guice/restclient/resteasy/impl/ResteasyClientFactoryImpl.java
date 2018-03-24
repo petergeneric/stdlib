@@ -9,11 +9,6 @@ import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
-import com.peterphi.std.util.tracing.TracingConstants;
-import com.peterphi.std.util.tracing.Tracing;
-import org.apache.http.HttpException;
-import org.apache.http.HttpRequest;
-import org.apache.http.HttpRequestInterceptor;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -28,13 +23,11 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
-import org.apache.http.protocol.HttpContext;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import java.io.IOException;
 import java.net.ProxySelector;
 import java.util.Objects;
 import java.util.concurrent.TimeUnit;
@@ -92,6 +85,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
+	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBContextResolver jaxbContextResolver)
 	{
@@ -108,6 +102,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// Register the exception processor
 		if (remoteExceptionClientResponseFilter != null)
 			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
+
+		if (tracingRequestFilter != null)
+			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
 
 		// Set up the Connection Manager
 		this.connectionManager = new PoolingHttpClientConnectionManager();
@@ -280,25 +277,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 		// By default use the JRE default route planner for proxies
 		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-
-		// If a correlation id is set locally then make sure we pass it along to the remote service
-		// N.B. we use the value from the MDC because the correlation id could be for a internal task
-		builder.addInterceptorFirst(new HttpRequestInterceptor()
-		{
-			@Override
-			public void process(final HttpRequest request, final HttpContext context) throws HttpException, IOException
-			{
-				final String traceId = Tracing.log("HTTP:out", () -> request.getRequestLine().toString());
-
-				if (traceId != null)
-				{
-					request.addHeader(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
-
-					if (Tracing.isVerbose())
-						request.addHeader(TracingConstants.HTTP_HEADER_TRACE_VERBOSE, "true");
-				}
-			}
-		});
 
 		// Allow customisation
 		if (customiser != null)

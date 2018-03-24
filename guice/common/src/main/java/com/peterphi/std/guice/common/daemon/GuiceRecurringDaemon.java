@@ -133,7 +133,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			try
 			{
 				// Assign a trace id for operations performed by this run of this thread
-				Tracing.start(traceId, false);
+				Tracing.start(traceId);
 
 				userCodeRunning = true;
 				execute();
