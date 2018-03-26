@@ -87,7 +87,7 @@ public final class Tracing
 		if (tracing.id == null)
 		{
 			tracing.id = id;
-			tracing.verbose = verbose;
+			tracing.verbose = verbose || log.isTraceEnabled();
 			tracing.ops = 0;
 
 			if (id != null)
@@ -131,7 +131,7 @@ public final class Tracing
 		{
 			final String eventId = tracing.id + "/" + (++tracing.ops);
 
-			if (tracing.verbose && name != null)
+			if ((tracing.verbose || log.isTraceEnabled()) && name != null)
 			{
 				logMessage(eventId, name, detail);
 			}
@@ -199,7 +199,7 @@ public final class Tracing
 		final Tracing tracing = peek();
 
 		if (tracing != null)
-			return tracing.verbose;
+			return tracing.verbose || log.isTraceEnabled();
 		else
 			return false;
 	}
