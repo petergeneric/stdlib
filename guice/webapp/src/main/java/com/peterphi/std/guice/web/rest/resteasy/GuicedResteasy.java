@@ -19,6 +19,7 @@ import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.JAXRSExceptionMapper;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
@@ -163,7 +164,9 @@ class GuicedResteasy implements GuiceApplication
 		try
 		{
 			// Share the call id to log4j
-			MDC.put(TracingConstants.MDC_TRACE_ID, ctx.getLogId());
+			Tracing.start(ctx.getLogId(), ctx.isVerbose());
+
+			// Share the call id to log4j
 			MDC.put(TracingConstants.MDC_HTTP_REMOTE_ADDR, ctx.getRequest().getRemoteAddr());
 			MDC.put(TracingConstants.MDC_SERVLET_CONTEXT_PATH, ctx.getServletContext().getContextPath());
 			MDC.put(TracingConstants.MDC_HTTP_REQUEST_URI, ctx.getRequest().getRequestURI());
@@ -207,6 +210,7 @@ class GuicedResteasy implements GuiceApplication
 				timer.stop();
 
 			HttpCallContext.clear();
+			Tracing.stop(ctx.getLogId());
 			MDC.clear();
 		}
 	}
