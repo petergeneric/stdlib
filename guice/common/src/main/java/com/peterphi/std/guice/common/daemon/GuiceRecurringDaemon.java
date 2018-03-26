@@ -13,7 +13,6 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.time.Instant;
-import java.time.temporal.ChronoUnit;
 
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
 {
@@ -127,8 +126,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			else
 				timer = null;
 
-
-			final String traceId = getThreadName() + "@" + lastRan.truncatedTo(ChronoUnit.SECONDS).toString();
+			final String traceId = getThreadName() + "@" + lastRan.getEpochSecond();
 
 			try
 			{
