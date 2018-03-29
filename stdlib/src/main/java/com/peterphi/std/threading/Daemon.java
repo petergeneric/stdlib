@@ -26,6 +26,7 @@ public abstract class Daemon implements Runnable
 	private volatile String textState;
 	private volatile long textStateUpdated;
 
+
 	/**
 	 * Starts this daemon, creating a new thread for it (the name of which will be set to the SimpleName of its class)
 	 *
@@ -42,6 +43,7 @@ public abstract class Daemon implements Runnable
 
 	/**
 	 * Return the name for this thread
+	 *
 	 * @return
 	 */
 	protected String getThreadName()
@@ -50,12 +52,14 @@ public abstract class Daemon implements Runnable
 	}
 
 
-	public Thread getThread() {
+	public Thread getThread()
+	{
 		if (thisThread != null && thisThread.isAlive())
 			return thisThread;
 		else
 			return null;
 	}
+
 
 	/**
 	 * Starts this daemon, creating a new thread for it
@@ -103,6 +107,7 @@ public abstract class Daemon implements Runnable
 		this.textState = value;
 		this.textStateUpdated = System.currentTimeMillis();
 	}
+
 
 	/**
 	 * Returns whether the daemon is in the process of terminating

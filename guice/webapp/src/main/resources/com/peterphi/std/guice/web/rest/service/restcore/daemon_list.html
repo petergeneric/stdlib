@@ -60,40 +60,44 @@
 					<th>Last Ran</th>
 					<th>Runs</th>
 					<th>Errors</th>
-					<th>Description</th>
-					<th>&nbsp;</th>
 				</tr>
 				</thead>
 				<tbody>
-				<tr th:each="daemon: ${daemons}">
-					<td th:text="${daemon.name}">name</td>
-					<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
-					<td th:text="${daemon.userCodeRunning ? '✔' : '✖'}">Yes / No</td>
+				<th:block th:each="daemon: ${daemons}">
+					<tr>
+						<td><strong th:text="${daemon.name}">name</strong></td>
+						<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
+						<td th:text="${daemon.userCodeRunning ? '✔' : '✖'}">Yes / No</td>
 
-					<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
-					<td th:text="${daemon.lastRan}"></td>
-					<td th:text="${daemon.calls.count}"></td>
-					<td th:text="${daemon.exceptions.count}"></td>
-
-					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
-					<td>
-						<form th:if="${daemon.threadRunning}" method="POST"
-						      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
-							<input type="hidden" name="name" th:value="${daemon.name}"/>
-							<input type="submit" value="Run Now"/>
-						</form>
-						<form th:if="${daemon.threadRunning}" method="POST"
-						      th:action="@{|${coreRestPrefix}/guice/threads/interrupt|}">
-							<input type="hidden" name="name" th:value="${daemon.name}"/>
-							<input type="submit" value="Interrupt"/>
-						</form>
-						<form th:if="${daemon.threadRunning}" method="GET"
-						      th:action="@{|${coreRestPrefix}/guice/threads/stacktrace|}">
-							<input type="hidden" name="name" th:value="${daemon.name}"/>
-							<input type="submit" value="Stack"/>
-						</form>
-					</td>
-				</tr>
+						<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
+						<td th:text="${daemon.lastRan}"></td>
+						<td th:text="${daemon.calls.count}"></td>
+						<td th:text="${daemon.exceptions.count}"></td>
+					</tr>
+					<tr>
+						<td colspan="6">
+							<p><em th:text="${daemonDescriber.apply(daemon)}">description</em></p>
+							<p th:if="${daemon.textState}"><span th:text="${daemon.textState}"></span> (<span th:text="${(#dates.createNow().getTime() - daemon.getTextStateUpdated()) / 1000}">10</span> sec ago)</p>
+						</td>
+						<td>
+							<form th:if="${daemon.threadRunning} and ${!daemon.userCodeRunning}" method="POST"
+							      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
+								<input type="hidden" name="name" th:value="${daemon.name}"/>
+								<input type="submit" value="Run Now"/>
+							</form>
+							<form th:if="${daemon.threadRunning}" method="POST"
+							      th:action="@{|${coreRestPrefix}/guice/threads/interrupt|}">
+								<input type="hidden" name="name" th:value="${daemon.name}"/>
+								<input type="submit" value="Interrupt"/>
+							</form>
+							<form th:if="${daemon.threadRunning}" method="GET"
+							      th:action="@{|${coreRestPrefix}/guice/threads/stacktrace|}">
+								<input type="hidden" name="name" th:value="${daemon.name}"/>
+								<input type="submit" value="Detail"/>
+							</form>
+						</td>
+					</tr>
+				</th:block>
 				</tbody>
 			</table>
 		</th:block>
