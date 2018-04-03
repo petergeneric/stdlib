@@ -83,7 +83,14 @@
 							<form th:if="${daemon.threadRunning} and ${!daemon.userCodeRunning}" method="POST"
 							      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
 								<input type="hidden" name="name" th:value="${daemon.name}"/>
+								<input type="hidden" name="verbose" value="false" />
 								<input type="submit" value="Run Now"/>
+							</form>
+							<form th:if="${daemon.threadRunning} and ${!daemon.userCodeRunning}" method="POST"
+							      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
+								<input type="hidden" name="name" th:value="${daemon.name}"/>
+								<input type="hidden" name="verbose" value="true" />
+								<input type="submit" value="Run (Traced)"/>
 							</form>
 							<form th:if="${daemon.threadRunning}" method="POST"
 							      th:action="@{|${coreRestPrefix}/guice/threads/interrupt|}">

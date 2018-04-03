@@ -4,6 +4,7 @@ import com.google.inject.ImplementedBy;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 
+import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
@@ -27,8 +28,7 @@ public interface GuiceRestDaemonsService
 	@Path("/trigger")
 	@Produces("text/html")
 	@Doc("Trigger a recurring daemon to run immediately")
-	Response trigger(@FormParam("name") final String name);
-
+	Response trigger(@FormParam("name") final String name, @FormParam("verbose") @DefaultValue("false") final boolean verbose);
 
 	@GET
 	@Path("/stacktrace")

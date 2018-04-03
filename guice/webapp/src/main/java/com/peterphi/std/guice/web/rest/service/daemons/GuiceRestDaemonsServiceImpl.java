@@ -53,7 +53,7 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 
 
 	@Override
-	public Response trigger(final String name)
+	public Response trigger(final String name, final boolean verbose)
 	{
 		final Optional<GuiceRecurringDaemon> result = registry.getRecurring()
 		                                                      .stream()
@@ -65,9 +65,12 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 		{
 			final GuiceRecurringDaemon daemon = result.get();
 
+			if (verbose)
+				daemon.makeNextRunVerbose();
+
 			daemon.trigger();
 
-			final String message = "Daemon " + daemon.getName() + " triggered at " + DateTime.now();
+			final String message = "Daemon " + daemon.getName() + " triggered at " + DateTime.now() + " with verbose=" + verbose;
 
 			return Response.seeOther(UriBuilder.fromUri(restEndpoint.toString() + "/guice/threads")
 			                                   .queryParam("message", message)

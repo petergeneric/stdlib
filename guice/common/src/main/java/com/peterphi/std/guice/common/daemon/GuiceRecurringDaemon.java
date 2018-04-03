@@ -32,6 +32,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	 * True while the user {@link #execute()} method is running
 	 */
 	private volatile boolean userCodeRunning = false;
+	private volatile boolean nextRunVerbose = false;
 
 
 	/**
@@ -112,6 +113,14 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	}
 
 
+	/**
+	 * Enable Verbose Tracing for the next run of this daemon
+	 */
+	public void makeNextRunVerbose()
+	{
+		this.nextRunVerbose = true;
+	}
+
 	@Override
 	public void run()
 	{
@@ -131,9 +140,13 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			try
 			{
 				// Assign a trace id for operations performed by this run of this thread
-				Tracing.start(traceId);
+				Tracing.start(traceId, nextRunVerbose);
+
+				if (nextRunVerbose)
+					nextRunVerbose = false;
 
 				userCodeRunning = true;
+
 				execute();
 			}
 			catch (Throwable t)
