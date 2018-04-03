@@ -109,7 +109,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						}
 						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
-							log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
+							if (log.isTraceEnabled())
+								log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
+							else
+								log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...");
 
 							Tracing.logOngoing(tracingId, "TX:exception:retryable", () -> e.getClass().getSimpleName());
 
@@ -130,9 +133,14 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							// Handle generic exception (usually one that wraps another exception)
 							if (e.getCause() != null && (isSqlServerSnapshotConflictError(e) || isDeadlockError(e)))
 							{
-								log.warn("@Transactional caught exception PersistenceException wrapping " +
-								         e.getCause().getClass().getSimpleName() +
-								         "; retrying...", e);
+								if (log.isTraceEnabled())
+									log.warn("@Transactional caught exception PersistenceException wrapping " +
+									         e.getCause().getClass().getSimpleName() +
+									         "; retrying...", e);
+								else
+									log.warn("@Transactional caught exception PersistenceException wrapping " +
+									         e.getCause().getClass().getSimpleName() +
+									         "; retrying...");
 
 								Tracing.logOngoing(tracingId, "TX:exception:retryable:wrapped", () -> e.getCause().getClass().getSimpleName());
 

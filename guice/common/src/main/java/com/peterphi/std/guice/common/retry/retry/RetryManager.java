@@ -56,7 +56,16 @@ public class RetryManager
 				}
 				else
 				{
-					log.warn("Attempt #" + attempt + " of " + operation + " failed, will retry.", e);
+					if (log.isTraceEnabled())
+						log.warn("Attempt #" + attempt + " of " + operation + " failed, will retry.", e);
+					else
+						log.warn("Attempt #" +
+						         attempt +
+						         " of " +
+						         operation +
+						         " failed with " +
+						         e.getClass().getSimpleName() +
+						         ", will retry.");
 				}
 			}
 			finally
