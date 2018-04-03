@@ -80,6 +80,10 @@ class GuicedResteasy implements GuiceApplication
 	@Named(GuiceProperties.HTTP_REQUESTS_DEFAULT_TO_UTF_8)
 	boolean forceUTF8DefaultCharset = true;
 
+	@Inject(optional = true)
+	@Named(GuiceProperties.HTTP_RENAME_THREADS)
+	boolean renameThreads = false;
+
 	/**
 	 * Allow to be overridden but have a default implementation
 	 */
@@ -161,8 +165,24 @@ class GuicedResteasy implements GuiceApplication
 		if (httpCalls != null)
 			timer = httpCalls.time();
 
+		final String oldThreadName;
+		final Thread thread;
+
+		if (ctx.isVerbose() || renameThreads)
+		{
+			thread = Thread.currentThread();
+			oldThreadName = thread.getName();
+		}
+		else {
+			thread = null;
+			oldThreadName = null;
+		}
+
 		try
 		{
+			if (thread != null && oldThreadName != null)
+				thread.setName(ctx.getLogId() + " " + ctx.getRequestInfo());
+
 			// Share the call id to log4j
 			Tracing.start(ctx.getLogId(), ctx.isVerbose());
 
@@ -212,6 +232,9 @@ class GuicedResteasy implements GuiceApplication
 			HttpCallContext.clear();
 			Tracing.stop(ctx.getLogId());
 			MDC.clear();
+
+			if (oldThreadName != null && thread != null)
+				thread.setName(oldThreadName);
 		}
 	}
 

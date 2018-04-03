@@ -134,6 +134,9 @@ public class GuiceProperties
 	@Doc("If true then the CharacterEncoding for HttpServletRequest (and InputParts for multipart/form-data resources) with no charset provided by the client will default to UTF-8 (default true)")
 	public static final String HTTP_REQUESTS_DEFAULT_TO_UTF_8 = "framework.http-request.default-to-utf8";
 
+	@Doc("If true, HTTP request threads will be renamed for the duration they're running (default false)")
+	public static final String HTTP_RENAME_THREADS = "framework.http-request.rename-threads";
+
 	//
 	// JAX-RS Exception Display
 	//
