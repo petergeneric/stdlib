@@ -56,8 +56,8 @@ public class JPASearchExecutor
 
 		final HibernateSQLLogger statementLog;
 
-		if (query.isLogSQL() || Tracing.isVerbose())
-			statementLog = hibernateObserver.startSQLLogger();
+		if (query.isLogSQL())
+			statementLog = hibernateObserver.startSQLLogger(traceOperationId);
 		else
 			statementLog = null;
 
@@ -167,10 +167,6 @@ public class JPASearchExecutor
 			return (ConstrainedResultSet<T>) resultset;
 		}
 		finally {
-			if (statementLog != null && Tracing.isVerbose()) {
-				Tracing.logOngoing(traceOperationId, "WebQuery:exec:sql ", ()->statementLog.getAllStatements().toString());
-			}
-
 			if (statementLog != null)
 				statementLog.close();
 		}

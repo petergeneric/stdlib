@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.module.logging;
 
+import com.peterphi.std.util.tracing.Tracing;
 import org.apache.log4j.Logger;
 
 import java.io.Closeable;
@@ -17,11 +18,12 @@ public class HibernateSQLLogger implements Closeable, AutoCloseable, Consumer<St
 
 	private final List<String> statements = new ArrayList<>(0);
 	private final HibernateObservingInterceptor interceptor;
+	private final String tracingOperationId;
 
-
-	public HibernateSQLLogger(HibernateObservingInterceptor interceptor)
+	public HibernateSQLLogger(HibernateObservingInterceptor interceptor, final String tracingOperationId)
 	{
 		this.interceptor = interceptor;
+		this.tracingOperationId = tracingOperationId;
 	}
 
 
@@ -36,6 +38,9 @@ public class HibernateSQLLogger implements Closeable, AutoCloseable, Consumer<St
 	{
 		if (log.isTraceEnabled())
 			log.trace("Hibernate executing SQL: " + sql);
+
+		if (tracingOperationId != null && Tracing.isVerbose())
+			Tracing.logOngoing(tracingOperationId, "log:sql", () -> sql);
 
 		synchronized (statements)
 		{

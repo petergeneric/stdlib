@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.module.logging;
 
 import com.google.inject.Singleton;
+import com.peterphi.std.util.tracing.Tracing;
 import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
 
@@ -35,12 +36,17 @@ public class HibernateObservingInterceptor
 	{
 		final List<Consumer<String>> consumers = onPrepareStatementWatchers.get();
 
-		if (consumers != null)
+		if (consumers != null && !consumers.isEmpty())
 		{
 			for (Consumer<String> consumer : consumers)
 			{
 				consumer.accept(sql);
 			}
+		}
+		else if (Tracing.isVerbose())
+		{
+			// Nobody else is watching SQL, so we're responsible for letting the Tracer know about it
+			Tracing.log("sql:prepare", () -> sql);
 		}
 	}
 
@@ -53,7 +59,20 @@ public class HibernateObservingInterceptor
 	 */
 	public HibernateSQLLogger startSQLLogger()
 	{
-		final HibernateSQLLogger logger = new HibernateSQLLogger(this);
+		return startSQLLogger(null);
+	}
+
+	/**
+	 * Start a new logger which records SQL Prepared Statements created by Hibernate in this Thread. Must be closed (or treated as
+	 * autoclose)
+	 *
+	 * @param tracingOperationId the tracing operation this sql logger should be associated with
+	 *
+	 * @return
+	 */
+	public HibernateSQLLogger startSQLLogger(final String tracingOperationId)
+	{
+		final HibernateSQLLogger logger = new HibernateSQLLogger(this, tracingOperationId);
 
 		logger.start();
 
