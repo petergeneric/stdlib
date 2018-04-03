@@ -139,6 +139,8 @@ public class WebQuery
 		       '\'' +
 		       ", constraints=" +
 		       constraintsToQueryFragment() +
+		       ", limit=" +
+		       constraints.limit +
 		       ", logSQL=" +
 		       logSQL +
 		       ", orderings=" +
