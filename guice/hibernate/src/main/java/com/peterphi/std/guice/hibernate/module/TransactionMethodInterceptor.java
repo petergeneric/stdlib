@@ -72,7 +72,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
-		final TransactionStatus initialStatus = sessionProvider.get().getTransaction().getStatus();
+		Session session = sessionProvider.get();
+		final TransactionStatus initialStatus = session.getTransaction().getStatus();
 
 		if (initialStatus == TransactionStatus.ACTIVE)
 		{
@@ -87,7 +88,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			Timer.Context callTimer = calls.time();
 
 			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
-			Tracing.logOngoing(tracingId, "TX:initialStatus", () -> initialStatus.name());
+			Tracing.logOngoing(tracingId, "TX:initialStatus", () -> ""+ initialStatus.name());
 
 			try
 			{
@@ -108,7 +109,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 					{
 						try
 						{
-							return createTransactionAndExecuteMethod(invocation, annotation);
+							return createTransactionAndExecuteMethod(invocation, annotation, tracingId);
 						}
 						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
@@ -170,7 +171,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 				Tracing.logOngoing(tracingId, "TX:last-try", null);
 				// Run without further retries
-				return createTransactionAndExecuteMethod(invocation, annotation);
+				return createTransactionAndExecuteMethod(invocation, annotation, tracingId);
 			}
 			finally
 			{
@@ -182,11 +183,12 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 
 	private Object createTransactionAndExecuteMethod(final MethodInvocation invocation,
-	                                                 final Transactional annotation) throws Throwable
+	                                                 final Transactional annotation, final String tracingId) throws Throwable
 	{
 		if (log.isTraceEnabled())
-			log.trace("Creating new transaction to call " + invocation.getMethod().toGenericString());
-
+			Tracing.logOngoing(tracingId,
+			                   "TX:createAndExecute",
+			                   () -> "Creating new transaction to call " + invocation.getMethod().toGenericString());
 
 		final boolean readOnly = annotation.readOnly();
 
@@ -194,13 +196,19 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		Timer.Context ownerTimer = transactionStartedCalls.time();
 
 		final Session session = sessionProvider.get();
+
+		Tracing.logOngoing(tracingId,
+		                   "TX:create",
+		                   () -> "Creating new transaction, current status: " +
+		                         session.getTransaction().getStatus());
+
 		try
 		{
 			// no transaction already started, so start one and enforce its semantics
 			final Transaction tx = session.beginTransaction();
 
 			if (readOnly)
-				makeReadOnly(session);
+				makeReadOnly(session,tracingId);
 			else
 				makeReadWrite(session);
 
@@ -288,14 +296,32 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * Make the session (and the underlying {@link java.sql.Connection} read only
 	 *
 	 * @param session
+	 * @param tracingId
 	 */
-	private void makeReadOnly(final Session session)
+	private void makeReadOnly(final Session session, final String tracingId)
 	{
+		Tracing.logOngoing(tracingId,
+		                   "TX:makeReadonly",
+		                   () -> "Set Default ReadOnly");
+
 		session.setDefaultReadOnly(true);
+
+		Tracing.logOngoing(tracingId,
+		                   "TX:makeReadonly",
+		                   () -> "Set Hibernate Flush Mode to MANUAL");
+
 		session.setHibernateFlushMode(FlushMode.MANUAL);
+
+		Tracing.logOngoing(tracingId,
+		                   "TX:makeReadonly",
+		                   () -> "Make Connection Read Only");
 
 		// Make the Connection read only
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);
+
+		Tracing.logOngoing(tracingId,
+		                   "TX:makeReadonly",
+		                   () -> "Complete");
 	}
 
 
@@ -453,7 +479,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * at org.hibernate.loader.Loader.doList(Loader.java:2702)
 	 * ... 53 more</pre>
 	 *
-	 * @param t
+	 * @param e
 	 *
 	 * @return
 	 */
