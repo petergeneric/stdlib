@@ -72,7 +72,9 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	@Override
 	public Object invoke(MethodInvocation invocation) throws Throwable
 	{
-		if (sessionProvider.get().getTransaction().getStatus() == TransactionStatus.ACTIVE)
+		final TransactionStatus initialStatus = sessionProvider.get().getTransaction().getStatus();
+
+		if (initialStatus == TransactionStatus.ACTIVE)
 		{
 			// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
 			if (log.isTraceEnabled())
@@ -85,6 +87,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			Timer.Context callTimer = calls.time();
 
 			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
+			Tracing.logOngoing(tracingId, "TX:initialStatus", () -> initialStatus.name());
 
 			try
 			{
