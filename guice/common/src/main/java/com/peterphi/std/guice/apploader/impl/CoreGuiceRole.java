@@ -50,7 +50,7 @@ class CoreGuiceRole implements GuiceRole
 		modules.add(new CacheModule(metrics));
 		modules.add(new RetryModule(metrics));
 		modules.add(new JAXBModule(config));
-		modules.add(new Log4JModule(config, metrics));
+		modules.add(new Log4JModule(config));
 	}
 
 
