@@ -69,5 +69,6 @@
 		<module>hibernate-testing</module>
 		<module>liquibase</module>
 		<module>testing</module>
+		<module>xml-testing</module>
 	</modules>
 </project>

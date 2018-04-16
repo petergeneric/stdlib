@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="http://maven.apache.org/POM/4.0.0"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.peterphi.std.guice</groupId>
+	<artifactId>stdlib-xml-testing</artifactId>
+	<version>9.6.8-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>stdlib xmlunit testing support</name>
+	<description>module to support xml testing</description>
+
+	<parent>
+		<groupId>com.peterphi.std.guice</groupId>
+		<artifactId>stdlib-guice-parent</artifactId>
+		<version>9.6.8-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.jdom</groupId>
+			<artifactId>jdom2</artifactId>
+			<version>2.0.6</version>
+		</dependency>
+
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>${junit.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>xmlunit</groupId>
+			<artifactId>xmlunit</artifactId>
+			<version>1.6</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+</project>
