@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.config.rest.types;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
@@ -55,11 +55,11 @@ public class ConfigPropertyValue
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this)
-		              .omitNullValues()
-		              .add("path", path)
-		              .add("name", name)
-		              .add("value", value)
-		              .toString();
+		return MoreObjects.toStringHelper(this)
+		                  .omitNullValues()
+		                  .add("path", path)
+		                  .add("name", name)
+		                  .add("value", value)
+		                  .toString();
 	}
 }

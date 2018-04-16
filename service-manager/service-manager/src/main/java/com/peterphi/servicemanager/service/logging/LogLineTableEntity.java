@@ -1,6 +1,6 @@
 package com.peterphi.servicemanager.service.logging;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.microsoft.azure.storage.table.TableServiceEntity;
 import com.peterphi.std.types.SimpleId;
 import org.apache.commons.lang.StringUtils;
@@ -282,8 +282,8 @@ public class LogLineTableEntity extends TableServiceEntity
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("when", when).add("category", category).add("level", level).add("endpoint",
-		                                                                                                        endpoint).add(
+		return MoreObjects.toStringHelper(this).add("when", when).add("category", category).add("level", level).add("endpoint",
+		                                                                                                            endpoint).add(
 				"instanceId",
 				instanceId).add("codeRev", codeRev).add("threadId", threadId).add("userId", userId).add("traceId", traceId).add(
 				"exceptionId",

@@ -34,7 +34,6 @@
 		</dependency>
 
 		<!-- guice -->
-		<!-- official guice 
 		<dependency>
 		  <groupId>com.google.inject</groupId>
 		  <artifactId>guice</artifactId>
@@ -46,29 +45,17 @@
 		  <artifactId>guice-multibindings</artifactId>
 			<version>${guice.version}</version>
 		</dependency>
-		-->
-		
-		<dependency>
-			<groupId>org.sonatype.sisu</groupId>
-			<artifactId>sisu-guice</artifactId>
-			<version>${guice.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.sonatype.sisu.inject</groupId>
-			<artifactId>guice-multibindings</artifactId>
-			<version>${guice.version}</version>
-		</dependency>
 		
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-finder</artifactId>
-			<version>4.4</version>
+			<version>4.7</version>
 		</dependency>
 
 		<dependency>
 			<groupId>org.ow2.asm</groupId>
-			<artifactId>asm-all</artifactId>
-			<version>5.0.4</version>
+			<artifactId>asm</artifactId>
+			<version>6.1</version>
 		</dependency>
 
 	</dependencies>
@@ -82,5 +69,6 @@
 		<module>hibernate-testing</module>
 		<module>liquibase</module>
 		<module>testing</module>
+		<module>xml-testing</module>
 	</modules>
 </project>

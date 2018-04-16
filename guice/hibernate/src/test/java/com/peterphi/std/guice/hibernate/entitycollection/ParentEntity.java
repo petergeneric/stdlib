@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.entitycollection;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.database.annotation.EagerFetch;
 
 import javax.persistence.CascadeType;
@@ -67,6 +67,6 @@ class ParentEntity
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("id", id).toString();
+		return MoreObjects.toStringHelper(this).add("id", id).toString();
 	}
 }

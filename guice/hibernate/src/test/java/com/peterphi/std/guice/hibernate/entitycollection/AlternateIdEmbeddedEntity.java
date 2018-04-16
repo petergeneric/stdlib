@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.hibernate.entitycollection;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
@@ -78,6 +78,6 @@ public class AlternateIdEmbeddedEntity
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("identifierSystem", identifierSystem).add("value", value).toString();
+		return MoreObjects.toStringHelper(this).add("identifierSystem", identifierSystem).add("value", value).toString();
 	}
 }

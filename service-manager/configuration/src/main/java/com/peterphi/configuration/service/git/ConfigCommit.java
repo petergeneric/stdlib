@@ -1,6 +1,6 @@
 package com.peterphi.configuration.service.git;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import java.util.Date;
 
@@ -24,12 +24,12 @@ public class ConfigCommit
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this)
-		              .add("timestamp", timestamp)
-		              .add("name", name)
-		              .add("email", email)
-		              .add("message",
+		return MoreObjects.toStringHelper(this)
+		                  .add("timestamp", timestamp)
+		                  .add("name", name)
+		                  .add("email", email)
+		                  .add("message",
 		                   message)
-		              .toString();
+		                  .toString();
 	}
 }

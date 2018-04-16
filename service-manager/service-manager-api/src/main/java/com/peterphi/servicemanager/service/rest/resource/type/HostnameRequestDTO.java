@@ -1,6 +1,6 @@
 package com.peterphi.servicemanager.service.rest.resource.type;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 
 import javax.xml.bind.annotation.XmlElement;
 import javax.xml.bind.annotation.XmlRootElement;
@@ -23,7 +23,7 @@ public class HostnameRequestDTO
 	@Override
 	public String toString()
 	{
-		return Objects
+		return MoreObjects
 				       .toStringHelper(this)
 				       .add("prefix", prefix)
 				       .add("hostname", hostname)

@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.web.rest.auth.userprovider;
 
-import com.google.common.base.Objects;
+import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.apploader.GuiceConstants;
@@ -342,6 +342,6 @@ class HttpCallJWTUser implements CurrentUser
 	@Override
 	public String toString()
 	{
-		return Objects.toStringHelper(this).add("claims", get()).toString();
+		return MoreObjects.toStringHelper(this).add("claims", get()).toString();
 	}
 }

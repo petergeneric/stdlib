@@ -4,12 +4,9 @@ import com.google.inject.AbstractModule;
 import com.google.inject.Binding;
 import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
-import com.google.inject.internal.Errors;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.ProvisionListener;
 import org.apache.log4j.Logger;
-
-import java.lang.reflect.Field;
 
 /**
  * Hooks into guice so that when objects implementing {@link com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener} are
@@ -43,33 +40,10 @@ public class GuiceLifecycleModule extends AbstractModule
 			{
 				final T instance = provision.provision();
 
-				final Errors errors;
-				try
-				{
-					final Class<?> clazz = provision.getClass();
+				// Cast the constructed object to a GuiceLifecycleListener and call the postConstruct method
+				final GuiceLifecycleListener asLifecycle = ((GuiceLifecycleListener) instance);
 
-					final Field field = clazz.getDeclaredField("errors");
-					field.setAccessible(true);
-					errors = (Errors) field.get(provision);
-				}
-				catch (Throwable t)
-				{
-					throw new RuntimeException("Error reflectively getting Errors object to evaluate", t);
-				}
-
-				if (errors.hasErrors())
-				{
-					log.warn("Errors prevent the lifecycle initialisation of instance " + instance);
-					// Throw an exception here to stop others from seeing this broken object
-					errors.throwProvisionExceptionIfErrorsExist();
-				}
-				else
-				{
-					// Cast the constructed object to a GuiceLifecycleListener and call the postConstruct method
-					final GuiceLifecycleListener asLifecycle = ((GuiceLifecycleListener) instance);
-
-					asLifecycle.postConstruct();
-				}
+				asLifecycle.postConstruct();
 			}
 		};
 
