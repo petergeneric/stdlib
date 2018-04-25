@@ -89,6 +89,11 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	}
 
 
+	public Timeout getInitialSleepTime()
+	{
+		return Timeout.ZERO;
+	}
+
 	public Timeout getSleepTime()
 	{
 		return sleepTime;
@@ -124,6 +129,9 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	@Override
 	public void run()
 	{
+		// Optionally sleep for some time before the first run
+		sleep(getInitialSleepTime());
+
 		while (isRunning())
 		{
 			lastRan = Instant.now();
@@ -169,7 +177,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			// Sleep for the default sleep time
 			if (isRunning())
 			{
-				sleep(sleepTime);
+				sleep(getSleepTime());
 			}
 		}
 	}
