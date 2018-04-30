@@ -111,11 +111,12 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<dependency>
+		<!-- Only required for Java 9+ -->
+		<!-- <dependency>
 			<groupId>javax.xml.bind</groupId>
 			<artifactId>jaxb-api</artifactId>
 			<version>2.3.0</version>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>org.eclipse.persistence.moxy</artifactId>
