@@ -4,6 +4,7 @@ import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.resteasy.GuiceServletContextHelper;
 import com.peterphi.std.guice.web.rest.setup.WebappGuiceRole;
 import com.peterphi.std.util.tracing.Tracing;
 
@@ -43,6 +44,8 @@ public abstract class GuiceServlet extends HttpServlet implements GuiceApplicati
 			{
 				if (registry == null)
 					registry = new GuiceRegistry(new GuiceBuilder().withRole(new WebappGuiceRole(getServletConfig())));
+
+				GuiceServletContextHelper.set(getServletContext(), registry);
 
 				registry.register(this, true);
 			}

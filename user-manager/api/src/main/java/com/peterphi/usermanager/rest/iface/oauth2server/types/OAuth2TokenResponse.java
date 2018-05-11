@@ -3,12 +3,15 @@ package com.peterphi.usermanager.rest.iface.oauth2server.types;
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
+import java.io.Serializable;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.util.Date;
 
-public class OAuth2TokenResponse
+public class OAuth2TokenResponse implements Serializable
 {
+	static final long serialVersionUID = 1L;
+
 	public String access_token;
 	public String refresh_token;
 	public Date expires;

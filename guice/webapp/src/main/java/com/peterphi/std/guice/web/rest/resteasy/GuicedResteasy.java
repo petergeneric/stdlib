@@ -102,6 +102,8 @@ class GuicedResteasy implements GuiceApplication
 		this.context = config.getServletContext();
 		this.bootstrap = bootstrap;
 		this.handleNotFoundException = handleNotFoundException;
+
+		GuiceServletContextHelper.set(this.context, registry);
 	}
 
 
@@ -116,6 +118,8 @@ class GuicedResteasy implements GuiceApplication
 		this.context = config.getServletContext();
 		this.bootstrap = bootstrap;
 		this.handleNotFoundException = handleNotFoundException;
+
+		GuiceServletContextHelper.set(this.context, registry);
 	}
 
 
