@@ -183,6 +183,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+
 	@Override
 	@Transactional(readOnly = true)
 	public T getById(ID id)
@@ -425,7 +426,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		return find(query).getList();
 	}
-
 
 	/**
 	 * Execute a Criteria-based search, returning the results as a checked list of primary key types

@@ -511,6 +511,19 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
+	public List<Object[]> selectCustomProjection(String... fields)
+	{
+		Query query = createSelectCustomProjection(fields);
+
+		List<?> results = query.getResultList();
+
+		if (results.isEmpty())
+			return Collections.emptyList();
+		else
+			return (List<Object[]>) (List) results;
+	}
+
+
 	public List<T> selectEntity()
 	{
 		final Query<T> query = createSelectEntity();
@@ -548,6 +561,46 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	public <C> Query<C> createSelectCustom(JPAQueryCustomiser customiser)
 	{
 		customiser.apply(criteriaBuilder, generated, root, this);
+
+		final Query query = session.createQuery(generated);
+
+		if (offset != null)
+			query.getQueryOptions().setFirstRow(offset);
+		if (limit != null)
+			query.getQueryOptions().setMaxRows(limit);
+
+		// Set all the parameters
+		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
+		{
+			query.setParameter(entry.getKey(), entry.getValue());
+		}
+
+		return query;
+	}
+
+
+	public Query createSelectCustomProjection(String... fields)
+	{
+		this.generated.distinct(true);
+
+		generated.orderBy(orders); // Make sure we return the results in the correct order
+
+		List<Selection<?>> selects = new ArrayList<>();
+
+		for (String field : fields)
+		{
+			selects.add(getProperty(field));
+		}
+
+		for (Order order : orders)
+		{
+			selects.add(order.getExpression());
+		}
+
+		if (selects.size() == 1)
+			generated.select(selects.get(0));
+		else
+			generated.multiselect(selects);
 
 		final Query query = session.createQuery(generated);
 

@@ -17,6 +17,7 @@ import org.junit.runner.RunWith;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -81,6 +82,111 @@ public class DynamicQueryTest
 		assertTrue(names.contains("inherit_base"));
 		assertTrue(names.contains("inherit_one"));
 		assertTrue(names.contains("inherit_two"));
+	}
+
+
+	/**
+	 * Test that supplying a comma-separated list of values to WebQuery.fetch results in those fields being returned from the db a an <code>Object[]</code>
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	@Transactional
+	public void testMultipleFetchWorks() throws Exception
+	{
+		// Load first object
+		final long id1;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name1");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("CName1");
+
+			childDao.save(obj.getOtherObject());
+			id1 = dao.save(obj);
+		}
+
+		// Load second
+		final long id2;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name2");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("CName2");
+
+			childDao.save(obj.getOtherObject());
+			id2 = dao.save(obj);
+		}
+
+		// Selecting a list
+		{
+			final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery()
+					                                                        .fetch("id,name,otherObject.name")
+					                                                        .orderAsc("name")
+					                                                        .orderDesc("deprecated"),
+			                                                        JPASearchStrategy.AUTO,
+			                                                        null);
+
+			assertEquals("Expecting 2 rows", 2, results.getList().size());
+			assertTrue("Expecting at least 3 columns", results.getList().get(0).length >= 3);
+
+			// Assert that the expected value is output for the first row
+			assertEquals("row1 id", id1, results.getList().get(0)[0]);
+			assertEquals("row1 name", "Name1", results.getList().get(0)[1]);
+			assertEquals("row1 otherObject.name", "CName1", results.getList().get(0)[2]);
+
+			// Assert that the expected value is output for the second row
+			assertEquals("row2 id", id2, results.getList().get(1)[0]);
+			assertEquals("row2 name", "Name2", results.getList().get(1)[1]);
+			assertEquals("row2 otherObject.name", "CName2", results.getList().get(1)[2]);
+		}
+	}
+
+
+	/**
+	 * WebQuery.fetch is not "id" or "entity", but is only a single value (makes sure that the row type coming back from the db is an Object[])
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	@Transactional
+	public void testSingleFetchReturnsAnObjectArray() throws Exception
+	{
+		// Load first object
+		final long id1;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name1");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("Name1");
+
+			childDao.save(obj.getOtherObject());
+			id1 = dao.save(obj);
+		}
+
+		// Load second
+		final long id2;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name2");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("Name2");
+
+			childDao.save(obj.getOtherObject());
+			id2 = dao.save(obj);
+		}
+
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("name"), JPASearchStrategy.AUTO, null);
+
+		assertEquals("Expecting 2 rows", 2, results.getList().size());
+		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);
+
+		// N.B. we have not ordered the results so they may come back in any order, just assert that the set contains what we expect
+		{
+			Set<String> names = results.getList().stream().map(array -> (String) array[0]).collect(Collectors.toSet());
+
+			assertEquals(new HashSet<>(Arrays.asList("Name1", "Name2")), names);
+		}
 	}
 
 
@@ -299,7 +405,10 @@ public class DynamicQueryTest
 		obj2.setName("Name2");
 		dao.save(obj2);
 
-		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery().orderAsc("id").limit(1000).logSQL(true));
+		final ConstrainedResultSet<ParentEntity> resultset = dao.findByUriQuery(new WebQuery()
+				                                                                        .orderAsc("id")
+				                                                                        .limit(1000)
+				                                                                        .logSQL(true));
 
 		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(resultset.getList())); // must have the right answer
 		assertNotNull(resultset.getSql());
@@ -330,11 +439,13 @@ public class DynamicQueryTest
 		assertNotNull(dao.findByUriQuery(new WebQuery().eq("id", "1").computeSize(true)).total);
 	}
 
+
 	@Test
 	public void testComputeSizeWorks() throws Exception
 	{
 		assertNotNull(dao.findByUriQuery(new WebQuery().computeSize(true)).total);
 	}
+
 
 	/**
 	 * Tests that computing size while applying ordering and limiting to the resultset still works

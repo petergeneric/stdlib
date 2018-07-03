@@ -89,11 +89,12 @@ public class JPASearchExecutor
 				{
 					strategy = JPASearchStrategy.ENTITY_WRAPPED_ID;
 				}
-				else
+				else if (query.getFetch() == null || StringUtils.equals(query.getFetch(), "entity"))
 				{
 					// If we're constraining by (or fetching) a collection AND we have a limit/offset, first get PKs for the entities and then fetch the entities
 					// This is necessary for correct pagination because the SQL resultset will have more than one row per entity, and our offset/limit is based on entity
-					if ((query.getLimit() > 0 || query.getOffset() > 0) && (builder.hasCollectionJoin() || builder.hasCollectionFetch()))
+					if ((query.getLimit() > 0 || query.getOffset() > 0) &&
+					    (builder.hasCollectionJoin() || builder.hasCollectionFetch()))
 					{
 						strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 					}
@@ -101,6 +102,11 @@ public class JPASearchExecutor
 					{
 						strategy = JPASearchStrategy.ENTITY;
 					}
+				}
+				else
+				{
+					// Multiple values specified for fetch, so we ask for exactly what the user has requested
+					strategy = JPASearchStrategy.CUSTOM_PROJECTION;
 				}
 			}
 
@@ -113,12 +119,28 @@ public class JPASearchExecutor
 
 					break;
 				}
+				case CUSTOM_PROJECTION:
+				{
+					// N.B. the returned array will also contain any order by elements
+
+					list = builder.selectCustomProjection(query.getFetch().split(","));
+
+					// N.B. if the user has only asked for a single fetch then we won't have a list of arrays
+					// We make sure it's an Array for consistency (user can't rely that asking for a single field will
+					// result in only that field, since the returned array may contain other fields the system needed to fetch in order to generate valid SQL)
+					if (!list.isEmpty() && !list.get(0).getClass().isArray())
+					{
+						list = (List<Object[]>) list.stream().map((Object v) -> new Object[]{v}).collect(Collectors.toList());
+					}
+
+					break;
+				}
 				case ENTITY_WRAPPED_ID:
 				{
 					list = builder.selectIDs();
 
 					// Transform the IDs into entity objects with the ID field populated
-					list = (List) list.stream().map(entity:: newInstanceWithId).collect(Collectors.toList());
+					list = (List) list.stream().map(entity :: newInstanceWithId).collect(Collectors.toList());
 
 					break;
 				}
@@ -166,7 +188,8 @@ public class JPASearchExecutor
 
 			return (ConstrainedResultSet<T>) resultset;
 		}
-		finally {
+		finally
+		{
 			if (statementLog != null)
 				statementLog.close();
 		}

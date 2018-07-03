@@ -22,7 +22,12 @@ public enum JPASearchStrategy
 	/**
 	 * Run an ID query, then run a query to fetch back all the entity data for those IDs
 	 */
-	ID_THEN_QUERY_ENTITY;
+	ID_THEN_QUERY_ENTITY,
+	/**
+	 * Run a query that returns a custom projection based on the fetch value of the WebQuery<br />
+	 * The result from the database <strong>will</strong> be an Object[] with the first few elements the same as fetch. N.B. the Object[] may be larger than the number of fetched columns (if, for example, the system had to add selections to satisfy SQL limitations - the most obvious case being for ORDER BYs)
+	 */
+	CUSTOM_PROJECTION;
 
 
 	/**
