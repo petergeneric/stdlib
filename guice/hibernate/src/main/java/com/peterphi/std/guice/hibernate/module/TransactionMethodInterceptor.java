@@ -102,7 +102,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 					final int retries = Math.max(0, annotation.autoRetryCount() - 1);
 
 					// N.B. more aggressive than the @Retry annotation implements
-					long backoff = 1000;
+					final long baseBackoff = 1000;
+					long backoff = baseBackoff;
 					final double multiplier = 1.5;
 
 					for (int attempt = 0; attempt < retries; attempt++)
@@ -122,7 +123,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 							try
 							{
-								Thread.sleep(backoff);
+								Thread.sleep(backoff + (long) (baseBackoff * Math.random()));
 							}
 							catch (InterruptedException ie)
 							{
@@ -150,7 +151,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 								try
 								{
-									Thread.sleep(backoff);
+									Thread.sleep(backoff + (long) (baseBackoff * Math.random()));
 								}
 								catch (InterruptedException ie)
 								{
