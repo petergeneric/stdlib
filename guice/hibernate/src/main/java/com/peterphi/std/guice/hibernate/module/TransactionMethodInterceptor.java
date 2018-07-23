@@ -209,6 +209,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		                   () -> "Creating new transaction, current status: " +
 		                         session.getTransaction().getStatus());
 
+		final AtomicInteger initialIsololationLevel = new AtomicInteger(IGNORE_ISOLATION_LEVEL);
+
 		try
 		{
 			// no transaction already started, so start one and enforce its semantics
@@ -218,8 +220,6 @@ class TransactionMethodInterceptor implements MethodInterceptor
 				makeReadOnly(session,tracingId);
 			else
 				makeReadWrite(session);
-
-			final AtomicInteger initialIsololationLevel = new AtomicInteger(IGNORE_ISOLATION_LEVEL);
 
 			// if an isolation level has been specified, ensure it is set
 			if (annotation.isolationLevel() != IGNORE_ISOLATION_LEVEL)
@@ -262,11 +262,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 				{
 					errorRollbacks.mark();
 
-					rollback(tx, e, session, initialIsololationLevel.get(), tracingId);
+					rollback(tx, e);
 				}
 				else
 				{
-					complete(tx, readOnly, session, initialIsololationLevel.get(), tracingId);
+					complete(tx, readOnly);
 				}
 
 				// propagate the exception
@@ -276,7 +276,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				errorRollbacks.mark();
 
-				rollback(tx, session, initialIsololationLevel.get(), tracingId);
+				rollback(tx);
 
 				// propagate the error
 				throw e;
@@ -287,13 +287,13 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			RuntimeException commitException = null;
 			try
 			{
-				complete(tx, readOnly, session, initialIsololationLevel.get(), tracingId);
+				complete(tx, readOnly);
 			}
 			catch (RuntimeException e)
 			{
 				commitFailures.mark();
 
-				rollback(tx, session, initialIsololationLevel.get(), tracingId);
+				rollback(tx);
 
 				commitException = e;
 			}
@@ -308,6 +308,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		finally
 		{
 			ownerTimer.stop();
+
+			//this seems a bit pointless as we are closing the session (indeed it could already be closed)
+			//but if the underlying connection is being reused we want its isolation level to go back to default
+			setIsoloationLevel(session,initialIsololationLevel.get(),tracingId);
 
 			if (session.isOpen())
 			{
@@ -557,13 +561,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * @param readOnly
 	 * 		the read-only flag on the transaction (if true, the transaction will be rolled back, otherwise the transaction will be
 	 */
-	private final void complete(Transaction tx, boolean readOnly, Session session, int isolationLevel, final String tracingId)
+	private final void complete(Transaction tx, boolean readOnly)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Complete " + tx);
-
-		//TODO is this necessary, commit/rollback may just close the underlying connection anyway?
-		setIsoloationLevel(session,isolationLevel,tracingId);
 
 		if (!readOnly)
 			tx.commit();
@@ -573,24 +574,21 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	}
 
 
-	private final void rollback(Transaction tx, Session session, int isolationLevel,final String tracingId)
+	private final void rollback(Transaction tx)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Rollback " + tx);
-
-		//TODO is this necessary, commit/rollback may just close the underlying connection anyway?
-		setIsoloationLevel(session,isolationLevel,tracingId);
 
 		tx.rollback();
 	}
 
 
-	private final void rollback(Transaction tx, Exception e, Session session, int isolationLevel,final String tracingId)
+	private final void rollback(Transaction tx, Exception e)
 	{
 		if (log.isDebugEnabled())
 			log.debug(e.getClass().getSimpleName() + " causes rollback");
 
-		rollback(tx,session,isolationLevel,tracingId);
+		rollback(tx);
 	}
 
 	private final void setIsoloationLevel(final Session session, final int isolationLevel, final String tracingId){
