@@ -36,11 +36,17 @@ import org.hibernate.Transaction;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
+import org.hibernate.jdbc.Work;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
 
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import java.lang.reflect.Method;
+import java.sql.Connection;
+import java.sql.SQLException;
+import java.util.concurrent.atomic.AtomicInteger;
+
+import static com.peterphi.std.guice.database.annotation.Transactional.IGNORE_ISOLATION_LEVEL;
 
 /**
  * A Guice AOP interceptor for methods annotated with the {@link Transactional} annotation to transparently start and
@@ -213,6 +219,37 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			else
 				makeReadWrite(session);
 
+			final AtomicInteger initialIsololationLevel = new AtomicInteger(IGNORE_ISOLATION_LEVEL);
+
+			// if an isolation level has been specified, ensure it is set
+			if (annotation.isolationLevel() != IGNORE_ISOLATION_LEVEL)
+			{
+				Tracing.logOngoing(tracingId,
+				                   "TX:create",
+				                   () -> "Isolation level: " + annotation.isolationLevel() + " specified");
+
+				session.doWork(new Work()
+				{
+					@Override
+					public void execute(final Connection connection) throws SQLException
+					{
+						final int currentIsolation = connection.getTransactionIsolation();
+						initialIsololationLevel.set(currentIsolation);
+
+						Tracing.logOngoing(tracingId, "TX:create", () -> "Isolation level: " + currentIsolation + " current");
+
+						if (currentIsolation == annotation.isolationLevel())
+						{
+							return;
+						}
+						else
+						{
+							connection.setTransactionIsolation(annotation.isolationLevel());
+						}
+					}
+				});
+			}
+
 			// Execute the method
 			final Object result;
 			try
@@ -225,11 +262,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 				{
 					errorRollbacks.mark();
 
-					rollback(tx, e);
+					rollback(tx, e, session, initialIsololationLevel.get(), tracingId);
 				}
 				else
 				{
-					complete(tx, readOnly);
+					complete(tx, readOnly, session, initialIsololationLevel.get(), tracingId);
 				}
 
 				// propagate the exception
@@ -239,7 +276,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				errorRollbacks.mark();
 
-				rollback(tx);
+				rollback(tx, session, initialIsololationLevel.get(), tracingId);
 
 				// propagate the error
 				throw e;
@@ -250,13 +287,13 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			RuntimeException commitException = null;
 			try
 			{
-				complete(tx, readOnly);
+				complete(tx, readOnly, session, initialIsololationLevel.get(), tracingId);
 			}
 			catch (RuntimeException e)
 			{
 				commitFailures.mark();
 
-				rollback(tx);
+				rollback(tx, session, initialIsololationLevel.get(), tracingId);
 
 				commitException = e;
 			}
@@ -516,38 +553,71 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 	/**
 	 * Complete the transaction
-	 *
-	 * @param tx
+	 *  @param tx
 	 * @param readOnly
 	 * 		the read-only flag on the transaction (if true, the transaction will be rolled back, otherwise the transaction will be
-	 * 		committed)
 	 */
-	private final void complete(Transaction tx, boolean readOnly)
+	private final void complete(Transaction tx, boolean readOnly, Session session, int isolationLevel, final String tracingId)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Complete " + tx);
+
+		//TODO is this necessary, commit/rollback may just close the underlying connection anyway?
+		setIsoloationLevel(session,isolationLevel,tracingId);
 
 		if (!readOnly)
 			tx.commit();
 		else
 			tx.rollback();
+
 	}
 
 
-	private final void rollback(Transaction tx)
+	private final void rollback(Transaction tx, Session session, int isolationLevel,final String tracingId)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Rollback " + tx);
 
+		//TODO is this necessary, commit/rollback may just close the underlying connection anyway?
+		setIsoloationLevel(session,isolationLevel,tracingId);
+
 		tx.rollback();
 	}
 
 
-	private final void rollback(Transaction tx, Exception e)
+	private final void rollback(Transaction tx, Exception e, Session session, int isolationLevel,final String tracingId)
 	{
 		if (log.isDebugEnabled())
 			log.debug(e.getClass().getSimpleName() + " causes rollback");
 
-		tx.rollback();
+		rollback(tx,session,isolationLevel,tracingId);
+	}
+
+	private final void setIsoloationLevel(final Session session, final int isolationLevel, final String tracingId){
+
+		if(isolationLevel != IGNORE_ISOLATION_LEVEL)
+		{
+			session.doWork(new Work()
+			{
+				@Override
+				public void execute(final Connection connection) throws SQLException
+				{
+					final int currentIsolation = connection.getTransactionIsolation();
+
+					Tracing.logOngoing(tracingId,
+					                   "TX:create",
+					                   () -> "Set isolation level: current: " + currentIsolation + " desired: " + isolationLevel);
+
+					if (currentIsolation == isolationLevel)
+					{
+						return;
+					}
+					else
+					{
+						connection.setTransactionIsolation(isolationLevel);
+					}
+				}
+			});
+		}
 	}
 }
