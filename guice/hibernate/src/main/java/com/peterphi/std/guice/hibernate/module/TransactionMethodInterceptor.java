@@ -262,11 +262,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 				{
 					errorRollbacks.mark();
 
-					rollback(tx, e, session,initialIsololationLevel.get(),tracingId);
+					rollback(tx, e);
 				}
 				else
 				{
-					complete(tx, readOnly, session,initialIsololationLevel.get(),tracingId);
+					complete(tx, readOnly);
 				}
 
 				// propagate the exception
@@ -276,7 +276,6 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				errorRollbacks.mark();
 
-				rollback(tx, session,initialIsololationLevel.get(),tracingId);
 
 				// propagate the error
 				throw e;
@@ -287,13 +286,13 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			RuntimeException commitException = null;
 			try
 			{
-				complete(tx, readOnly, session,initialIsololationLevel.get(),tracingId);
+				complete(tx, readOnly);
 			}
 			catch (RuntimeException e)
 			{
 				commitFailures.mark();
 
-				rollback(tx, session,initialIsololationLevel.get(),tracingId);
+				rollback(tx);
 
 				commitException = e;
 			}
@@ -311,6 +310,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 			if (session.isOpen())
 			{
+				setIsoloationLevel(session,initialIsololationLevel.get(),tracingId);
 				// Close the session
 				session.close();
 			}
@@ -557,7 +557,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * @param readOnly
 	 * 		the read-only flag on the transaction (if true, the transaction will be rolled back, otherwise the transaction will be
 	 */
-	private final void complete(Transaction tx, boolean readOnly, final Session session, final int isolationLevel, final String tracingId)
+	private final void complete(Transaction tx, boolean readOnly)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Complete " + tx);
@@ -566,28 +566,24 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			tx.commit();
 		else
 			tx.rollback();
-
-		setIsoloationLevel(session,isolationLevel,tracingId);
 	}
 
 
-	private final void rollback(Transaction tx, final Session session, final int isolationLevel, final String tracingId)
+	private final void rollback(Transaction tx)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Rollback " + tx);
 
 		tx.rollback();
-
-		setIsoloationLevel(session,isolationLevel,tracingId);
 	}
 
 
-	private final void rollback(Transaction tx, Exception e, final Session session, final int isolationLevel, final String tracingId)
+	private final void rollback(Transaction tx, Exception e)
 	{
 		if (log.isDebugEnabled())
 			log.debug(e.getClass().getSimpleName() + " causes rollback");
 
-		rollback(tx,session,isolationLevel,tracingId);
+		rollback(tx);
 	}
 
 	private final void setIsoloationLevel(final Session session, final int isolationLevel, final String tracingId){
