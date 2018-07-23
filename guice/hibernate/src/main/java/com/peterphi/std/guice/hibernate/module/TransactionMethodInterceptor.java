@@ -262,11 +262,11 @@ class TransactionMethodInterceptor implements MethodInterceptor
 				{
 					errorRollbacks.mark();
 
-					rollback(tx, e);
+					rollback(tx, e, session,initialIsololationLevel.get(),tracingId);
 				}
 				else
 				{
-					complete(tx, readOnly);
+					complete(tx, readOnly, session,initialIsololationLevel.get(),tracingId);
 				}
 
 				// propagate the exception
@@ -276,7 +276,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				errorRollbacks.mark();
 
-				rollback(tx);
+				rollback(tx, session,initialIsololationLevel.get(),tracingId);
 
 				// propagate the error
 				throw e;
@@ -287,13 +287,13 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			RuntimeException commitException = null;
 			try
 			{
-				complete(tx, readOnly);
+				complete(tx, readOnly, session,initialIsololationLevel.get(),tracingId);
 			}
 			catch (RuntimeException e)
 			{
 				commitFailures.mark();
 
-				rollback(tx);
+				rollback(tx, session,initialIsololationLevel.get(),tracingId);
 
 				commitException = e;
 			}
@@ -308,10 +308,6 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		finally
 		{
 			ownerTimer.stop();
-
-			//this seems a bit pointless as we are closing the session (indeed it could already be closed)
-			//but if the underlying connection is being reused we want its isolation level to go back to default
-			setIsoloationLevel(session,initialIsololationLevel.get(),tracingId);
 
 			if (session.isOpen())
 			{
@@ -561,7 +557,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 * @param readOnly
 	 * 		the read-only flag on the transaction (if true, the transaction will be rolled back, otherwise the transaction will be
 	 */
-	private final void complete(Transaction tx, boolean readOnly)
+	private final void complete(Transaction tx, boolean readOnly, final Session session, final int isolationLevel, final String tracingId)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Complete " + tx);
@@ -571,24 +567,27 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		else
 			tx.rollback();
 
+		setIsoloationLevel(session,isolationLevel,tracingId);
 	}
 
 
-	private final void rollback(Transaction tx)
+	private final void rollback(Transaction tx, final Session session, final int isolationLevel, final String tracingId)
 	{
 		if (log.isTraceEnabled())
 			log.trace("Rollback " + tx);
 
 		tx.rollback();
+
+		setIsoloationLevel(session,isolationLevel,tracingId);
 	}
 
 
-	private final void rollback(Transaction tx, Exception e)
+	private final void rollback(Transaction tx, Exception e, final Session session, final int isolationLevel, final String tracingId)
 	{
 		if (log.isDebugEnabled())
 			log.debug(e.getClass().getSimpleName() + " causes rollback");
 
-		rollback(tx);
+		rollback(tx,session,isolationLevel,tracingId);
 	}
 
 	private final void setIsoloationLevel(final Session session, final int isolationLevel, final String tracingId){
