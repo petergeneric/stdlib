@@ -13,7 +13,6 @@ import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 import org.joda.time.format.DateTimeFormatter;
 
@@ -29,8 +28,6 @@ import java.util.concurrent.ExecutionException;
 @SessionScoped
 public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 {
-	private static final Logger log = Logger.getLogger(OAuthUser.class);
-
 	@Inject
 	RedirectToOAuthAccessRefuser accessRefuser;
 
@@ -65,31 +62,10 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 
 	private OAuth2SessionRef getSession()
 	{
-		OAuth2SessionRef session;
 		if (staticSession != null)
-		{
-			session = staticSession;
-
-			if (session.ctx == null)
-				log.fatal(
-						"OAuth2SessionRef from staticSession was without injected CTX field - invalidating HTTP Session. THIS INDICATES THERE IS A BUG IN SESSION CREATION");
-		}
+			return staticSession;
 		else
-		{
-			session = sessionRefProvider.get();
-
-			if (session.ctx == null)
-				log.fatal(
-						"OAuth2SessionRef returned from provider without injected CTX field - invalidating HTTP Session. THIS INDICATES THERE IS A BUG IN SESSION CREATION");
-		}
-
-		if (session.ctx == null)
-		{
-			HttpCallContext.get().getRequest().getSession().invalidate();
-			throw new RuntimeException("An internal error occurred that prevented your login session from being initialised or reinitialised. Please try to log in again.");
-		}
-
-		return session;
+			return sessionRefProvider.get();
 	}
 
 
