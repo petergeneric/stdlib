@@ -162,7 +162,7 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 
 			try
 			{
-				return dateFormatCache.get(key, userInfo :: toDateTimeFormatter);
+				return dateFormatCache.get(key, userInfo:: toDateTimeFormatter);
 			}
 			catch (ExecutionException e)
 			{

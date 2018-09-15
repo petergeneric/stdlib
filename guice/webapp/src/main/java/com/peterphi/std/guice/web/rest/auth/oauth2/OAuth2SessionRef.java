@@ -1,9 +1,9 @@
 package com.peterphi.std.guice.web.rest.auth.oauth2;
 
 import com.google.inject.Inject;
-import com.google.inject.Injector;
-import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.web.rest.resteasy.GuiceServletContextHelper;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
@@ -12,11 +12,7 @@ import com.peterphi.usermanager.rest.type.UserManagerUser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpSessionActivationListener;
-import javax.servlet.http.HttpSessionEvent;
 import javax.ws.rs.core.UriBuilder;
-import java.io.Serializable;
 import java.net.URI;
 import java.util.Base64;
 
@@ -29,45 +25,71 @@ import java.util.Base64;
  * Manager)
  */
 @SessionScoped
-public class OAuth2SessionRef implements Serializable, HttpSessionActivationListener
+public class OAuth2SessionRef
 {
-	static final long serialVersionUID = 1L;
 	private static final Logger log = Logger.getLogger(OAuth2SessionRef.class);
+
+	public final UserManagerOAuthService authService;
+	public final String oauthServiceEndpoint;
+
+	@Inject(optional = true)
+	@Doc("If specified, this value will be used instead of service.oauth2.endpoint when redirecting the client to the oauth2 server (e.g. for separate internal and external endpoints)")
+	@Named("service.oauth2.redirect-endpoint")
+	public String oauthServiceRedirectEndpoint;
+
+	@Inject(optional = true)
+	@Doc("If specified, this value will be used instead of local endpoint when telling the oauth2 server where to send the oauth2 reply (e.g. to allow a relative response). Will have the following added to it: /oauth2/client/cb")
+	@Named("service.oauth2.self-endpoint")
+	public String oauthSelfEndpoint;
+
+	private final URI localEndpoint;
 
 	/**
 	 * A nonce value used to make sure that authorisation flows originated from this session ref
 	 */
-	private /*final*/ String callbackNonce = SimpleId.alphanumeric(20);
+	private final String callbackNonce = SimpleId.alphanumeric(20);
 
-	@Inject
-	public transient UserManagerAuthServiceContext ctx;
+	public final String clientId;
+	private final String clientSecret;
 
 	private OAuth2TokenResponse response;
-	private transient UserManagerUser cachedInfo;
+	private UserManagerUser cachedInfo;
 
 
-	public synchronized boolean hasBeenInitialised()
+	@Inject
+	public OAuth2SessionRef(final UserManagerOAuthService authService,
+	                        @Named("service.oauth2.endpoint") final String oauthServiceEndpoint,
+	                        @Named("service.oauth2.client_id") final String clientId,
+	                        @Named("service.oauth2.client_secret") final String clientSecret,
+	                        @Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT) URI localEndpoint)
 	{
-		return (response != null);
+		this.authService = authService;
+		this.oauthServiceEndpoint = oauthServiceEndpoint;
+		this.clientId = clientId;
+		this.clientSecret = clientSecret;
+		this.localEndpoint = localEndpoint;
 	}
 
 
+	public synchronized boolean hasBeenInitialised() {
+		return (response != null);
+	}
+
 	/**
 	 * Initialise this session reference by exchanging an API token for an access_token and refresh_token
-	 *
 	 * @param token
 	 */
 	public synchronized void initialiseFromAPIToken(final String token)
 	{
-		final String responseStr = ctx.authService.getToken(UserManagerOAuthService.GRANT_TYPE_TOKEN_EXCHANGE,
-		                                                    null,
-		                                                    ctx.getOwnCallbackUri().toString(),
-		                                                    ctx.clientId,
-		                                                    ctx.clientSecret,
-		                                                    null,
-		                                                    null,
-		                                                    null,
-		                                                    token);
+		final String responseStr = authService.getToken(UserManagerOAuthService.GRANT_TYPE_TOKEN_EXCHANGE,
+		                                                null,
+		                                                getOwnCallbackUri().toString(),
+		                                                clientId,
+		                                                clientSecret,
+		                                                null,
+		                                                null,
+		                                                null,
+		                                                token);
 
 		loadAuthResponse(responseStr);
 	}
@@ -89,6 +111,22 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 
 
 	/**
+	 * Return the URI for this service's callback resource
+	 *
+	 * @return
+	 */
+	public URI getOwnCallbackUri()
+	{
+		String localEndpointStr = (oauthSelfEndpoint != null) ? oauthSelfEndpoint : localEndpoint.toString();
+
+		if (!localEndpointStr.endsWith("/"))
+			localEndpointStr += "/";
+
+		return URI.create(localEndpointStr + "oauth2/client/cb");
+	}
+
+
+	/**
 	 * Get the endpoint to redirect a client to in order to start an OAuth2 Authorisation Flow
 	 *
 	 * @param returnTo
@@ -99,13 +137,16 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 	 */
 	public URI getAuthFlowStartEndpoint(final String returnTo, final String scope)
 	{
-		final String endpoint = ctx.getOAuthServerFlowStartEndpoint();
+		final String oauthServiceRoot = (oauthServiceRedirectEndpoint != null) ?
+		                                oauthServiceRedirectEndpoint :
+		                                oauthServiceEndpoint;
+		final String endpoint = oauthServiceRoot + "/oauth2/authorize";
 
 		UriBuilder builder = UriBuilder.fromUri(endpoint);
 
 		builder.replaceQueryParam("response_type", "code");
-		builder.replaceQueryParam("client_id", ctx.clientId);
-		builder.replaceQueryParam("redirect_uri", ctx.getOwnCallbackUri());
+		builder.replaceQueryParam("client_id", clientId);
+		builder.replaceQueryParam("redirect_uri", getOwnCallbackUri());
 		if (scope != null)
 			builder.replaceQueryParam("scope", scope);
 
@@ -123,7 +164,7 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 	 *
 	 * @return
 	 */
-	private static String encodeState(final String src)
+	private String encodeState(final String src)
 	{
 		return Base64.getUrlEncoder().encodeToString(src.getBytes());
 	}
@@ -136,7 +177,7 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 	 *
 	 * @return
 	 */
-	private static String decodeState(final String src)
+	private String decodeState(final String src)
 	{
 		return new String(Base64.getUrlDecoder().decode(src));
 	}
@@ -197,15 +238,15 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 		this.response = null;
 		this.cachedInfo = null;
 
-		final String responseStr = ctx.authService.getToken(UserManagerOAuthService.GRANT_TYPE_REFRESH_TOKEN,
-		                                                    null,
-		                                                    null,
-		                                                    ctx.clientId,
-		                                                    ctx.clientSecret,
-		                                                    refreshToken,
-		                                                    null,
-		                                                    null,
-		                                                    null);
+		final String responseStr = authService.getToken(UserManagerOAuthService.GRANT_TYPE_REFRESH_TOKEN,
+		                                                null,
+		                                                null,
+		                                                clientId,
+		                                                clientSecret,
+		                                                refreshToken,
+		                                                null,
+		                                                null,
+		                                                null);
 
 		loadAuthResponse(responseStr);
 	}
@@ -222,7 +263,7 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 	public synchronized void refreshUserInfo()
 	{
 		this.cachedInfo = null;
-		this.cachedInfo = ctx.authService.get(getToken(), ctx.clientId);
+		this.cachedInfo = authService.get(getToken(), clientId);
 	}
 
 
@@ -258,28 +299,5 @@ public class OAuth2SessionRef implements Serializable, HttpSessionActivationList
 			// Proactively obtain user information
 			refreshUserInfo();
 		}
-	}
-
-
-	@Override
-	public void sessionWillPassivate(final HttpSessionEvent se)
-	{
-		// No action required
-	}
-
-
-	@Override
-	public void sessionDidActivate(final HttpSessionEvent se)
-	{
-		ServletContext ctx = se.getSession().getServletContext();
-
-		final GuiceRegistry registry = GuiceServletContextHelper.get(ctx);
-
-		final Injector guice = registry.getInjector();
-
-		// Populate all the @Inject fields
-		guice.injectMembers(this);
-
-		refreshToken();
 	}
 }
