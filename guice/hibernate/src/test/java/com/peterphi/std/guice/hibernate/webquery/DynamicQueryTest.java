@@ -142,6 +142,52 @@ public class DynamicQueryTest
 		}
 	}
 
+	/**
+	 * WebQuery.fetch is otherObject.this, returning a relation
+	 *
+	 * @throws Exception
+	 */
+	@Test
+	@Transactional
+	public void testFetchRelationReturnsArray() throws Exception
+	{
+		// Load first object
+		final long id1;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name1");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("Name1");
+
+			childDao.save(obj.getOtherObject());
+			id1 = dao.save(obj);
+		}
+
+		// Load second
+		final long id2;
+		{
+			ParentEntity obj = new ParentEntity();
+			obj.setName("Name2");
+			obj.setOtherObject(new ChildEntity());
+			obj.getOtherObject().setName("Name2");
+
+			childDao.save(obj.getOtherObject());
+			id2 = dao.save(obj);
+		}
+
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("otherObject.entity"), JPASearchStrategy.AUTO, null);
+
+		assertEquals("Expecting 2 rows", 2, results.getList().size());
+		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);
+
+
+		// N.B. we have not ordered the results so they may come back in any order, just assert that the set contains what we expect
+		{
+			final Object[] firstRow = results.getList().get(0);
+			assertTrue(firstRow[0] instanceof ChildEntity);
+		}
+	}
+
 
 	/**
 	 * WebQuery.fetch is not "id" or "entity", but is only a single value (makes sure that the row type coming back from the db is an Object[])

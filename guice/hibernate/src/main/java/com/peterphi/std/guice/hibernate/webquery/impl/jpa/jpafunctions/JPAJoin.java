@@ -33,6 +33,12 @@ public class JPAJoin
 	}
 
 
+	public Expression<?> getJoinExpression()
+	{
+		return root;
+	}
+
+
 	public boolean isCollection()
 	{
 		return collection;
@@ -61,12 +67,16 @@ public class JPAJoin
 	{
 		if (name.indexOf(':') == -1)
 		{
-			entity.getProperty(name); // Validate that such a property exists
-
 			if (StringUtils.equals(name, "class"))
 				return root.type();
+			else if (StringUtils.equals(name, "entity"))
+				return root;
 			else
+			{
+				entity.getProperty(name); // Validate that such a property exists in our metamodel
+
 				return root.get(name);
+			}
 		}
 		else
 		{
