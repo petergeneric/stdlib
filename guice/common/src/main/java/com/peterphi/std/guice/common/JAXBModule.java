@@ -23,7 +23,8 @@ public class JAXBModule extends AbstractModule
 	protected void configure()
 	{
 		final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
+		final boolean useSoftReferences = config.getBoolean(GuiceProperties.JAXB_CACHE_SOFT_REFERENCES_ENABLED, true);
 
-		bind(JAXBSerialiserFactory.class).toInstance(new JAXBSerialiserFactory(useMoxy));
+		bind(JAXBSerialiserFactory.class).toInstance(new JAXBSerialiserFactory(useMoxy, useSoftReferences));
 	}
 }
