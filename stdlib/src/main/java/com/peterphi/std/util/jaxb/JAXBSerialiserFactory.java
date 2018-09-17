@@ -1,6 +1,7 @@
 package com.peterphi.std.util.jaxb;
 
-import java.lang.ref.Reference;
+import org.apache.log4j.Logger;
+
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.Map;
@@ -10,53 +11,101 @@ import java.util.function.Supplier;
 /**
  * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext
  * implementation acquisition rules).<br />
- * Caches JAXBSerialiser instances created using {@link java.lang.ref.SoftReference}s (see {@link #reference(Object)}
+ * Caches JAXBSerialiser instances created using either {@link java.lang.ref.SoftReference}s or direct hard references (based on config - defaults to soft references)
  */
 public class JAXBSerialiserFactory
 {
-	private final ConcurrentHashMap<String, Reference<JAXBSerialiser>> cache = new ConcurrentHashMap<>();
+	private static final Logger log = Logger.getLogger(JAXBSerialiserFactory.class);
+
+	private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 	private final boolean useMoxy;
+	private boolean useSoftReferences;
 
 
 	public JAXBSerialiserFactory(boolean useMoxy)
 	{
-		this.useMoxy = useMoxy;
+		this(useMoxy, true);
 	}
 
-	private static <T> Reference<T> reference(final T instance) {
-		return new SoftReference<>(instance);
+
+	public JAXBSerialiserFactory(boolean useMoxy, boolean useSoftReferences)
+	{
+		this.useMoxy = useMoxy;
+		this.useSoftReferences = useSoftReferences;
 	}
+
+
+	private Object reference(final JAXBSerialiser instance)
+	{
+		if (instance == null) throw new IllegalArgumentException("Cannot construct null reference for cache!");
+
+		if (useSoftReferences)
+			return new SoftReference<>(instance);
+		else
+			return instance;
+	}
+
+
+	private JAXBSerialiser dereference(final Object obj)
+	{
+		if (obj == null)
+			return null;
+
+		if (useSoftReferences)
+			return ((SoftReference<JAXBSerialiser>) obj).get();
+		else
+			return (JAXBSerialiser) obj;
+	}
+
 
 	protected JAXBSerialiser getInstance(final String key, final Supplier<JAXBSerialiser> provider)
 	{
-		final Reference<JAXBSerialiser> ref = cache.get(key);
-		JAXBSerialiser instance = (ref != null) ? ref.get() : null;
+		JAXBSerialiser instance = dereference(cache.get(key));
 
 		if (instance == null)
 		{
+			log.debug("Cache miss for: " + key);
+
 			instance = provider.get();
 			cache.put(key, reference(instance));
 
 			// We just took the penalty to create a JAXBContext, do some maintenance on the map while we're at it
 			prune();
 		}
+		else if (log.isTraceEnabled())
+		{
+			log.trace("Cache hit for: " + key);
+		}
 
 		return instance;
 	}
+
+
+	/**
+	 * Remove all items from the cache
+	 */
+	public void clear()
+	{
+		cache.clear();
+	}
+
 
 	/**
 	 * Finds stale entries in the map
 	 */
 	private void prune()
 	{
-		Iterator<Map.Entry<String, Reference<JAXBSerialiser>>> it = cache.entrySet().iterator();
-
-		while (it.hasNext())
+		if (useSoftReferences)
 		{
-			final Map.Entry<String, Reference<JAXBSerialiser>> entry = it.next();
+			Iterator<Map.Entry<String, Object>> it = cache.entrySet().iterator();
 
-			if (entry.getValue() == null || entry.getValue().get() == null)
-				it.remove();
+			while (it.hasNext())
+			{
+				final Map.Entry<String, Object> entry = it.next();
+
+				if (dereference(entry.getValue()) == null)
+					it.remove();
+			}
 		}
 	}
 
