@@ -1,5 +1,6 @@
 package com.peterphi.std.util.jaxb;
 
+import java.lang.ref.Reference;
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.Map;
@@ -9,11 +10,11 @@ import java.util.function.Supplier;
 /**
  * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext
  * implementation acquisition rules).<br />
- * Caches JAXBSerialiser instances created using {@link java.lang.ref.SoftReference}s.
+ * Caches JAXBSerialiser instances created using {@link java.lang.ref.SoftReference}s (see {@link #reference(Object)}
  */
 public class JAXBSerialiserFactory
 {
-	private final ConcurrentHashMap<String, SoftReference<JAXBSerialiser>> cache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, Reference<JAXBSerialiser>> cache = new ConcurrentHashMap<>();
 	private final boolean useMoxy;
 
 
@@ -22,16 +23,19 @@ public class JAXBSerialiserFactory
 		this.useMoxy = useMoxy;
 	}
 
+	private static <T> Reference<T> reference(final T instance) {
+		return new SoftReference<>(instance);
+	}
 
 	protected JAXBSerialiser getInstance(final String key, final Supplier<JAXBSerialiser> provider)
 	{
-		final SoftReference<JAXBSerialiser> ref = cache.get(key);
+		final Reference<JAXBSerialiser> ref = cache.get(key);
 		JAXBSerialiser instance = (ref != null) ? ref.get() : null;
 
 		if (instance == null)
 		{
 			instance = provider.get();
-			cache.put(key, new SoftReference<>(instance));
+			cache.put(key, reference(instance));
 
 			// We just took the penalty to create a JAXBContext, do some maintenance on the map while we're at it
 			prune();
@@ -40,17 +44,16 @@ public class JAXBSerialiserFactory
 		return instance;
 	}
 
-
 	/**
 	 * Finds stale entries in the map
 	 */
 	private void prune()
 	{
-		Iterator<Map.Entry<String, SoftReference<JAXBSerialiser>>> it = cache.entrySet().iterator();
+		Iterator<Map.Entry<String, Reference<JAXBSerialiser>>> it = cache.entrySet().iterator();
 
 		while (it.hasNext())
 		{
-			final Map.Entry<String, SoftReference<JAXBSerialiser>> entry = it.next();
+			final Map.Entry<String, Reference<JAXBSerialiser>> entry = it.next();
 
 			if (entry.getValue() == null || entry.getValue().get() == null)
 				it.remove();
