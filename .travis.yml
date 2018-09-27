@@ -7,9 +7,10 @@ cache:
 # Don't cache own jars
 before_cache:
   - rm -f $HOME/.m2/repository/com/peterphi
-  
+
+# N.B. can't use openjdk10 yet - see comments about CA certs in https://github.com/travis-ci/travis-ci/issues/9368
 jdk:
-  - oraclejdk8
+  - oraclejdk10
 
 env:
   global:
