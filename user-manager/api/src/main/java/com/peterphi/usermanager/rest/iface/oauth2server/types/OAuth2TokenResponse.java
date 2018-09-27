@@ -1,9 +1,8 @@
 package com.peterphi.usermanager.rest.iface.oauth2server.types;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import java.io.StringReader;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+
 import java.io.StringWriter;
 import java.util.Date;
 
@@ -37,51 +36,72 @@ public class OAuth2TokenResponse
 
 	public static OAuth2TokenResponse decode(final String json)
 	{
-		final JsonObject obj = Json.createReader(new StringReader(json)).readObject();
+		try
+		{
+			final JSONObject obj = new JSONObject(json);
+
+			final int expiresIn = obj.has("expires_in") ? obj.getInt("expires_in") : 0;
+
+			// Set expires 1m before expires_in
+			final Date expires;
+			if (expiresIn == 0)
+				expires = new Date(System.currentTimeMillis() + ((expiresIn - 60) * 1000));
+			else
+				expires = null;
 
 
-		final int expiresIn = obj.getInt("expires_in", 0);
+			return new OAuth2TokenResponse(getString(obj, "access_token", null),
+			                               getString(obj, "refresh_token", null),
+			                               expires,
+			                               getString(obj, "error", null));
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("Unable to deserialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
+	}
 
-		// Set expires 1m before expires_in
-		final Date expires;
-		if (expiresIn == 0)
-			expires = new Date(System.currentTimeMillis() + ((expiresIn - 60) * 1000));
+
+	private static String getString(JSONObject obj, final String name, final String defaultValue) throws JSONException
+	{
+		if (obj.has(name))
+			return obj.getString(name);
 		else
-			expires = null;
-
-		return new OAuth2TokenResponse(obj.getString("access_token", null),
-		                               obj.getString("refresh_token", null),
-		                               expires,
-		                               obj.getString("error", null));
+			return defaultValue;
 	}
 
 
 	public String encode()
 	{
-		StringWriter sw = new StringWriter();
+		try
+		{
+			StringWriter sw = new StringWriter();
 
-		final JsonObjectBuilder builder = Json.createObjectBuilder();
+			JSONObject obj = new JSONObject();
 
-		final long expiresIn;
+			final long expiresIn;
 
-		if (expires != null)
-			expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
-		else
-			expiresIn = -1;
+			if (expires != null)
+				expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
+			else
+				expiresIn = -1;
 
-		if (access_token != null)
-			builder.add("access_token", access_token);
-		if (refresh_token != null)
-			builder.add("refresh_token", refresh_token);
-		if (expires != null)
-			builder.add("expires_in", expiresIn);
-		if (error != null)
-			builder.add("error", error);
+			if (access_token != null)
+				obj.put("access_token", access_token);
+			if (refresh_token != null)
+				obj.put("refresh_token", refresh_token);
+			if (expires != null)
+				obj.put("expires_in", expiresIn);
+			if (error != null)
+				obj.put("error", error);
 
-		JsonObject obj = builder.build();
+			obj.write(sw);
 
-		Json.createWriter(sw).writeObject(obj);
-
-		return sw.toString();
+			return sw.toString();
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
 	}
 }
