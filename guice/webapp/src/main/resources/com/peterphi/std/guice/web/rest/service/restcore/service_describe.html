@@ -1,7 +1,8 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
 <!--@thymesVar id="service" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo"-->
-<!--@thymesVar id="schemaGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil"-->
+<!--@thymesVar id="serviceId" type="java.lang.Integer"-->
+<!--@thymesVar id="exampleGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.ExampleGenerator"-->
 <head>
 	<title th:text="${service.interfaceName}"></title>
 
@@ -124,16 +125,18 @@
 			</tbody>
 		</table>
 
-		<th:block th:if="${resource.requestEntity}">
+		<th:block th:if="${resource.requestXML and resource.requestEntity}">
 			<h5>Request Schema</h5>
-			<pre th:text="${schemaGenerator.getSchema(resource.requestEntity.dataType)}">schema</pre>
+			<a th:href="@{|${coreRestPrefix}/guice/type/${resource.requestEntity.getDataType().getName()}/schema.xsd|}">XSD</a> | <a th:href="@{|${coreRestPrefix}/guice/type/${resource.requestEntity.getDataType().getName()}/example.xml|}">Example XML</a> | <a th:href="@{|${coreRestPrefix}/guice/type/${resource.requestEntity.getDataType().getName()}/example.xml|(minimal=true)}">Example XML (Minimal)</a>
 		</th:block>
 
+		<th:block th:if="${resource.responseXML and resource.getReturnType()}">
 		<h5>Response Schema</h5>
-		<pre th:text="${schemaGenerator.getSchema(resource.returnType)}"></pre>
+		<a th:href="@{|${coreRestPrefix}/guice/type/${resource.getReturnType().getName()}/schema.xsd|}">XSD</a> | <a th:href="@{|${coreRestPrefix}/guice/type/${resource.getReturnType().getName()}/example.xml|}">Example XML</a>
+		</th:block>
 
 		<h5>curl template</h5>
-		<code th:text="${resource.getCurlTemplate(url)}"></code>
+		<pre class="code" th:text="${resource.getCurlTemplate(url, exampleGenerator)}"></pre>
 		<br/>
 		<hr/>
 		<br/>

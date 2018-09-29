@@ -2,7 +2,10 @@ package com.peterphi.std.guice.web.rest.service.servicedescription.freemarker;
 
 import com.google.common.collect.ComparisonChain;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.web.rest.service.servicedescription.ExampleGenerator;
+import com.peterphi.std.util.DOMUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.HttpMethod;
@@ -23,6 +26,8 @@ import java.util.stream.Stream;
  */
 public class RestServiceResourceInfo implements Comparable<RestServiceResourceInfo>
 {
+	private static final Logger log = Logger.getLogger(RestServiceResourceInfo.class);
+
 	private final RestServiceInfo service;
 	private final Method method;
 
@@ -73,6 +78,18 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	}
 
 
+	public boolean isRequestXML()
+	{
+		return getConsumes().contains("application/xml");
+	}
+
+
+	public boolean isResponseXML()
+	{
+		return getProduces().contains("application/xml");
+	}
+
+
 	public String getMethodString()
 	{
 		return method.toGenericString();
@@ -111,10 +128,12 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	@Override
 	public int compareTo(final RestServiceResourceInfo that)
 	{
-		return ComparisonChain.start().compare(this.getLocalPath(), that.getLocalPath()).compare(this.getHttpMethod(),
-		                                                                                         that.getHttpMethod()).compare(
-				this.method.getParameterTypes().length,
-				that.method.getParameterTypes().length).result();
+		return ComparisonChain
+				       .start()
+				       .compare(this.getLocalPath(), that.getLocalPath())
+				       .compare(this.getHttpMethod(), that.getHttpMethod())
+				       .compare(this.method.getParameterTypes().length, that.method.getParameterTypes().length)
+				       .result();
 	}
 
 
@@ -156,7 +175,12 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	public Class<?> getReturnType()
 	{
-		return method.getReturnType();
+		final Class returnType = method.getReturnType();
+
+		if (returnType.equals(Void.TYPE))
+			return null;
+		else
+			return returnType;
 	}
 
 
@@ -216,7 +240,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	}
 
 
-	public String getCurlTemplate(String url)
+	public String getCurlTemplate(String url, ExampleGenerator exampleGenerator) throws Exception
 	{
 		StringBuilder sb = new StringBuilder();
 
@@ -241,18 +265,41 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		// Add the URL
 		sb.append(" \"").append(url).append('"');
 
+
 		// Add Content-Type and binary for POST/PUT
-		if (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT"))
+		if (getRequestEntity() != null && (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT")))
 		{
-			if (getConsumes().contains("application/xml"))
-				sb.append(" -H \"Content-Type: application/xml\" --data-binary \"@file.xml\"");
+			final boolean isXML = isRequestXML();
+
+			if (isXML)
+				sb.append(" -H \"Content-Type: application/xml\" --data-binary \"@-\"");
 			else if (getConsumes().contains("application/json"))
 				sb.append(" -H \"Content-Type: application/json\" --data-binary \"@file.json\"");
 			else if (getConsumes().contains("text/plain"))
 				sb.append(" -H \"Content-Type: text/plain\" --data-binary \"").append(getExampleTextPlain()).append('"');
 			else if (getRequestEntity() != null)
 				sb.append(" -H \"Content-Type: " + getConsumes() + "\" --data-binary \"...\"");
+
+			if (isXML)
+			{
+				sb.append(" <<EOF\n");
+
+				try
+				{
+					final String example = exampleGenerator.generateExampleXML(getRequestEntity().getDataType(), true);
+
+					sb.append(DOMUtils.pretty(DOMUtils.parse(example)));
+				}
+				catch (Throwable t)
+				{
+					// Error generating XML, ignore
+					sb.append("...");
+				}
+
+				sb.append("\nEOF");
+			}
 		}
+
 
 		return sb.toString();
 	}
@@ -273,14 +320,19 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 	{
 		if (clazz.equals(Boolean.class) || clazz.equals(Boolean.TYPE))
 			return "true";
-		else if (clazz.equals(Integer.class) || clazz.equals(Integer.TYPE) ||
-		         clazz.equals(Long.class) || clazz.equals(Long.TYPE) ||
-		         clazz.equals(Short.class) || clazz.equals(Short.TYPE) ||
-		         clazz.equals(Float.class) || clazz.equals(Float.TYPE) ||
-		         clazz.equals(Double.class) || clazz.equals(Double.TYPE))
+		else if (clazz.equals(Integer.class) ||
+		         clazz.equals(Integer.TYPE) ||
+		         clazz.equals(Long.class) ||
+		         clazz.equals(Long.TYPE) ||
+		         clazz.equals(Short.class) ||
+		         clazz.equals(Short.TYPE) ||
+		         clazz.equals(Float.class) ||
+		         clazz.equals(Float.TYPE) ||
+		         clazz.equals(Double.class) ||
+		         clazz.equals(Double.TYPE))
 			return "123";
 		else if (clazz.isEnum())
-			return Stream.of(clazz.getEnumConstants()).map(Object:: toString).collect(Collectors.joining("|"));
+			return Stream.of(clazz.getEnumConstants()).map(Object :: toString).collect(Collectors.joining("|"));
 		else
 			return "...";
 	}
