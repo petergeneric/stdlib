@@ -25,7 +25,7 @@
 		<dependency>
 			<groupId>ognl</groupId>
 			<artifactId>ognl</artifactId>
-			<version>3.1.10</version>
+			<version>3.1.17</version>
 		</dependency>
 
 		<!-- Override the HTTP Client version that's pulled in from resteasy -->
