@@ -27,6 +27,10 @@ public enum WQUriControlField
 	 */
 	LOG_SQL("_log_sql"),
 	/**
+	 * Set to true to request performance metrics be reported for this query
+	 */
+	LOG_PERFORMANCE("_log_performance"),
+	/**
 	 * Set to some class to specify the subclass to return (for entities with type hierarchies)
 	 */
 	CLASS("_class"),
