@@ -10,6 +10,7 @@ public class ConstrainedResultSet<T>
 	protected /*final*/ ResultSetConstraint constraint;
 	protected /*final*/ WebQuery query;
 	protected List<String> sql = Collections.emptyList();
+	protected List<String> info = Collections.emptyList();
 	protected final List<T> list;
 
 	protected Long total;
@@ -105,6 +106,18 @@ public class ConstrainedResultSet<T>
 	public void setSql(final List<String> sql)
 	{
 		this.sql = sql;
+	}
+
+
+	public List<String> getInfo()
+	{
+		return info;
+	}
+
+
+	public void setInfo(final List<String> info)
+	{
+		this.info = info;
 	}
 
 

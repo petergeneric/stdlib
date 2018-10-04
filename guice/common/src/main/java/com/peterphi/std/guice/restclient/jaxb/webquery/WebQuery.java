@@ -59,6 +59,9 @@ public class WebQuery
 	@XmlAttribute
 	public boolean logSQL = false;
 
+	@XmlAttribute
+	public Boolean logPerformance;
+
 	@XmlElement
 	public WQConstraints constraints = new WQConstraints();
 
@@ -124,6 +127,15 @@ public class WebQuery
 	public boolean isLogSQL()
 	{
 		return this.logSQL;
+	}
+
+
+	public boolean isLogPerformance()
+	{
+		if (logPerformance != null)
+			return logPerformance;
+		else
+			return false;
 	}
 
 
@@ -240,6 +252,14 @@ public class WebQuery
 	public WebQuery logSQL(final boolean enabled)
 	{
 		this.logSQL = enabled;
+
+		return this;
+	}
+
+
+	public WebQuery logPerformance(final boolean enabled)
+	{
+		this.logPerformance = enabled;
 
 		return this;
 	}
@@ -563,6 +583,9 @@ public class WebQuery
 						break;
 					case LOG_SQL:
 						def.logSQL(parseBoolean(entry.getValue().get(0)));
+						break;
+					case LOG_PERFORMANCE:
+						def.logPerformance(parseBoolean(entry.getValue().get(0)));
 						break;
 					case EXPAND:
 						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
