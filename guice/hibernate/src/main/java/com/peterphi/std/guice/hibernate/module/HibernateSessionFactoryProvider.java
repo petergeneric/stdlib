@@ -37,6 +37,9 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 	                                       Provider<ServiceRegistry> serviceRegistryProvider,
 	                                       Configuration config)
 	{
+		if (config == null)
+			throw new IllegalArgumentException("Must provide non-null hibernate Configuration!");
+
 		this.serviceRegistryProvider = serviceRegistryProvider;
 		this.config = config;
 
@@ -50,7 +53,15 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 		{
 			final ServiceRegistry serviceRegistry = serviceRegistryProvider.get();
 
-			this.sessionFactory = config.buildSessionFactory(serviceRegistry);
+			try
+			{
+				this.sessionFactory = config.buildSessionFactory(serviceRegistry);
+			}
+			catch (Throwable t) {
+				log.warn("Error setting up hibernate session factory",t);
+
+				throw t;
+			}
 			log.trace("Hibernate Setup Complete.");
 		}
 
