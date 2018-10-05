@@ -11,7 +11,7 @@ import javax.persistence.Version;
 abstract class AbstractEntity
 {
 	private DateTime created = DateTime.now();
-	private DateTime updated;
+	private DateTime updated = DateTime.now();
 
 
 	@Column(name = "created_ts", nullable = false)

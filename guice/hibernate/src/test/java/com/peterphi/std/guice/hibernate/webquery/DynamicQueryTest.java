@@ -70,7 +70,44 @@ public class DynamicQueryTest
 	@Test
 	public void testMappedSuperclassFieldSearch()
 	{
-		mappedSuperclassEntityDao.findByUriQuery(new WebQuery().eq("id", 123).neq("name", "test").lt("created", DateTime.now()));
+		loadMappedSuperclassEntity();
+
+		queryMappedSuperclassEntity();
+	}
+
+	@Transactional
+	public void queryMappedSuperclassEntity()
+	{
+		final ConstrainedResultSet<MappedSuperclassEntity> resultset = mappedSuperclassEntityDao.findByUriQuery(new WebQuery().logSQL(true)
+		                                                                                                                      .neq("id",
+				                                                                                                             123)
+		                                                                                                                      .eq("name",
+				                                                                                                            "test")
+		                                                                                                                      .le("created",
+		                                                                                                                          DateTime.now()));
+		final List<MappedSuperclassEntity> list = resultset.getList();
+
+		System.out.println(resultset.getSql());
+
+		assertEquals(1, list.size());
+
+		System.out.println(list.get(0).getClass());
+		System.out.println(list.get(0).getChild().getClass());
+		System.out.println(list.get(0).getChild().getCreated());
+		list.get(0).getChild().getName();
+	}
+
+
+	@Transactional
+	public void loadMappedSuperclassEntity()
+	{
+		MappedSuperclassEntity toSave = new MappedSuperclassEntity();
+		toSave.setName("test");
+		toSave.setChild(new ChildEntity());
+		toSave.getChild().setName("some name");
+
+		childDao.save(toSave.getChild());
+		mappedSuperclassEntityDao.save(toSave);
 	}
 
 
