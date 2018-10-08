@@ -16,8 +16,18 @@
 <div class="container">
 	<h1>Threads</h1>
 
-	<div th:if="${message}" class="alert alert-success">
+	<div id="message-div" th:if="${message}" class="alert alert-success">
 		<th:block th:text="${message}"></th:block>
+		<script>
+			setTimeout(function () {
+				var div = document.getElementById("message-div");
+
+				div.parentNode.removeChild(div);
+			}, 15000);
+
+			// Remove the query string params
+			history.replaceState(null, null, window.location.href.split('?')[0]);
+		</script>
 	</div>
 
 	<p>This page lists daemons and centrally-managed threads started by this application</p>
@@ -80,13 +90,13 @@
 							<p th:if="${daemon.textState}"><span th:text="${daemon.textState}"></span> (<span th:text="${(#dates.createNow().getTime() - daemon.getTextStateUpdated()) / 1000}">10</span> sec ago)</p>
 						</td>
 						<td>
-							<form th:if="${daemon.threadRunning} and ${!daemon.userCodeRunning}" method="POST"
+							<form method="POST"
 							      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
 								<input type="hidden" name="name" th:value="${daemon.name}"/>
 								<input type="hidden" name="verbose" value="false" />
 								<input type="submit" value="Run Now"/>
 							</form>
-							<form th:if="${daemon.threadRunning} and ${!daemon.userCodeRunning}" method="POST"
+							<form method="POST"
 							      th:action="@{|${coreRestPrefix}/guice/threads/trigger|}">
 								<input type="hidden" name="name" th:value="${daemon.name}"/>
 								<input type="hidden" name="verbose" value="true" />
