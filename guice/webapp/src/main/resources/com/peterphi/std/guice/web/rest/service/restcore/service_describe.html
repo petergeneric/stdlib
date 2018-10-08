@@ -56,19 +56,11 @@
 		<table class="table">
 			<tbody>
 			<tr>
-				<th>HTTP Verb</th>
-				<td th:text="${resource.httpMethod}"></td>
-			</tr>
-			<tr>
 				<th>Full Path</th>
 				<td th:unless="${resource.plainGet}" th:text="${url}">url</td>
 				<td th:if="${resource.plainGet}">
 					<a th:href="${url}" th:text="${url}"></a>
 				</td>
-			</tr>
-			<tr>
-				<th>Local Path</th>
-				<td th:text="${resource.path}">path</td>
 			</tr>
 			<tr>
 				<th>Accept</th>
