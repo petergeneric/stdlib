@@ -48,6 +48,7 @@
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
+		<moxy.version>2.7.3</moxy.version>
 	</properties>
 
 	<scm>
@@ -78,6 +79,7 @@
 		<module>user-manager</module>
 		<module>rules</module>
 		<module>azure</module>
+		<module>moxy</module>
 	</modules>
 
 	<dependencyManagement>
@@ -120,7 +122,7 @@
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>org.eclipse.persistence.moxy</artifactId>
-			<version>2.7.3</version>
+			<version>${moxy.version}</version>
 				<exclusions>
 					<exclusion>
 						<groupId>javax.json</groupId>
