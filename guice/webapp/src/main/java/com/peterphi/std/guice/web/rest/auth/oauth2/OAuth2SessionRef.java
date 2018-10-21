@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
@@ -12,6 +13,7 @@ import com.peterphi.usermanager.rest.type.UserManagerUser;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Base64;
@@ -195,15 +197,21 @@ public class OAuth2SessionRef
 		final String[] pieces = decodeState(state).split(" ", 2);
 
 		if (!StringUtils.equals(callbackNonce, pieces[0]))
-			throw new IllegalArgumentException(
-					"WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
+		{
+			// The callback nonce is not what we expect; this is usually caused by:
+			// - The user has followed a previous oauth callback entry from their history
+			// - The user has accessed a service via a non-canonical endpoint and been redirected by the oauth server to the canonical one
+			//   which means the original nonce stored in the session is not available to this session.
+
+			// To get around this, we simply redirect the user to the root of this service so they can start the oauth flow again
+			throw new LiteralRestResponseException(Response.seeOther(URI.create("/")).build());
+		}
 
 		if (pieces.length == 2)
 			return URI.create(pieces[1]);
 		else
 			return null;
 	}
-
 
 	public synchronized String getToken()
 	{
