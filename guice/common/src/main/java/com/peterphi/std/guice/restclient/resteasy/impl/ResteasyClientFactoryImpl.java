@@ -89,6 +89,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBContextResolver jaxbContextResolver)
 	{
+		// Make sure that if we're called multiple times (e.g. because of a guice CreationException failing startup after us) we start fresh
+		if (ResteasyProviderFactory.peekInstance() != null)
+			ResteasyProviderFactory.clearInstanceIfEqual(ResteasyProviderFactory.peekInstance());
+
 		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
 		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
