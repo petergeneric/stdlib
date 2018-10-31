@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.peterphi.std.config</groupId>
 		<artifactId>service-manager-parent</artifactId>
-		<version>10.1.2</version>
+		<version>10.1.3-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
