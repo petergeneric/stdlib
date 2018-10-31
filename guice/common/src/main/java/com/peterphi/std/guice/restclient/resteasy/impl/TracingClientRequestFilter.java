@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
+import org.apache.log4j.Logger;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -11,6 +12,9 @@ import java.io.IOException;
 @Provider
 public class TracingClientRequestFilter implements ClientRequestFilter
 {
+	private static final Logger log = Logger.getLogger(TracingClientRequestFilter.class);
+
+
 	@Override
 	public void filter(final ClientRequestContext requestContext) throws IOException
 	{
@@ -18,10 +22,18 @@ public class TracingClientRequestFilter implements ClientRequestFilter
 
 		if (traceId != null)
 		{
-			requestContext.getHeaders().add(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
+			if (requestContext.getHeaders().containsKey(TracingConstants.HTTP_HEADER_CORRELATION_ID))
+				log.warn("Duplicate call to tracing filter " +
+				         this +
+				         " for " +
+				         requestContext +
+				         " for " +
+				         requestContext.getUri());
+
+			requestContext.getHeaders().putSingle(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
 
 			if (Tracing.isVerbose())
-				requestContext.getHeaders().add(TracingConstants.HTTP_HEADER_TRACE_VERBOSE, "true");
+				requestContext.getHeaders().putSingle(TracingConstants.HTTP_HEADER_TRACE_VERBOSE, "true");
 		}
 	}
 }
