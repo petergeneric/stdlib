@@ -177,6 +177,9 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			// Sleep for the default sleep time
 			if (isRunning())
 			{
+				// Clear the interrupted flag on this thread (if it's set then we'd immediately return from this sleep method)
+				Thread.interrupted();
+				
 				sleep(getSleepTime());
 			}
 		}
