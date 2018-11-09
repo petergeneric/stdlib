@@ -2,6 +2,7 @@ package com.peterphi.std.guice.xmltesting;
 
 import org.w3c.dom.Attr;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.NamedNodeMap;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
@@ -15,6 +16,7 @@ import java.util.Set;
 class XMLTestInputFilter
 {
 	private Set<String> attributesToRemove = new HashSet<>();
+	private Set<String> elementsToRemove = new HashSet<>();
 	private boolean removeComments = false;
 
 
@@ -32,6 +34,18 @@ class XMLTestInputFilter
 	public void setAttributesToRemove(final Set<String> attributesToRemove)
 	{
 		this.attributesToRemove = attributesToRemove;
+	}
+
+
+	public Set<String> getElementsToRemove()
+	{
+		return elementsToRemove;
+	}
+
+
+	public void setElementsToRemove(final Set<String> elementsToRemove)
+	{
+		this.elementsToRemove = elementsToRemove;
 	}
 
 
@@ -65,6 +79,8 @@ class XMLTestInputFilter
 	void apply(Node node)
 	{
 		if (removeComments && node instanceof org.w3c.dom.Comment)
+			node.getParentNode().removeChild(node);
+		else if (elementsToRemove.size() > 0 && node instanceof Element && elementsToRemove.contains(node.getLocalName()))
 			node.getParentNode().removeChild(node);
 		else
 		{

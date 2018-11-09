@@ -13,39 +13,53 @@ import java.util.Set;
 
 public class XMLDiffHelper
 {
-	public static void xmldiff(final String expectedResource, final Document actual, final Set<String> attributesToRemove)
+	public static void xmldiff(final String expectedResource,
+	                           final Document actual,
+	                           final Set<String> attributesToRemove,
+	                           final Set<String> elementsToRemove)
 	{
 		final Document expected = DOMUtils.parse(XMLDiffHelper.class.getResourceAsStream(expectedResource));
 
-		xmldiff(expected, actual, attributesToRemove);
+		xmldiff(expected, actual, attributesToRemove, elementsToRemove);
 	}
 
 
-	public static void xmldiff(final Document expected, final Document actual, final Set<String> attributesToRemove)
+	public static void xmldiff(final Document expected,
+	                           final Document actual,
+	                           final Set<String> attributesToRemove,
+	                           final Set<String> elementsToRemove)
 	{
-		Diff diff = doXmlDiff(expected, actual, attributesToRemove);
+		Diff diff = doXmlDiff(expected, actual, attributesToRemove, elementsToRemove);
 
 		if (!diff.similar())
 			throw new ComparisonFailure(diff.toString(), pretty(expected), pretty(actual));
 	}
 
 
-	public static Diff doXmlDiff(final Document expected, final Document actual, final Set<String> attributesToRemove)
+	public static Diff doXmlDiff(final Document expected,
+	                             final Document actual,
+	                             final Set<String> attributesToRemove,
+	                             final Set<String> elementsToRemove)
 	{
 		XMLUnit.setIgnoreWhitespace(true);
 
-		filterDocument(expected, actual, attributesToRemove);
+		filterDocument(expected, actual, attributesToRemove, elementsToRemove);
 
 		return new Diff(expected, actual);
 	}
 
 
-	public static void filterDocument(final Document expected, final Document actual, final Set<String> attributesToRemove)
+	public static void filterDocument(final Document expected,
+	                                  final Document actual,
+	                                  final Set<String> attributesToRemove,
+	                                  final Set<String> elementsToRemove)
 	{
 		XMLTestInputFilter docFilterer = new XMLTestInputFilter();
 
 		if (attributesToRemove != null)
 			docFilterer.setAttributesToRemove(attributesToRemove);
+		if (elementsToRemove != null)
+			docFilterer.setElementsToRemove(elementsToRemove);
 
 		docFilterer.setRemoveComments(true);
 
