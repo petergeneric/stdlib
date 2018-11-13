@@ -7,6 +7,7 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.util.ListUtility;
+import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
 import javax.servlet.http.HttpServletRequest;
@@ -20,12 +21,11 @@ class RedirectToLoginAccessRefuser implements AccessRefuser
 	@Override
 	public Throwable refuse(final AuthScope scope, final AuthConstraint constraint, final CurrentUser login)
 	{
-		AuthenticationFailureException exception = new AuthenticationFailureException("You do not have sufficient privileges to access this resource" +
-		                                                                              (constraint != null ?
-		                                                                               ": " + constraint.comment() :
-		                                                                               "") +
-		                                                                              ". Required role: " +
-		                                                                              scope.getRole(constraint));
+		AuthenticationFailureException exception = new AuthenticationFailureException(
+				"You do not have sufficient privileges to access this resource" +
+				(constraint != null ? ": " + constraint.comment() : "") +
+				". Required role: " +
+				scope.getRole(constraint));
 
 		if (!login.isAnonymous())
 		{
@@ -44,9 +44,10 @@ class RedirectToLoginAccessRefuser implements AccessRefuser
 				if (!isBrowserConsumer(request))
 				{
 					// Non-browser consumer, send back an HTTP 401 immediately
-					Response tryBasicAuth = Response.status(401)
-					                                .header("WWW-Authenticate", "Basic realm=\"user manager\"")
-					                                .build();
+					Response tryBasicAuth = Response
+							                        .status(401)
+							                        .header("WWW-Authenticate", "Basic realm=\"user manager\"")
+							                        .build();
 
 					throw new LiteralRestResponseException(tryBasicAuth, exception);
 				}
@@ -99,16 +100,17 @@ class RedirectToLoginAccessRefuser implements AccessRefuser
 
 		return false;
 	}
-
+	
 
 	private String getRequestURI(HttpServletRequest request)
 	{
-		final String uri = request.getRequestURL().toString();
-		final String qs = request.getQueryString();
+		final String contextPath = StringUtils.equals(request.getContextPath(), "/") ? "" : request.getContextPath();
+		final String requestUri = request.getRequestURI();
+		final String qs = (StringUtils.isEmpty(request.getQueryString()) ? "" : "?" + request.getQueryString());
 
-		if (qs == null)
-			return uri;
+		if (requestUri.startsWith(contextPath))
+			return requestUri.substring(contextPath.length()) + qs;
 		else
-			return uri + "?" + qs;
+			return requestUri + qs;
 	}
 }
