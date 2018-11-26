@@ -41,6 +41,11 @@ public class TimeoutConverterTest
 	Timeout timeout50h;
 
 
+	@Inject
+	@Named("timeout1000d")
+	Timeout timeout1000d;
+
+
 	@Test
 	public void test()
 	{
@@ -51,6 +56,7 @@ public class TimeoutConverterTest
 		props.set("timeout1h", "1h");
 		props.set("timeout60m", "60m");
 		props.set("timeout50h", "50h");
+		props.set("timeout1000d", "P10000D");
 
 		final Injector injector = Guice.createInjector(new ServicePropertiesModule(props));
 
@@ -62,6 +68,7 @@ public class TimeoutConverterTest
 		assertEquals(new Timeout(1, TimeUnit.SECONDS), timeout1s);
 		assertEquals(new Timeout(60, TimeUnit.MINUTES), timeout60m);
 		assertEquals(new Timeout(1, TimeUnit.HOURS), timeout1h);
+		assertEquals(new Timeout(10000, TimeUnit.DAYS), timeout1000d);
 
 		// compare against one another
 		assertEquals(timeout60m, timeout1h);
