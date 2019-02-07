@@ -118,7 +118,7 @@
 		<dt>users with role</dt>
 		<dd>
 			<ul th:if="${users}">
-				<li th:each="user: ${users}"><a th:href="@{'/user/'+user.id}" th:text="${user.email}">email</a></li>
+				<li th:each="user: ${users}"><a th:href="@{'/user/'+${user.id}}" th:text="${user.email}">email</a></li>
 			</ul>
 			<em th:unless="${users}">None</em></dd>
 	</dl>
