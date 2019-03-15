@@ -107,6 +107,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		if (remoteExceptionClientResponseFilter != null)
 			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
 
+		// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
+		FastInfosetPreferringClientRequestFilter.register();
+
 		if (tracingRequestFilter != null)
 			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
 
