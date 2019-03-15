@@ -197,9 +197,17 @@ public class ExampleGenerator
 	                        Field field,
 	                        final Object val) throws IllegalAccessException, InvocationTargetException
 	{
-		if (field.canAccess(obj))
+		boolean success;
+		try
+		{
 			field.set(obj, val);
-		else
+			success=true;
+		}
+		catch (Throwable t) {
+			success=false;
+		}
+
+		if (!success)
 		{
 			try
 			{
