@@ -12,11 +12,12 @@ import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
+import javax.xml.stream.XMLStreamReader;
+import javax.xml.stream.XMLStreamWriter;
 import javax.xml.validation.Schema;
 import java.io.File;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
@@ -227,7 +228,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("create marshaller",e);
+			throw new JAXBRuntimeException("create marshaller", e);
 		}
 	}
 
@@ -273,7 +274,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("create unmarshaller",e);
+			throw new JAXBRuntimeException("create unmarshaller", e);
 		}
 	}
 
@@ -307,19 +308,6 @@ public class JAXBSerialiser
 	public Object deserialise(final InputStream is)
 	{
 		return deserialise(new InputSource(is));
-	}
-
-
-	/**
-	 * Deserialise a Reader of XML to an Object (or JAXBElement)
-	 *
-	 * @param reader
-	 *
-	 * @return
-	 */
-	public Object deserialise(final Reader reader)
-	{
-		return deserialise(new InputSource(reader));
 	}
 
 
@@ -393,9 +381,10 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("deserialisation",e);
+			throw new JAXBRuntimeException("deserialisation", e);
 		}
 	}
+
 
 	public Object deserialise(final InputSource source)
 	{
@@ -415,7 +404,37 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("deserialisation",e);
+			throw new JAXBRuntimeException("deserialisation", e);
+		}
+	}
+
+
+	/**
+	 * Deserialise an XMLStreamReader to an Object (or JAXBElement)
+	 *
+	 * @param reader
+	 *
+	 * @return
+	 */
+	public Object deserialise(final XMLStreamReader reader)
+	{
+		if (reader == null)
+			throw new IllegalArgumentException("Null argument passed to deserialise!");
+
+		final Unmarshaller unmarshaller = getUnmarshaller();
+
+		try
+		{
+			final Object obj = unmarshaller.unmarshal(reader);
+
+			if (obj == null)
+				throw new RuntimeException("Malformed XML! JAXB returned null");
+			else
+				return obj;
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("deserialisation", e);
 		}
 	}
 
@@ -445,7 +464,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("deserialisation",e);
+			throw new JAXBRuntimeException("deserialisation", e);
 		}
 	}
 
@@ -486,7 +505,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation",e);
+			throw new JAXBRuntimeException("serialisation", e);
 		}
 	}
 
@@ -501,7 +520,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation",e);
+			throw new JAXBRuntimeException("serialisation", e);
 		}
 	}
 
@@ -516,7 +535,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation",e);
+			throw new JAXBRuntimeException("serialisation", e);
 		}
 	}
 
@@ -531,7 +550,22 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation",e);
+			throw new JAXBRuntimeException("serialisation", e);
+		}
+	}
+
+
+	public void serialise(final Object obj, final XMLStreamWriter writer)
+	{
+		final Marshaller marshaller = getMarshaller();
+
+		try
+		{
+			marshaller.marshal(obj, writer);
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("serialisation", e);
 		}
 	}
 
@@ -557,7 +591,7 @@ public class JAXBSerialiser
 		}
 		catch (JAXBException e)
 		{
-			throw new JAXBRuntimeException("serialisation",e);
+			throw new JAXBRuntimeException("serialisation", e);
 		}
 	}
 
