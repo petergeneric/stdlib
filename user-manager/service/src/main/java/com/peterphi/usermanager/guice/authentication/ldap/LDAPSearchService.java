@@ -17,8 +17,11 @@ import javax.naming.directory.InitialDirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.directory.SearchResult;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 
 @Singleton
 public class LDAPSearchService
@@ -170,6 +173,14 @@ public class LDAPSearchService
 
 	public LDAPUserRecord search(LDAPUser authUser, final String password, LDAPUser searchFor)
 	{
+		final Map<LDAPUser, LDAPUserRecord> results = search(authUser, password, Collections.singletonList(searchFor));
+
+		return results.get(searchFor);
+	}
+
+
+	public Map<LDAPUser, LDAPUserRecord> search(LDAPUser authUser, final String password, List<LDAPUser> searchForAll)
+	{
 		try
 		{
 			DirContext ldapContext = null;
@@ -183,34 +194,44 @@ public class LDAPSearchService
 				ldapEnv.put(Context.SECURITY_CREDENTIALS, password);
 				ldapContext = new InitialDirContext(ldapEnv); // N.B. sometimes takes ~10 seconds
 
-				final NamingEnumeration<SearchResult> answer;
+				Map<LDAPUser, LDAPUserRecord> results = new HashMap<>();
+
+				// Run a separate search for each user
+				for (LDAPUser searchFor : searchForAll)
 				{
-					SearchControls search = new SearchControls();
+					final NamingEnumeration<SearchResult> answer;
+					{
+						SearchControls search = new SearchControls();
 
-					search.setSearchScope(SearchControls.SUBTREE_SCOPE);
-					search.setReturningAttributes(new String[]{"dn", "name", "samAccountName"});
+						search.setSearchScope(SearchControls.SUBTREE_SCOPE);
+						search.setReturningAttributes(new String[]{"dn", "name", "samAccountName"});
 
-					final String searchFilter = String.format(this.ldapFilter, searchFor.username);
+						final String searchFilter = String.format(this.ldapFilter, searchFor.username);
 
-					answer = ldapContext.search(ldapSearchBase, searchFilter, search);
+						answer = ldapContext.search(ldapSearchBase, searchFilter, search);
+					}
+
+					LDAPUserRecord record = null;
+
+					while (answer.hasMoreElements())
+					{
+						SearchResult sr = answer.next();
+						Attributes attrs = sr.getAttributes();
+
+						final String dn = sr.getNameInNamespace();
+						final String name = attrs.get("name").get().toString();
+						final String actualUsername = attrs.get("samAccountName").get().toString();
+
+						// Get the direct & indirect group membership data
+						List<LDAPGroup> groups = getGroups(ldapContext, dn);
+
+						record = new LDAPUserRecord(actualUsername, name, groups);
+					}
+
+					results.put(searchFor, record);
 				}
 
-				while (answer.hasMoreElements())
-				{
-					SearchResult sr = answer.next();
-					Attributes attrs = sr.getAttributes();
-
-					final String dn = sr.getNameInNamespace();
-					final String name = attrs.get("name").get().toString();
-					final String actualUsername = attrs.get("samAccountName").get().toString();
-
-					// Get the direct & indirect group membership data
-					List<LDAPGroup> groups = getGroups(ldapContext, dn);
-
-					return new LDAPUserRecord(actualUsername, name, groups);
-				}
-
-				return null;
+				return results;
 			}
 			finally
 			{

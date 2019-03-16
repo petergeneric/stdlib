@@ -1,20 +1,30 @@
 package com.peterphi.usermanager.guice.authentication.ldap;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.database.annotation.Transactional;
+import com.peterphi.std.guice.hibernate.webquery.ConstrainedResultSet;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.threading.Timeout;
 import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
+import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
 
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class LDAPUserAuthenticationService implements UserAuthenticationService
 {
+	private static final Logger log = Logger.getLogger(LDAPUserAuthenticationService.class);
+
 	@Inject
 	UserDaoImpl dao;
 
@@ -23,6 +33,28 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 
 	@Inject
 	LDAPSearchService ldap;
+
+	@Inject(optional = true)
+	@Named("ldap.background-role-updates")
+	@Doc("If true, LDAP role data will be updated in the background")
+	public boolean autoRefreshUserData = false;
+
+	@Inject(optional = true)
+	@Named("ldap.user-manager-account.username")
+	@Doc("The LDAP user to use for background updates")
+	public String autoRefreshUsername;
+
+	@Inject(optional = true)
+	@Named("ldap.user-manager-account.password")
+	@Doc("The LDAP password to use for background updates")
+	public String autoRefreshPassword;
+
+	/**
+	 * The time we last attempted an opportunistic user data refresh
+	 */
+	private long lastOpportunisticUserDataRefresh = 0;
+
+	private static final long OPPORTUNISTIC_USER_DATA_REFRESH_THROTTLE = new Timeout(12, TimeUnit.HOURS).getMilliseconds();
 
 
 	@Override
@@ -53,7 +85,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	@Transactional
 	public UserEntity authenticate(final String username, final String password, final boolean basicAuth)
 	{
-		// TODO Authenticate with LDAP and get user record
+		// Authenticate with LDAP and get user record
 		LDAPUserRecord record = ldapAuthenticate(username, password);
 
 		// Sync LDAP record into our database
@@ -62,6 +94,12 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 		// Update the last login timestamp
 		entity.setLastLogin(DateTime.now());
 		dao.update(entity);
+
+		// If we're to periodically update user data (but don't have credentials) then consider borrowing these credentials for an update run
+		if (shouldOpportunisticallyRefreshUserData())
+		{
+			opportunisticallyRefreshUserData(username, password);
+		}
 
 		return entity;
 	}
@@ -137,5 +175,101 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 		final LDAPUser user = ldap.parseUser(inputUsername);
 
 		return ldap.search(user, password, user);
+	}
+
+
+	public boolean shouldOpportunisticallyRefreshUserData()
+	{
+		return autoRefreshUserData &&
+		       autoRefreshUsername == null &&
+		       (lastOpportunisticUserDataRefresh + OPPORTUNISTIC_USER_DATA_REFRESH_THROTTLE) < System.currentTimeMillis();
+	}
+
+
+	/**
+	 * Temporarily borrow a user's credentials to run an opportunistic user data refresh
+	 *
+	 * @param username
+	 * @param password
+	 */
+	public synchronized void opportunisticallyRefreshUserData(final String username, final String password)
+	{
+		if (shouldOpportunisticallyRefreshUserData())
+		{
+			this.lastOpportunisticUserDataRefresh = System.currentTimeMillis();
+			Thread thread = new Thread(() -> refreshAllUserData(ldap.parseUser(username), password, true));
+			thread.setDaemon(true);
+			thread.setName("UserManager_OpportunisticRefresh");
+			thread.start();
+		}
+	}
+
+
+	@Override
+	@Transactional
+	public void executeBackgroundTasks()
+	{
+		if (autoRefreshUserData)
+		{
+			final LDAPUser authUser = ldap.parseUser(autoRefreshUsername);
+			final String password = autoRefreshPassword;
+
+			refreshAllUserData(authUser, password, false);
+		}
+	}
+
+
+	@Transactional
+	public void refreshAllUserData(final LDAPUser authUser, final String password, final boolean opportunistic)
+	{
+		final ConstrainedResultSet<UserEntity> users = dao.find(new WebQuery().limit(0).eq("local", false));
+
+		// Search for all users
+		Map<LDAPUser, LDAPUserRecord> results = ldap.search(authUser,
+		                                                    password,
+		                                                    users
+				                                                    .getList()
+				                                                    .stream()
+				                                                    .map(UserEntity :: getName)
+				                                                    .map(ldap :: parseUser)
+				                                                    .collect(Collectors.toList()));
+
+		for (UserEntity entity : users.getList())
+		{
+			try
+			{
+				final LDAPUser searchFor = ldap.parseUser(entity.getEmail());
+
+				LDAPUserRecord record = results.get(searchFor);
+
+				if (record != null)
+				{
+					// Update their full name
+					entity.setName(record.fullName);
+
+					// Update the role data
+					setRoles(entity, record);
+				}
+				else
+				{
+					if (opportunistic)
+					{
+						log.warn("Cannot find user in LDAP system: " +
+						         entity.getEmail() +
+						         " - but check was opportunistic so won't delete the user");
+					}
+					else
+					{
+						// User has been deleted from LDAP so we shouldn't keep a record for them!
+						log.warn("User no longer known to LDAP system: " + entity.getEmail() + " - deleting User Manager record");
+						dao.delete(entity);
+					}
+				}
+			}
+			catch (Throwable t)
+			{
+				log.error("Error updating LDAP record for " + entity.getEmail(), t);
+			}
+		}
 	}
 }

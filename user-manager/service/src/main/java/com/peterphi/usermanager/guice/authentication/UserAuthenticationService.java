@@ -13,4 +13,10 @@ public interface UserAuthenticationService
 
 	@Transactional
 	UserEntity authenticate(String sessionReconnectToken);
+
+	/**
+	 * Called periodically to request that the background tasks needed by this authentication service be performed
+	 */
+	@Transactional
+	void executeBackgroundTasks();
 }

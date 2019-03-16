@@ -6,9 +6,12 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.db.InternalUserAuthenticationServiceImpl;
+import org.apache.log4j.Logger;
 
 public class LocalAndLDAPAuthenticationService implements UserAuthenticationService
 {
+	private static final Logger log = Logger.getLogger(LocalAndLDAPAuthenticationService.class);
+
 	@Inject
 	UserDaoImpl dao;
 
@@ -46,5 +49,30 @@ public class LocalAndLDAPAuthenticationService implements UserAuthenticationServ
 			return entity;
 		else
 			return ldap.authenticate(sessionReconnectToken);
+	}
+
+
+	@Override
+	public void executeBackgroundTasks()
+	{
+		// Run background tasks on LDAP users (e.g. fetch latest group data)
+		try
+		{
+			ldap.executeBackgroundTasks();
+		}
+		catch (Throwable t)
+		{
+			log.warn("LDAP background tasks failed", t);
+		}
+
+		// Now run background tasks on the internal users
+		try
+		{
+			internal.executeBackgroundTasks();
+		}
+		catch (Throwable t)
+		{
+			log.warn("Internal background tasks failed", t);
+		}
 	}
 }

@@ -2,6 +2,8 @@ package com.peterphi.usermanager.guice.authentication.ldap;
 
 import com.google.common.base.MoreObjects;
 
+import java.util.Objects;
+
 public class LDAPUser
 {
 	public final String username;
@@ -12,6 +14,26 @@ public class LDAPUser
 	{
 		this.username = username;
 		this.fullyQualifiedUsername = fullyQualifiedUsername;
+	}
+
+
+	@Override
+	public boolean equals(final Object o)
+	{
+		if (this == o)
+			return true;
+		if (o == null || getClass() != o.getClass())
+			return false;
+		LDAPUser ldapUser = (LDAPUser) o;
+		return Objects.equals(username, ldapUser.username) &&
+		       Objects.equals(fullyQualifiedUsername, ldapUser.fullyQualifiedUsername);
+	}
+
+
+	@Override
+	public int hashCode()
+	{
+		return Objects.hash(username, fullyQualifiedUsername);
 	}
 
 

@@ -1,6 +1,9 @@
 package com.peterphi.usermanager.db.dao.hibernate;
 
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.crypto.BCrypt;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.database.annotation.Transactional;
@@ -19,6 +22,10 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 {
 	private static final Logger log = Logger.getLogger(UserDaoImpl.class);
 
+	@Inject
+	@Named("auth.ldap.allow-session-reconnect")
+	@Doc("If true, logins created using LDAP credentials will be allowed to use the Session Reconnect Key system to stay logged in longer without re-authenticating")
+	public boolean allowRemoteAccountsToUseSessionReconnect;
 
 	@Transactional
 	public UserEntity login(String email, String password)
@@ -148,7 +155,11 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		account.setEmail(username);
 		account.setName(fullName);
 		account.setPassword("NONE"); // Won't allow password logins anyway, but we also set a value that won't match any BCrypt hash
-		account.setSessionReconnectKey(null);
+
+		if (allowRemoteAccountsToUseSessionReconnect)
+			account.setSessionReconnectKey(UUID.randomUUID().toString());
+		else
+			account.setSessionReconnectKey(null);
 
 		account.setTimeZone(CurrentUser.DEFAULT_TIMEZONE);
 		account.setDateFormat(CurrentUser.DEFAULT_DATE_FORMAT_STRING);
@@ -169,7 +180,12 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	@Transactional
 	public UserEntity loginBySessionReconnectKey(String key)
 	{
-		final UserEntity account = uniqueResult(new WebQuery().eq("local", true).eq("sessionReconnectKey", key));
+		final WebQuery search = new WebQuery().eq("sessionReconnectKey", key);
+
+		if (!allowRemoteAccountsToUseSessionReconnect)
+			search.eq("local",true);
+
+		final UserEntity account = uniqueResult(search);
 
 		if (account != null)
 		{
@@ -203,7 +219,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null)
 		{
-			if (account.isLocal())
+			if (account.isLocal() || allowRemoteAccountsToUseSessionReconnect)
 				account.setSessionReconnectKey(UUID.randomUUID().toString());
 			else
 				account.setSessionReconnectKey(null);
