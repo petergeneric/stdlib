@@ -55,4 +55,11 @@ public class InternalUserAuthenticationServiceImpl implements UserAuthentication
 	{
 		return ensureRolesFetched(dao.loginBySessionReconnectKey(sessionReconnectToken));
 	}
+
+
+	@Override
+	public void executeBackgroundTasks()
+	{
+		// Nothing to update
+	}
 }
