@@ -230,7 +230,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 		                                                    users
 				                                                    .getList()
 				                                                    .stream()
-				                                                    .map(UserEntity :: getName)
+				                                                    .map(UserEntity :: getEmail)
 				                                                    .map(ldap :: parseUser)
 				                                                    .collect(Collectors.toList()));
 
@@ -256,7 +256,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 					{
 						log.warn("Cannot find user in LDAP system: " +
 						         entity.getEmail() +
-						         " - but check was opportunistic so won't delete the user");
+						         " - but check was opportunistic so won't delete the user.");
 					}
 					else
 					{

@@ -1,5 +1,7 @@
 package com.peterphi.usermanager.guice.authentication.ldap;
 
+import com.google.common.base.MoreObjects;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -26,5 +28,18 @@ public class LDAPUserRecord
 	public Set<String> getRoleIds()
 	{
 		return this.roleIds;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return MoreObjects
+				       .toStringHelper(this)
+				       .add("username", username)
+				       .add("fullName", fullName)
+				       .add("roles", roles)
+				       .add("roleIds", roleIds)
+				       .toString();
 	}
 }

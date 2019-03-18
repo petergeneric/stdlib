@@ -7,6 +7,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
 
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
@@ -26,6 +27,8 @@ import java.util.Map;
 @Singleton
 public class LDAPSearchService
 {
+	private static final Logger log = Logger.getLogger(LDAPSearchService.class);
+
 	@Inject
 	@Named("ldap.domain")
 	@Reconfigurable
@@ -181,6 +184,9 @@ public class LDAPSearchService
 
 	public Map<LDAPUser, LDAPUserRecord> search(LDAPUser authUser, final String password, List<LDAPUser> searchForAll)
 	{
+		if (log.isTraceEnabled())
+			log.trace("Querying LDAP as " + authUser + " for " + searchForAll);
+
 		try
 		{
 			DirContext ldapContext = null;
