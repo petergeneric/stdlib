@@ -260,9 +260,15 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 					}
 					else
 					{
-						// User has been deleted from LDAP so we shouldn't keep a record for them!
+						// User has been deleted from LDAP so we shouldn't keep a record for them
+						// However, the user may have services so we don't necessarily want to remove those, so we'll just make the user unable to log in without a reauth
 						log.warn("User no longer known to LDAP system: " + entity.getEmail() + " - deleting User Manager record");
-						dao.delete(entity);
+
+						entity.setSessionReconnectKey(null);
+						entity.setAccessKey(null);
+						entity.setAccessKeySecondary(null);
+						
+						dao.update(entity);
 					}
 				}
 			}
