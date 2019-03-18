@@ -56,4 +56,13 @@ public class OAuthSessionContextDaoImpl extends HibernateDao<OAuthSessionContext
 
 		return entity;
 	}
+
+	@Transactional
+	public void deleteByUser(final UserEntity user)
+	{
+		for (OAuthSessionContextEntity entity : find(new WebQuery().limit(0).eq("user.id", user.getId())).getList())
+		{
+			delete(entity);
+		}
+	}
 }
