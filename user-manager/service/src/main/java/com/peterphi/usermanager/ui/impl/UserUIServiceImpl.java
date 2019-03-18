@@ -16,6 +16,7 @@ import com.peterphi.usermanager.guice.authentication.AuthenticationFailureExcept
 import com.peterphi.usermanager.guice.authentication.ImpersonationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.service.UserDeleteService;
 import com.peterphi.usermanager.ui.api.UserUIService;
 
 import javax.ws.rs.core.Response;
@@ -51,6 +52,9 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Inject
 	LowSecuritySessionNonceStore nonceStore;
+
+	@Inject
+	UserDeleteService deleteService;
 
 
 	@Override
@@ -200,7 +204,7 @@ public class UserUIServiceImpl implements UserUIService
 
 		final int localUser = login.getId();
 
-		accountDao.deleteById(userId);
+		deleteService.delete(accountDao.getById(userId));
 
 		if (localUser == userId)
 		{
