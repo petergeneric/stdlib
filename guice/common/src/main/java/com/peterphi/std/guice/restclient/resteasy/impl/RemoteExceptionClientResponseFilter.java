@@ -69,9 +69,9 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 			operationId = requestContext.getHeaderString(TracingConstants.HTTP_HEADER_CORRELATION_ID);
 
 			if (operationId != null)
-				Tracing.logOngoing(operationId, "HTTP:resp", () -> "" + code);
+				Tracing.logOngoing(operationId, "HTTP:resp", code);
 			else
-				operationId = Tracing.log("HTTP:resp:unexpected", () -> "" + code); // can't find outgoing trace id
+				operationId = Tracing.log("HTTP:resp:unexpected", code); // can't find outgoing trace id
 		}
 		else
 		{
@@ -124,7 +124,7 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 				{
 					final ExceptionInfo ei = failure.exception;
 
-					Tracing.logOngoing(operationId, "HTTP:error", () -> ei.shortName + " " + ei.detail);
+					Tracing.logOngoing(operationId, "HTTP:error", ei.shortName, " ", ei.detail);
 				}
 
 				RestException exception = exceptionFactory.build(failure, responseContext);

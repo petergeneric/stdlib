@@ -45,6 +45,7 @@ import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.function.Supplier;
 
 import static com.peterphi.std.guice.database.annotation.Transactional.IGNORE_ISOLATION_LEVEL;
 
@@ -94,7 +95,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			Timer.Context callTimer = calls.time();
 
 			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
-			Tracing.logOngoing(tracingId, "TX:initialStatus", () -> ""+ initialStatus.name());
+			Tracing.logOngoing(tracingId, "TX:initialStatus", initialStatus);
 
 			try
 			{
@@ -125,7 +126,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							else
 								log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...");
 
-							Tracing.logOngoing(tracingId, "TX:exception:retryable", () -> e.getClass().getSimpleName());
+							Tracing.logOngoing(tracingId, "TX:exception:retryable", (Supplier) () -> e.getClass().getSimpleName());
 
 							try
 							{
@@ -153,7 +154,9 @@ class TransactionMethodInterceptor implements MethodInterceptor
 									         e.getCause().getClass().getSimpleName() +
 									         "; retrying...");
 
-								Tracing.logOngoing(tracingId, "TX:exception:retryable:wrapped", () -> e.getCause().getClass().getSimpleName());
+								Tracing.logOngoing(tracingId,
+								                   "TX:exception:retryable:wrapped",
+								                   (Supplier) () -> e.getCause().getClass().getSimpleName());
 
 								try
 								{
@@ -169,20 +172,20 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							}
 							else
 							{
-								Tracing.logOngoing(tracingId, "TX:exception:fatal", () -> e.getClass().getSimpleName());
+								Tracing.logOngoing(tracingId, "TX:exception:fatal", (Supplier)() -> e.getClass().getSimpleName());
 								throw e; // rethrow because we won't handle this
 							}
 						}
 					}
 				}
 
-				Tracing.logOngoing(tracingId, "TX:last-try", null);
+				Tracing.logOngoing(tracingId, "TX:last-try");
 				// Run without further retries
 				return createTransactionAndExecuteMethod(invocation, annotation, tracingId);
 			}
 			finally
 			{
-				Tracing.logOngoing(tracingId, "TX:quit", null);
+				Tracing.logOngoing(tracingId, "TX:quit");
 				callTimer.stop();
 			}
 		}
@@ -195,7 +198,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		if (log.isTraceEnabled())
 			Tracing.logOngoing(tracingId,
 			                   "TX:createAndExecute",
-			                   () -> "Creating new transaction to call " + invocation.getMethod().toGenericString());
+			                   "Creating new transaction to call ",
+			                   (Supplier) () -> invocation.getMethod().toGenericString());
 
 		final boolean readOnly = annotation.readOnly();
 
@@ -206,8 +210,8 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		Tracing.logOngoing(tracingId,
 		                   "TX:create",
-		                   () -> "Creating new transaction, current status: " +
-		                         session.getTransaction().getStatus());
+		                   "Creating new transaction, current status: ",
+		                   (Supplier) () -> session.getTransaction().getStatus());
 
 		final AtomicInteger initialIsololationLevel = new AtomicInteger(IGNORE_ISOLATION_LEVEL);
 
@@ -224,9 +228,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			// if an isolation level has been specified, ensure it is set
 			if (annotation.isolationLevel() != IGNORE_ISOLATION_LEVEL)
 			{
-				Tracing.logOngoing(tracingId,
-				                   "TX:create",
-				                   () -> "Isolation level: " + annotation.isolationLevel() + " specified");
+				Tracing.logOngoing(tracingId, "TX:create", "Isolation ", (Supplier) () -> annotation.isolationLevel());
 
 				session.doWork(new Work()
 				{
@@ -236,7 +238,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						final int currentIsolation = connection.getTransactionIsolation();
 						initialIsololationLevel.set(currentIsolation);
 
-						Tracing.logOngoing(tracingId, "TX:create", () -> "Isolation level: " + currentIsolation + " current");
+						Tracing.logOngoing(tracingId, "TX:create", "Isolation level: ", currentIsolation, " current");
 
 						if (currentIsolation == annotation.isolationLevel())
 						{
@@ -338,28 +340,20 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 */
 	private void makeReadOnly(final Session session, final String tracingId)
 	{
-		Tracing.logOngoing(tracingId,
-		                   "TX:makeReadonly",
-		                   () -> "Set Default ReadOnly");
+		Tracing.logOngoing(tracingId, "TX:makeReadonly Set Default ReadOnly");
 
 		session.setDefaultReadOnly(true);
 
-		Tracing.logOngoing(tracingId,
-		                   "TX:makeReadonly",
-		                   () -> "Set Hibernate Flush Mode to MANUAL");
+		Tracing.logOngoing(tracingId, "TX:makeReadonly Set Hibernate Flush Mode to MANUAL");
 
 		session.setHibernateFlushMode(FlushMode.MANUAL);
 
-		Tracing.logOngoing(tracingId,
-		                   "TX:makeReadonly",
-		                   () -> "Make Connection Read Only");
+		Tracing.logOngoing(tracingId, "TX:makeReadonly Make Connection Read Only");
 
 		// Make the Connection read only
 		session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);
 
-		Tracing.logOngoing(tracingId,
-		                   "TX:makeReadonly",
-		                   () -> "Complete");
+		Tracing.logOngoing(tracingId, "TX:makeReadonly Complete");
 	}
 
 
@@ -599,7 +593,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 					Tracing.logOngoing(tracingId,
 					                   "TX:create",
-					                   () -> "Set isolation level: current: " + currentIsolation + " desired: " + isolationLevel);
+					                   "Set isolation level: current: ",
+					                   currentIsolation,
+					                   " desired: ",
+					                   isolationLevel);
 
 					if (currentIsolation == isolationLevel)
 					{

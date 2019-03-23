@@ -182,9 +182,7 @@ public class JPASearchExecutor
 			if (total != null)
 				resultset.setTotal(total);
 
-			Tracing.logOngoing(traceOperationId,
-			                   "WebQuery:exec:result",
-			                   () -> "size=" + resultset.getList().size() + ", total=" + total);
+			Tracing.logOngoing(traceOperationId, "WebQuery:exec:result", "size=", resultset.getList().size(), ", total=", total);
 
 			return (ConstrainedResultSet<T>) resultset;
 		}
