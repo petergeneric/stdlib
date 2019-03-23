@@ -4,7 +4,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.apache.log4j.MDC;
 
+import java.util.Arrays;
+import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.Supplier;
+import java.util.stream.Collectors;
 
 public final class Tracing
 {
@@ -53,14 +57,14 @@ public final class Tracing
 			if (StringUtils.equals(tracing.id, id))
 			{
 				if (tracing.verbose)
-					log("End trace", null);
+					log("End trace");
 
 				clear();
 			}
 			else
 			{
 				if (tracing.verbose)
-					log("End sub-trace", () -> id);
+					log("End sub-trace", id);
 			}
 		}
 	}
@@ -94,12 +98,12 @@ public final class Tracing
 				MDC.put(TracingConstants.MDC_TRACE_ID, id);
 
 			if (tracing.verbose)
-				log("Start trace", null);
+				log("Start trace");
 		}
 		else
 		{
 			if (tracing.verbose)
-				log("Start sub-trace", () -> id);
+				log("Start sub-trace", id);
 		}
 	}
 
@@ -111,19 +115,72 @@ public final class Tracing
 	 */
 	public static String newOperationId()
 	{
-		return log(null, null);
+		return log();
 	}
 
 
 	/**
+	 * Wrap a function call in a trace block; designed for use in a parallel stream
+	 *
+	 * @param <T>
+	 * 		the type of the input to the function
+	 * @param <R>
+	 * 		the type of the result of the function
+	 *
+	 * @return
+	 */
+	public static <T, R> Function<T, R> wrap(final Function<T, R> function)
+	{
+		final Tracing tracing = Tracing.get();
+
+		final String traceId = tracing.newOperationId();
+		return wrap(traceId, tracing.isVerbose(), function);
+	}
+
+
+	/**
+	 * Wrap a function call in a trace block; designed for use in a parallel stream
+	 *
+	 * @param <T>
+	 * 		the type of the input to the function
+	 * @param <R>
+	 * 		the type of the result of the function
+	 *
+	 * @return
+	 */
+	public static <T, R> Function<T, R> wrap(final String id, final boolean verbose, final Function<T, R> function)
+	{
+		return (t) -> {
+			try
+			{
+				Tracing.start(id, verbose);
+
+				return function.apply(t);
+			}
+			finally
+			{
+				Tracing.stop(id);
+			}
+		};
+	}
+
+
+	public static String log(final String name, final Supplier<String> detail)
+	{
+		if (detail == null)
+			return log(StringUtils.trim(name));
+		else
+			return log(StringUtils.trim(name), (Object) detail);
+	}
+
+	/**
 	 * If verbose tracing is enabled, log an operation
 	 *
-	 * @param name
-	 * @param detail
+	 * @param detail an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
 	 *
 	 * @return an operation identifier (if we're within a tracing block)
 	 */
-	public static String log(final String name, final Supplier<String> detail)
+	public static String log(final Object... detail)
 	{
 		final Tracing tracing = peek();
 
@@ -131,11 +188,10 @@ public final class Tracing
 		{
 			final String eventId = tracing.id + "/" + (++tracing.ops);
 
-			if ((tracing.verbose || log.isTraceEnabled()) && name != null)
+			if ((tracing.verbose || log.isTraceEnabled()))
 			{
-				logMessage(eventId, name, detail);
+				logMessage(eventId, detail);
 			}
-
 
 			return eventId;
 		}
@@ -154,32 +210,49 @@ public final class Tracing
 	 * @param name
 	 * @param detail
 	 */
-	public static void logOngoing(final String operationId, final String name, final Supplier<String> detail)
+	public static void logOngoing(final String operationId, final String name, final Object... detail)
 	{
 		if (operationId != null && isVerbose())
 		{
-			logMessage(operationId, name, detail);
+			logMessage(operationId, StringUtils.trim(name), detail);
 		}
 	}
 
 
-	private static void logMessage(final String operationId, final String name, final Supplier<String> detail)
+	/**
+	 * @param operationId
+	 * @param name
+	 * @param detail
+	 * 		an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
+	 */
+	private static void logMessage(final String operationId, final Object... detail)
 	{
-		if (detail != null)
-		{
+		if (detail == null)
+			return; // nothing to supply
+
+		// Reduce all inputs to string, special-casing Supplier if present
+		final String detailStr = Arrays.stream(detail).map(o -> {
 			try
 			{
-				log.warn("Trace{" + operationId + "} " + name + " " + detail.get());
+				if (o instanceof Supplier)
+				{
+					return Objects.toString(((Supplier) o).get());
+				}
+				else if (o instanceof Object[])
+				{
+					return Arrays.toString((Object[])o);
+				}
+				else {
+					return Objects.toString(o);
+				}
 			}
 			catch (Throwable t)
 			{
-				// log the error generating the detail
-				log.warn("Trace{" + operationId + "} " + name + ". (detail generation error)", t);
+				return "<err>";
 			}
-			return;
-		}
+		}).collect(Collectors.joining(" ", "Trace{" + operationId + "} ", ""));
 
-		log.warn("Trace{" + operationId + "} " + name);
+		log.warn(detailStr);
 	}
 
 

@@ -40,7 +40,7 @@ public class HibernateSQLLogger implements Closeable, AutoCloseable, Consumer<St
 			log.trace("Hibernate executing SQL: " + sql);
 
 		if (tracingOperationId != null && Tracing.isVerbose())
-			Tracing.logOngoing(tracingOperationId, "log:sql", () -> sql);
+			Tracing.logOngoing(tracingOperationId, "log:sql", sql);
 
 		synchronized (statements)
 		{
