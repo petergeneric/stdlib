@@ -202,6 +202,9 @@ public class GuiceProperties
 	@Doc("If true then when the guice metrics jar is loaded it'll auto-register the metrics JAX-RS services (default true)")
 	public static final String ROLE_METRICS_JAXRS_AUTO = "role.metrics-jaxrs.auto";
 
+	@Doc("If set, will be added as labels to any metrics handed, should be of the form key=\"value\",key2=\"value2\" (default empty)")
+	public static final String METRIC_CUSTOM_LABELS = "metrics.labels";
+
 	//
 	// Guice DbUnit module
 	//
