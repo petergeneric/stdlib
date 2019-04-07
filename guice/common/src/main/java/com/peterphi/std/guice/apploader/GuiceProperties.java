@@ -196,9 +196,6 @@ public class GuiceProperties
 	@Doc("If true then when the guice metrics jar is loaded it'll auto-register the metrics JAX-RS services (default true)")
 	public static final String ROLE_METRICS_JAXRS_AUTO = "role.metrics-jaxrs.auto";
 
-	@Doc("If true then the metric data returned by the metric rest service will include raw measurements as well as computed aggregates (default false)")
-	public static final String METRICS_JAXRS_SHOW_SAMPLES = "metrics-jaxrs.show-samples";
-
 	//
 	// Guice DbUnit module
 	//
