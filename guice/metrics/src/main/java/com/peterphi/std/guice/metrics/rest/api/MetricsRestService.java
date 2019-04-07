@@ -31,6 +31,11 @@ public interface MetricsRestService
 	public String getTextMetrics();
 
 	@GET
+	@Path("/prometheus")
+	@Produces(MediaType.TEXT_PLAIN)
+	public String getPrometheusMetrics();
+
+	@GET
 	@Path("/")
 	@Produces(MediaType.TEXT_HTML)
 	public String getIndex();

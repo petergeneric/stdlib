@@ -13,7 +13,7 @@ import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
 import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.lang.ref.WeakReference;
+import java.lang.ref.SoftReference;
 import java.net.URI;
 
 /**
@@ -42,8 +42,8 @@ public class GuiceCoreTemplater
 	 * We cache the TemplateEngine directly because Java may discard the ThymeleafTemplater wrapper but not the TemplateEngine
 	 * (which would cost us a lot of time+memory)
 	 */
-	private WeakReference<TemplateEngine> engine = new WeakReference<>(null);
-	private WeakReference<ThymeleafTemplater> templater = new WeakReference<>(null);
+	private SoftReference<TemplateEngine> engine = new SoftReference<>(null);
+	private SoftReference<ThymeleafTemplater> templater = new SoftReference<>(null);
 
 	/**
 	 * Populated at guice creation
@@ -97,7 +97,7 @@ public class GuiceCoreTemplater
 			templater.set("coreServices", services);
 			templater.set("currentUser", new ThymeleafCurrentUserUtils(userProvider));
 
-			this.templater = new WeakReference<>(templater);
+			this.templater = new SoftReference<>(templater);
 		}
 
 		return templater;
@@ -114,7 +114,7 @@ public class GuiceCoreTemplater
 			// Build and cache a new templater (previous instance must have been garbage collected)
 			engine = createEngine();
 
-			this.engine = new WeakReference<>(engine);
+			this.engine = new SoftReference<>(engine);
 		}
 
 		return engine;
