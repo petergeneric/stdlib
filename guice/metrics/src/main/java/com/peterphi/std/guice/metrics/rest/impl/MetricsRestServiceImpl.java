@@ -48,7 +48,11 @@ public class MetricsRestServiceImpl implements MetricsRestService
 	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
 	public String localRestEndpoint;
 
-	private String _hostname;
+	@Inject(optional = true)
+	@Named(GuiceProperties.METRIC_CUSTOM_LABELS)
+	public String customLabels;
+
+	private String _metricLabels;
 
 	@Inject
 	MetricSerialiser serialiser;
@@ -205,55 +209,76 @@ public class MetricsRestServiceImpl implements MetricsRestService
 	}
 
 
+	/**
+	 * Gets (lazy-generating) service properties
+	 *
+	 * @return
+	 */
 	private String getServiceProperties()
 	{
-		final String hostname = getHostname();
+		if (_metricLabels == null)
+		{
+			final String hostname = getHostname();
 
-		String serviceName = service;
+			String serviceName = service;
 
-		// Strip any leading slashes
-		while (serviceName.startsWith("/"))
-			serviceName = serviceName.substring(1);
+			// Strip any leading slashes
+			while (serviceName.startsWith("/"))
+				serviceName = serviceName.substring(1);
 
-		return "{service=\"" + serviceName + "\",host=\"" + hostname + "\"}";
+			StringBuilder sb = new StringBuilder();
+
+			sb.append("{service=\"").append(serviceName).append("\",host=\"").append(hostname).append('"');
+
+			if (StringUtils.isNotEmpty(customLabels))
+			{
+				sb.append(',');
+				sb.append(customLabels);
+			}
+
+			sb.append('}');
+
+			_metricLabels = sb.toString();
+		}
+
+		return _metricLabels;
 	}
 
 
 	private String getHostname()
 	{
-		if (_hostname == null)
+		String hostname = null;
+		try
+		{
+			hostname = InetAddress.getLocalHost().getHostName();
+		}
+		catch (Throwable t)
+		{
+			// ignore
+		}
+
+		if (StringUtils.isEmpty(hostname) || StringUtils.equalsIgnoreCase("localhost", hostname))
 		{
 			try
 			{
-				_hostname = InetAddress.getLocalHost().getHostName();
+				final URI uri = URI.create(this.localRestEndpoint);
+				hostname = uri.getHost();
 			}
 			catch (Throwable t)
 			{
 				// ignore
-			}
-
-			if (StringUtils.isEmpty(_hostname) || StringUtils.equalsIgnoreCase("localhost", _hostname))
-			{
-				try
-				{
-					final URI uri = URI.create(this.localRestEndpoint);
-					_hostname = uri.getHost();
-				}
-				catch (Throwable t)
-				{
-					// ignore
-					_hostname = "unknown";
-				}
-			}
-
-			// Only capture the first dotted part of the hostname
-			if (_hostname != null && _hostname.indexOf('.') != -1)
-			{
-				_hostname = StringUtils.split(_hostname, '.')[0];
+				hostname = "unknown";
 			}
 		}
 
-		return _hostname;
+		// Only capture the first dotted part of the hostname
+		if (hostname != null && hostname.indexOf('.') != -1)
+		{
+			hostname = StringUtils.split(hostname, '.')[0];
+		}
+
+
+		return hostname;
 	}
 
 
@@ -277,10 +302,11 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		TemplateCall call = templater.template(PREFIX + "index.html");
 
 		call.set("gauges", registry.getGauges().entrySet());
-		call.set("counters", this.<Counting>combine(registry.getCounters(),
-		                                            registry.getMeters(),
-		                                            registry.getTimers(),
-		                                            registry.getHistograms()).entrySet());
+		call.set("counters",
+		         this.<Counting>combine(registry.getCounters(),
+		                                registry.getMeters(),
+		                                registry.getTimers(),
+		                                registry.getHistograms()).entrySet());
 		call.set("meters", this.<Metered>combine(registry.getMeters(), registry.getTimers()).entrySet());
 		call.set("histograms", this.<Sampling>combine(registry.getHistograms(), registry.getTimers()).entrySet());
 
