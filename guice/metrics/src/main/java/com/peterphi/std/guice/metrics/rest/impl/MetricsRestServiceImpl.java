@@ -26,6 +26,7 @@ import org.apache.commons.lang.StringUtils;
 import java.net.InetAddress;
 import java.net.URI;
 import java.util.Map;
+import java.util.Objects;
 import java.util.SortedMap;
 import java.util.TreeMap;
 
@@ -189,6 +190,12 @@ public class MetricsRestServiceImpl implements MetricsRestService
 	                          final String type,
 	                          final Object value)
 	{
+		final String str = Objects.toString(value);
+
+		// primarily designed to catch "jvm.thread-states.deadlocks=[]"
+		if (str.indexOf('[') != -1)
+			return; // Ignore this metric
+
 		sb.append("# TYPE ");
 
 		final boolean nameHasLabel = name.endsWith("}");
@@ -205,7 +212,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		else
 			sb.append(name).append(label);
 
-		sb.append(" ").append(value).append("\n");
+		sb.append(" ").append(str).append("\n");
 	}
 
 
