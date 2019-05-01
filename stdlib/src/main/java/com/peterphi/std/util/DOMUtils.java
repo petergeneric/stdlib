@@ -18,6 +18,7 @@ import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -79,18 +80,9 @@ public class DOMUtils
 		if (file == null)
 			throw new IllegalArgumentException("Must provide non-null XML input to parse!");
 
-		try
+		try (FileInputStream fis = new FileInputStream(file))
 		{
-			final Document document;
-
-			DocumentBuilder documentBuilder = createDocumentBuilder();
-			document = documentBuilder.parse(file);
-
-			return document;
-		}
-		catch (SAXException e)
-		{
-			throw new RuntimeException("Error parsing xml: " + e.getMessage(), e);
+			return parse(fis);
 		}
 		catch (IOException e)
 		{
