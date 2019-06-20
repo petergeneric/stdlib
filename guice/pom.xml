@@ -49,7 +49,7 @@
 		<dependency>
 			<groupId>org.apache.xbean</groupId>
 			<artifactId>xbean-finder</artifactId>
-			<version>4.12</version>
+			<version>4.14</version>
 		</dependency>
 
 		<dependency>

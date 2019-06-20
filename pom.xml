@@ -35,7 +35,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<javalang.version>1.10</javalang.version>
+		<javalang.version>12</javalang.version>
 		<slf4j.version>1.7.25</slf4j.version>
 		<junit.version>4.12</junit.version>
 		<httpclient.version>4.5.6</httpclient.version>
@@ -43,8 +43,8 @@
 		<guice.version>4.2.2</guice.version>
 		<metrics.version>4.0.2</metrics.version>
 		<resteasy.version>3.6.1.Final</resteasy.version>
-		<javassist.version>3.23.1-GA</javassist.version>
-		<hibernate.version>5.3.6.Final</hibernate.version>
+		<javassist.version>3.25.0-GA</javassist.version>
+		<hibernate.version>5.4.3.Final</hibernate.version>
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
@@ -201,7 +201,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>2.21.0</version>
+				<version>3.0.0-M3</version>
 				<configuration>
 					<excludes>
 						<exclude>**/TestUtils.java</exclude>
@@ -215,7 +215,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
-				<version>3.7.0</version>
+				<version>3.8.1</version>
 				<configuration>
 					<source>${javalang.version}</source>
 					<target>${javalang.version}</target>
