@@ -2,11 +2,19 @@ package com.peterphi.std.guice.common.daemon;
 
 import com.google.inject.Inject;
 import com.peterphi.std.annotation.ServiceName;
+import com.peterphi.std.guice.common.breaker.Breaker;
+import com.peterphi.std.guice.common.breaker.BreakerService;
+import com.peterphi.std.guice.common.breaker.DaemonBreaker;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.threading.Daemon;
 import com.peterphi.std.threading.Timeout;
+
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
+import java.util.function.Consumer;
 
 public abstract class GuiceDaemon extends Daemon implements StoppableService, GuiceLifecycleListener
 {
@@ -18,6 +26,12 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	@Inject
 	GuiceDaemonRegistry registry;
 
+	@Inject
+	BreakerService breakerService;
+
+	private List<String> breakerNames;
+
+	private Breaker _breaker = null;
 
 	public GuiceDaemon()
 	{
@@ -28,8 +42,49 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	public GuiceDaemon(boolean daemonThread)
 	{
 		this.daemonThread = daemonThread;
+
+		this.breakerNames = new ArrayList<>(Arrays.asList("all", "daemon", getName()));
+
+		// Recognise additional breaker names
+		if (getClass().isAnnotationPresent(DaemonBreaker.class))
+		{
+			final DaemonBreaker annotation = getClass().getAnnotation(DaemonBreaker.class);
+
+			if (annotation.value().length > 0)
+			{
+				this.breakerNames.addAll(Arrays.asList(annotation.value()));
+			}
+		}
 	}
 
+
+	/**
+	 * Lazy-create a Breaker representing all the breaker names.
+	 *
+	 * @return
+	 * @see BreakerService#register(Consumer, List)
+	 */
+	public Breaker getBreaker()
+	{
+		if (_breaker == null)
+		{
+			_breaker = breakerService.register(this :: notifyBreakerChange, getBreakerNames());
+		}
+
+		return _breaker;
+	}
+
+
+	/**
+	 * Method designed to be overridden to receive a notification any time the tripped state of the breaker returned by {@link
+	 * #getBreaker()} changes. This method is executed synchronously with breaker evaluation potentially impacting multiple
+	 * threads, so it should not block, nor should it perform any heavy computation
+	 *
+	 * @param tripped true if the breaker is tripped, otherwise false if the breaker is normal
+	 */
+	protected void notifyBreakerChange(final boolean tripped) {
+		// No action required
+	}
 
 	@Override
 	protected boolean shouldStartAsDaemon()
@@ -114,6 +169,13 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 		}
 		else
 			return clazz.getSimpleName();
+	}
+
+
+
+	public List<String> getBreakerNames()
+	{
+		return this.breakerNames;
 	}
 
 

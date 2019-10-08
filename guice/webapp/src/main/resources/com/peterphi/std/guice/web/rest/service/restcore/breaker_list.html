@@ -1,0 +1,73 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="breakerService" type="com.peterphi.std.guice.common.breaker.BreakerService"-->
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--@thymesVar id="message" type="java.lang.String"-->
+<head>
+	<title>Breakers</title>
+
+	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+</head>
+
+<body id="top">
+<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+
+
+<div class="container">
+	<h1>Threads</h1>
+
+	<div id="message-div" th:if="${message}" class="alert alert-success">
+		<th:block th:text="${message}"></th:block>
+		<script>
+			setTimeout(function () {
+				var div = document.getElementById("message-div");
+
+				div.parentNode.removeChild(div);
+			}, 15000);
+
+			// Remove the query string params
+			history.replaceState(null, null, window.location.href.split('?')[0]);
+		</script>
+	</div>
+
+	<p>This page lists breakers that exist within this application</p>
+
+	<th:block th:with="breakerNames = ${breakerService.allBreakerNames}">
+		<th:block th:unless="${#lists.isEmpty(breakerNames)}">
+			<h2>Breakers</h2>
+			<table class="table">
+				<thead>
+				<tr>
+					<th>Name</th>
+					<th>Normal?</th>
+					<th>Action</th>
+					<th>Last Changed</th>
+					<th>Note</th>
+				</tr>
+				</thead>
+				<tbody>
+				<tr th:each="breakerName: ${breakerNames}">
+					<th:block th:with="record = ${breakerService.getTripRecord(breakerName)}">
+						<td th:text="${breakerName}">name</td>
+						<td th:text="${record.newValue ? '✖':'✔'}">No / Yes</td>
+						<td>
+							<form method="POST"
+							      th:action="@{|${coreRestPrefix}/guice/breakers/set-breaker-state|}">
+								<input type="hidden" name="name" th:value="${breakerName}"/>
+								<input type="hidden" name="value" th:value="${!record.newValue}" />
+								<input type="hidden" name="note" value="Changed via web interface" />
+								<input type="submit" th:value="${record.newValue ? 'Reset' : 'Trip'}"/>
+							</form>
+						</td>
+						<td th:text="${record.when}">changed</td>
+
+						<td th:text="${record.note}">description</td>
+					</th:block>
+				</tr>
+				</tbody>
+			</table>
+		</th:block>
+	</th:block>
+</div>
+</body>
+</html>
