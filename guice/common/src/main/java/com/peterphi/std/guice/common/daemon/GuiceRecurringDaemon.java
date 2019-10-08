@@ -4,6 +4,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
@@ -20,6 +21,9 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 	@Inject
 	MetricRegistry metrics;
+
+	@Inject
+	BreakerService breakerService;
 
 	private Timer calls;
 	private Meter exceptions;
@@ -63,6 +67,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 			throw new IllegalArgumentException("Cannot provide a negative sleep time!");
 		else
 			this.sleepTime = sleepTime;
+
 	}
 
 
@@ -134,44 +139,51 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 		while (isRunning())
 		{
-			lastRan = Instant.now();
+			if (shouldContinue())
+			{
+				lastRan = Instant.now();
 
-			final Timer.Context timer;
+				final Timer.Context timer;
 
-			if (calls != null)
-				timer = calls.time();
+				if (calls != null)
+					timer = calls.time();
+				else
+					timer = null;
+
+				final String traceId = getThreadName() + "@" + lastRan.getEpochSecond();
+
+				try
+				{
+					// Assign a trace id for operations performed by this run of this thread
+					Tracing.start(traceId, nextRunVerbose);
+
+					if (nextRunVerbose)
+						nextRunVerbose = false;
+
+					userCodeRunning = true;
+
+					execute();
+				}
+				catch (Throwable t)
+				{
+					if (exceptions != null)
+						exceptions.mark();
+
+					executeException(t);
+				}
+				finally
+				{
+					userCodeRunning = false;
+
+					Tracing.stop(traceId);
+
+					if (timer != null)
+						timer.stop();
+				}
+			}
 			else
-				timer = null;
-
-			final String traceId = getThreadName() + "@" + lastRan.getEpochSecond();
-
-			try
 			{
-				// Assign a trace id for operations performed by this run of this thread
-				Tracing.start(traceId, nextRunVerbose);
-
-				if (nextRunVerbose)
-					nextRunVerbose = false;
-
-				userCodeRunning = true;
-
-				execute();
-			}
-			catch (Throwable t)
-			{
-				if (exceptions != null)
-					exceptions.mark();
-
-				log.error("Ignoring exception in GuiceRecurringDaemon call", t);
-			}
-			finally
-			{
-				userCodeRunning = false;
-
-				Tracing.stop(traceId);
-
-				if (timer != null)
-					timer.stop();
+				setTextState("Breaker tripped, will not execute user code until breaker is reset...");
 			}
 
 			// Sleep for the default sleep time
@@ -185,6 +197,22 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 		}
 	}
 
+
+	/**
+	 * Returns true if the execution of user code should proceed; ordinarily this will return true.
+	 *
+	 * If this method returns false then:
+	 * <ul>
+	 *     <li>If in user code, the user code SHOULD attempt to return control as soon as possible, without leaving any work undone that would not be completed on the next invocation of the user code</li>
+	 *     <li>If not in user code, the control logic WILL ensure that user code is not invoked; {@link #isRunning()} will also be tested to determine if the daemon should shutdown</li>
+	 * </ul>
+	 *
+	 * @return
+	 */
+	public boolean shouldContinue()
+	{
+		return isRunning() && getBreaker().isNormal();
+	}
 
 	public Instant getLastRan()
 	{
@@ -240,6 +268,10 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 		else if (!isRunning())
 		{
 			throw new IllegalStateException("Daemon is in the process of terminating!");
+		}
+		else if (!shouldContinue())
+		{
+			throw new IllegalStateException("Breaker has been tripped, user code will not be invoked until it is reset");
 		}
 		else
 		{

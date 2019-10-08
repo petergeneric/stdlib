@@ -65,6 +65,7 @@
 				<tr>
 					<th>Name</th>
 					<th>Alive?</th>
+					<th>Breaker?</th>
 					<th>Running?</th>
 					<th>Interval</th>
 					<th>Last Ran</th>
@@ -77,6 +78,7 @@
 					<tr>
 						<td><strong th:text="${daemon.name}">name</strong></td>
 						<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
+						<td th:text="${daemon.breaker.normal ? '✔' : '✖'}">Yes / No</td>
 						<td th:text="${daemon.userCodeRunning ? '✔' : '✖'}">Yes / No</td>
 
 						<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
