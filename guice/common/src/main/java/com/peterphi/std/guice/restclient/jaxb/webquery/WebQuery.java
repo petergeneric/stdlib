@@ -32,6 +32,11 @@ public class WebQuery
 	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
 
 	/**
+	 * Special limit value used to request the returning of 0 data rows (will still return count if requested)
+	 */
+	public static final int LIMIT_RETURN_ZERO = -1;
+
+	/**
 	 * An optional name for the query, to allow server-side optimisation/hinting
 	 */
 	@XmlAttribute
