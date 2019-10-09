@@ -1,5 +1,11 @@
 #!/bin/bash
 
+#
+# Release script. Replicates the functionality of mvn release but avoids all the buggy behaviour we've seen
+# under mvn3 (especially with code-signing)
+#
+
+
 function die_with() {
 	echo "$*" >&2
 	exit 1
@@ -134,7 +140,7 @@ echo ""
 # Prompt for release version (or compute it automatically if requested)
 RELEASE_VERSION_DEFAULT=$(echo "$CURRENT_VERSION" | perl -pe 's/-SNAPSHOT//')
 if [ -z "$RELEASE_VERSION" ] ; then
-	read -p "Version to release [${RELEASE_VERSION_DEFAULT}]" RELEASE_VERSION
+	read -p "Version to release [${RELEASE_VERSION_DEFAULT}] " RELEASE_VERSION
 		
 	if [ -z "$RELEASE_VERSION" ] ; then
 		RELEASE_VERSION=$RELEASE_VERSION_DEFAULT
@@ -151,7 +157,7 @@ fi
 # Prompt for next version (or compute it automatically if requested)
 NEXT_VERSION_DEFAULT=$(echo "$RELEASE_VERSION" | perl -pe 's{^(([0-9]\.)+)?([0-9]+)$}{$1 . ($3 + 1)}e')
 if [ -z "$NEXT_VERSION" ] ; then
-	read -p "Next snapshot version [${NEXT_VERSION_DEFAULT}]" NEXT_VERSION
+	read -p "Next snapshot version [${NEXT_VERSION_DEFAULT}] " NEXT_VERSION
 	
 	if [ -z "$NEXT_VERSION" ] ; then
 		NEXT_VERSION=$NEXT_VERSION_DEFAULT
@@ -184,7 +190,7 @@ if [ $(git tag -l "${VCS_RELEASE_TAG}" | wc -l) != "0" ] ; then
 fi
 
 # Update the pom.xml versions
-$MVN versions:set -DgenerateBackupPoms=false -DnewVersion=$RELEASE_VERSION || die_with "Failed to set release version on pom.xml files"
+$MVN versions:set -DgenerateBackupPoms=false "-DnewVersion=$RELEASE_VERSION" || die_with "Failed to set release version on pom.xml files"
 
 # Commit the updated pom.xml files
 git commit -a -m "Release version ${RELEASE_VERSION}" || die_with "Failed to commit updated pom.xml versions for release!"
@@ -195,10 +201,14 @@ echo ""
 
 
 # build and deploy the release
-$MVN -DperformRelease=true clean deploy -pl "!service-manager/host-agent, !service-manager/service-manager, !user-manager/service, !service-manager/configuration" || rollback_and_die_with "Build/Deploy failure. Release failed."
+$MVN -DperformRelease=true -Pstdlib-release clean deploy -pl "!service-manager/host-agent, !service-manager/service-manager, !user-manager/service, !service-manager/configuration" || rollback_and_die_with "Build/Deploy failure. Release failed."
 
 # tag the release (N.B. should this be before perform the release?)
 git tag "v${RELEASE_VERSION}" || die_with "Failed to create tag ${RELEASE_VERSION}! Release has been deployed, however"
+
+# Clean up anything Maven has left in the working tree (occasionally seeing folders with \020 in their name being created)
+git reset --hard
+git clean -fd
 
 ######################################
 # START THE NEXT DEVELOPMENT PROCESS #
