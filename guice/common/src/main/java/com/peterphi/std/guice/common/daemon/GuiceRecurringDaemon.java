@@ -162,6 +162,8 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 					userCodeRunning = true;
 
+					setTextState("");
+
 					execute();
 				}
 				catch (Throwable t)
