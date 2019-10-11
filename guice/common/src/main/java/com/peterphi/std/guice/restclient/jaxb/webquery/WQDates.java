@@ -101,7 +101,7 @@ public class WQDates
 
 
 	/**
-	 * Resolve a datetime expression (or a literal ISO datetime)
+	 * Resolve a datetime expression (or a literal ISO datetime, or a value of <code>epochms_<strong><em>(milliseconds-since-1970)</em></strong></code>)
 	 *
 	 * @param expr
 	 *
@@ -109,49 +109,65 @@ public class WQDates
 	 */
 	public static DateTime resolve(String expr)
 	{
-		for (WebQueryDateAnchor anchor : WebQueryDateAnchor.values())
+		if (expr.length() == 0)
+			throw new IllegalArgumentException("Empty date string: cannot be parsed!");
+
+		if (Character.isAlphabetic(expr.charAt(0)))
 		{
-			if (StringUtils.startsWithIgnoreCase(expr, anchor.name()))
+			// Support special value, "epochms999999999999999"
+			if (StringUtils.startsWithIgnoreCase(expr, "epochms_"))
 			{
-				final DateTime baseDate = anchor.resolve();
+				return new DateTime(Long.parseLong(expr.substring("epochms_".length())));
+			}
 
-				if (expr.equalsIgnoreCase(anchor.name()))
+			for (WebQueryDateAnchor anchor : WebQueryDateAnchor.values())
+			{
+				if (StringUtils.startsWithIgnoreCase(expr, anchor.name()))
 				{
-					return baseDate;
-				}
-				else
-				{
-					// Consider + and -
-					final String maths = expr.substring(anchor.name().length());
+					final DateTime baseDate = anchor.resolve();
 
-					final boolean plus;
-					if (maths.charAt(0) == '+' || maths.charAt(0) == ' ')
+					if (expr.equalsIgnoreCase(anchor.name()))
 					{
-						plus = true;
+						return baseDate;
 					}
-					else if (maths.charAt(0) == '-')
-						plus = false;
 					else
 					{
-						throw new IllegalArgumentException("Expected [+- ] but got char " +
-						                                   maths.charAt(0) +
-						                                   " while processing " +
-						                                   expr);
+						// Consider + and -
+						final String maths = expr.substring(anchor.name().length());
+
+						final boolean plus;
+						if (maths.charAt(0) == '+' || maths.charAt(0) == ' ')
+						{
+							plus = true;
+						}
+						else if (maths.charAt(0) == '-')
+							plus = false;
+						else
+						{
+							throw new IllegalArgumentException("Expected [+- ] but got char " +
+							                                   maths.charAt(0) +
+							                                   " while processing " +
+							                                   expr);
+						}
+
+						final String period = maths.substring(1);
+
+						final Period timePeriod = Period.parse(period);
+
+						if (plus)
+							return baseDate.plus(timePeriod);
+						else
+							return baseDate.minus(timePeriod);
 					}
-
-					final String period = maths.substring(1);
-
-					final Period timePeriod = Period.parse(period);
-
-					if (plus)
-						return baseDate.plus(timePeriod);
-					else
-						return baseDate.minus(timePeriod);
 				}
 			}
-		}
 
-		// Not a special string
-		return ISO_FORMAT.parseDateTime(expr);
+			throw new IllegalArgumentException("Could not parse date expression: " + expr);
+		}
+		else
+		{
+			// Not a special string
+			return ISO_FORMAT.parseDateTime(expr);
+		}
 	}
 }
