@@ -9,6 +9,7 @@ import javax.ws.rs.FormParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Response;
@@ -31,4 +32,10 @@ public interface GuiceRestBreakerService
 	Response trigger(@FormParam("name") final String name,
 	                 @FormParam("value") @DefaultValue("false") final boolean value,
 	                 @FormParam("note") String note);
+
+	@GET
+	@Path("/breaker/{breaker_name}/test")
+	@Produces("text/plain")
+	@Doc("Returns 2xx with body 'OK' if breaker is not tripped, otherwise 503 with body 'Tripped'. If no such breaker then returns code 404. No auth is required for this method.")
+	Response testBreaker(@PathParam("breaker_name") String breakerName);
 }

@@ -78,9 +78,16 @@ public class BreakerService
 
 		// If never tripped, return a placeholder record
 		if (record == null)
-			return new TripRecord(new Date(0), "Initial value", false);
+		{
+			if (names.contains(name))
+				return new TripRecord(new Date(0), "Initial value", false);
+			else
+				return null; // breaker name not known
+		}
 		else
+		{
 			return record;
+		}
 	}
 
 
