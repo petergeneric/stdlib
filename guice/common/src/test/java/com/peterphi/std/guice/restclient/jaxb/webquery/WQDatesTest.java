@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
+import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.junit.Test;
 
@@ -12,6 +13,12 @@ public class WQDatesTest
 	{
 		assertEquals("now", WQDates.nowMinus(Period.millis(0)));
 		assertEquals("now", WQDates.nowPlus(Period.millis(0)));
+	}
+
+	@Test
+	public void testEpochMs()
+	{
+		assertEquals(new DateTime(0), WQDates.resolve("epochms_0"));
 	}
 
 
