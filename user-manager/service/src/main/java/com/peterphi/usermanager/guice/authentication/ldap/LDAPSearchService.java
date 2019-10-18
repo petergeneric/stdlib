@@ -9,6 +9,7 @@ import com.peterphi.usermanager.guice.authentication.UserLogin;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import javax.annotation.Nullable;
 import javax.naming.Context;
 import javax.naming.NamingEnumeration;
 import javax.naming.NamingException;
@@ -174,6 +175,14 @@ public class LDAPSearchService
 	}
 
 
+	/**
+	 *
+	 * @param authUser
+	 * @param password
+	 * @param searchFor
+	 * @return the LDAP user record - or null if the user did not meet the ldap search criteria
+	 */
+	@Nullable
 	public LDAPUserRecord search(LDAPUser authUser, final String password, LDAPUser searchFor)
 	{
 		final Map<LDAPUser, LDAPUserRecord> results = search(authUser, password, Collections.singletonList(searchFor));
