@@ -71,7 +71,7 @@ public class JPASearchExecutor
 
 			// First, compute the total size if requested
 			final Long total;
-			if (ALWAYS_COMPUTE_SIZE || query.isComputeSize())
+			if (ALWAYS_COMPUTE_SIZE || query.isComputeSize() || strategy == JPASearchStrategy.COUNT_ONLY)
 			{
 				JPAQueryBuilder countBuilder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
 				countBuilder.forWebQuery(query);
@@ -85,7 +85,7 @@ public class JPASearchExecutor
 
 
 			List list;
-			if (query.getLimit() == WebQuery.LIMIT_RETURN_ZERO)
+			if (strategy == JPASearchStrategy.COUNT_ONLY || query.getLimit() == WebQuery.LIMIT_RETURN_ZERO)
 			{
 				// Special limit value of -1 means do not fetch any result data (used when just wanting to compute totals)
 				list = Collections.emptyList();
