@@ -69,6 +69,15 @@ public interface Dao<T, ID extends Serializable>
 	ConstrainedResultSet<ID> findIds(WebQuery constraints);
 
 	/**
+	 * Return the total number of results for a given query (ignoring offset/limit values)<br /> The value returned is the same as
+	 * the <code>total</code> field returned by setting <code>query.computeSize(true)</code>
+	 *
+	 * @param query
+	 * @return the total number of results
+	 */
+	long count(final WebQuery query);
+
+	/**
 	 * Execute a query, using the named strategy (defaults to AUTO if null) and optionally serialising the resulting rows using the provided serialiser
 	 * @param constraints
 	 * @param strategy strategy, or null to default to AUTO

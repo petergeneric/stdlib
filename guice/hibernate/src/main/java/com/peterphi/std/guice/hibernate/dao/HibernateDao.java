@@ -539,6 +539,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 		return find(query, JPASearchStrategy.ID, null);
 	}
 
+	@Override
+	public long count(final WebQuery query)
+	{
+		final ConstrainedResultSet<?> resultset = find(query, JPASearchStrategy.COUNT_ONLY, null);
+
+		return resultset.getTotal().longValue();
+	}
+
 
 	@Override
 	@Transactional(readOnly = true)
