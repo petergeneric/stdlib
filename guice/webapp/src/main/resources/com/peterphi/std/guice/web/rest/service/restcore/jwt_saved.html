@@ -14,26 +14,13 @@
 
 
 <div class="container">
-	<h1>JWT Generate / Save</h1>
+	<h1>JWT Cookie Saved</h1>
 
 	<div th:if="${message}" class="alert alert-info">
 		<th:block th:text="${message}"></th:block>
 	</div>
 
-	<p>Your request has been completed. If requested, the JWT has been stored in a cookie which expires 1 minute before the
-		JWT.</p>
-
-	<h3>JWT</h3>
-	<div>
-		<code>
-			<pre th:text="${token}"></pre>
-		</code>
-	</div>
-
-	<div>
-		<h3>Usage</h3>
-		<code>curl -H "Authorization: Bearer <span th:text="${token}"></span>" http://...</code>
-	</div>
+	<p>Your request has been completed. The JWT has been stored in a cookie which expires 1 minute before the JWT and your current login session has been invalidated so that the JWT from the cookie will be picked up.</p>
 </div>
 </body>
 </html>
