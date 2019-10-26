@@ -6,6 +6,7 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import org.joda.time.DateTime;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -60,6 +61,13 @@ class ThymeleafCurrentUserUtils implements CurrentUser
 	public DateTime getExpires()
 	{
 		return getUser().getExpires();
+	}
+
+
+	@Override
+	public Collection<String> getRoles()
+	{
+		return getUser().getRoles();
 	}
 
 
