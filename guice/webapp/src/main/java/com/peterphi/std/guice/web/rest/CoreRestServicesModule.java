@@ -10,7 +10,7 @@ import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
 import com.peterphi.std.guice.web.rest.service.breaker.GuiceRestBreakerService;
 import com.peterphi.std.guice.web.rest.service.daemons.GuiceRestDaemonsService;
-import com.peterphi.std.guice.web.rest.service.jwt.JwtCreationRestService;
+import com.peterphi.std.guice.web.rest.service.jwt.AuthInfoRestService;
 import com.peterphi.std.guice.web.rest.service.logging.GuiceRestLoggingService;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceCommonRestResources;
 import com.peterphi.std.guice.web.rest.service.restcore.GuiceRestCoreService;
@@ -47,7 +47,7 @@ public class CoreRestServicesModule extends AbstractModule
 		RestResourceRegistry.register(GuiceRestDaemonsService.class);
 		RestResourceRegistry.register(GuiceRestBreakerService.class);
 		RestResourceRegistry.register(GuiceRestLoggingService.class);
-		RestResourceRegistry.register(JwtCreationRestService.class);
+		RestResourceRegistry.register(AuthInfoRestService.class);
 	}
 
 

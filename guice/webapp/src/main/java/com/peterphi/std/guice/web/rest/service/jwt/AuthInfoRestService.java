@@ -11,22 +11,25 @@ import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
 
-@Path("/guice/jwt")
-@ServiceName("JWT")
-@Doc("JWT auth token helper; allows generating and/or saving JWTs (using a user-supplied secret value)")
-@ImplementedBy(JwtCreationRestServiceImpl.class)
-public interface JwtCreationRestService
+@Path("/guice/auth")
+@ServiceName("Auth")
+@Doc("Authentication / Authorisation Status")
+@ImplementedBy(AuthInfoRestServiceImpl.class)
+public interface AuthInfoRestService
 {
 	@GET
 	@Path("/")
 	@Produces("text/html")
 	String getIndex(@QueryParam("message") @Doc("for internal use") String message);
 
+	@GET
+	@Path("/test")
+	@Produces("text/plain")
+	@Doc("Test page controlled by an auth constraint; returns OK if the user is authenticated")
+	String getTestPage();
+
 	@POST
 	@Path("/")
 	@Produces("text/html")
-	String getResult(@FormParam("token") String token,
-	                 @FormParam("secret") String secret,
-	                 @FormParam("payload") String payload,
-	                 @Doc("operation - Generate or Save") @FormParam("op") String op);
+	String saveJWTCookie(@FormParam("token") String token, @Doc("operation - must be Save") @FormParam("op") String op);
 }

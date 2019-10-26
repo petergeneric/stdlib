@@ -3,6 +3,7 @@
 <!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
 <!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
 <!--@thymesVar id="message" type="java.lang.String"-->
+<!--@thymesVar id="currentUser" type="com.peterphi.std.guice.common.auth.iface.CurrentUser"-->
 <head>
 	<title>Daemons</title>
 
@@ -14,24 +15,35 @@
 
 
 <div class="container">
-	<h1>JWT Generate / Save</h1>
+	<h1>User Info</h1>
 
-	<div th:if="${message}" class="alert alert-info">
-		<th:block th:text="${message}"></th:block>
-	</div>
+	<div>The user provider associated with this session is: '<span th:text="${currentUser.authType}">type</span>'.</div>
+	<div>Username is: '<span  th:text="${currentUser.username}">username</span>'</div>
+	<div th:if="${currentUser.expires}">Login has an expiry date of '<span  th:text="${currentUser.format(currentUser.expires)}">date</span>'.</div>
 
-	<p>This page allows you to generate / save JWT authentication tokens for service access.</p>
+	<th:block th:unless="${currentUser.isAnonymous()}">
+		<div>
+			Current Roles:
+			<ul>
+				<li th:each="role: ${currentUser.roles}" th:text="${role}">role name</li>
+			</ul>
+		</div>
 
-	<h4>Current User Provider</h4>
-	<div>The user provider associated with this session is '<span th:text="${currentUser.authType}">type</span>'. Username is '<span
-			th:text="${currentUser.username}">username</span>' and the current token has an expiry date of '<span
-			th:text="${currentUser.format(currentUser.expires)}">date</span>'. Clicking one of the <em>Save</em> buttons below will
-		start a new session (so that the JWT provider can claim the session).
-	</div>
+		<div th:unless="${currentUser.claims.isEmpty()}">
+			Claims:
+			<ul>
+				<li th:each="entry: ${currentUser.claims}">
+					<strong th:text="${entry.getKey()}">claim name</strong> = <span th:text="${entry.getValue()}">value</span>
+				</li>
+			</ul>
+		</div>
+	</th:block>
 
 	<!-- Save pre-generated JWT -->
 	<div>
-		<h3>Save pre-generated JWT to Cookie</h3>
+		<h3>Save JWT to Cookie</h3>
+
+		<p><em>This requires a JWT be generated against this service externally; once saved to a cookie, the HTTP session (if one exists) will be invalidated, so that a new session will start under the new credentials.</em></p>
 
 		<form class="form-horizontal" method="POST" enctype="application/x-www-form-urlencoded">
 			<div class="control-group">
@@ -44,37 +56,6 @@
 			<div class="control-group">
 				<div class="controls">
 					<input type="submit" class="btn" name="op" value="Save"/>
-					<br/><br/>
-				</div>
-			</div>
-		</form>
-	</div>
-
-	<!-- Generate and save JWT -->
-	<div>
-		<h3>Generate and save JWT to Cookie</h3>
-
-		<form class="form-horizontal" method="POST" enctype="application/x-www-form-urlencoded">
-			<div class="control-group">
-				<label class="control-label">JWT Secret:</label>
-
-				<div class="controls">
-					<input type="password" name="secret"/>
-				</div>
-			</div>
-			<div class="control-group">
-				<label class="control-label">Payload:</label>
-
-				<div class="controls">
-					<textarea name="payload" cols="100" rows="20">{
-    "roles": [ "user", "admin", "framework-admin", "framework-info" ]
-}</textarea>
-				</div>
-			</div>
-			<div class="control-group">
-				<div class="controls">
-					<input type="submit" class="btn" name="op" value="Save"/>
-					<input type="submit" class="btn" name="op" value="Generate"/>
 					<br/><br/>
 				</div>
 			</div>

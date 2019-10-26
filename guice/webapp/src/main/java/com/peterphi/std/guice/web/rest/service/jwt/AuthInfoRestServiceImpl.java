@@ -5,32 +5,30 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import org.apache.commons.lang.StringUtils;
-import org.jose4j.jws.AlgorithmIdentifiers;
-import org.jose4j.jws.JsonWebSignature;
+import org.apache.log4j.Logger;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;
 import org.jose4j.jwt.consumer.JwtConsumer;
 import org.jose4j.jwt.consumer.JwtConsumerBuilder;
-import org.jose4j.jwx.HeaderParameterNames;
-import org.jose4j.keys.HmacKey;
-import org.jose4j.lang.JoseException;
 
 import javax.servlet.http.Cookie;
 import javax.servlet.http.HttpSession;
 import java.net.URI;
-import java.nio.charset.StandardCharsets;
 
 /**
  *
  */
 @AuthConstraint(id = "framework-jwtgenerate", skip = true)
-public class JwtCreationRestServiceImpl implements JwtCreationRestService
+public class AuthInfoRestServiceImpl implements AuthInfoRestService
 {
+	private static final Logger log = Logger.getLogger(AuthInfoRestServiceImpl.class);
+
 	/**
 	 * The resource prefix
 	 */
@@ -63,32 +61,22 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 
 
 	@Override
-	public String getResult(String token, final String secret, final String payload, final String op)
+	@AuthConstraint(role = CurrentUser.ROLE_AUTHENTICATED, comment = "Authorisation test page rule")
+	public String getTestPage()
 	{
-		final TemplateCall template = templater.template(PREFIX + "jwt_generated.html");
+		return "OK";
+	}
 
-		final Long expireTime;
-		if (token == null)
+
+	@Override
+	public String saveJWTCookie(String token, final String op)
+	{
+		final TemplateCall template = templater.template(PREFIX + "jwt_saved.html");
+
+		Long expireTime;
+		try
 		{
-			try
-			{
-				JwtClaims claims = JwtClaims.parse(payload);
-
-				if (claims.getExpirationTime() != null)
-					expireTime = claims.getExpirationTime().getValueInMillis();
-				else
-					expireTime = null;
-
-				token = createJWT(secret, payload);
-			}
-			catch (InvalidJwtException | MalformedClaimException | JoseException e)
-			{
-				throw new RuntimeException(e);
-			}
-		}
-		else
-		{
-			// User has provided a JWT. We should simply parse it and extract the expiry time (for the cookie)
+			// User has provided a JWT. We should simply parse it and extract the expiry time (for the cookie expiry value)
 			try
 			{
 				JwtConsumer jwtConsumer = new JwtConsumerBuilder()
@@ -109,16 +97,23 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 				throw new RuntimeException(e);
 			}
 		}
+		catch (Throwable t)
+		{
+			expireTime = null;
 
-		final boolean save = StringUtils.equalsIgnoreCase("save", op);
+			log.warn("Error parsing expiry time on user-provided JWT as part of save-as-cookie helper functionality; ignoring and proceeding without setting cookie expire time",
+			         t);
+		}
 
-		// Optionally save as a cookie
-		if (save)
+		// Save as a cookie
 		{
 			Cookie cookie = new Cookie(cookieName, token);
 
 			// Set the cookie path based on the webapp endpoint path
 			cookie.setPath(webappEndpoint.getPath());
+
+			// Don't allow client-side javascript access to this cookie
+			cookie.setHttpOnly(true);
 
 			// If the webapp has an https endpoint (or if we were accessed by HTTPS) then set the cookie as a secure cookie
 			cookie.setSecure(HttpCallContext.get().getRequest().isSecure() ||
@@ -127,6 +122,8 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 			// Expire the cookie 1 minute before the token expires
 			if (expireTime != null)
 				cookie.setMaxAge(expireTime.intValue() - 60);
+			else
+				cookie.setMaxAge(-1); // Expire when the browser session ends
 
 			// Kill the current session (just in case it's associated with a job manager login)
 			final HttpSession session = HttpCallContext.get().getRequest().getSession(false);
@@ -140,25 +137,6 @@ public class JwtCreationRestServiceImpl implements JwtCreationRestService
 			HttpCallContext.get().getResponse().addCookie(cookie);
 		}
 
-		template.set("saved", save);
-		template.set("token", token);
-
 		return template.process();
-	}
-
-
-	public static String createJWT(final String secret, final String payload) throws JoseException
-	{
-		String token;
-		JsonWebSignature sig = new JsonWebSignature();
-		//sig.setKey(new HmacKey(DigestUtils.sha256(secret.getBytes(StandardCharsets.UTF_8))));
-		sig.setKey(new HmacKey(secret.getBytes(StandardCharsets.UTF_8)));
-		sig.setDoKeyValidation(false);
-		sig.setPayload(payload);
-		sig.setAlgorithmHeaderValue(AlgorithmIdentifiers.HMAC_SHA256);
-		sig.setHeader(HeaderParameterNames.TYPE, "JWT");
-
-		token = sig.getCompactSerialization();
-		return token;
 	}
 }
