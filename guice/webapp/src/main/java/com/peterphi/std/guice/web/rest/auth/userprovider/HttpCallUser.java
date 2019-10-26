@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -77,6 +78,13 @@ class HttpCallUser implements CurrentUser
 	public DateTime getExpires()
 	{
 		return null;
+	}
+
+
+	@Override
+	public Collection<String> getRoles()
+	{
+		return Collections.emptySet(); // There is no API for this, so we cannot know it
 	}
 
 

@@ -7,6 +7,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -70,6 +71,13 @@ public interface CurrentUser
 	 * @return
 	 */
 	DateTime getExpires();
+
+	/**
+	 * Get all the verified role claims for this user. The returned collection MUST NOT be modified.
+	 * Returns an empty collection if no role list data is available.
+	 * @return
+	 */
+	Collection<String> getRoles();
 
 	/**
 	 * Get all the (verified) claims for this user. The returned collection MUST NOT be modified.

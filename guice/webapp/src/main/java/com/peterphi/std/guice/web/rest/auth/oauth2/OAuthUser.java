@@ -20,6 +20,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -92,7 +93,6 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	@Override
 	public boolean hasRole(final String role)
 	{
-
 		if (isAnonymous())
 		{
 			return false;
@@ -111,6 +111,24 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	public DateTime getExpires()
 	{
 		return null; // We have no info on hard expiration
+	}
+
+
+	@Override
+	public Set<String> getRoles()
+	{
+		if (isAnonymous())
+		{
+			return Collections.emptySet();
+		}
+		else
+		{
+			final Set<String> roles = new HashSet<>(getSession().getUserInfo().roles);
+
+			roles.add(CurrentUser.ROLE_AUTHENTICATED);
+
+			return Collections.unmodifiableSet(roles);
+		}
 	}
 
 

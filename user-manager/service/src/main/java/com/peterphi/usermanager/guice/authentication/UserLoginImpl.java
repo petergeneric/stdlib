@@ -8,7 +8,9 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -84,6 +86,18 @@ class UserLoginImpl implements UserLogin
 			return isLoggedIn();
 		else
 			return roles.contains(role);
+	}
+
+
+	@Override
+	public Collection<String> getRoles()
+	{
+		final Set<String> set = new HashSet<>(roles);
+
+		if (isLoggedIn())
+			set.add(UserLogin.ROLE_LOGGED_IN);
+
+		return Collections.unmodifiableSet(set);
 	}
 
 

@@ -21,8 +21,10 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 class HttpCallJWTUser implements CurrentUser
 {
@@ -328,6 +330,27 @@ class HttpCallJWTUser implements CurrentUser
 		else
 		{
 			return null; // No expire time set
+		}
+	}
+
+
+	@Override
+	public Set<String> getRoles()
+	{
+		final Map<String, Object> data = get();
+
+		if (data == null)
+		{
+			return Collections.emptySet();
+		}
+		else {
+			final List<String> roles = (List<String>) data.get("roles");
+
+			final Set<String> ret = new HashSet<>(roles);
+
+			ret.add(CurrentUser.ROLE_AUTHENTICATED);
+
+			return Collections.unmodifiableSet(ret);
 		}
 	}
 
