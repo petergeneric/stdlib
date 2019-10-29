@@ -105,7 +105,7 @@ public interface UserManagerOAuthService
 
 	@GET
 	@Path("/userinfo")
-	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://connect2id.com/products/server/docs/api/userinfo")
+	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://openid.net/specs/openid-connect-core-1_0.html#UserInfo")
 	@Produces(MediaType.APPLICATION_JSON)
 	Response getOIDCUserInfo(@HeaderParam(HttpHeaderNames.AUTHORIZATION)
 	                         @Doc("Expected header is 'Authorization: Bearer [token from /token resource]'; if omitted then will return 'WWW-Authenticate: Bearer'")
@@ -113,7 +113,7 @@ public interface UserManagerOAuthService
 
 	@POST
 	@Path("/userinfo")
-	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://connect2id.com/products/server/docs/api/userinfo")
+	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://openid.net/specs/openid-connect-core-1_0.html#UserInfo")
 	@Produces(MediaType.APPLICATION_JSON)
 	Response getOIDCUserInfoPost(@HeaderParam(HttpHeaderNames.AUTHORIZATION)
 	                             @Doc("Expected header is 'Authorization: Bearer [token from /token resource]'; if omitted then will return 'WWW-Authenticate: Bearer'")
