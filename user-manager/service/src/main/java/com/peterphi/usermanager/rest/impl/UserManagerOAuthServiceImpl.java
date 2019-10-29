@@ -30,6 +30,7 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -313,14 +314,28 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	public String getToken(final String grantType,
 	                       final String code,
 	                       final String redirectUri,
-	                       final String clientId,
-	                       final String secret,
+	                       String clientId,
+	                       String secret,
 	                       final String refreshToken,
 	                       final String username,
 	                       final String password,
-	                       final String subjectToken)
+	                       final String subjectToken,
+	                       final String authorizationHeader)
 	{
 		OAuthSessionEntity session;
+
+		// Allow clients to supply their ID and Secret using Basic Auth (per RFC)
+		if (StringUtils.isNotEmpty(authorizationHeader) && StringUtils.isEmpty(clientId) && StringUtils.isEmpty(secret))
+		{
+			// N.B. returns null if not BASIC auth (e.g. Bearer auth)
+			final String[] credentials = BasicAuthHelper.parseHeader(authorizationHeader);
+
+			if (credentials != null)
+			{
+				clientId = credentials[0];
+				secret = credentials[1];
+			}
+		}
 
 		switch (grantType)
 		{
