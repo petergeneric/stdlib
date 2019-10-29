@@ -2,6 +2,7 @@ package com.peterphi.usermanager.rest.iface.oauth2server;
 
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
+import org.jboss.resteasy.util.HttpHeaderNames;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.FormParam;
@@ -62,28 +63,27 @@ public interface UserManagerOAuthService
 	 * @return
 	 */
 	@POST
-	@Doc(value = {
-			"Exchange an access code (or a refresh token, or a username+password) for a Token to be provided to the standard OpenID Connect JSON /userinfo resource or non-standard structured /token-to-user-info method.",
-			"N.B. this resource is not fully RFC6749 compliant because it cannot accept Client ID and Secret supplied using BASIC auth (due to an interaction with logic that treats all BASIC auth attempts as attempts to directly authorise a User). Client ID + Secret must instead be POSTed as form parameters instead"}, href = "https://tools.ietf.org/html/rfc6749#section-2.3.1")
+	@Doc(value = "Exchange an access code (or a refresh token, or a username+password) for a Token to be provided to the standard OpenID Connect JSON /userinfo resource or non-standard structured /token-to-user-info method.", href = "https://tools.ietf.org/html/rfc6749#section-3.2")
 	@Path("/token")
 	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 	@Produces({MediaType.APPLICATION_JSON})
 	String getToken(@FormParam("grant_type")
-	                       @Doc("One of: authorization_code,refresh_token,urn:ietf:params:oauth:grant-type:token-exchange,password,client_credentials")
-			                       String grantType,
-	                       @FormParam("code")
-	                       @Doc("The authorization code from the auth callback (where grant_type is authorization_code)")
-			                       String code,
-	                       @FormParam("redirect_uri") @Doc("") String redirectUri,
-	                       @FormParam("client_id") String clientId,
-	                       @FormParam("client_secret") String secret,
-	                       @FormParam("refresh_token") @Doc("The refresh token (where grant_type is refresh_token)")
-			                       String refreshToken,
-	                       @FormParam("username") @Doc("The username (where grant_type is password)") String username,
-	                       @FormParam("password") @Doc("The password (where grant_type is password)") String password,
-	                       @FormParam("subject_token")
-	                       @Doc("The subject_token (where grant_type is urn:ietf:params:oauth:grant-type:token-exchange)")
-			                       String subjectToken);
+	                @Doc("One of: authorization_code,refresh_token,urn:ietf:params:oauth:grant-type:token-exchange,password,client_credentials")
+			                String grantType,
+	                @FormParam("code")
+	                @Doc("The authorization code from the auth callback (where grant_type is authorization_code)") String code,
+	                @FormParam("redirect_uri") @Doc("") String redirectUri,
+	                @FormParam("client_id") String clientId,
+	                @FormParam("client_secret") String secret,
+	                @FormParam("refresh_token") @Doc("The refresh token (where grant_type is refresh_token)") String refreshToken,
+	                @FormParam("username") @Doc("The username (where grant_type is password)") String username,
+	                @FormParam("password") @Doc("The password (where grant_type is password)") String password,
+	                @FormParam("subject_token")
+	                @Doc("The subject_token (where grant_type is urn:ietf:params:oauth:grant-type:token-exchange)")
+			                String subjectToken,
+	                @HeaderParam(HttpHeaderNames.AUTHORIZATION)
+	                @Doc(value = "If providing client id and secret as BASIC auth rather than form params", href = "https://tools.ietf.org/html/rfc6749#section-2.3.1")
+	                final String basicAuthHeader);
 
 
 	/**
@@ -107,7 +107,7 @@ public interface UserManagerOAuthService
 	@Path("/userinfo")
 	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://connect2id.com/products/server/docs/api/userinfo")
 	@Produces(MediaType.APPLICATION_JSON)
-	Response getOIDCUserInfo(@HeaderParam("Authorization")
+	Response getOIDCUserInfo(@HeaderParam(HttpHeaderNames.AUTHORIZATION)
 	                         @Doc("Expected header is 'Authorization: Bearer [token from /token resource]'; if omitted then will return 'WWW-Authenticate: Bearer'")
 			                         String bearerTokenHeader);
 
@@ -115,7 +115,7 @@ public interface UserManagerOAuthService
 	@Path("/userinfo")
 	@Doc(value = "OpenID Connect Compatible UserInfo endpoint", href = "https://connect2id.com/products/server/docs/api/userinfo")
 	@Produces(MediaType.APPLICATION_JSON)
-	Response getOIDCUserInfoPost(@HeaderParam("Authorization")
+	Response getOIDCUserInfoPost(@HeaderParam(HttpHeaderNames.AUTHORIZATION)
 	                             @Doc("Expected header is 'Authorization: Bearer [token from /token resource]'; if omitted then will return 'WWW-Authenticate: Bearer'")
 			                             String bearerTokenHeader);
 }

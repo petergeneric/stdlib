@@ -91,7 +91,8 @@ public class OAuth2SessionRef
 		                                                null,
 		                                                null,
 		                                                null,
-		                                                token);
+		                                                token,
+		                                                null);
 
 		loadAuthResponse(responseStr);
 	}
@@ -252,6 +253,7 @@ public class OAuth2SessionRef
 		                                                clientId,
 		                                                clientSecret,
 		                                                refreshToken,
+		                                                null,
 		                                                null,
 		                                                null,
 		                                                null);

@@ -17,11 +17,11 @@ import java.util.List;
 @Entity(name = "oauth_service")
 public class OAuthServiceEntity
 {
-	private String id = SimpleId.alphanumeric("svc-", 36);
+	private String id = SimpleId.alphanumeric(IDPrefix.OAUTH_SERVICE, 36);
 	private UserEntity owner;
 	private String name;
 	private String endpoints;
-	private String clientSecret = SimpleId.alphanumeric("csec-", 36);
+	private String clientSecret = SimpleId.alphanumeric(IDPrefix.OAUTH_SERVICE_SECRET, 36);
 	private String requiredRoleName;
 	private boolean enabled = true;
 	private DateTime created = new DateTime();
