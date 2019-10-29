@@ -291,4 +291,11 @@
 
 	</changeSet>
 
+	<!-- N.B. not set up as a foreign key so that roles that do not yet exist can be referenced -->
+	<changeSet author="peter@peterphi.com" id="add_service_required_role">
+		<addColumn tableName="oauth_service">
+			<column name="required_role_id" type="VARCHAR(255)"/>
+		</addColumn>
+	</changeSet>
+
 </databaseChangeLog>

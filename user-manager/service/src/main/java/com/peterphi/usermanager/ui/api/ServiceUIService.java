@@ -29,6 +29,7 @@ public interface ServiceUIService
 	@Produces(MediaType.TEXT_HTML)
 	Response create(@FormParam("nonce") final String nonce,
 	                @FormParam("name") final String name,
+	                @FormParam("required_role") final String requiredRoleName,
 	                @FormParam("endpoints") final String endpoints);
 
 	@POST
@@ -41,5 +42,6 @@ public interface ServiceUIService
 	@Produces(MediaType.TEXT_HTML)
 	Response setEndpoints(@FormParam("nonce") final String nonce,
 	                      @PathParam("id") String id,
+	                      @FormParam("required_role") final String requiredRoleName,
 	                      @FormParam("endpoints") final String endpoints);
 }

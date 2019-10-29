@@ -17,6 +17,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
+import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
@@ -260,6 +261,22 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			throw new IllegalArgumentException("No such client with id " +
 			                                   clientId +
 			                                   " at the provided endpoint! There is a problem with the service that sent you here.");
+
+		final String requiredRoleName = client.getRequiredRoleName();
+
+		if (StringUtils.isNotEmpty(requiredRoleName))
+		{
+			final UserEntity user = userDao.getById(userId);
+
+			boolean hasRole = false;
+			for (RoleEntity role : user.getRoles())
+			{
+				hasRole = hasRole || StringUtils.equalsIgnoreCase(role.getId(), requiredRoleName);
+			}
+
+			if (!hasRole)
+				throw new IllegalArgumentException("This user is missing the required role to permit it to use this service!");
+		}
 
 		OAuthSessionContextEntity context = contextDao.get(userId, client.getId(), scope);
 
