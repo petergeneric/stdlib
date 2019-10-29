@@ -24,8 +24,11 @@ import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -34,9 +37,12 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.StringWriter;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
@@ -383,6 +389,13 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
 	public UserManagerUser get(final String token, final String clientId)
 	{
+		final OAuthSessionEntity session = getSessionForToken(token, clientId);
+
+		return marshaller.marshal(session.getContext().getUser());
+	}
+
+
+	public OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
 		OAuthSessionEntity session = sessionDao.getByToken(token);
 
 		if (session == null)
@@ -407,6 +420,87 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 		}
 
-		return marshaller.marshal(session.getContext().getUser());
+		return session;
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
+	public Response getOIDCUserInfo(final String bearerTokenHeader)
+	{
+		if (StringUtils.isEmpty(bearerTokenHeader))
+		{
+			return Response.status(401).header("WWW-Authenticate", "Bearer").build();
+		}
+		else
+		{
+			try
+			{
+				final String token = UserManagerBearerToken.getTokenFromBearerAuthorizationHeader(bearerTokenHeader);
+
+				// OpenID Connect userinfo doesn't provide Client ID, so we can't provide additional protection against this token from being forced into a different client
+				final OAuthSessionEntity session = getSessionForToken(token, null);
+
+				final String json = createOpenIDConnectUserInfo(session);
+				return Response.ok(json, MediaType.APPLICATION_JSON).build();
+			}
+			catch (Throwable t)
+			{
+				log.warn("Error in UserInfo resource", t);
+
+				return Response
+						       .status(401)
+						       .header("WWW-Authenticate",
+						               "error=\"invalid_token\", error_description=\"invalid or expired token\"")
+						       .build();
+			}
+		}
+	}
+
+	public String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
+		try
+		{
+			StringWriter sw = new StringWriter();
+
+			JSONObject obj = new JSONObject();
+
+			final UserEntity user = session.getContext().getUser();
+
+			obj.put("sub", user.getId()); // Unique ID for this user
+			obj.put("client_id", session.getContext().getService().getId()); // Audience
+			obj.put("iat", session.getCreated().getMillis() / 1000); // Issued At
+			obj.put("exp", session.getExpires().getMillis() / 1000); // Expires
+
+			// Optional fields (N.B. technically per spec this info should be in a specifically requested scope)
+			obj.put("name", user.getName());
+			obj.put("email", user.getEmail());
+			obj.put("zoneinfo", user.getTimeZone());
+			obj.put("datetime_format", user.getDateFormat());
+
+			List<String> roles = user.getRoles().stream().map(r->r.getId()).collect(Collectors.toList());
+
+			// Different clients use different key names here, so populate many claims with the same data
+			obj.put("groups", roles);
+			obj.put("roles", roles);
+			obj.put("group", roles);
+			obj.put("role", roles);
+
+			obj.write(sw);
+
+			return sw.toString();
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
+	}
+
+
+	@Override
+	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
+	public Response getOIDCUserInfoPost(final String bearerTokenHeader)
+	{
+		return getOIDCUserInfo(bearerTokenHeader);
 	}
 }
