@@ -85,7 +85,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response create(final String nonce, final String name, final String endpoints)
+	public Response create(final String nonce, final String name, String requiredRole, final String endpoints)
 	{
 		nonceStore.validate(NONCE_USE,nonce);
 
@@ -96,6 +96,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		OAuthServiceEntity entity = new OAuthServiceEntity();
 		entity.setOwner(user);
 		entity.setName(name);
+		entity.setRequiredRoleName(StringUtils.trimToNull(requiredRole));
 		entity.setEndpoints(StringUtils.trimToNull(endpoints));
 		entity.setEnabled(true);
 
@@ -130,7 +131,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response setEndpoints(final String nonce, final String id, final String endpoints)
+	public Response setEndpoints(final String nonce, final String id, final String requiredRole, final String endpoints)
 	{
 		nonceStore.validate(NONCE_USE,nonce);
 
@@ -143,6 +144,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		else if (entity.getOwner().getId() != userProvider.get().getId() && !userProvider.get().isAdmin())
 			throw new IllegalArgumentException("Only the owner or an admin can change endpoints of a service!");
 
+		entity.setRequiredRoleName(StringUtils.trimToNull(requiredRole));
 		entity.setEndpoints(endpoints);
 
 		dao.update(entity);

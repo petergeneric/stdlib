@@ -22,6 +22,7 @@ public class OAuthServiceEntity
 	private String name;
 	private String endpoints;
 	private String clientSecret = SimpleId.alphanumeric("csec-", 36);
+	private String requiredRoleName;
 	private boolean enabled = true;
 	private DateTime created = new DateTime();
 	private DateTime updated = new DateTime();
@@ -64,6 +65,12 @@ public class OAuthServiceEntity
 		return clientSecret;
 	}
 
+
+	@Column(name = "required_role_id", nullable = true, length = 255)
+	public String getRequiredRoleName()
+	{
+		return requiredRoleName;
+	}
 
 	@Column(name = "is_enabled", nullable = false)
 	public boolean isEnabled()
@@ -114,6 +121,12 @@ public class OAuthServiceEntity
 	public void setClientSecret(final String clientSecret)
 	{
 		this.clientSecret = clientSecret;
+	}
+
+
+	public void setRequiredRoleName(final String requiredRoleName)
+	{
+		this.requiredRoleName = requiredRoleName;
 	}
 
 

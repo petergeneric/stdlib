@@ -15,7 +15,7 @@
 	<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
 		<ul class="nav nav-pills">
 			<li><a href="#delModal" data-toggle="modal">Disable Service</a></li>
-			<li><a href="#editEndpointsModal" data-toggle="modal">Edit Endpoints</a>
+			<li><a href="#editEndpointsModal" data-toggle="modal">Edit</a>
 			</li>
 		</ul>
 
@@ -43,20 +43,34 @@
 
 		<!-- Edit endpoints modal -->
 		<form id="editEndpointsModal"
-		      class="modal hide fade form-horizontal"
+		      class="modal hide fade form-vertical"
 		      tabindex="-1" role="dialog"
 		      aria-labelledby="editEndpointsModalLabel" aria-hidden="true" method="POST" autocomplete="off"
 		      th:action="@{'/service/'+${entity.id}+'/edit-endpoints'}">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="editEndpointsModalLabel">Change Endpoints</h3>
+				<h3 id="editEndpointsModalLabel">Edit</h3>
 			</div>
 			<div class="modal-body">
+				<!-- required role -->
+				<div class="control-group">
+					<label class="control-label" for="input_required_role">Required Role</label>
+					<input
+					       type="text"
+					       id="input_required_role"
+					       name="required_role"
+					       placeholder="(optional)"
+					       th:value="${entity.requiredRoleName}"></input>
+
+					<!-- Help / Warning text -->
+					<span class="help-inline"></span>
+				</div>
 				<!-- endpoints -->
 				<div class="control-group">
-					<textarea style="width: 95%" cols="5"
+					<label class="control-label" for="input_endpoints">Endpoints</label>
+					<textarea id="input_endpoints"
+					          rows="5" style="width: 95%;"
 					          type="text"
-					          id="input_endpoints"
 					          name="endpoints"
 					          placeholder="Endpoint prefixes (one per line)"
 					          th:text="${entity.endpoints}"></textarea>
@@ -82,6 +96,8 @@
 		<dd th:text="${entity.owner.email}">owner</dd>
 		<dt>enabled</dt>
 		<dd th:text="${entity.enabled}">enabled</dd>
+		<dt>required role</dt>
+		<dd th:text="${entity.requiredRoleName}">required role</dd>
 		<dt>Endpoint Prefixes</dt>
 		<dd>
 			<ul>
