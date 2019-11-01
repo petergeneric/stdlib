@@ -17,7 +17,6 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
-import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
@@ -44,6 +43,7 @@ import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
@@ -254,7 +254,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	                                        final String clientId,
 	                                        final String redirectUri,
 	                                        final String scope,
-	                                        final boolean allowCreateApproval)
+	                                        final boolean allowCreateApproval) throws ServiceAccessPreconditionFailed
 	{
 		final OAuthServiceEntity client = serviceDao.getByClientIdAndEndpoint(clientId, redirectUri);
 
@@ -263,21 +263,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			                                   clientId +
 			                                   " at the provided endpoint! There is a problem with the service that sent you here.");
 
-		final String requiredRoleName = client.getRequiredRoleName();
+		final boolean canAccessService = canUserAccessService(userId, client.getRequiredRoleName());
 
-		if (StringUtils.isNotEmpty(requiredRoleName))
-		{
-			final UserEntity user = userDao.getById(userId);
-
-			boolean hasRole = false;
-			for (RoleEntity role : user.getRoles())
-			{
-				hasRole = hasRole || StringUtils.equalsIgnoreCase(role.getId(), requiredRoleName);
-			}
-
-			if (!hasRole)
-				throw new IllegalArgumentException("This user is missing the required role to permit it to use this service!");
-		}
+		if (!canAccessService)
+			throw new ServiceAccessPreconditionFailed("This user is missing the required role to permit it to use this service!");
 
 		OAuthSessionContextEntity context = contextDao.get(userId, client.getId(), scope);
 
@@ -292,6 +281,37 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 		// Now create a Session
 		return sessionDao.create(context, computeInitiatorInfo(), DateTime.now().plus(tokenRefreshInterval));
+	}
+
+
+	private boolean canUserAccessService(final int userId, final String requiredRoleName)
+	{
+		if (StringUtils.isNotEmpty(requiredRoleName))
+		{
+			final UserEntity user = userDao.getById(userId);
+
+			final Set<String> roleNames = user
+					                              .getRoles()
+					                              .stream()
+					                              .map(r -> StringUtils.lowerCase(r.getId()))
+					                              .collect(Collectors.toSet());
+
+			for (String role : StringUtils.split(requiredRoleName, '|'))
+			{
+				if (roleNames.contains(StringUtils.lowerCase(StringUtils.trimToEmpty(role))))
+				{
+					// Found role match
+					return true;
+				}
+			}
+
+			// No roles matched
+			return false;
+		}
+		else
+		{
+			return true; // no restriction
+		}
 	}
 
 

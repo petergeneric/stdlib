@@ -35,17 +35,19 @@
 			<!-- required role -->
 			<div class="control-group">
 				<label class="control-label" for="input_required_role">Required Role</label>
-				<input
-				       type="text"
-				       id="input_required_role"
-				       name="required_role"
-				       placeholder="(optional)"
-				       value=""></input>
 
-				<!-- Help / Warning text -->
-				<span class="help-inline"></span>
+				<div class="controls">
+					<input
+							type="text"
+							id="input_required_role"
+							name="required_role"
+							placeholder=""
+							value="" />
+
+					<!-- Help / Warning text -->
+					<span class="help-inline">Role required to use service, OR condition using pipe ("|") character</span>
+				</div>
 			</div>
-
 
 			<!-- endpoints -->
 			<div class="control-group">
@@ -55,7 +57,7 @@
 					<textarea style="width: 95%" cols="5" type="text" id="input_endpoints" name="endpoints" placeholder="Endpoint prefixes (one per line)" value=""></textarea>
 
 					<!-- Help / Warning text -->
-					<span class="help-inline"></span>
+					<span class="help-inline">Endpoints, one per line</span>
 				</div>
 			</div>
 		</div>
