@@ -66,7 +66,7 @@ public class OAuthServiceEntity
 	}
 
 
-	@Column(name = "required_role_id", nullable = true, length = 255)
+	@Column(name = "required_role_id", nullable = true, length = 4096)
 	public String getRequiredRoleName()
 	{
 		return requiredRoleName;
