@@ -1,0 +1,31 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Confirm Logout: User Manager</title>
+	<link th:replace="includes :: htmlhead"/>
+</head>
+<body th:with="page='login'">
+<span th:replace="includes :: navbar"></span>
+
+<div class="container">
+	<h1>Logout?</h1>
+
+	<div>An application has attempted to log you out, are you sure you wish to proceed?</div>
+
+	<form class="form-horizontal" method="POST" th:action="@{/logout}">
+		<input th:if="${returnTo}" type="hidden" name="returnTo" th:value="${returnTo}"/>
+		<input type="hidden" name="nonce" th:value="${nonceProvider.get().allocate()}" />
+
+		<div class="control-group">
+			<div class="controls">
+				<button type="submit" class="btn">Yes, logout</button>
+				<br/><br />
+			</div>
+		</div>
+	</form>
+	<footer th:replace="includes :: footer"></footer>
+</div>
+<!-- Include jquery etc -->
+<div th:replace="includes :: htmlfoot"></div>
+</body>
+</html>

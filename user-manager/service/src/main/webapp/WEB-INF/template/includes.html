@@ -39,14 +39,16 @@
                     <div class="nav-collapse collapse">
                         <ul class="nav">
                             <li th:class="(${page} == 'home') ? 'active'"><a th:href="@{/}">Home</a></li>
+	                        <th:block th:if="${session.login}">
 	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'users') ? 'active'"><a th:href="@{/users}">Users</a></li>
 	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'roles') ? 'active'"><a th:href="@{/roles}">Roles</a></li>
 	                        <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'services') ? 'active'"><a th:href="@{/services}">Services</a></li>
                             <li th:if="${session.login.isAdmin()}" th:class="(${page} == 'register') ? 'active'"><a th:href="@{/register}">New user</a></li>
+	                        </th:block>
                         </ul>
                     </div><!--/.nav-collapse -->
 
-					<div th:if="${session.login.isLoggedIn()}" class="btn-group navbar-text pull-right" id="whoamidropdown">
+					<div th:if="${session.login != null and session.login.isLoggedIn()}" class="btn-group navbar-text pull-right" id="whoamidropdown">
 					  <a class="btn btn-primary dropdown-toggle" data-toggle="dropdown" href="#"><i class="icon-user icon-white"></i> <span th:text="${session.login.name}">user</span> <span class="caret"></span></a>
 					  <ul class="dropdown-menu">
 						<li><a th:href="@{'/user/'+${session.login.id}}"><i class="icon-edit"></i> Edit Profile</a></li>
@@ -54,7 +56,7 @@
 						<li><a th:href="@{/logout}"><i class="i"></i> Logout</a></li>
 					  </ul>
 					</div>
-                    <form th:if="${session.login.isLoggedIn() == false and page != 'login' and page != 'register'}" class="navbar-form pull-right" method="POST" th:action="@{/login}">
+                    <form th:if="${(session.login == null or session.login.isLoggedIn() == false) and page != 'login' and page != 'logout'  and page != 'register'}" class="navbar-form pull-right" method="POST" th:action="@{/login}">
 	                    <input type="hidden" name="nonce" th:value="${nonceProvider.get().allocate()}" />
                         <input type="hidden" name="returnTo" th:value="${#httpServletRequest.requestURL + ((#httpServletRequest.queryString) ? ('?' + #httpServletRequest.queryString) : '')}" />
                         <input class="span2" type="text" name="email" placeholder="Email" />

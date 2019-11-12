@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.ui.api;
 
+import com.peterphi.std.annotation.Doc;
 import org.jboss.resteasy.annotations.cache.NoCache;
 
 import javax.ws.rs.DefaultValue;
@@ -23,7 +24,7 @@ public interface LoginUIService
 	@POST
 	@Path("/login")
 	@Produces(MediaType.TEXT_HTML)
-	Response doLogin(@FormParam("nonce") String nonce,
+	Response doLogin(@Doc("CSRF protection code") @FormParam("nonce") String nonce,
 	                 @FormParam("returnTo") @DefaultValue("/") String returnTo,
 	                 @FormParam("email") String user,
 	                 @FormParam("password") String password);
@@ -32,5 +33,14 @@ public interface LoginUIService
 	@NoCache
 	@Path("/logout")
 	@Produces(MediaType.TEXT_HTML)
-	Response doLogout(@QueryParam("returnTo") @DefaultValue("") String returnTo);
+	@Doc("Start the logout flow (or confirm that the user is logged out if already logged out)")
+	String requestLogout(@QueryParam("returnTo") @DefaultValue("") String returnTo);
+
+	@POST
+	@NoCache
+	@Path("/logout")
+	@Produces(MediaType.TEXT_HTML)
+	@Doc("Perform the logout action")
+	Response doLogout(@Doc("CSRF protection id") @FormParam("nonce") String nonce,
+	                  @FormParam("returnTo") @DefaultValue("") String returnTo);
 }

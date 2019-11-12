@@ -38,6 +38,11 @@ sman: clean
 uman: clean
 	$(MVN) package -DskipTests=true -am --projects user-manager/service
 
+uman-full: uman uman-deploy
+
+uman-deploy:
+	 $(RSYNC) user-manager/service/target/*.war $(WEBAPPS)/user-manager.war
+
 sman-full: sman
 ifndef host
 		$(error host is not set)

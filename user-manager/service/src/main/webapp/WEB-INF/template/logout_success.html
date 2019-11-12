@@ -1,0 +1,19 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>Logout Successful: User Manager</title>
+	<link th:replace="includes :: htmlhead"/>
+</head>
+<body th:with="page='login'">
+<span th:replace="includes :: navbar"></span>
+
+<div class="container">
+	<h1>Logout Successful</h1>
+
+	<div>You have been successfully logged out of the User Manager; you may close this window or <a th:href="@{/login}">log in again</a>.</div>
+	<footer th:replace="includes :: footer"></footer>
+</div>
+<!-- Include jquery etc -->
+<div th:replace="includes :: htmlfoot"></div>
+</body>
+</html>

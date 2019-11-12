@@ -130,8 +130,30 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@Override
 	@AuthConstraint(skip = true, comment = "Logout page")
-	public Response doLogout(String returnTo)
+	public String requestLogout(String returnTo)
 	{
+		final TemplateCall call;
+
+		if (login.isLoggedIn())
+		{
+			call = templater.template("logout");
+			call.set("returnTo", returnTo);
+		}
+		else
+		{
+			call = templater.template("logout_success");
+		}
+
+		return call.process();
+	}
+
+
+	@Override
+	@AuthConstraint(role = "authenticated", comment = "Logout action")
+	public Response doLogout(String csrfToken, String returnTo)
+	{
+		nonceStore.validate(csrfToken, true);
+
 		// Change the session reconnect key (if one is used)
 		if (login.isLoggedIn())
 			accountDao.changeSessionReconnectKey(login.getId());
@@ -146,8 +168,15 @@ public class LoginUIServiceImpl implements LoginUIService
 		login.clear();
 
 		if (StringUtils.isEmpty(returnTo))
-			return Response.seeOther(URI.create("/")).build();
+		{
+			// If there was no return endpoint, show the user a logout confirmation screen
+			TemplateCall call = templater.template("logout_success");
+
+			return call.process(Response.ok().type("text/html"));
+		}
 		else
+		{
 			return Response.seeOther(URI.create(returnTo)).build();
+		}
 	}
 }
