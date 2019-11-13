@@ -15,6 +15,9 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
+import java.util.Arrays;
+import java.util.List;
+
 /**
  * Intercepts calls to methods annotated with AuthConstraint (or whose superclass is annotated with AuthConstraint) and enforces
  * those constraints
@@ -129,13 +132,22 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		}
 		else
 		{
-			final boolean pass = user.hasRole(scope.getRole(constraint));
+			// Evaluate an OR of each listed role
+			boolean pass = false;
+			for (String permittedRole : scope.getRole(constraint))
+				pass = pass || user.hasRole(permittedRole);
 
 			if (log.isTraceEnabled())
 				if (pass)
-					log.trace("Allow method invocation: user " + user + " has role " + scope.getRole(constraint));
+					log.trace("Allow method invocation: user " +
+					          user +
+					          " has one of roles " +
+					          Arrays.asList(scope.getRole(constraint)));
 				else
-					log.trace("Deny method invocation: user " + user + " does not have role " + scope.getRole(constraint));
+					log.trace("Deny method invocation: user " +
+					          user +
+					          " does not have any of roles " +
+					          Arrays.asList(scope.getRole(constraint)));
 
 			return pass;
 		}
@@ -157,21 +169,21 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 		if (scope == null)
 		{
-			final String role;
+			final List<String> roles;
 			final Boolean skip;
 
 			if (StringUtils.equals(SCOPE_DEFAULT, id))
 			{
-				role = config.get(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
+				roles = config.getList(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
 				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
 			}
 			else
 			{
-				role = config.get("framework.webauth.scope." + id + ".role", null);
+				roles = config.getList("framework.webauth.scope." + id + ".role", null);
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
 			}
 
-			scope = new AuthScope(id, role, skip);
+			scope = new AuthScope(id, toArray(roles), skip);
 
 			scopes.put(id, scope);
 		}
@@ -179,6 +191,26 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		return scope;
 	}
 
+
+	private String[] toArray(final List<String> roles)
+	{
+		if (roles != null)
+		{
+			String[] rolesArray = new String[roles.size()];
+
+			rolesArray = roles.toArray(rolesArray);
+
+			// Strip any spaces that were placed between commas
+			for (int i=0;i<rolesArray.length;i++)
+				rolesArray[i] = StringUtils.trimToEmpty(rolesArray[i]);
+
+			return rolesArray;
+		}
+		else
+		{
+			return null;
+		}
+	}
 
 	private AuthConstraint readConstraint(final MethodInvocation invocation)
 	{
