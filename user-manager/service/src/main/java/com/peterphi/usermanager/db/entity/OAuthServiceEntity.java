@@ -28,9 +28,21 @@ public class OAuthServiceEntity
 	private String clientSecret = SimpleId.alphanumeric(IDPrefix.OAUTH_SERVICE_SECRET, 36);
 	private String requiredRoleName;
 	private Set<RoleEntity> roles = new HashSet<>();
+
+	/**
+	 * The primary access key (the key all API clients should use for this account). Optional.
+	 */
+	private String accessKey;
+
+	/**
+	 * The secondary access key (allows keys to be rotated out without a big-bang reconfiguration of API users). Optional.
+	 */
+	private String accessKeySecondary;
+
 	private boolean enabled = true;
 	private DateTime created = new DateTime();
 	private DateTime updated = new DateTime();
+
 
 	@Id
 	@Column(name = "id", length = 36)
@@ -75,6 +87,38 @@ public class OAuthServiceEntity
 	{
 		return requiredRoleName;
 	}
+
+
+	@ManyToMany(mappedBy = "serviceMembers", cascade = CascadeType.ALL)
+	public Set<RoleEntity> getRoles()
+	{
+		return roles;
+	}
+
+
+	/**
+	 * Access key, allows a User Manager Service to authenticate easily against another service.
+	 *
+	 * @return
+	 */
+	@Column(name = "access_key", nullable = true, length = 100)
+	public String getAccessKey()
+	{
+		return accessKey;
+	}
+
+
+	/**
+	 * Access key (secondary key - due for retirement, the next rotation will remove this key, put the primary key in its place and generate a new primary key), allows a User Manager Service to authenticate easily against another service.
+	 *
+	 * @return
+	 */
+	@Column(name = "access_key_alt", nullable = true, length = 100)
+	public String getAccessKeySecondary()
+	{
+		return accessKeySecondary;
+	}
+
 
 	@Column(name = "is_enabled", nullable = false)
 	public boolean isEnabled()
@@ -134,18 +178,22 @@ public class OAuthServiceEntity
 	}
 
 
-	@ManyToMany(mappedBy = "serviceMembers", cascade = CascadeType.ALL)
-	public Set<RoleEntity> getRoles()
-	{
-		return roles;
-	}
-
-
 	public void setRoles(final Set<RoleEntity> roles)
 	{
 		this.roles = roles;
 	}
 
+
+	public void setAccessKey(final String accessKey)
+	{
+		this.accessKey = accessKey;
+	}
+
+
+	public void setAccessKeySecondary(final String accessKeySecondary)
+	{
+		this.accessKeySecondary = accessKeySecondary;
+	}
 
 
 	public void setEnabled(final boolean enabled)

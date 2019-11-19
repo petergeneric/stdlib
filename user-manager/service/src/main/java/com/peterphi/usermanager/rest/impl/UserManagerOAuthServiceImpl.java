@@ -44,6 +44,7 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.io.StringWriter;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -378,15 +379,33 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
 			{
-				final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+				if (UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
+				{
+					// If a Service Token is provied as a Refresh Token, treat the call as a Service API Key Token Exchange
+					// This is necessary because a Service User isn't a real user and so can't have a Session
+					return getToken(GRANT_TYPE_TOKEN_EXCHANGE,
+					                code,
+					                redirectUri,
+					                clientId,
+					                secret,
+					                refreshToken,
+					                username,
+					                password,
+					                subjectToken,
+					                authorizationHeader);
+				}
+				else
+				{
 
-				if (service == null)
-					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
 
-				session = sessionDao.exchangeRefreshTokenForNewToken(service,
-				                                                     refreshToken,
-				                                                     new DateTime().plus(tokenRefreshInterval));
-				break;
+					if (service == null)
+						throw new IllegalArgumentException(
+								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
+					break;
+				}
 			}
 			case GRANT_TYPE_PASSWORD:
 			{
@@ -423,6 +442,17 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 					// Return a fake session reference
 					return new OAuth2TokenResponse(subjectToken, null, delegated.getExpires().toDate()).encode();
+				}
+				else if (UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
+				{
+					final OAuthServiceEntity serviceUser = serviceDao.getByAccessKey(subjectToken);
+
+					if (serviceUser == null)
+						throw new IllegalArgumentException("Service Access Key not recognised");
+
+					// Return an expiring session (to allow old keys to be rotated and invalidated)
+					// N.B. refresh token is the same as this token, which will cause this logic to run again on refresh
+					return new OAuth2TokenResponse(subjectToken, subjectToken, new DateTime().plus(tokenRefreshInterval).toDate()).encode();
 				}
 				else
 				{
@@ -490,6 +520,28 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			{
 				obj.roles.add(serviceRole.getId());
 			}
+
+			return obj;
+		}
+		else if (UserManagerBearerToken.isUserManagerServiceBearer(token))
+		{
+			final OAuthServiceEntity serviceUser = serviceDao.getByAccessKey(token);
+
+			if (serviceUser == null)
+				throw new IllegalArgumentException("Service Access Key not recognised");
+
+			UserEntity fakeUser = new UserEntity();
+
+			fakeUser.setName(serviceUser.getId());
+			fakeUser.setEmail(serviceUser.getId() + "@service.localhost");
+			fakeUser.setLocal(true);
+			fakeUser.setRoles(new ArrayList<>(serviceUser.getRoles()));
+			fakeUser.setTimeZone(CurrentUser.DEFAULT_TIMEZONE);
+			fakeUser.setDateFormat(CurrentUser.ISO_DATE_FORMAT_STRING);
+
+			UserManagerUser obj = marshaller.marshal(fakeUser);
+
+			obj.roles.add(CurrentUser.ROLE_SERVICE_CALL);
 
 			return obj;
 		}

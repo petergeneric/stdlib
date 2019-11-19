@@ -3,7 +3,9 @@ package com.peterphi.usermanager.db.dao.hibernate;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
@@ -40,11 +42,8 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 	/**
 	 * Checks that one of the registered endpoints is a prefix match for the supplied <code>redirectUri</code>
 	 *
-	 * @param entity
-	 * 		the database entity representing the service
-	 * @param redirectUri
-	 * 		the redirectUri received from the client
-	 *
+	 * @param entity      the database entity representing the service
+	 * @param redirectUri the redirectUri received from the client
 	 * @return
 	 */
 	private OAuthServiceEntity filterByEndpoint(OAuthServiceEntity entity, final String redirectUri)
@@ -59,7 +58,8 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 					                               .stream(StringUtils
 							                                       .trimToEmpty(entity.getEndpoints())
 							                                       .replace('\r', '\n')
-							                                       .split("\n")).map(StringUtils:: trimToEmpty)
+							                                       .split("\n"))
+					                               .map(StringUtils :: trimToEmpty)
 					                               .filter(s -> s.length() > 0)
 					                               .collect(Collectors.toList());
 
@@ -109,5 +109,29 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 	public OAuthServiceEntity getByClientIdAndSecretOnly(final String id, final String secret)
 	{
 		return uniqueResult(new WebQuery().eq("id", id).eq("enabled", true).eq("clientSecret", secret));
+	}
+
+
+	public void rotateUserAccessKey(final OAuthServiceEntity entity)
+	{
+		if (entity == null)
+			throw new IllegalArgumentException("No service provided!");
+
+		// Set the secondary token to the old primary token
+		entity.setAccessKeySecondary(entity.getAccessKey());
+
+		// Now regenerate the primary token
+		entity.setAccessKey(SimpleId.alphanumeric(UserManagerBearerToken.PREFIX_SERVICE_TOKEN, 100));
+
+		update(entity);
+	}
+
+
+	public OAuthServiceEntity getByAccessKey(final String key)
+	{
+		return find(new WebQuery()
+				            .limit(0)
+				            .eq("enabled", true)
+				            .or(or -> or.eq("accessKey", key).eq("accessKeySecondary", key))).uniqueResult();
 	}
 }
