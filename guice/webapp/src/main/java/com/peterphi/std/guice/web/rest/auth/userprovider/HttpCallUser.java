@@ -38,6 +38,13 @@ class HttpCallUser implements CurrentUser
 
 
 	@Override
+	public boolean isDelegated()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		HttpServletRequest request = HttpCallContext.get().getRequest();

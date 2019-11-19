@@ -73,6 +73,13 @@ class UserLoginImpl implements UserLogin
 
 
 	@Override
+	public boolean isDelegated()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		return name;

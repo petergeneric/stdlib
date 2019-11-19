@@ -61,6 +61,16 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	}
 
 
+	@Override
+	public boolean isDelegated()
+	{
+		if (isAnonymous())
+			return false;
+		else
+			return getSession().getUserInfo().delegated;
+	}
+
+
 	private OAuth2SessionRef getSession()
 	{
 		if (staticSession != null)
@@ -216,6 +226,12 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	public AccessRefuser getAccessRefuser()
 	{
 		return accessRefuser;
+	}
+
+
+	public String getOrCreateDelegatedToken()
+	{
+		return getSession().getOrCreateDelegatedToken();
 	}
 
 

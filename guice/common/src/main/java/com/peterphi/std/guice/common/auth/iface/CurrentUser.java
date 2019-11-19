@@ -27,6 +27,18 @@ public interface CurrentUser
 	String ROLE_AUTHENTICATED = "authenticated";
 
 	/**
+	 * Special role string indicating that the user was authenticated via a Delegate Token, and is not calling in directly<br />
+	 * This is important when a service will not talk to a user directly but will talk to services acting on behalf of the user
+	 */
+	String ROLE_DELEGATED = "delegated";
+
+	/**
+	 * Special role string indicating that this is a service call, not a direct user request.
+	 * This is important when a service will not talk to a user directly but will talk to services acting on behalf of the user
+	 */
+	String ROLE_SERVICE_CALL = "service-call";
+
+	/**
 	 * Return the type of authentication used
 	 *
 	 * @return
@@ -39,6 +51,14 @@ public interface CurrentUser
 	 * @return true if the user is not authenticated, false if the user is authenticated
 	 */
 	boolean isAnonymous();
+
+	/**
+	 * Return true if the user was authenticated by a delegated access token; this is important to know when a service will not
+	 * talk to a user directly but will talk to services acting on behalf of the user.
+	 *
+	 * @return
+	 */
+	boolean isDelegated();
 
 	/**
 	 * Get the name of the current user

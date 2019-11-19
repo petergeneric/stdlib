@@ -12,7 +12,9 @@ import javax.persistence.ManyToMany;
 import javax.persistence.OrderBy;
 import javax.persistence.UniqueConstraint;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity(name = "role_definition")
 public class RoleEntity
@@ -21,7 +23,7 @@ public class RoleEntity
 	private String caption;
 
 	private List<UserEntity> members = new ArrayList<>();
-
+	private Set<OAuthServiceEntity> serviceMembers = new HashSet<>();
 
 	@Id
 	@Column(name = "id", length = 255, nullable = false)
@@ -64,6 +66,23 @@ public class RoleEntity
 	public void setMembers(final List<UserEntity> members)
 	{
 		this.members = members;
+	}
+
+
+	@ManyToMany(cascade = CascadeType.ALL)
+	@JoinTable(name = "service_has_role", //
+			joinColumns = {@JoinColumn(name = "role_id", referencedColumnName = "id", nullable = false, updatable = false)}, inverseJoinColumns = {
+			@JoinColumn(name = "service_id", referencedColumnName = "id", nullable = false, updatable = false)}, uniqueConstraints = {
+			@UniqueConstraint(columnNames = {"service_id", "role_id"})})
+	public Set<OAuthServiceEntity> getServiceMembers()
+	{
+		return this.serviceMembers;
+	}
+
+
+	public void setServiceMembers(final Set<OAuthServiceEntity> serviceMembers)
+	{
+		this.serviceMembers = serviceMembers;
 	}
 
 

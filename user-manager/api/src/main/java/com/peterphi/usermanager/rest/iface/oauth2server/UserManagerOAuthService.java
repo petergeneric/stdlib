@@ -118,4 +118,18 @@ public interface UserManagerOAuthService
 	Response getOIDCUserInfoPost(@HeaderParam(HttpHeaderNames.AUTHORIZATION)
 	                             @Doc("Expected header is 'Authorization: Bearer [token from /token resource]'; if omitted then will return 'WWW-Authenticate: Bearer'")
 			                             String bearerTokenHeader);
+
+	@POST
+	@Path("/token-to-delegated-token")
+	@Doc("Non-standard method to exchange a Refresh Token for a short-lived Delegated Access Token granting the same access privileges as that user, and the access rights of the service. The client_id MUST be permitted to use the provided refresh_token")
+	@Consumes(MediaType.APPLICATION_FORM_URLENCODED)
+	@Produces(MediaType.TEXT_PLAIN)
+	String createDelegatedAccessToken(@FormParam("client_id") String clientId,
+	                                  @FormParam("client_secret") String secret,
+	                                  @FormParam("validity_period")
+	                                  @Doc("The number of milliseconds the token should remain valid for") long validityPeriod,
+	                                  @FormParam("refresh_token") @Doc("The refresh token") String refreshToken,
+	                                  @HeaderParam(HttpHeaderNames.AUTHORIZATION)
+	                                  @Doc(value = "If providing client id and secret as BASIC auth rather than form params", href = "https://tools.ietf.org/html/rfc6749#section-2.3.1")
+	                                  final String basicAuthHeader);
 }

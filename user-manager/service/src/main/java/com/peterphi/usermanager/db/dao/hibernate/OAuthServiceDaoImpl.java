@@ -100,11 +100,14 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 
 	public OAuthServiceEntity getByClientIdAndSecretAndEndpoint(final String id, final String secret, final String redirectUri)
 	{
-		final OAuthServiceEntity entity = uniqueResult(new WebQuery()
-				                                               .eq("id", id)
-				                                               .eq("enabled", true)
-				                                               .eq("clientSecret", secret));
+		final OAuthServiceEntity entity = getByClientIdAndSecretOnly(id, secret);
 
 		return filterByEndpoint(entity, redirectUri);
+	}
+
+
+	public OAuthServiceEntity getByClientIdAndSecretOnly(final String id, final String secret)
+	{
+		return uniqueResult(new WebQuery().eq("id", id).eq("enabled", true).eq("clientSecret", secret));
 	}
 }

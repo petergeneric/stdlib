@@ -11,8 +11,10 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthServiceDaoImpl;
+import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
+import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
@@ -22,6 +24,10 @@ import org.apache.commons.lang.StringUtils;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
 import java.net.URI;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 @AuthConstraint(role = UserLogin.ROLE_ADMIN, comment = "Must be user manager admin to view/modify services")
 public class ServiceUIServiceImpl implements ServiceUIService
@@ -33,6 +39,9 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Inject
 	OAuthServiceDaoImpl dao;
+
+	@Inject
+	RoleDaoImpl roleDao;
 
 	@Inject
 	UserDaoImpl userDao;
@@ -75,9 +84,13 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final TemplateCall call = templater.template("service");
 
+		final List<RoleEntity> roles = roleDao.find(new WebQuery().limit(0).orderAsc("id")).getList();
+
 		call.set("nonce", nonceStore.getValue(NONCE_USE));
 		call.set("entity", entity);
 		call.set("localEndpoint", localEndpoint);
+		call.set("roles", roles);
+		call.set("entityRoleIds", entity.getRoles().stream().map(r -> r.getId()).collect(Collectors.toSet()));
 
 		return call.process();
 	}
@@ -85,9 +98,13 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response create(final String nonce, final String name, String requiredRole, final String endpoints)
+	public Response create(final String nonce,
+	                       final String name,
+	                       String requiredRole,
+	                       final String endpoints,
+	                       final List<String> roles)
 	{
-		nonceStore.validate(NONCE_USE,nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final int userId = userProvider.get().getId();
 
@@ -99,6 +116,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		entity.setRequiredRoleName(StringUtils.trimToNull(requiredRole));
 		entity.setEndpoints(StringUtils.trimToNull(endpoints));
 		entity.setEnabled(true);
+		entity.setRoles(new HashSet<>(roleDao.getListById(roles)));
 
 		dao.save(entity);
 
@@ -110,7 +128,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Transactional
 	public Response disable(final String id, final String nonce)
 	{
-		nonceStore.validate(NONCE_USE,nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -131,9 +149,13 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response setEndpoints(final String nonce, final String id, final String requiredRole, final String endpoints)
+	public Response edit(final String nonce,
+	                     final String id,
+	                     final String requiredRole,
+	                     final String endpoints,
+	                     final List<String> roles)
 	{
-		nonceStore.validate(NONCE_USE,nonce);
+		nonceStore.validate(NONCE_USE, nonce);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -147,8 +169,49 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		entity.setRequiredRoleName(StringUtils.trimToNull(requiredRole));
 		entity.setEndpoints(endpoints);
 
+		setRoles(entity, roles);
+
 		dao.update(entity);
 
 		return Response.seeOther(URI.create("/service/" + id)).build();
+	}
+
+
+	private void setRoles(final OAuthServiceEntity service, final List<String> roles)
+	{
+		final Set<String> currentRoles = service.getRoles().stream().map(r -> r.getId()).collect(Collectors.toSet());
+
+		// Role IDs to add
+		final Set<String> addRoles = new HashSet<>(roles);
+		addRoles.removeAll(currentRoles);
+
+		// Role IDs to remove
+		final Set<String> delRoles = new HashSet<>(currentRoles);
+		delRoles.removeAll(roles);
+
+		// Add roles as necessary
+		if (addRoles.size() > 0)
+		{
+			for (String role : addRoles)
+			{
+				RoleEntity roleEntity = roleDao.getById(role);
+				roleEntity.getServiceMembers().add(service);
+
+				roleDao.update(roleEntity);
+			}
+		}
+
+		// Remove roles as necessary
+		if (delRoles.size() > 0)
+		{
+			for (String role : delRoles)
+			{
+				RoleEntity roleEntity = roleDao.getById(role);
+
+				roleEntity.getServiceMembers().removeIf(u -> u.getId() == service.getId());
+
+				roleDao.update(roleEntity);
+			}
+		}
 	}
 }
