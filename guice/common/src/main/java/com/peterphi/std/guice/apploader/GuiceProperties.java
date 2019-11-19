@@ -35,12 +35,6 @@ public class GuiceProperties
 	@Doc("The instance id assigned to this execution of the service (internal property, should not be set by user)")
 	public static final String INSTANCE_ID = "service.instance-id";
 
-	@Doc("If true, any connection to the service manager will be skipped - messages directed to the service manager log appender will be ignored rather than forwarded on (default false)")
-	public static final String SERVICE_MANAGER_SKIP = "service-manager.logging.skip";
-
-	@Doc("The maximum number of unsent log messages that will be buffered in memory by the Service Manager appender (default 5000)")
-	public static final String SERVICE_MANAGER_LOGGING_MAX_BACKLOG = "service-manager.logging.max-backlog";
-
 	//
 	// Configuration Service Properties
 	//

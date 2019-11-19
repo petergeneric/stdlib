@@ -9,7 +9,6 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyReader;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
@@ -364,7 +363,6 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory.registerProviderInstance(provider);
 		}
 
-		providerFactory.registerProviderInstance(new LogReportMessageBodyReader());
 		// Register the JAXBContext provider
 		providerFactory.registerProviderInstance(jaxbContextResolver);
 
