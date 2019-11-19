@@ -15,7 +15,7 @@
 	<th:block th:if="${session.login.isAdmin()}">
 		<ul class="nav nav-pills">
 			<li><a href="#chcaptionModal" data-toggle="modal">Change Caption</a></li>
-			<li><a href="#editmembersModal" data-toggle="modal">Edit Members</a></li>
+			<li><a href="#editmembersModal" data-toggle="modal">Edit Users</a></li>
 			<li><a href="#delroleModal" data-toggle="modal">Delete</a></li>
 		</ul>
 
@@ -56,7 +56,7 @@
 		      aria-hidden="true" method="POST" autocomplete="off" th:action="@{'/role/' + ${entity.id} + '/change-members'}">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="editmembersModalLabel">Edit Members</h3>
+				<h3 id="editmembersModalLabel">Edit Users</h3>
 			</div>
 			<div class="modal-body">
 				<p>Please select the new membership list</p>
@@ -64,7 +64,7 @@
 
 				<!-- Caption -->
 				<div class="control-group">
-					<label class="control-label" for="input_members">Edit Members</label>
+					<label class="control-label" for="input_members">Edit Users</label>
 
 					<div class="controls" style="padding-bottom: 100px;">
 						<select data-placeholder="Choose members" multiple="multiple" id="input_members" name="members"
@@ -115,12 +115,23 @@
 		<dd th:text="${entity.id}">role name</dd>
 		<dt>caption</dt>
 		<dd th:text="${entity.caption}">caption</dd>
+
+		<th:block th:if="${session.login.isAdmin()}">
 		<dt>users with role</dt>
 		<dd>
 			<ul th:if="${users}">
 				<li th:each="user: ${users}"><a th:href="@{'/user/'+${user.id}}" th:text="${user.email}">email</a></li>
 			</ul>
-			<em th:unless="${users}">None</em></dd>
+			<em th:unless="${users}">None</em>
+		</dd>
+		<dt>services with role</dt>
+		<dd>
+			<ul th:unless="${entity.serviceMembers.isEmpty()}">
+				<li th:each="s: ${entity.serviceMembers}"><a th:href="@{'/service/'+${s.id}}" th:text="${s.name}">name</a></li>
+			</ul>
+			<em th:if="${entity.serviceMembers.isEmpty()}">None</em>
+		</dd>
+		</th:block>
 	</dl>
 
 	<footer th:replace="includes :: footer"></footer>

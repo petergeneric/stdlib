@@ -56,6 +56,19 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 
 
 	@Transactional
+	public OAuthSessionEntity getSessionToDelegateByRefreshToken(final OAuthServiceEntity service, final String refreshToken)
+	{
+		final OAuthSessionEntity session = uniqueResult(new WebQuery()
+				                                                .eq("id", refreshToken)
+				                                                .isNotNull("token")
+				                                                .eq("alive", true)
+				                                                .eq("context.service:id", service.getId()));
+
+		return session;
+	}
+
+
+	@Transactional
 	public OAuthSessionEntity exchangeCodeForToken(final OAuthServiceEntity service, final String authorisationCode)
 	{
 		final OAuthSessionEntity session = uniqueResult(new WebQuery()

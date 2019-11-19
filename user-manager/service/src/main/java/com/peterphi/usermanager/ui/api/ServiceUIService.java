@@ -10,6 +10,7 @@ import javax.ws.rs.core.Context;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriInfo;
+import java.util.List;
 
 @Path("/")
 public interface ServiceUIService
@@ -30,7 +31,8 @@ public interface ServiceUIService
 	Response create(@FormParam("nonce") final String nonce,
 	                @FormParam("name") final String name,
 	                @FormParam("required_role") final String requiredRoleName,
-	                @FormParam("endpoints") final String endpoints);
+	                @FormParam("endpoints") final String endpoints,
+	                @FormParam("roles") final List<String> roles);
 
 	@POST
 	@Path("/service/{id}/disable")
@@ -38,10 +40,11 @@ public interface ServiceUIService
 	Response disable(@PathParam("id") String id, @FormParam("nonce") final String nonce);
 
 	@POST
-	@Path("/service/{id}/edit-endpoints")
+	@Path("/service/{id}/edit")
 	@Produces(MediaType.TEXT_HTML)
-	Response setEndpoints(@FormParam("nonce") final String nonce,
-	                      @PathParam("id") String id,
-	                      @FormParam("required_role") final String requiredRoleName,
-	                      @FormParam("endpoints") final String endpoints);
+	Response edit(@FormParam("nonce") final String nonce,
+	              @PathParam("id") String id,
+	              @FormParam("required_role") final String requiredRoleName,
+	              @FormParam("endpoints") final String endpoints,
+	              @FormParam("roles") final List<String> roles);
 }

@@ -4,15 +4,19 @@ import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.types.SimpleId;
 import org.joda.time.DateTime;
 
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.Id;
 import javax.persistence.JoinColumn;
+import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
 import javax.persistence.Version;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity(name = "oauth_service")
 public class OAuthServiceEntity
@@ -23,10 +27,10 @@ public class OAuthServiceEntity
 	private String endpoints;
 	private String clientSecret = SimpleId.alphanumeric(IDPrefix.OAUTH_SERVICE_SECRET, 36);
 	private String requiredRoleName;
+	private Set<RoleEntity> roles = new HashSet<>();
 	private boolean enabled = true;
 	private DateTime created = new DateTime();
 	private DateTime updated = new DateTime();
-
 
 	@Id
 	@Column(name = "id", length = 36)
@@ -128,6 +132,20 @@ public class OAuthServiceEntity
 	{
 		this.requiredRoleName = requiredRoleName;
 	}
+
+
+	@ManyToMany(mappedBy = "serviceMembers", cascade = CascadeType.ALL)
+	public Set<RoleEntity> getRoles()
+	{
+		return roles;
+	}
+
+
+	public void setRoles(final Set<RoleEntity> roles)
+	{
+		this.roles = roles;
+	}
+
 
 
 	public void setEnabled(final boolean enabled)

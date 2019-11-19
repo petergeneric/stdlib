@@ -25,6 +25,11 @@ import java.util.function.Supplier;
 @Singleton
 public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 {
+	/**
+	 * A Bearer Token generator that generates Delegated Tokens for an OAuth2 user session when calling other services
+	 */
+	public static final String OAUTH_DELEGATING_BEARER_GENERATOR = "com.peterphi.std.guice.web.rest.auth.oauth2.OAuthSessionDelegatingBearerGenerator";
+
 	@Inject
 	ResteasyClientFactoryImpl clientFactory;
 
@@ -36,7 +41,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 	@Inject(optional = true)
 	@Named("jaxrs.cookie-store")
-	@Doc("Whether default JAX-RS clients should maintain a cookie store (default false)")
+	@Doc("Whether default JAX-RS clients should maintain a cookie store (default false); will also default to false if oauth delegation is switched on (or if a bearer generator is configured)")
 	public boolean defaultStoreCookies = false;
 
 
@@ -107,31 +112,40 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final String password = config.get("service." + name + ".password", getPassword(uri));
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
 		final String authType = config.get("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
-		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store", defaultStoreCookies);
 		final String bearerToken = config.get("service." + name + ".bearer", null);
-		final String bearerTokenClassName = config.get("service." + name + ".bearer-generator", null);
+		final boolean oauthDelegate = config.getBoolean("service." + name + ".delegation", false);
+		final String defaultBearerGenerator;
 
+		if (oauthDelegate)
+			defaultBearerGenerator = OAUTH_DELEGATING_BEARER_GENERATOR;
+		else
+			defaultBearerGenerator = null;
 
-		final Supplier<String> bearerSupplier;
+		final String bearerTokenClassName = config.get("service." + name + ".bearer-generator", defaultBearerGenerator);
+
+		// N.B. do not store cookies by default if we're generating bearer tokens (since this may result in credentials being improperly shared across calls)
+		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store",
+		                                               defaultStoreCookies && (bearerTokenClassName == null));
+
+		final BearerGenerator bearerSupplier;
 		{
-			if (bearerToken != null)
-			{
-				bearerSupplier = () -> bearerToken;
-			}
-			else if (bearerTokenClassName != null)
+			if (bearerTokenClassName != null)
 			{
 				try
 				{
-					final Class<?> bearerClass = Class.forName(bearerTokenClassName);
+					final Class<? extends BearerGenerator> bearerClass = (Class) Class.forName(bearerTokenClassName);
 
-					final Object instance = guice.getInstance(bearerClass);
-
-					bearerSupplier = (Supplier<String>) instance;
+					bearerSupplier = guice.getInstance(bearerClass);
 				}
 				catch (Throwable e)
 				{
 					throw new RuntimeException("Error trying to instantiate bearer-generator class " + bearerTokenClassName, e);
 				}
+			}
+			else if (bearerToken != null)
+			{
+				// Static bearer token
+				bearerSupplier = new StaticBearerToken(bearerToken);
 			}
 			else
 			{
@@ -227,7 +241,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	public ResteasyWebTarget createWebTarget(final URI endpoint,
 	                                         String username,
 	                                         String password,
-	                                         Supplier<String> bearerToken,
+	                                         BearerGenerator bearerToken,
 	                                         boolean storeCookies,
 	                                         boolean preemptiveAuth)
 	{
@@ -239,7 +253,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                  boolean fastFail,
 	                                  String username,
 	                                  String password,
-	                                  final Supplier<String> bearerToken,
+	                                  final BearerGenerator bearerToken,
 	                                  final boolean storeCookies,
 	                                  boolean preemptiveAuth)
 	{
@@ -320,7 +334,13 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return createWebTarget(endpoint, fastFail, null, null, token, defaultStoreCookies, true).proxy(iface);
+		return createWebTarget(endpoint,
+		                       fastFail,
+		                       null,
+		                       null,
+		                       new SupplierBearerGenerator(token),
+		                       defaultStoreCookies,
+		                       true).proxy(iface);
 	}
 
 

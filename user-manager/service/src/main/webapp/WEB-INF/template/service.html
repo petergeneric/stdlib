@@ -41,12 +41,12 @@
 			</div>
 		</form>
 
-		<!-- Edit endpoints modal -->
+		<!-- Edit modal -->
 		<form id="editEndpointsModal"
 		      class="modal hide fade form-vertical"
 		      tabindex="-1" role="dialog"
 		      aria-labelledby="editEndpointsModalLabel" aria-hidden="true" method="POST" autocomplete="off"
-		      th:action="@{'/service/'+${entity.id}+'/edit-endpoints'}">
+		      th:action="@{'/service/'+${entity.id}+'/edit'}">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
 				<h3 id="editEndpointsModalLabel">Edit</h3>
@@ -85,6 +85,26 @@
 						<span class="help-inline">Endpoints, one per line</span>
 					</div>
 				</div>
+
+				<div class="control-group">
+					<label class="control-label" for="input_roles">Service Roles</label>
+
+					<div class="controls">
+						<select multiple="multiple" id="input_roles" name="roles"
+						        class="chosen-select" style="width: 95%;" data-placeholder="Choose some roles (optional)">
+							<option th:each="role: ${roles}" th:value="${role.id}"
+							        th:text="${role.id}"
+							        th:selected="${entityRoleIds.contains(role.id)}"></option>
+						</select>
+					</div>
+
+					<script>
+						$(document).ready(function () {
+							$(".chosen-select").chosen({width: "95%"});
+						});
+					</script>
+				</div>
+
 				<div class="modal-footer">
 					<input type="hidden" name="nonce" th:value="${nonce}"/>
 					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -105,6 +125,12 @@
 		<dd th:text="${entity.enabled}">enabled</dd>
 		<dt>required role</dt>
 		<dd th:text="${entity.requiredRoleName}">required role</dd>
+		<dt>service roles</dt>
+		<dd>
+			<ul>
+				<li th:each="role: ${entity.roles}"><a th:href="@{'/role/'+${role.id}}" th:text="${role.caption}">role name</a></li>
+			</ul>
+		</dd>
 		<dt>Endpoint Prefixes</dt>
 		<dd>
 			<ul>

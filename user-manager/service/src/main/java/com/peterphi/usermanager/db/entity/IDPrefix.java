@@ -9,4 +9,6 @@ public class IDPrefix
 	public static final String OAUTH_AUTHORISATION_CODE = "authc-";
 
 	public static final String OAUTH_SESSION_TOKEN = "tok-";
+
+	public static final String OAUTH_DELEGATED_TOKEN = "dtk-";
 }

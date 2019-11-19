@@ -252,6 +252,13 @@ class HttpCallJWTUser implements CurrentUser
 
 
 	@Override
+	public boolean isDelegated()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		final Map<String, Object> data = get();

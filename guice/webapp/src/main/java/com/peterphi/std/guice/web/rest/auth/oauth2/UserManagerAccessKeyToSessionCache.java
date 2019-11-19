@@ -60,6 +60,9 @@ public class UserManagerAccessKeyToSessionCache
 		if (!session.hasBeenInitialised())
 			session.initialiseFromAPIToken(token);
 
+		if (!session.isValid())
+			throw new IllegalArgumentException("Access token appears to have expired, please re-authenticate");
+
 		return session;
 	}
 }
