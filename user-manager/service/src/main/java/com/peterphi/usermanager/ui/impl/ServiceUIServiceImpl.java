@@ -106,6 +106,9 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	{
 		nonceStore.validate(NONCE_USE, nonce);
 
+		if (!userProvider.get().isAdmin())
+			throw new IllegalArgumentException("Only an admin can create a service!");
+
 		final int userId = userProvider.get().getId();
 
 		final UserEntity user = userDao.getById(userId);
@@ -136,8 +139,8 @@ public class ServiceUIServiceImpl implements ServiceUIService
 			throw new IllegalArgumentException("No such service with client_id: " + id);
 		else if (!entity.isEnabled())
 			throw new IllegalArgumentException("Cannot disable an already-disabled service: " + id);
-		else if (entity.getOwner().getId() != userProvider.get().getId() && !userProvider.get().isAdmin())
-			throw new IllegalArgumentException("Only the owner or an admin can change a service!");
+		else if (!userProvider.get().isAdmin())
+			throw new IllegalArgumentException("Only an admin can disable a service!");
 
 		entity.setEnabled(false);
 
@@ -163,8 +166,8 @@ public class ServiceUIServiceImpl implements ServiceUIService
 			throw new IllegalArgumentException("No such service with client_id: " + id);
 		else if (!entity.isEnabled())
 			throw new IllegalArgumentException("Cannot set endpoints on disabled service: " + id);
-		else if (entity.getOwner().getId() != userProvider.get().getId() && !userProvider.get().isAdmin())
-			throw new IllegalArgumentException("Only the owner or an admin can change endpoints of a service!");
+		else if (!userProvider.get().isAdmin())
+			throw new IllegalArgumentException("Only an admin can edit a service!");
 
 		entity.setRequiredRoleName(StringUtils.trimToNull(requiredRole));
 		entity.setEndpoints(endpoints);
@@ -174,6 +177,28 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		dao.update(entity);
 
 		return Response.seeOther(URI.create("/service/" + id)).build();
+	}
+
+
+	@Override
+	@Transactional
+	public Response rotateAccessKey(final String id, final String nonce)
+	{
+		nonceStore.validate(NONCE_USE, nonce);
+
+		final OAuthServiceEntity entity = dao.getById(id);
+
+		if (entity == null)
+			throw new IllegalArgumentException("No such service with client_id: " + id);
+		else if (!entity.isEnabled())
+			throw new IllegalArgumentException("Cannot set endpoints on disabled service: " + id);
+		else if (entity.getOwner().getId() != userProvider.get().getId() && !userProvider.get().isAdmin())
+			throw new IllegalArgumentException("Only the owner or an admin can change access keys for a service!");
+
+		// Change regular account settings
+		dao.rotateUserAccessKey(entity);
+
+		return Response.seeOther(URI.create("/service/" + entity.getId())).build();
 	}
 
 

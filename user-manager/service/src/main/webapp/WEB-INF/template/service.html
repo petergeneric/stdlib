@@ -16,6 +16,7 @@
 		<ul class="nav nav-pills">
 			<li><a href="#delModal" data-toggle="modal">Disable Service</a></li>
 			<li><a href="#editEndpointsModal" data-toggle="modal">Edit</a>
+			<li th:if="${session.login.isAdmin()}"><a href="#rotateKeyModal" data-toggle="modal"><span th:text="${entity.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</a></li>
 			</li>
 		</ul>
 
@@ -112,7 +113,29 @@
 				</div>
 			</div>
 		</form>
+
+
+		<!-- Rotate API keys modal -->
+		<form id="rotateKeyModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="rotateKeyModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/service/' + ${entity.id} + '/rotate-access-key'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="rotateKeyModalLabel"><span th:text="${entity.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</h3>
+			</div>
+			<div class="modal-body">
+				<p>Assign a new API key for this service? If an Access Key is already assigned then a new key will be assigned and the old key will be moved to the Access Key Secondary field (and will continue to work until a subsequent rotation or until that key is revoked). Are you sure?</p>
+				<input type="hidden" name="alter" value="rotateKey"/>
+				<input type="hidden" name="id" th:value="${entity.id}"/>
+				<input type="hidden" name="nonce" th:value="${nonce}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Rotate"/>
+			</div>
+		</form>
 	</th:block>
+
 
 	<dl class="dl-horizontal" th:fragment="properties">
 		<dt>client_id</dt>
@@ -137,13 +160,21 @@
 				<li th:each="endpoint: ${entity.endpointsAsList()}" th:text="${endpoint}">endpoint</li>
 			</ul>
 		</dd>
-		<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
+		<th:block th:if="${session.login.isAdmin()}">
 			<dt>Client Config</dt>
 			<dd>
 				<pre><th:block th:text="'service.oauth2.endpoint='+${localEndpoint}"></th:block>
 <th:block th:text="'service.oauth2.client_id='+${entity.id}"></th:block>
 <th:block th:text="'service.oauth2.client_secret='+${entity.clientSecret}"></th:block></pre>
 			</dd>
+			<th:block th:if="${entity.accessKey}">
+				<dt>Primary API Key</dt>
+				<dd><input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" th:value="${entity.accessKey}" alt="Click to copy" title="Click to copy"/></dd>
+			</th:block>
+			<th:block th:if="${entity.accessKeySecondary}">
+				<dt>Secondary API Key</dt>
+				<dd><input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" th:value="${entity.accessKeySecondary}" alt="Click to copy" title="Click to copy"/></dd>
+			</th:block>
 		</th:block>
 	</dl>
 

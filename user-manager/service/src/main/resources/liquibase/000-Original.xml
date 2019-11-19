@@ -349,4 +349,11 @@
 		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
 		                         referencedTableName="oauth_session" referencedColumnNames="id"/>
 	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_service_access_keys">
+		<addColumn tableName="oauth_service">
+			<column name="access_key" type="VARCHAR(100)" />
+			<column name="access_key_alt" type="VARCHAR(100)" />
+		</addColumn>
+	</changeSet>
 </databaseChangeLog>

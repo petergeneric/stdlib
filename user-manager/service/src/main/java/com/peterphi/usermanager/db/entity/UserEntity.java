@@ -58,7 +58,7 @@ public class UserEntity
 	 */
 	private String sessionReconnectKey;
 
-	private DateTime created=DateTime.now();
+	private DateTime created = DateTime.now();
 
 	private DateTime lastLogin;
 
@@ -78,7 +78,8 @@ public class UserEntity
 		this.id = id;
 	}
 
-	@Column(name="is_local",nullable=false)
+
+	@Column(name = "is_local", nullable = false)
 	public boolean isLocal()
 	{
 		return local;

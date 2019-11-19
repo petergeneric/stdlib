@@ -17,6 +17,7 @@ import java.util.Set;
 public interface CurrentUser
 {
 	String DEFAULT_DATE_FORMAT_STRING = "YYYY-MM-dd HH:mm:ss zzz";
+	String ISO_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ssZ";
 	String DEFAULT_TIMEZONE = "Europe/London";
 
 	DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT_STRING).withZone(DateTimeZone.forID(DEFAULT_TIMEZONE));

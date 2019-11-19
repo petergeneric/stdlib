@@ -47,4 +47,10 @@ public interface ServiceUIService
 	              @FormParam("required_role") final String requiredRoleName,
 	              @FormParam("endpoints") final String endpoints,
 	              @FormParam("roles") final List<String> roles);
+
+
+	@POST
+	@Path("/service/{service_id}/rotate-access-key")
+	@Produces(MediaType.TEXT_HTML)
+	Response rotateAccessKey(@PathParam("service_id") String serviceId, @FormParam("nonce") String nonce);
 }
