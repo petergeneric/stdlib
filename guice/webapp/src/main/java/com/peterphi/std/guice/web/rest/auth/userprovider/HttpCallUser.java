@@ -45,6 +45,13 @@ class HttpCallUser implements CurrentUser
 
 
 	@Override
+	public boolean isService()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		HttpServletRequest request = HttpCallContext.get().getRequest();

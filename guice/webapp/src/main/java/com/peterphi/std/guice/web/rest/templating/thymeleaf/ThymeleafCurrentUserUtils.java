@@ -114,6 +114,13 @@ class ThymeleafCurrentUserUtils implements CurrentUser
 
 
 	@Override
+	public boolean isService()
+	{
+		return getUser().isDelegated();
+	}
+
+
+	@Override
 	public String format(DateTime date)
 	{
 		return getUser().format(date);

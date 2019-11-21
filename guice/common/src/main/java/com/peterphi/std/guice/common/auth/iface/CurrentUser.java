@@ -62,6 +62,14 @@ public interface CurrentUser
 	boolean isDelegated();
 
 	/**
+	 * Returns true if the calling user is a service user. This indicates that a call is being made by a service directly, not on
+	 * behalf of a particular user.
+	 *
+	 * @return
+	 */
+	boolean isService();
+
+	/**
 	 * Get the name of the current user
 	 *
 	 * @return the name if known, otherwise null

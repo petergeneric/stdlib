@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
+import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Test;
@@ -13,6 +14,8 @@ public class WebQueryTest
 	@Test
 	public void testEncodeResultStable()
 	{
+		HibernateDao dao;
+
 		WebQuery query = new WebQuery()
 				                 .orderDesc("id")
 				                 .orderAsc("name")

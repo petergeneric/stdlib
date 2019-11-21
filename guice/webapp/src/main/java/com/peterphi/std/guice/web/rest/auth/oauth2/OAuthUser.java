@@ -71,6 +71,16 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	}
 
 
+	@Override
+	public boolean isService()
+	{
+		if (isAnonymous())
+			return false;
+		else
+			return getSession().getUserInfo().service;
+	}
+
+
 	private OAuth2SessionRef getSession()
 	{
 		if (staticSession != null)
