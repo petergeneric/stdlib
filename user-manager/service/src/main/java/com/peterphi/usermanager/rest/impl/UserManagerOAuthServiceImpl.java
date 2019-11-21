@@ -540,6 +540,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			UserManagerUser obj = marshaller.marshal(fakeUser);
 
+			obj.service = true;
+			obj.delegated = false;
+
 			obj.roles.add(CurrentUser.ROLE_SERVICE_CALL);
 
 			return obj;

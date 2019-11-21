@@ -22,6 +22,12 @@ public class UserManagerUser
 	public boolean delegated = false;
 
 	/**
+	 * True if this is a service user
+	 */
+	@XmlAttribute
+	public boolean service = false;
+
+	/**
 	 * User's real name
 	 */
 	@XmlElement

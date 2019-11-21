@@ -266,6 +266,13 @@ class HttpCallJWTUser implements CurrentUser
 
 
 	@Override
+	public boolean isService()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		final Map<String, Object> data = get();

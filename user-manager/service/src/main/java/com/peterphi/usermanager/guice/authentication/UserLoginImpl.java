@@ -80,6 +80,13 @@ class UserLoginImpl implements UserLogin
 
 
 	@Override
+	public boolean isService()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		return name;
