@@ -34,10 +34,10 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 		                                                              (constraint != null ? ": " + constraint.comment() : "") +
 		                                                              ". Required role: " +
 		                                                              scope.getRole(constraint) +
-		                                                              ". You are: anonymous=" +
-		                                                              login.isAnonymous() +
-		                                                              ", browser=" +
-		                                                              isBrowserConsumer());
+		                                                              "." +
+		                                                              (login.isAnonymous() ?
+		                                                               " You are not currently logged in" :
+		                                                               " You are logged in as " + login.getUsername()));
 
 
 		// If the user is logged in, deny access with a 403
