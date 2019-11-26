@@ -11,19 +11,19 @@ public final class UserManagerBearerToken
 
 	public static boolean isUserManagerBearer(final String token)
 	{
-		return token.startsWith(PREFIX);
+		return token != null && token.startsWith(PREFIX);
 	}
 
 
 	public static boolean isUserManagerDelegatedBearer(final String token)
 	{
-		return token.startsWith(PREFIX_DELEGATED);
+		return token != null && token.startsWith(PREFIX_DELEGATED);
 	}
 
 
 	public static boolean isUserManagerServiceBearer(final String token)
 	{
-		return token.startsWith(PREFIX_SERVICE_TOKEN);
+		return token != null && token.startsWith(PREFIX_SERVICE_TOKEN);
 	}
 
 
