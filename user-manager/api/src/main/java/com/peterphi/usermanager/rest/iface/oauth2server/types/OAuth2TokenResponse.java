@@ -1,5 +1,7 @@
 package com.peterphi.usermanager.rest.iface.oauth2server.types;
 
+import org.joda.time.DateTime;
+
 import javax.json.Json;
 import javax.json.JsonObject;
 import javax.json.JsonObjectBuilder;
@@ -12,6 +14,7 @@ public class OAuth2TokenResponse
 	public String access_token;
 	public String refresh_token;
 	public Date expires;
+	public Date refresh;
 	public String error;
 
 
@@ -40,14 +43,14 @@ public class OAuth2TokenResponse
 		final JsonObject obj = Json.createReader(new StringReader(json)).readObject();
 
 
-		final int expiresIn = obj.getInt("expires_in", 0);
+		final int expiresIn = obj.getInt("expires_in", Integer.MIN_VALUE);
 
 		// Set expires 1m before expires_in
 		final Date expires;
-		if (expiresIn == 0)
-			expires = new Date(System.currentTimeMillis() + ((expiresIn - 60) * 1000));
+		if (expiresIn != Integer.MIN_VALUE)
+			expires = DateTime.now().plusSeconds(expiresIn).toDate();
 		else
-			expires = null;
+			expires = null; // Non-expiring token (!)
 
 		return new OAuth2TokenResponse(obj.getString("access_token", null),
 		                               obj.getString("refresh_token", null),
@@ -67,13 +70,13 @@ public class OAuth2TokenResponse
 		if (expires != null)
 			expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
 		else
-			expiresIn = -1;
+			expiresIn = 0;
 
 		if (access_token != null)
 			builder.add("access_token", access_token);
 		if (refresh_token != null)
 			builder.add("refresh_token", refresh_token);
-		if (expires != null)
+		if (expiresIn > 0)
 			builder.add("expires_in", expiresIn);
 		if (error != null)
 			builder.add("error", error);
