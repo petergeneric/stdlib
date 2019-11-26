@@ -118,6 +118,9 @@ public class OAuth2SessionRef
 
 	public boolean isValid()
 	{
+		if (response == null)
+			return false; // Cannot be valid because there is no response data available at all
+
 		try
 		{
 			getToken();
@@ -172,16 +175,16 @@ public class OAuth2SessionRef
 			builder.replaceQueryParam("scope", scope);
 
 		if (returnTo != null)
-			builder.replaceQueryParam("state", encodeState(callbackNonce + " " + returnTo));
+			builder.replaceQueryParam("state", encodeState(callbackNonce + " GET " + returnTo));
 
 		return builder.build();
 	}
 
 
 	/**
-	 * Encode the state value into RFC $648 URL-safe base64
+	 * Encode the state value into RFC $648 URL-safe base64.
 	 *
-	 * @param src
+	 * @param src Should be of the form <code>nonce [http request] [redirect url]</code>
 	 *
 	 * @return
 	 */
@@ -192,13 +195,15 @@ public class OAuth2SessionRef
 
 
 	/**
-	 * Decode the state value (which should be encoded as RFC 4648 URL-safe base64)
+	 * Decode the state value (which should be encoded as RFC 4648 URL-safe base64)<br />
+	 * The state should be encoded as: <code>nonce [http request] [redirect url]</code>.
 	 *
 	 * @param src
 	 *
 	 * @return
+	 * @see #encodeState(String)
 	 */
-	private String decodeState(final String src)
+	private static String decodeState(final String src)
 	{
 		return new String(Base64.getUrlDecoder().decode(src));
 	}
@@ -213,16 +218,37 @@ public class OAuth2SessionRef
 	 */
 	public URI getRedirectToFromState(final String state)
 	{
-		final String[] pieces = decodeState(state).split(" ", 2);
+		final String[] pieces = decodeState(state).split(" ", 3);
 
 		if (!StringUtils.equals(callbackNonce, pieces[0]))
 			throw new IllegalArgumentException(
 					"WARNING: This service received an authorisation approval which it did not initiate, someone may be trying to compromise your account security");
 
-		if (pieces.length == 2)
-			return URI.create(pieces[1]);
+		if (pieces.length >= 2)
+		{
+			return getRedirectToFromStateIgnoringNonce(state);
+		}
 		else
+		{
 			return null;
+		}
+	}
+
+
+	/**
+	 * Gets the URI the user should GET for the redirect. N.B. fails on anything other than GET.
+	 *
+	 * @param state
+	 * @return
+	 */
+	public static URI getRedirectToFromStateIgnoringNonce(final String state)
+	{
+		final String[] pieces = decodeState(state).split(" ", 3);
+
+		if (!StringUtils.equals("GET", pieces[1]))
+			throw new IllegalArgumentException("WARNING: Unsupported redirect type (expected GET)");
+
+		return URI.create(pieces[2]);
 	}
 
 
