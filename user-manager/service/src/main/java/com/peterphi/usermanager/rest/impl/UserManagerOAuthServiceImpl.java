@@ -59,8 +59,8 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Inject(optional = true)
 	@Named("auth.token.refresh-period")
-	@Doc("The period after which an OAuth2 consumer will have to refresh their access token. If they do not expire it by this timeout then a new session must be re-established (default PT25M)")
-	public Period tokenRefreshInterval = Period.parse("PT30M");
+	@Doc("The period after which an OAuth2 consumer will have to refresh their access token. If they do not expire it by this timeout then a new session must be re-established (default PT3H)")
+	public Period tokenRefreshInterval = Period.parse("PT3H");
 
 	@Inject(optional = true)
 	@Named("auth.all.create-new-session-context-if-necessary")
