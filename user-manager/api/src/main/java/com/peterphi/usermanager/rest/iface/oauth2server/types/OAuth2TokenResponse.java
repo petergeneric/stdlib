@@ -12,6 +12,7 @@ public class OAuth2TokenResponse
 	public String access_token;
 	public String refresh_token;
 	public Date expires;
+	public Date refresh;
 	public String error;
 
 
