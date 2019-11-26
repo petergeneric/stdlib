@@ -59,7 +59,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Inject(optional = true)
 	@Named("auth.token.refresh-period")
-	@Doc("The period after which an OAuth2 consumer will have to refresh their access token (default PT30M)")
+	@Doc("The period after which an OAuth2 consumer will have to refresh their access token. If they do not expire it by this timeout then a new session must be re-established (default PT25M)")
 	public Period tokenRefreshInterval = Period.parse("PT30M");
 
 	@Inject(optional = true)
@@ -378,7 +378,19 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
 			{
-				if (UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
+				if (subjectToken == null || !UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
+				{
+					// Regular refresh token
+					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+
+					if (service == null)
+						throw new IllegalArgumentException(
+								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
+					break;
+				}
+				else
 				{
 					// If a Service Token is provied as a Refresh Token, treat the call as a Service API Key Token Exchange
 					// This is necessary because a Service User isn't a real user and so can't have a Session
@@ -392,18 +404,6 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					                password,
 					                subjectToken,
 					                authorizationHeader);
-				}
-				else
-				{
-
-					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
-
-					if (service == null)
-						throw new IllegalArgumentException(
-								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
-
-					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
-					break;
 				}
 			}
 			case GRANT_TYPE_PASSWORD:
