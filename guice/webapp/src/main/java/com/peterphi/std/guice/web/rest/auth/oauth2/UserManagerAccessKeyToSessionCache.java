@@ -5,6 +5,7 @@ import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 
 import java.util.concurrent.ExecutionException;
@@ -19,11 +20,10 @@ public class UserManagerAccessKeyToSessionCache
 	@Inject
 	public Provider<OAuth2SessionRef> sessionRefProvider;
 
-	private final Cache<String, OAuth2SessionRef> bearerToSessionRefCache = CacheBuilder
+	private final Cache<String, OAuth2SessionRef> bearerToSessionRefCache = CacheManager.build(getClass().getSimpleName(), CacheBuilder
 			                                                                        .newBuilder()
 			                                                                        .expireAfterAccess(20, TimeUnit.MINUTES)
-			                                                                        .maximumSize(1024)
-			                                                                        .build();
+			                                                                        .maximumSize(1024));
 
 
 	public OAuth2SessionRef getOrCreateSessionRef(final String token)

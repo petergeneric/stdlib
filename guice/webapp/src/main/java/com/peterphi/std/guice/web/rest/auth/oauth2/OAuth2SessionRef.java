@@ -357,6 +357,7 @@ public class OAuth2SessionRef
 				                                   delegatedTokenValidityPeriod);
 
 			this.delegatedToken = new SingleItemCache<>(this :: generateNewDelegatedToken, delegatedTokenRefreshPeriod);
+			this.delegatedToken.setName("OAuth Delegation Token");
 		}
 
 		return delegatedToken.get();

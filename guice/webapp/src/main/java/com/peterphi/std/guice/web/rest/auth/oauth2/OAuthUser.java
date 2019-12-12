@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.web.rest.auth.oauth2;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceConstants;
@@ -24,7 +22,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 @SessionScoped
 public class OAuthUser implements CurrentUser, GuiceLifecycleListener
@@ -44,7 +41,7 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	@Inject
 	Provider<UserManagerAccessKeyToSessionCache> apiSessionRefCacheProvider;
 
-	Cache<String, DateTimeFormatter> dateFormatCache = CacheBuilder.newBuilder().maximumSize(1).build();
+	DateTimeFormatter _dateFormatter = null;
 
 
 	@Override
@@ -184,18 +181,21 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	{
 		if (!isAnonymous())
 		{
-			final UserManagerUser userInfo = getSession().getUserInfo();
-
-			final String key = userInfo.dateFormat + userInfo.timeZone;
-
-			try
+			if (_dateFormatter == null)
 			{
-				return dateFormatCache.get(key, userInfo:: toDateTimeFormatter);
+				final UserManagerUser userInfo = getSession().getUserInfo();
+
+				try
+				{
+					_dateFormatter = userInfo.toDateTimeFormatter();
+				}
+				catch (Throwable t)
+				{
+					throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", t);
+				}
 			}
-			catch (ExecutionException e)
-			{
-				throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", e);
-			}
+
+			return _dateFormatter;
 		}
 
 		return CurrentUser.DEFAULT_DATE_FORMAT;

@@ -2,6 +2,7 @@ package com.peterphi.configuration.service.git;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.io.FileHelper;
@@ -40,9 +41,11 @@ public class RepoHelper
 	public static final String KEY_INCLUDE = "include";
 	public static final String KEY_INCLUDE_SHALLOW = "shallow-include";
 
-	private static Cache<String, Map<String, Map<String, ConfigPropertyValue>>> COMMIT_CACHE = CacheBuilder.newBuilder()
-	                                                                                                       .maximumSize(8)
-	                                                                                                       .build();
+	private static Cache<String, Map<String, Map<String, ConfigPropertyValue>>> COMMIT_CACHE = CacheManager.build("RepoHelper.CommitCache",
+	                                                                                                              CacheBuilder
+			                                                                                                              .newBuilder()
+			                                                                                                              .maximumSize(
+					                                                                                                              8));
 
 
 	public static RevCommit resolve(final Repository repo, final String ref) throws IOException

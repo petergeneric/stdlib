@@ -3,6 +3,7 @@ package com.peterphi.std.guice.common.cached.module;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.common.cached.annotation.Cache;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -17,7 +18,10 @@ final class CacheMethodInterceptor implements MethodInterceptor
 	/**
 	 * Use a guava cache with soft values (so the GC can reclaim the space if necessary)
 	 */
-	private final com.google.common.cache.Cache<String, CacheResult> cache = CacheBuilder.newBuilder().softValues().build();
+	private final com.google.common.cache.Cache<String, CacheResult> cache = CacheManager.build("Cache-annotated methods",
+	                                                                                            CacheBuilder
+			                                                                                            .newBuilder()
+			                                                                                            .softValues());
 
 	private final Meter hits;
 	private final Meter misses;
@@ -27,6 +31,8 @@ final class CacheMethodInterceptor implements MethodInterceptor
 	{
 		this.hits = registry.meter(GuiceMetricNames.CACHE_HITS);
 		this.misses = registry.meter(GuiceMetricNames.CACHE_MISSES);
+
+		CacheManager.register("Cache-annotated methods", cache);
 	}
 
 

@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.serviceprops.composite;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
@@ -19,7 +20,8 @@ class GuiceConfigVariableResolver extends StrLookup
 	/**
 	 * OGNL cache
 	 */
-	private final Cache<String, Node> ognlCache = CacheBuilder.newBuilder().maximumSize(1024).softValues().build();
+	private final Cache<String, Node> ognlCache = CacheManager.build("GuiceOgnlConfig",
+	                                                                 CacheBuilder.newBuilder().maximumSize(1024).softValues());
 
 	private final GuiceConfig properties;
 

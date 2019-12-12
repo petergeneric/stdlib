@@ -3,13 +3,15 @@ package com.peterphi.std.guice.common.ognl;
 import com.google.common.base.MoreObjects;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.common.cached.CacheManager;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 
 public class OgnlEvaluatorCollection
 {
-	private final Cache<String, OgnlEvaluator> interpreted = CacheBuilder.newBuilder().softValues().build();
+	private final Cache<String, OgnlEvaluator> interpreted = CacheManager.build("OgnlEvaluatorCollection",
+	                                                                            CacheBuilder.newBuilder().softValues());
 
 	private final ConcurrentHashMap<String, OgnlEvaluator> compiled = new ConcurrentHashMap<>();
 

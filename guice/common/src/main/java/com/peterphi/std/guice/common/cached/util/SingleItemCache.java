@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.cached.util;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.threading.Timeout;
 
 import java.util.concurrent.Callable;
@@ -25,6 +26,7 @@ public class SingleItemCache<T>
 
 	private final Cache<Integer, T> cache;
 	private final Callable<T> supplier;
+	private String name;
 
 
 	/**
@@ -53,6 +55,9 @@ public class SingleItemCache<T>
 	{
 		this.supplier = supplier;
 		this.cache = builder.maximumSize(1).build();
+
+		// Assign a name and register it with the Cache Manager
+		setName("unnamed single item cache");
 	}
 
 
@@ -109,9 +114,23 @@ public class SingleItemCache<T>
 	}
 
 
+	public void setName(final String name)
+	{
+		this.name = name;
+
+		CacheManager.register(name, cache);
+	}
+
+
+	public String getName()
+	{
+		return name;
+	}
+
+
 	@Override
 	public String toString()
 	{
-		return "SingleItemCache{" + "supplier=" + supplier + "}";
+		return "SingleItemCache{name=" + name + ",supplier=" + supplier + "}";
 	}
 }
