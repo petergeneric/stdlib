@@ -5,7 +5,7 @@ include Makefile.local
 
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = python3 -msphinx
+SPHINXBUILD   = sphinx-build
 #SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
