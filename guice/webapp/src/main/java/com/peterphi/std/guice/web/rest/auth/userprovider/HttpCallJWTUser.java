@@ -6,6 +6,7 @@ import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
@@ -25,6 +26,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.TimeUnit;
 
 class HttpCallJWTUser implements CurrentUser
 {
@@ -39,7 +41,12 @@ class HttpCallJWTUser implements CurrentUser
 	/**
 	 * Token cache; lets us skip parsing (N.B. need to revalidate "exp" if set)
 	 */
-	private static final Cache<String, Map<String, Object>> TOKEN_CACHE = CacheBuilder.newBuilder().maximumSize(256).build();
+	private static final Cache<String, Map<String, Object>> TOKEN_CACHE = CacheManager.build("Parsed JWTs",
+	                                                                                         CacheBuilder
+			                                                                                         .newBuilder()
+			                                                                                         .maximumSize(256)
+			                                                                                         .expireAfterWrite(1,
+			                                                                                                           TimeUnit.HOURS));
 
 	private final String headerName;
 	private final String cookieName;

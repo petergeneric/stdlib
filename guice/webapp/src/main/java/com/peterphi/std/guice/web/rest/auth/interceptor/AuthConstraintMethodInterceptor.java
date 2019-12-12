@@ -8,6 +8,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
@@ -36,7 +37,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private final Meter authenticatedDenied;
 	private final boolean onlyServletRequest;
 
-	private final Cache<String, AuthScope> scopes = CacheBuilder.newBuilder().build();
+	private final Cache<String, AuthScope> scopes = CacheManager.build("AuthScopes", CacheBuilder.newBuilder());
 
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,

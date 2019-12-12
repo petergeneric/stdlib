@@ -1,0 +1,88 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<!--@thymesVar id="breakerService" type="com.peterphi.std.guice.common.breaker.BreakerService"-->
+<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--@thymesVar id="csrfToken" type="java.lang.String"-->
+<!--@thymesVar id="message" type="java.lang.String"-->
+<!--@thymesVar id="cacheNames" type="java.util.List<java.lang.String>"-->
+<!--@thymesVar id="cachesByName" type="java.util.Map<java.lang.String, java.util.List<com.google.common.cache.Cache>>"-->
+<!--@thymesVar id="cacheUtils" type="com.peterphi.std.guice.web.rest.service.caches.GuiceCacheManagerRestServiceImpl"-->
+<head>
+	<title>Caches</title>
+
+	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
+</head>
+
+<body id="top">
+<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+
+
+<div class="container">
+	<h1>Caches</h1>
+
+	<div id="message-div" th:if="${message}" class="alert alert-success">
+		<th:block th:text="${message}"></th:block>
+		<script>
+			setTimeout(function () {
+				var div = document.getElementById("message-div");
+
+				div.parentNode.removeChild(div);
+			}, 15000);
+
+			// Remove the query string params
+			history.replaceState(null, null, window.location.href.split('?')[0]);
+		</script>
+	</div>
+
+	<p>This page lists the in-memory caches of this service</p>
+
+	<th:block th:unless="${#lists.isEmpty(cacheNames)}">
+		<table class="table">
+			<thead>
+			<tr>
+				<th>Keys</th>
+				<th>Hit Rate</th>
+				<th>Miss Rate</th>
+				<th>Load Successes</th>
+				<th>Load Exceptions</th>
+				<th>TotalLoadTime</th>
+				<th>Eviction Count</th>
+			</tr>
+			</thead>
+			<tbody>
+			<th:block th:each="cacheName: ${cacheNames}" th:with="cachelist = ${cachesByName.get(cacheName)}">
+				<tr>
+					<th colspan="6" th:text="${cacheName}">name</th>
+					<th>
+						<form method="POST"
+						      th:action="@{|${coreRestPrefix}/guice/caches/invalidate|}">
+							<input type="hidden" name="csrf_token" th:value="${csrfToken}"/>
+							<input type="hidden" name="name" th:value="${cacheName}"/>
+							<input type="submit" value="Clear"/>
+						</form>
+					</th>
+				</tr>
+				<tr th:each="item: ${cachelist}">
+					<th:block th:with="stats = ${item.stats()}">
+						<td th:text="${item.size()}"></td>
+						<td th:text="${stats.hitRate()}"></td>
+						<td th:text="${stats.missRate()}"></td>
+						<td th:text="${stats.loadSuccessCount()}"></td>
+						<td th:text="${stats.loadExceptionCount()}"></td>
+						<td th:text="${stats.totalLoadTime()}"></td>
+						<td th:text="${stats.evictionCount()}"></td>
+					</th:block>
+				</tr>
+			</th:block>
+			</tbody>
+		</table>
+
+		<form method="POST"
+		      th:action="@{|${coreRestPrefix}/guice/caches/invalidate|}">
+			<input type="hidden" name="csrf_token" th:value="${csrfToken}"/>
+			<input type="submit" value="Clear All Caches"/>
+		</form>
+	</th:block>
+</div>
+</body>
+</html>
