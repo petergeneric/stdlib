@@ -5,6 +5,7 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import org.apache.log4j.Logger;
 
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.Set;
 
 /**
@@ -40,16 +41,24 @@ public class WebMethodMatcher extends AbstractMatcher<Method>
 			return true; // Directly annotated implementation
 		else if (method.getDeclaringClass().isAnnotationPresent(AuthConstraint.class))
 			return true; // Declaring class annotated
-		else
+		else if (Modifier.isPublic(method.getModifiers()))
 		{
-			// Method in a class implementing a REST interface
+			// Public method in a class implementing a REST interface
 			final Class<?>[] ifaces = method.getDeclaringClass().getInterfaces();
 
 			for (Class<?> iface : ifaces)
+			{
 				if (this.ifaces.contains(iface))
-					return true;
-		}
+				{
+					if (!method.isAnnotationPresent(Override.class))
+						log.warn(
+								"AuthConstraint fallback logic applying to method because it is public and parent class implements a REST interface: " +
+								method.toString() + ". This may apply additional security constraints you do not intend.");
 
+					return true;
+				}
+			}
+		}
 		// No match
 		return false;
 	}

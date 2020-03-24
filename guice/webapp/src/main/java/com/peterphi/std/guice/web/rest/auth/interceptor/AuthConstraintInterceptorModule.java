@@ -4,14 +4,12 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
-import com.google.inject.matcher.Matchers;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import org.aopalliance.intercept.MethodInterceptor;
-
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -55,8 +53,9 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 		Set<Class<?>> restIfaces = RestResourceRegistry.getResources().stream().map(RestResource:: getResourceClass).collect(
 				Collectors.toSet());
 
-		Matcher<Method> matcher = new WebMethodMatcher(restIfaces);
+		final Matcher<Class> restClassMatcher = new RestClassMatcher();
+		final Matcher<Method> matcher = new WebMethodMatcher(restIfaces);
 
-		bindInterceptor(Matchers.any(), matcher, interceptor);
+		bindInterceptor(restClassMatcher, matcher, interceptor);
 	}
 }
