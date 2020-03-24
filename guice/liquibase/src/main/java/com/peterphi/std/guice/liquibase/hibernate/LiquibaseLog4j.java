@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
 import liquibase.logging.LogFactory;
+import liquibase.logging.LogType;
 import liquibase.logging.Logger;
 import liquibase.logging.core.AbstractLogger;
 
@@ -28,79 +29,121 @@ public class LiquibaseLog4j extends LogFactory
 
 
 		@Override
-		public void setName(final String name)
-		{
-			// ignore
-		}
-
-
-		@Override
-		public void setLogLevel(final String logLevel, final String logFile)
-		{
-			// ignore, governed by log4j
-		}
-
-
-		@Override
 		public void severe(final String message)
 		{
-			log.error(buildMessage(message));
+			log.error(message);
 		}
 
 
 		@Override
 		public void severe(final String message, final Throwable e)
 		{
-			log.error(buildMessage(message), e);
+			log.error(message, e);
+		}
+
+
+		@Override
+		public void severe(final LogType target, final String message)
+		{
+			severe(message);
+		}
+
+
+		@Override
+		public void severe(final LogType target, final String message, final Throwable e)
+		{
+			severe(message, e);
 		}
 
 
 		@Override
 		public void warning(final String message)
 		{
-			log.warn(buildMessage(message));
+			log.warn(message);
 		}
 
 
 		@Override
 		public void warning(final String message, final Throwable e)
 		{
-			log.warn(buildMessage(message), e);
+			log.warn(message, e);
+		}
+
+
+		@Override
+		public void warning(final LogType target, final String message)
+		{
+			warning(message);
+		}
+
+
+		@Override
+		public void warning(final LogType target, final String message, final Throwable e)
+		{
+			warning(message, e);
 		}
 
 
 		@Override
 		public void info(final String message)
 		{
-			log.info(buildMessage(message));
+			log.info(message);
 		}
 
 
 		@Override
 		public void info(final String message, final Throwable e)
 		{
-			log.info(buildMessage(message), e);
+			log.info(message, e);
+		}
+
+
+		@Override
+		public void info(final LogType logType, final String message)
+		{
+			info(message);
+		}
+
+
+		@Override
+		public void info(final LogType target, final String message, final Throwable e)
+		{
+			info(message, e);
 		}
 
 
 		@Override
 		public void debug(final String message)
 		{
-			log.debug(buildMessage(message));
+			log.debug(message);
 		}
 
 
 		@Override
 		public void debug(final String message, final Throwable e)
 		{
-			log.debug(buildMessage(message), e);
+			log.debug(message, e);
 		}
 
 
 		@Override
-		public int getPriority()
+		public void debug(final LogType target, final String message)
 		{
-			return 1; // not used because we're replacing the whole logging system
+			debug(message);
 		}
+
+
+		@Override
+		public void debug(final LogType target, final String message, final Throwable e)
+		{
+			debug(message, e);
+		}
+
+
+		//@Override
+		//public int getPriority()
+		//{
+		//	return 1; // not used because we're replacing the whole logging system
+		//}
 	}
 }
