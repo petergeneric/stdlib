@@ -53,11 +53,29 @@ public class SingleItemCache<T>
 	 */
 	public SingleItemCache(CacheBuilder builder, Callable<T> supplier)
 	{
+		this(builder, supplier, true);
+	}
+
+
+	/**
+	 * Create a new cache, caching the result of <code>supplier</code> using a cache built by <code>builder</code>.
+	 *
+	 * @param builder         the cache builder; will be largely untouched, although the maximum size will be set to 1 (since the
+	 *                        cache will only store a single item)
+	 * @param supplier        a function that generates some cache-worthy result; see {@link #get()} for information on how/when
+	 *                        this method is called. The supplier MUST NOT return null
+	 * @param useCacheManager if true, will not be registered with the CacheManager to allow cache to be cleared manually
+	 */
+	public SingleItemCache(CacheBuilder builder, Callable<T> supplier, final boolean useCacheManager)
+	{
 		this.supplier = supplier;
 		this.cache = builder.maximumSize(1).build();
 
-		// Assign a name and register it with the Cache Manager
-		setName("unnamed single item cache");
+		if (useCacheManager)
+		{
+			// Assign a name and register it with the Cache Manager
+			setName("unnamed single item cache");
+		}
 	}
 
 
