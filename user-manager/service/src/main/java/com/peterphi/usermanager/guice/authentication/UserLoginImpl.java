@@ -130,4 +130,29 @@ class UserLoginImpl implements UserLogin
 	{
 		return email;
 	}
+
+
+	@Override
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder("UserLoginImpl{");
+
+		if (!isAnonymous())
+		{
+			sb.append("id=").append(id);
+			sb.append(", name='").append(name).append('\'');
+			sb.append(", email='").append(email).append('\'');
+			sb.append(", dateFormatter=").append(dateFormatter);
+			sb.append(", local=").append(local);
+			sb.append(", roles=").append(roles);
+		}
+		else
+		{
+			sb.append("anonymous");
+		}
+
+		sb.append('}');
+
+		return sb.toString();
+	}
 }
