@@ -225,6 +225,8 @@ public class GuiceConfig
 			return true;
 		else if (StringUtils.equalsIgnoreCase(value, "false") || StringUtils.equalsIgnoreCase(value, "no"))
 			return false;
+		else if (StringUtils.equals(value, "null"))
+			return defaultValue;
 		else
 			throw new IllegalArgumentException("Error parsing property " +
 			                                   name +
