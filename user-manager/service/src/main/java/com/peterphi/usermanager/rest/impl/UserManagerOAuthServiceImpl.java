@@ -190,7 +190,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Transactional
-	public Response createSessionAndRedirect(final String responseType,
+	Response createSessionAndRedirect(final String responseType,
 	                                         final String clientId,
 	                                         final String redirectUri,
 	                                         final String state,
@@ -257,8 +257,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		return Response.seeOther(redirectTo).build();
 	}
 
-
-	public OAuthSessionEntity createSession(final int userId,
+	OAuthSessionEntity createSession(final int userId,
 	                                        final String clientId,
 	                                        final String redirectUri,
 	                                        final String scope,
@@ -554,7 +553,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	}
 
 
-	public OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
+	OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
 		OAuthSessionEntity session = sessionDao.getByToken(token);
 
 		if (session == null)
@@ -617,7 +616,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		}
 	}
 
-	public String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
+	String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
 		try
 		{
 			StringWriter sw = new StringWriter();
