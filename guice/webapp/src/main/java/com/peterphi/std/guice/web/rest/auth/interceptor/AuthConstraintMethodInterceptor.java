@@ -24,8 +24,6 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
 
-	public static final String SCOPE_DEFAULT = "default";
-
 	private final Provider<CurrentUser> userProvider;
 	private final GuiceConfig config;
 	private final Meter calls;
@@ -130,13 +128,14 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		}
 		else
 		{
-			final boolean pass = user.hasRole(scope.getRole(constraint));
+			String requiredRole = scope.getRole(constraint);
+			final boolean pass = user.hasRole(requiredRole);
 
 			if (log.isTraceEnabled())
 				if (pass)
-					log.trace("Allow method invocation: user " + user + " has role " + scope.getRole(constraint));
+					log.trace("Allow method invocation: user " + user + " has role " + requiredRole);
 				else
-					log.trace("Deny method invocation: user " + user + " does not have role " + scope.getRole(constraint));
+					log.trace("Deny method invocation: user " + user + " does not have role " + requiredRole);
 
 			return pass;
 		}
@@ -146,7 +145,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private AuthScope getScope(final AuthConstraint constraint)
 	{
 		if (constraint == null)
-			return getScope(SCOPE_DEFAULT);
+			return getScope(AuthConstraint.DEFAULT_ID);
 		else
 			return getScope(constraint.id());
 	}
@@ -160,19 +159,22 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		{
 			final String role;
 			final Boolean skip;
+			final Boolean forceSkip;
 
-			if (StringUtils.equals(SCOPE_DEFAULT, id))
+			if (StringUtils.equals(AuthConstraint.DEFAULT_ID, id))
 			{
 				role = config.get(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
 				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
+				forceSkip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_FORCE_SKIP, null);
 			}
 			else
 			{
 				role = config.get("framework.webauth.scope." + id + ".role", null);
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
+				forceSkip = config.getBoolean("framework.webauth.scope." + id + ".force-skip", null);
 			}
 
-			scope = new AuthScope(id, role, skip);
+			scope = new AuthScope(id, role, skip, forceSkip);
 
 			scopes.put(id, scope);
 		}

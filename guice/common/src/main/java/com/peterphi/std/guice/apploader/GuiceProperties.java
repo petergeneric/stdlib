@@ -108,6 +108,8 @@ public class GuiceProperties
 	public static final String AUTHZ_DEFAULT_ROLE = "framework.webauth.scope.default.role";
 	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default true)")
 	public static final String AUTHZ_DEFAULT_SKIP = "framework.webauth.scope.default.skip";
+	@Doc("If true then force the skip value no matter what the AuthConstraint specifies; not recommended for use in the default role! (default null)")
+	public static final String AUTHZ_DEFAULT_FORCE_SKIP = "framework.webauth.scope.default.force-skip";
 
 	@Doc("The JWT Secret value (if not set then JWT will not be usable)")
 	public static final String AUTH_JWT_SECRET = "framework.webauth.jwt.secret";

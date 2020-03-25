@@ -8,19 +8,38 @@ public class AuthScope
 	private final String name;
 	private final String role;
 	private final Boolean skip;
+	private final Boolean forceSkip;
 
 
-	public AuthScope(final String name, final String role, final Boolean skip)
+	public AuthScope(final String name, final String role, final Boolean skip, final Boolean forceSkip)
 	{
 		this.name = name;
 		this.role = role;
 		this.skip = skip;
+		this.forceSkip = forceSkip;
 	}
 
 
+	/**
+	 * Determine the value of "skip" for a given (optionally annotated) method. The rule for this is:
+	 * <ol>
+	 *     <li>If config contains force-skip, use that value</li>
+	 *     <li>If AuthConstraint annotation is present and skip is true, the result is true (e.g. for login pages and other open resources)</li>
+	 *     <li>Otherwise, if there's a value in config for "skip", use that</li>
+	 *     <li>Otherwise, if the AuthConstraint annotation is present, use the skip value from that</li>
+	 *     <li>Otherwise (e.g. for no AuthConstraint annotated REST methods), the default is not to skip</li>
+	 * </ol>
+	 *
+	 * @param annotation
+	 * @return
+	 */
 	public boolean getSkip(AuthConstraint annotation)
 	{
-		if (this.skip != null)
+		if (forceSkip != null)
+			return forceSkip;
+		else if (annotation != null && annotation.skip())
+			return true; // N.B. if the annotation instructs that we skip auth then we should do this (since this will be for e.g. login resources)
+		else if (this.skip != null)
 			return skip;
 		else if (annotation != null)
 			return annotation.skip();
@@ -29,7 +48,19 @@ public class AuthScope
 	}
 
 
-	public String getRole(AuthConstraint annotation)
+	/**
+	 * Determine the required role for a given (optionally annotated) method. The rule for this is simple priority:
+	 * <ol>
+	 *     <li>Role specified in config for this scope id</li>
+	 *     <li>Annotated role</li>
+	 *     <li>If no annotation and no configured role, throw an IllegalArgumentException</li>
+	 * </ol>
+	 *
+	 * @param annotation
+	 * @return
+	 * @throws IllegalArgumentException If no annotation and no configured role
+	 */
+	public String getRole(AuthConstraint annotation) throws IllegalArgumentException
 	{
 		if (this.role != null)
 			return role;

@@ -19,9 +19,10 @@ import java.util.List;
 
 /**
  * A simple REST resource that lists the services registered with the {@link RestResourceRegistry}
+ *
  * N.B. by default we do not enforce authorisation on this resource, because it can be very useful for developers (and the
  * knowledge of APIs shouldn't in and of itself introduce a security risk. Access can be restricted by setting
- * framework.webauth.scope.framework-info.skip=false
+ * framework.webauth.scope.framework-info.force-skip=false
  */
 @Singleton
 @AuthConstraint(id = "framework-info", role = "framework-info", skip = true)
