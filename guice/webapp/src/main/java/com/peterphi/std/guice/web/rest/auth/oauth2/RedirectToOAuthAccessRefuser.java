@@ -29,15 +29,32 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 	@Override
 	public Throwable refuse(final AuthScope scope, final AuthConstraint constraint, final CurrentUser login)
 	{
+		final boolean isAnonymous = login.isAnonymous();
+		final boolean isBrowser = isBrowserConsumer();
+
+		// For authenticated API users, include role details in the error message
+		String ext = "";
+		if (!isAnonymous && !isBrowser)
+		{
+			ext = ". Your roles=" +
+			      login.getRoles() +
+			      ", delegated=" +
+			      login.isDelegated() +
+			      ", authType=" +
+			      login.getAuthType() +
+			      ", username=" +
+			      login.getUsername();
+		}
+
 		final RestException accessDeniedException = new RestException(403,
 		                                                              "You do not have sufficient privileges to access this resource" +
 		                                                              (constraint != null ? ": " + constraint.comment() : "") +
 		                                                              ". Required role: " +
 		                                                              scope.getRole(constraint) +
 		                                                              ". You are: anonymous=" +
-		                                                              login.isAnonymous() +
+		                                                              isAnonymous +
 		                                                              ", browser=" +
-		                                                              isBrowserConsumer());
+		                                                              isBrowser + "" + ext);
 
 
 		// If the user is logged in, deny access with a 403
