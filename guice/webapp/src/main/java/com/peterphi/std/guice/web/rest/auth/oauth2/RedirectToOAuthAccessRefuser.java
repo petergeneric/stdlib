@@ -36,14 +36,12 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 		String ext = "";
 		if (!isAnonymous && !isBrowser)
 		{
-			ext = ". Your roles=" +
-			      login.getRoles() +
-			      ", delegated=" +
+			ext = ". Delegated=" +
 			      login.isDelegated() +
 			      ", authType=" +
 			      login.getAuthType() +
 			      ", username=" +
-			      login.getUsername();
+			      login.getUsername() +", role=" + login.getRoles();
 		}
 
 		final RestException accessDeniedException = new RestException(403,
@@ -58,11 +56,11 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 
 
 		// If the user is logged in, deny access with a 403
-		if (!login.isAnonymous())
+		if (!isAnonymous)
 		{
 			throw accessDeniedException;
 		}
-		else if (!isBrowserConsumer())
+		else if (!isBrowser)
 		{
 			// Non-browser consumer, send back an HTTP 401 immediately
 			// TODO allow configuration of Basic with a realm?
