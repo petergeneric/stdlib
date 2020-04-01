@@ -29,29 +29,44 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 	@Override
 	public Throwable refuse(final AuthScope scope, final AuthConstraint constraint, final CurrentUser login)
 	{
+		final boolean isAnonymous = login.isAnonymous();
+		final boolean isBrowser = isBrowserConsumer();
+
+		// For authenticated API users, include role details in the error message
+		String ext = "";
+		if (!isAnonymous && !isBrowser)
+		{
+			ext = ". Delegated=" +
+			      login.isDelegated() +
+			      ", authType=" +
+			      login.getAuthType() +
+			      ", username=" +
+			      login.getUsername() +", role=" + login.getRoles();
+		}
+
 		final RestException accessDeniedException = new RestException(403,
 		                                                              "You do not have sufficient privileges to access this resource" +
 		                                                              (constraint != null ? ": " + constraint.comment() : "") +
-		                                                              ". Required role: " +
-		                                                              scope.getRole(constraint) +
-		                                                              "." +
-		                                                              (login.isAnonymous() ?
-		                                                               " You are not currently logged in" :
-		                                                               " You are logged in as " + login.getUsername()));
+		                                                              ". Requires one of: " +
+		                                                              scope.getRoles(constraint) +
+		                                                              ". You are: anonymous=" +
+		                                                              isAnonymous +
+		                                                              ", browser=" +
+		                                                              isBrowser + "" + ext);
 
 
 		// If the user is logged in, deny access with a 403
-		if (!login.isAnonymous())
+		if (!isAnonymous)
 		{
 			throw accessDeniedException;
 		}
-		else if (!isBrowserConsumer())
+		else if (!isBrowser)
 		{
 			// Non-browser consumer, send back an HTTP 401 immediately
 			// TODO allow configuration of Basic with a realm?
-			Response tryBasicAuth = Response.status(401).header("WWW-Authenticate", "Bearer").build();
+			Response requestForBearerAuth = Response.status(401).header("WWW-Authenticate", "Bearer").build();
 
-			throw new LiteralRestResponseException(tryBasicAuth, accessDeniedException);
+			throw new LiteralRestResponseException(requestForBearerAuth, accessDeniedException);
 		}
 		else if (!isGETRequest())
 		{

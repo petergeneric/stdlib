@@ -9,33 +9,33 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface AuthConstraint
 {
+	String DEFAULT_ID = "default";
+
 	/**
 	 * The id of this authentication constraint; designed to allow configuration to override the constraints in the annotation
 	 *
 	 * @return
 	 */
-	public String id() default "no-id";
+	String id() default DEFAULT_ID;
 
 	/**
 	 * If true, authentication will not be enforced on calls made to the annotation target
 	 *
 	 * @return
 	 */
-	public boolean skip() default false;
+	boolean skip() default false;
 
 	/**
-	 * The role the user must have (defaults to "user"). If the user does not hold this role then an authentication exception
-	 * will
-	 * be raised
+	 * A list of roles, one of which the user must have. Defaults to "user". If the user does not hold this role then an authentication exception will be raised
 	 *
 	 * @return
 	 */
-	public String role() default "user";
+	String[] role() default "user";
 
 	/**
 	 * The description of this constraint (which can be displayed to users to help explain why they have been denied access)
 	 *
 	 * @return
 	 */
-	public String comment() default "";
+	String comment() default "";
 }

@@ -116,13 +116,13 @@ class HttpCallUser implements CurrentUser
 		{
 			if (user.isAnonymous())
 				return new RestException(401,
-				                         "You must log in to access this resource. Required role: " + scope.getRole(constraint));
+				                         "You must log in to access this resource. Required one of roles: " + scope.getRoles(constraint));
 			else
 				return new RestException(403,
 				                         "Access denied for your Servlet user by rule: " +
 				                         ((constraint != null) ?
 				                          constraint.comment() :
-				                          "(default)" + ". Required role: " + scope.getRole(constraint)));
+				                          "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
 		};
 	}
 

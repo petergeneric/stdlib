@@ -20,12 +20,11 @@ class RedirectToLoginAccessRefuser implements AccessRefuser
 	@Override
 	public Throwable refuse(final AuthScope scope, final AuthConstraint constraint, final CurrentUser login)
 	{
-		AuthenticationFailureException exception = new AuthenticationFailureException("You do not have sufficient privileges to access this resource" +
-		                                                                              (constraint != null ?
-		                                                                               ": " + constraint.comment() :
-		                                                                               "") +
-		                                                                              ". Required role: " +
-		                                                                              scope.getRole(constraint));
+		AuthenticationFailureException exception = new AuthenticationFailureException(
+				"You do not have sufficient privileges to access this resource" +
+				(constraint != null ? ": " + constraint.comment() : "") +
+				". Required one of roles: " +
+				scope.getRoles(constraint));
 
 		if (!login.isAnonymous())
 		{
