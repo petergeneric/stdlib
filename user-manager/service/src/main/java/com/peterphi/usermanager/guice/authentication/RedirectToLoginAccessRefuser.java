@@ -24,8 +24,8 @@ class RedirectToLoginAccessRefuser implements AccessRefuser
 		AuthenticationFailureException exception = new AuthenticationFailureException(
 				"You do not have sufficient privileges to access this resource" +
 				(constraint != null ? ": " + constraint.comment() : "") +
-				". Required role: " +
-				scope.getRole(constraint));
+				". Required one of roles: " +
+				scope.getRoles(constraint));
 
 		if (!login.isAnonymous())
 		{

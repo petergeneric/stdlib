@@ -3,18 +3,21 @@ package com.peterphi.std.guice.common.auth;
 import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 
+import java.util.Arrays;
+import java.util.List;
+
 public class AuthScope
 {
 	private final String name;
-	private final String role;
+	private final List<String> roles;
 	private final Boolean skip;
 	private final Boolean forceSkip;
 
 
-	public AuthScope(final String name, final String role, final Boolean skip, final Boolean forceSkip)
+	public AuthScope(final String name, final List<String> roles, final Boolean skip, final Boolean forceSkip)
 	{
 		this.name = name;
-		this.role = role;
+		this.roles = roles;
 		this.skip = skip;
 		this.forceSkip = forceSkip;
 	}
@@ -51,29 +54,29 @@ public class AuthScope
 	/**
 	 * Determine the required role for a given (optionally annotated) method. The rule for this is simple priority:
 	 * <ol>
-	 *     <li>Role specified in config for this scope id</li>
-	 *     <li>Annotated role</li>
-	 *     <li>If no annotation and no configured role, throw an IllegalArgumentException</li>
+	 *     <li>Roles specified in config for this scope id</li>
+	 *     <li>Annotated roles</li>
+	 *     <li>If no annotation and no configured roles, throw an IllegalArgumentException</li>
 	 * </ol>
 	 *
 	 * @param annotation
 	 * @return
 	 * @throws IllegalArgumentException If no annotation and no configured role
 	 */
-	public String getRole(AuthConstraint annotation) throws IllegalArgumentException
+	public List<String> getRoles(AuthConstraint annotation) throws IllegalArgumentException
 	{
-		if (this.role != null)
-			return role;
+		if (this.roles != null)
+			return roles;
 		else if (annotation != null)
-			return annotation.role();
+			return Arrays.asList(annotation.role());
 		else
-			throw new IllegalArgumentException("No override role and no annotation to default to!");
+			throw new IllegalArgumentException("No override roles and no annotation to default to!");
 	}
 
 
 	@Override
 	public String toString()
 	{
-		return MoreObjects.toStringHelper(this).add("name", name).add("role", role).add("skip", skip).toString();
+		return MoreObjects.toStringHelper(this).add("name", name).add("roles", roles).add("skip", skip).toString();
 	}
 }

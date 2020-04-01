@@ -26,12 +26,11 @@ public @interface AuthConstraint
 	boolean skip() default false;
 
 	/**
-	 * The role the user must have (defaults to "user"). If the user does not hold this role then an authentication exception will
-	 * be raised
+	 * A list of roles, one of which the user must have. Defaults to "user". If the user does not hold this role then an authentication exception will be raised
 	 *
 	 * @return
 	 */
-	String role() default "user";
+	String[] role() default "user";
 
 	/**
 	 * The description of this constraint (which can be displayed to users to help explain why they have been denied access)

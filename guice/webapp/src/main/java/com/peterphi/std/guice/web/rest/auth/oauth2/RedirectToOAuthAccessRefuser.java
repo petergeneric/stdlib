@@ -49,8 +49,8 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 		final RestException accessDeniedException = new RestException(403,
 		                                                              "You do not have sufficient privileges to access this resource" +
 		                                                              (constraint != null ? ": " + constraint.comment() : "") +
-		                                                              ". Required role: " +
-		                                                              scope.getRole(constraint) +
+		                                                              ". Requires one of: " +
+		                                                              scope.getRoles(constraint) +
 		                                                              ". You are: anonymous=" +
 		                                                              isAnonymous +
 		                                                              ", browser=" +
