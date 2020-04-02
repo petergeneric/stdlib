@@ -374,6 +374,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 				session = sessionDao.exchangeCodeForToken(service, code);
+
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange authorisation code for a token!");
+
 				break;
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
@@ -388,6 +392,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange refresh token for a token!");
+
 					break;
 				}
 				else
@@ -420,6 +428,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 				// Take the authorisation code internally and exchange it for a token
 				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange username/password for a token!");
 
 				break;
 			}
@@ -475,6 +486,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 					// Take the authorisation code internally and exchange it for a token
 					session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange token!");
 				}
 
 				break;
@@ -485,6 +499,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				throw new IllegalArgumentException("unsupported grant_type: " + grantType);
 			}
 		}
+
+		if (session == null)
+			throw new IllegalArgumentException("Unable to acquire token.");
 
 		return new OAuth2TokenResponse(session.getToken(), session.getId(), session.getExpires().toDate()).encode();
 	}
