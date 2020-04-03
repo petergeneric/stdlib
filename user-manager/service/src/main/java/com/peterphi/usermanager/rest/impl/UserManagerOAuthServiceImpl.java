@@ -190,12 +190,12 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Transactional
-	public Response createSessionAndRedirect(final String responseType,
-	                                         final String clientId,
-	                                         final String redirectUri,
-	                                         final String state,
-	                                         final String scope,
-	                                         final boolean allowCreateApproval)
+	Response createSessionAndRedirect(final String responseType,
+	                                  final String clientId,
+	                                  final String redirectUri,
+	                                  final String state,
+	                                  final String scope,
+	                                  final boolean allowCreateApproval)
 	{
 		final OAuthSessionEntity session = createSession(loginProvider.get().getId(),
 		                                                 clientId,
@@ -257,12 +257,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		return Response.seeOther(redirectTo).build();
 	}
 
-
-	public OAuthSessionEntity createSession(final int userId,
-	                                        final String clientId,
-	                                        final String redirectUri,
-	                                        final String scope,
-	                                        final boolean allowCreateApproval) throws ServiceAccessPreconditionFailed
+	OAuthSessionEntity createSession(final int userId,
+	                                 final String clientId,
+	                                 final String redirectUri,
+	                                 final String scope,
+	                                 final boolean allowCreateApproval) throws ServiceAccessPreconditionFailed
 	{
 		final OAuthServiceEntity client = serviceDao.getByClientIdAndEndpoint(clientId, redirectUri);
 
@@ -375,23 +374,15 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 				session = sessionDao.exchangeCodeForToken(service, code);
+
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange authorisation code for a token!");
+
 				break;
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
 			{
-				if (subjectToken == null || !UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
-				{
-					// Regular refresh token
-					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
-
-					if (service == null)
-						throw new IllegalArgumentException(
-								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
-
-					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
-					break;
-				}
-				else
+				if (UserManagerBearerToken.isUserManagerServiceBearer(refreshToken))
 				{
 					// If a Service Token is provied as a Refresh Token, treat the call as a Service API Key Token Exchange
 					// This is necessary because a Service User isn't a real user and so can't have a Session
@@ -400,11 +391,31 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					                redirectUri,
 					                clientId,
 					                secret,
-					                refreshToken,
+					                null,
 					                username,
 					                password,
-					                subjectToken,
+					                refreshToken, // Use provided refresh token as the subject token for new invocation
 					                authorizationHeader);
+				}
+				else
+				{
+					// Regular refresh token
+					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId,
+					                                                                                secret,
+					                                                                                redirectUri);
+
+					if (service == null)
+						throw new IllegalArgumentException(
+								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+					session = sessionDao.exchangeRefreshTokenForNewToken(service,
+					                                                     refreshToken,
+					                                                     new DateTime().plus(tokenRefreshInterval));
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange refresh token for a token!");
+
+					break;
 				}
 			}
 			case GRANT_TYPE_PASSWORD:
@@ -421,6 +432,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 				// Take the authorisation code internally and exchange it for a token
 				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange username/password for a token!");
 
 				break;
 			}
@@ -476,6 +490,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 					// Take the authorisation code internally and exchange it for a token
 					session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange token!");
 				}
 
 				break;
@@ -486,6 +503,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				throw new IllegalArgumentException("unsupported grant_type: " + grantType);
 			}
 		}
+
+		if (session == null)
+			throw new IllegalArgumentException("Unable to acquire token.");
 
 		return new OAuth2TokenResponse(session.getToken(), session.getId(), session.getExpires().toDate()).encode();
 	}
@@ -557,7 +577,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	}
 
 
-	public OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
+	OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
 		OAuthSessionEntity session = sessionDao.getByToken(token);
 
 		if (session == null)
@@ -620,7 +640,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		}
 	}
 
-	public String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
+	String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
 		try
 		{
 			StringWriter sw = new StringWriter();
