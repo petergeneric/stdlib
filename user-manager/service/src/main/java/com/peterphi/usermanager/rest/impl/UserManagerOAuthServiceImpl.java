@@ -382,23 +382,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
 			{
-				if (subjectToken == null || !UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
-				{
-					// Regular refresh token
-					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
-
-					if (service == null)
-						throw new IllegalArgumentException(
-								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
-
-					session = sessionDao.exchangeRefreshTokenForNewToken(service, refreshToken, new DateTime().plus(tokenRefreshInterval));
-
-					if (session == null)
-						throw new IllegalArgumentException("Unable to exchange refresh token for a token!");
-
-					break;
-				}
-				else
+				if (UserManagerBearerToken.isUserManagerServiceBearer(refreshToken))
 				{
 					// If a Service Token is provied as a Refresh Token, treat the call as a Service API Key Token Exchange
 					// This is necessary because a Service User isn't a real user and so can't have a Session
@@ -407,11 +391,31 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					                redirectUri,
 					                clientId,
 					                secret,
-					                refreshToken,
+					                null,
 					                username,
 					                password,
-					                subjectToken,
+					                refreshToken, // Use provided refresh token as the subject token for new invocation
 					                authorizationHeader);
+				}
+				else
+				{
+					// Regular refresh token
+					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId,
+					                                                                                secret,
+					                                                                                redirectUri);
+
+					if (service == null)
+						throw new IllegalArgumentException(
+								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+					session = sessionDao.exchangeRefreshTokenForNewToken(service,
+					                                                     refreshToken,
+					                                                     new DateTime().plus(tokenRefreshInterval));
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange refresh token for a token!");
+
+					break;
 				}
 			}
 			case GRANT_TYPE_PASSWORD:
