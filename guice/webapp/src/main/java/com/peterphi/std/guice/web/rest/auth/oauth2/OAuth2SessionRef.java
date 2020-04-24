@@ -5,13 +5,13 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
-import com.peterphi.std.guice.common.cached.util.SingleItemCache;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -82,7 +82,7 @@ public class OAuth2SessionRef
 	private OAuth2TokenResponse response;
 	private UserManagerUser cachedInfo;
 
-	private SingleItemCache<String> delegatedToken;
+	private OAuth2DelegatedToken delegatedToken;
 
 
 	@Inject
@@ -280,9 +280,16 @@ public class OAuth2SessionRef
 		// If the token has expired then we must use the refresh token to refresh it
 		if (shouldRefresh())
 		{
-			log.debug("OAuth token has expired for " +
-			          ((cachedInfo != null) ? cachedInfo.email : "OAuth session " + response.refresh_token) +
-			          " and must be refreshed");
+			if (response != null &&
+			    response.refresh_token == null &&
+			    UserManagerBearerToken.isUserManagerDelegatedBearer(response.access_token))
+				throw new IllegalArgumentException("Delegated Bearer Token used to make this service call has expired.");
+			else if (log.isDebugEnabled())
+				log.debug("OAuth token has expired for " +
+				          ((cachedInfo != null) ?
+				           cachedInfo.email :
+				           "OAuth session refresh=" + (response != null ? response.refresh_token : null)) +
+				          " and must be refreshed");
 
 			// Will throw an exception if the token acquisition fails
 			refreshToken();
@@ -343,9 +350,8 @@ public class OAuth2SessionRef
 	{
 		this.cachedInfo = null;
 
-		// N.B. we will need to generate a new Delegated Token
-		if (this.delegatedToken != null)
-			delegatedToken.invalidate();
+		// Clear the delegated token too
+		this.delegatedToken = null;
 	}
 
 
@@ -378,7 +384,8 @@ public class OAuth2SessionRef
 		{
 			this.response = response;
 
-			if (this.response.expires != null && this.response.refresh == null)
+			// If the response contains a refresh token but no refresh time, create one based on the expires time
+			if (this.response.expires != null && this.response.refresh == null && response.refresh_token != null)
 				this.response.refresh = new DateTime(this.response.expires).minus(tokenRefreshPriorToExpire).toDate();
 
              // Proactively obtain user information
@@ -399,34 +406,32 @@ public class OAuth2SessionRef
 			// Already have a delegated token, use that directly
 			return getToken();
 		}
-		else if (delegatedToken == null)
+		else if (delegatedToken == null || delegatedToken.getExpires() <= System.currentTimeMillis())
 		{
-			// N.B. guard against bad config - refresh must be more frequent than validity period!
-			if (delegatedTokenRefreshPeriod.getMilliseconds() >= delegatedTokenValidityPeriod.getMilliseconds())
-				throw new IllegalArgumentException("Delegated Token Refresh Interval " +
-				                                   delegatedTokenRefreshPeriod +
-				                                   " must be less than Delegated Token Validity Period " +
-				                                   delegatedTokenValidityPeriod);
-
-			this.delegatedToken = new SingleItemCache<>(this :: generateNewDelegatedToken, delegatedTokenRefreshPeriod);
-			this.delegatedToken.setName("OAuth Delegation Token");
+			delegatedToken = generateNewDelegatedToken();
 		}
 
-		return delegatedToken.get();
+		return delegatedToken.getValue();
 	}
 
 
-	public String generateNewDelegatedToken()
+	/**
+	 * Generates a new OAuth2 Delegated Token
+	 *
+	 * @return
+	 */
+	private OAuth2DelegatedToken generateNewDelegatedToken()
 	{
 		// Check that the user session is still valid
 		if (!isValid())
 			throw new IllegalArgumentException("Failed to generate delegated token: user session no longer valid!");
 
 		// Create a new delegation token
-		return authService.createDelegatedAccessToken(clientId,
-		                                              clientSecret,
-		                                              delegatedTokenValidityPeriod.getMilliseconds(),
-		                                              this.response.refresh_token,
-		                                              null);
+		return new OAuth2DelegatedToken(authService.createDelegatedAccessToken(clientId,
+		                                                                       clientSecret,
+		                                                                       delegatedTokenValidityPeriod.getMilliseconds(),
+		                                                                       this.response.refresh_token,
+		                                                                       null),
+		                                System.currentTimeMillis() + delegatedTokenRefreshPeriod.getMilliseconds());
 	}
 }
