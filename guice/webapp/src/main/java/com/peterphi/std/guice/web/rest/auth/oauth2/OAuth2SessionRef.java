@@ -425,13 +425,14 @@ public class OAuth2SessionRef
 		// Check that the user session is still valid
 		if (!isValid())
 			throw new IllegalArgumentException("Failed to generate delegated token: user session no longer valid!");
+		
+		final long refreshAfter = System.currentTimeMillis() + delegatedTokenRefreshPeriod.getMilliseconds();
 
 		// Create a new delegation token
 		return new OAuth2DelegatedToken(authService.createDelegatedAccessToken(clientId,
 		                                                                       clientSecret,
 		                                                                       delegatedTokenValidityPeriod.getMilliseconds(),
 		                                                                       this.response.refresh_token,
-		                                                                       null),
-		                                System.currentTimeMillis() + delegatedTokenRefreshPeriod.getMilliseconds());
+		                                                                       null), refreshAfter);
 	}
 }
