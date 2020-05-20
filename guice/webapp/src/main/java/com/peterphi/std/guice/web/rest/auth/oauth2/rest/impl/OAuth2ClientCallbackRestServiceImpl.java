@@ -118,7 +118,7 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 	}
 
 
-	public Response doRedirect(final OAuth2SessionRef sessionRef, final String state)
+	private Response doRedirect(final OAuth2SessionRef sessionRef, final String state)
 	{
 		URI redirectTo;
 
