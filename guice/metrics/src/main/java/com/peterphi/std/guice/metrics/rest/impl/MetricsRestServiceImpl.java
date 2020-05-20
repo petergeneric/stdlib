@@ -13,6 +13,7 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
 import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
@@ -27,6 +28,7 @@ import java.util.SortedMap;
 import java.util.TreeMap;
 
 @Singleton
+@AuthConstraint(id = "metrics", role = "framework-admin")
 public class MetricsRestServiceImpl implements MetricsRestService
 {
 	private static final String PREFIX = "/com/peterphi/std/guice/metrics/rest/impl/";
