@@ -13,7 +13,6 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.List;
@@ -26,8 +25,6 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
 
-	public static final String SCOPE_DEFAULT = "default";
-
 	private final Provider<CurrentUser> userProvider;
 	private final GuiceConfig config;
 	private final Meter calls;
@@ -38,6 +35,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 	private final Cache<String, AuthScope> scopes = CacheManager.build("AuthScopes", CacheBuilder.newBuilder());
 
+	private final String noAnnotationScopeId;
 
 	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
 	                                       final GuiceConfig config,
@@ -57,8 +55,9 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		this.authenticatedDenied = authenticatedDenied;
 
 		this.onlyServletRequest = config.getBoolean(GuiceProperties.AUTHZ_ONLY_SERVLET_REQUEST, true);
+		this.noAnnotationScopeId = config.get(GuiceProperties.AUTHZ_UNANNOTATED_WEB_METHOD_AUTHSCOPE_ID,
+		                                      AuthConstraint.DEFAULT_ID);
 	}
-
 
 	@Override
 	public Object invoke(final MethodInvocation invocation) throws Throwable
@@ -159,7 +158,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private AuthScope getScope(final AuthConstraint constraint)
 	{
 		if (constraint == null)
-			return getScope(SCOPE_DEFAULT);
+			return getScope(noAnnotationScopeId);
 		else
 			return getScope(constraint.id());
 	}
@@ -175,13 +174,10 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			final Boolean skip;
 			final Boolean forceSkip;
 
-			if (StringUtils.equals(AuthConstraint.DEFAULT_ID, id))
-			{
-				roles = config.getList(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
-				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
-				forceSkip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_FORCE_SKIP, null);
-			}
-			else
+			/**
+			 * N.B. With the scope as 'default', the effective guice properties read are {@link GuiceProperties#AUTHZ_DEFAULT_ROLE}, {@link GuiceProperties#AUTHZ_DEFAULT_SKIP}, {@link GuiceProperties#AUTHZ_DEFAULT_FORCE_SKIP} -
+			 * these are documented as separate properties for the convenience of users.
+			 */
 			{
 				roles = config.getList("framework.webauth.scope." + id + ".role", null);
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);

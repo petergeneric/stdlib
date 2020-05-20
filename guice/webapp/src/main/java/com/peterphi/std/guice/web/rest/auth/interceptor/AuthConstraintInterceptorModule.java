@@ -5,13 +5,13 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import org.aopalliance.intercept.MethodInterceptor;
-
 
 import java.lang.reflect.Method;
 import java.util.Set;
@@ -28,6 +28,7 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 	private final Meter denied;
 	private final Meter authenticatedDenied;
 
+	private final boolean interceptUnannotated;
 
 	public AuthConstraintInterceptorModule(MetricRegistry metrics, final GuiceConfig config)
 	{
@@ -36,6 +37,8 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 		this.granted = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_GRANTED_METER);
 		this.denied = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_DENIED_METER);
 		this.authenticatedDenied = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_AUTHENTICATED_DENIED_METER);
+
+		this.interceptUnannotated = config.getBoolean(GuiceProperties.AUTHZ_INTERCEPT_ALL_WEB_METHODS , true);
 	}
 
 
@@ -55,7 +58,7 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 		Set<Class<?>> restIfaces = RestResourceRegistry.getResources().stream().map(RestResource:: getResourceClass).collect(
 				Collectors.toSet());
 
-		Matcher<Method> matcher = new WebMethodMatcher(restIfaces);
+		Matcher<Method> matcher = new WebMethodMatcher(restIfaces, interceptUnannotated);
 
 		bindInterceptor(Matchers.any(), matcher, interceptor);
 	}
