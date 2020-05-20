@@ -4,6 +4,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
@@ -26,6 +27,7 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 	private final Meter denied;
 	private final Meter authenticatedDenied;
 
+	private final boolean interceptUnannotated;
 
 	public AuthConstraintInterceptorModule(MetricRegistry metrics, final GuiceConfig config)
 	{
@@ -34,6 +36,8 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 		this.granted = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_GRANTED_METER);
 		this.denied = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_DENIED_METER);
 		this.authenticatedDenied = metrics.meter(GuiceMetricNames.AUTH_CONSTRAINT_AUTHENTICATED_DENIED_METER);
+
+		this.interceptUnannotated = config.getBoolean(GuiceProperties.AUTHZ_INTERCEPT_ALL_WEB_METHODS , true);
 	}
 
 
@@ -54,7 +58,7 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 				Collectors.toSet());
 
 		final Matcher<Class> restClassMatcher = new RestClassMatcher();
-		final Matcher<Method> matcher = new WebMethodMatcher(restIfaces);
+		final Matcher<Method> matcher = new WebMethodMatcher(restIfaces, this.interceptUnannotated);
 
 		bindInterceptor(restClassMatcher, matcher, interceptor);
 	}

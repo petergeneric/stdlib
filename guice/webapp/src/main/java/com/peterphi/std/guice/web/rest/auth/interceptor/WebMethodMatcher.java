@@ -21,16 +21,17 @@ public class WebMethodMatcher extends AbstractMatcher<Method>
 	private static final Logger log = Logger.getLogger(WebMethodMatcher.class);
 
 	private final Set<Class<?>> ifaces;
+	private final boolean interceptUnannotated;
 
 
 	/**
-	 * @param ifaces
-	 * 		the interfaces to intercept methods for; this should be a list of interfaces from {@link
-	 * 		com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry}
+	 * @param ifaces the interfaces to intercept methods for; this should be a list of interfaces from {@link
+	 *               com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry}
 	 */
-	public WebMethodMatcher(Set<Class<?>> ifaces)
+	public WebMethodMatcher(Set<Class<?>> ifaces, final boolean interceptUnannotated)
 	{
 		this.ifaces = ifaces;
+		this.interceptUnannotated = interceptUnannotated;
 	}
 
 
@@ -41,24 +42,34 @@ public class WebMethodMatcher extends AbstractMatcher<Method>
 			return true; // Directly annotated implementation
 		else if (method.getDeclaringClass().isAnnotationPresent(AuthConstraint.class))
 			return true; // Declaring class annotated
-		else if (Modifier.isPublic(method.getModifiers()))
+		else if (interceptUnannotated && Modifier.isPublic(method.getModifiers()))
 		{
-			// Public method in a class implementing a REST interface
+			// This is a public method in a class implementing a REST interface
+			// Check if it's implementing a REST interface
+
 			final Class<?>[] ifaces = method.getDeclaringClass().getInterfaces();
 
 			for (Class<?> iface : ifaces)
 			{
 				if (this.ifaces.contains(iface))
 				{
-					if (!method.isAnnotationPresent(Override.class))
-						log.warn(
-								"AuthConstraint fallback logic applying to method because it is public and parent class implements a REST interface: " +
-								method.toString() + ". This may apply additional security constraints you do not intend.");
+					for (Method ifaceMethod : iface.getMethods())
+					{
+						if (ifaceMethod.getName().equals(method.getName()))
+						{
+							log.warn("Applying default AuthConstraint to unannotated Web Method: " +
+							         method.getDeclaringClass().getSimpleName() +
+							         "::" +
+							         method.getName() +
+							         ". This may enforce additional security constraints you did not intend!");
 
-					return true;
+							return true;
+						}
+					}
 				}
 			}
 		}
+
 		// No match
 		return false;
 	}

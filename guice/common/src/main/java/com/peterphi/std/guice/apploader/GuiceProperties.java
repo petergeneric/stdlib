@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.apploader;
 
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 
 /**
  * The properties used directly (that is, not pulled in with a {@link com.google.inject.Inject} and {@link
@@ -104,9 +105,15 @@ public class GuiceProperties
 	@Doc("If true then web auth will only be enforced for Servlet requests, not for internal requests - e.g. a daemon thread calling into a REST service method directly instead of using an HTTP call (default true)")
 	public static final java.lang.String AUTHZ_ONLY_SERVLET_REQUEST = "framework.webauth.only-servlet-request";
 
+	@Doc("If set, even web methods without AuthConstraint annotations will be intercepted and have the rules for a named AuthScope id applied - see framework.webauth.unannotated-web-method.scope (default true)")
+	public static final String AUTHZ_INTERCEPT_ALL_WEB_METHODS = "framework.webauth.unannotated-web-method.intercept";
+
+	@Doc("If set, the AuthScope id to use for unannotated web methods  (defaults to '" + AuthConstraint.DEFAULT_ID + "')")
+	public static final String AUTHZ_UNANNOTATED_WEB_METHOD_AUTHSCOPE_ID = "framework.webauth.unannotated-web-method.scope";
+
 	@Doc("If set, the default roles (comma separated, ORred together) to require when accessing REST methods with no AuthConstraint on the method/class (default not specified)")
 	public static final String AUTHZ_DEFAULT_ROLE = "framework.webauth.scope.default.role";
-	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default true)")
+	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default unspecified)")
 	public static final String AUTHZ_DEFAULT_SKIP = "framework.webauth.scope.default.skip";
 	@Doc("If true then force the skip value no matter what the AuthConstraint specifies; not recommended for use in the default role! (default null)")
 	public static final String AUTHZ_DEFAULT_FORCE_SKIP = "framework.webauth.scope.default.force-skip";
