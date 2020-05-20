@@ -5,20 +5,24 @@ import com.codahale.metrics.Metered;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Sampling;
 import com.google.inject.Inject;
+import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.metrics.rest.api.MetricsRestService;
 import com.peterphi.std.guice.metrics.rest.types.MetricsCounter;
 import com.peterphi.std.guice.metrics.rest.types.MetricsDocument;
 import com.peterphi.std.guice.metrics.rest.types.MetricsGauge;
 import com.peterphi.std.guice.metrics.rest.types.MetricsHistogram;
 import com.peterphi.std.guice.metrics.rest.types.MetricsMeter;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 
 import java.util.SortedMap;
 import java.util.TreeMap;
 
+@Singleton
+@AuthConstraint(id = "metrics", role = "framework-admin")
 public class MetricsRestServiceImpl implements MetricsRestService
 {
 	private static final String PREFIX = "/com/peterphi/std/guice/metrics/rest/impl/";
