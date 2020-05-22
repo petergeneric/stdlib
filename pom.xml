@@ -42,7 +42,7 @@
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
-		<moxy.version>2.7.3</moxy.version>
+		<moxy.version>2.7.7</moxy.version>
 	</properties>
 
 	<scm>
