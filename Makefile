@@ -59,7 +59,8 @@ compile:
 	$(MVN) clean compile
 
 dependencies:
-	$(MVN) clean dependency:tree
+	$(MVN) install -DskipTests
+	$(MVN) dependency:tree
 
 package:
 	$(MVN) clean package
