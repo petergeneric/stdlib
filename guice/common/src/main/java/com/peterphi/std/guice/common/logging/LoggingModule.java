@@ -2,13 +2,14 @@ package com.peterphi.std.guice.common.logging;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.joran.JoranConfigurator;
-import ch.qos.logback.core.joran.spi.JoranException;
 import ch.qos.logback.core.util.StatusPrinter;
 import com.google.inject.AbstractModule;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfigChangeObserver;
 import com.peterphi.std.io.PropertyFile;
+import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,8 @@ import org.xml.sax.InputSource;
 
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.StringReader;
-import java.net.URL;
 
 /**
  * Reads the <code>log4j.properties</code> value from the service config; if a value is supplied it searches the classpath for
@@ -30,16 +31,9 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 
 	public static final String DEFAULT_OUTPUT_PATTERN = "%d{ISO8601} %5p %m%n";
 
-
 	private static boolean allowAutoReconfigure = true;
 
 	private GuiceConfig guiceConfig;
-
-
-	private interface JoranTask
-	{
-		void apply(JoranConfigurator joran) throws JoranException, IOException;
-	}
 
 
 	public LoggingModule(GuiceConfig configuration)
@@ -53,7 +47,7 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 	@Override
 	protected void configure()
 	{
-		reconfigure(guiceConfig);
+		reconfigure(guiceConfig, true);
 	}
 
 
@@ -61,14 +55,14 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 	{
 		log.info("Manual reconfiguration of log4j.properties - disabling automatic reload!");
 		allowAutoReconfigure = false;
-		reconfigure(guice);
+		reconfigure(guice, true);
 	}
 
 
 	public static void autoReconfigure(final GuiceConfig guice)
 	{
 		if (allowAutoReconfigure)
-			reconfigure(guice);
+			reconfigure(guice, true);
 	}
 
 
@@ -84,83 +78,99 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 	}
 
 
-	private static void reconfigure(final GuiceConfig config)
+	/**
+	 * Attempt to configure the logging system before the environment is fully prepared<br /> Will be subsequently reconfigured by
+	 * the LoggingModule being constructed
+	 *
+	 * @param config
+	 */
+	public static void preconfigure(final GuiceConfig config)
 	{
-		final String logbackConfig = config.get(GuiceProperties.LOGBACK_CONFIG_FILE, null);
+		reconfigure(config, false);
+	}
 
-		// No logback config - fall back on translating log4j
-		if (logbackConfig == null)
+
+	private static void reconfigure(final GuiceConfig config, boolean warnIfUsingDefault)
+	{
+		final String logbackConfigXml = readLogbackConfig(config);
+
+		if (logbackConfigXml != null)
 		{
-			boolean success;
-			try
-			{
-				success = tryLog4jPropertiesFallback(config);
-			}
-			catch (Throwable t)
-			{
-				log.warn("Exception occurred trying to translate log4j.properties!", t);
-				success = false;
-			}
-
-			if (!success)
-				log.warn("Leaving logback to configure itself");
-
-			return;
+			applyLogbackConfig(logbackConfigXml);
 		}
+		else
+		{
+			// Apply the default config
+			applyLogbackConfig(Log4jToLogbackConverter.convert(new PropertyFile()));
 
+			if (warnIfUsingDefault)
+				log.warn("Using default logback at default configuration!");
+		}
+	}
+
+
+	public static String readLogbackConfig(final GuiceConfig config)
+	{
 		try
 		{
-			// Inline XML
-			if (StringUtils.startsWith(logbackConfig, "<"))
-			{
-				log.debug("Assuming logback.xml contains literal logback XML file, not a resource/file reference");
+			final String logbackConfig = config.get(GuiceProperties.LOGBACK_CONFIG_FILE, null);
 
-				doLogbackConfig(joran -> joran.doConfigure(new InputSource(new StringReader(logbackConfig))));
-			}
-			else if (isLocalFile(logbackConfig))
+			// No logback config - fall back on translating log4j
+			if (logbackConfig == null)
 			{
-				doLogbackConfig(joran -> joran.doConfigure(new File(logbackConfig)));
+				return tryLog4jPropertiesFallback(config);
+			}
+			else if (StringUtils.startsWith(logbackConfig, "<"))
+			{
+				// Inline XML
+				log.trace("Assuming logback.xml contains literal logback XML file, not a resource/file reference");
+
+				return logbackConfig;
 			}
 			else
 			{
-				final URL resource = LoggingModule.class.getResource(logbackConfig);
-
-				if (resource != null)
+				try (final InputStream is = LoggingModule.class.getResourceAsStream(logbackConfig))
 				{
-					if (resource.getProtocol().equalsIgnoreCase("file"))
+					if (is != null)
 					{
-						final File file = new File(resource.toURI());
-
-						doLogbackConfig(joran -> joran.doConfigure(file));
+						return config.resolveVariables(IOUtils.toString(is));
+					}
+					else if (isLocalFile(logbackConfig))
+					{
+						// If this is a local file instead of a resource then load that
+						return config.resolveVariables(FileUtils.readFileToString(new File(logbackConfig)));
 					}
 					else
 					{
-						doLogbackConfig(joran -> joran.doConfigure(resource));
+						log.warn("Invalid logback configuration file provided, using defaults. Requested config was: " +
+						         logbackConfig);
+
+						return null;
 					}
-				}
-				else
-				{
-					log.warn("Invalid logback configuration file provided, using defaults. Requested config was: " +
-					         logbackConfig);
 				}
 			}
 		}
 		catch (Exception e)
 		{
-			log.warn("Error initiaising logging configuration: " + e.getMessage(), e);
+			log.error("Error initialising logback: " + e.getMessage(), e);
+
+			return null;
 		}
 	}
 
 
 	private static boolean isLocalFile(final String value)
 	{
+		if (value.length() > 2000)
+			return false;
+
 		final File f = new File(value);
 
 		return (f.isAbsolute() && f.exists() && f.isFile());
 	}
 
 
-	private static void doLogbackConfig(JoranTask loader) throws IOException
+	private static void applyLogbackConfig(String xml)
 	{
 		// assume SLF4J is bound to logback in the current environment
 		LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
@@ -173,19 +183,20 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 			// configuration. For multi-step configuration, omit calling context.reset().
 			context.reset();
 
-			loader.apply(configurator);
+			configurator.doConfigure(new InputSource(new StringReader(xml)));
 		}
-		catch (JoranException je)
+		catch (Exception je)
 		{
-			throw new RuntimeException(je);
-			// StatusPrinter will handle this
-		}
+			// Print the error
+			StatusPrinter.printInCaseOfErrorsOrWarnings(context);
 
-		StatusPrinter.printInCaseOfErrorsOrWarnings(context);
+			// Now fail outright
+			throw new RuntimeException(je);
+		}
 	}
 
 
-	private static boolean tryLog4jPropertiesFallback(final GuiceConfig config) throws IOException
+	private static String tryLog4jPropertiesFallback(final GuiceConfig config) throws IOException
 	{
 		PropertyFile log4jConfig = getProperties(config);
 
@@ -193,14 +204,10 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 		{
 			final String logbackConfig = Log4jToLogbackConverter.convert(log4jConfig);
 
-			if (logbackConfig != null)
-			{
-				doLogbackConfig(joran -> joran.doConfigure(new InputSource(new StringReader(logbackConfig))));
-				return true;
-			}
+			return logbackConfig;
 		}
 
-		return false; // No log4j configuration to convert
+		return null; // No log4j configuration to convert
 	}
 
 

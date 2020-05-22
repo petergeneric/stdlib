@@ -25,7 +25,7 @@ public class GuiceProperties
 	public static final String LOG4J_PROPERTIES_FILE = "log4j.properties";
 
 	@Doc("If set, logback will be loaded from the named file. If absent then we will fall back on log4j.properties, and failing that we will use the default logback configuration. Can also contain a literal logback configuration if it has multiple lines (default null)")
-	public static final String LOGBACK_CONFIG_FILE = "logback.xml";
+	public static final String LOGBACK_CONFIG_FILE = "logback-config";
 
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
 	public static final String MOXY_ENABLED = "guice.jaxb.moxy";

@@ -50,9 +50,9 @@ final class Log4jToLogbackConverter
 		                                      LoggingModule.DEFAULT_OUTPUT_PATTERN);
 
 		sb.append(
-				"<configuration><appender name=\"STDOUT\" class=\"ch.qos.logback.core.ConsoleAppender\"><encoder class=\"ch.qos.logback.classic.PatternLayoutEncoder\"><Pattern>");
+				"<configuration><appender name=\"STDOUT\" class=\"ch.qos.logback.core.ConsoleAppender\"><encoder class=\"ch.qos.logback.classic.encoder.PatternLayoutEncoder\"><Pattern>");
 		sb.append(pattern);
-		sb.append("</Pattern></layout></appender>");
+		sb.append("</Pattern></encoder></appender>");
 
 		for (String key : properties.keySet())
 		{
