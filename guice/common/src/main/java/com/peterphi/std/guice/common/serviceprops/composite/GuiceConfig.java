@@ -282,4 +282,13 @@ public class GuiceConfig
 	{
 		return toPropertyFile(null);
 	}
+
+
+	public String resolveVariables(final String str)
+	{
+		if (str.contains("${"))
+			return substitutor.replace(str);
+		else
+			return str;
+	}
 }

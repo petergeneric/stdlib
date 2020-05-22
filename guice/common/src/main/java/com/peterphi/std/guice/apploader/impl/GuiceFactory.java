@@ -12,6 +12,7 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.GuiceModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
@@ -131,6 +132,9 @@ class GuiceFactory
 		{
 			applyConfigs(classloader, properties);
 		}
+
+		// Try to re-initialise the logging system with the most up-to-date environment
+		LoggingModule.preconfigure(properties);
 
 		// This is a bit of a hack really, but let's insert the GuiceRole for network config if network config is enabled
 		if (hasNetworkConfiguration(properties))

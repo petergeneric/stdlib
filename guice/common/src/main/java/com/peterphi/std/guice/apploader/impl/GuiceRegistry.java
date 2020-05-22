@@ -3,6 +3,8 @@ package com.peterphi.std.guice.apploader.impl;
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceSetup;
+import com.peterphi.std.guice.common.logging.LoggingModule;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import org.apache.log4j.Logger;
 
@@ -37,6 +39,8 @@ public class GuiceRegistry
 	{
 		this.builder = builder;
 		builder.withRegistry(this);
+
+		LoggingModule.preconfigure(new GuiceConfig());
 	}
 
 
