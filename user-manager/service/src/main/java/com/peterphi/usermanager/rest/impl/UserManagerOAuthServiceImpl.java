@@ -161,6 +161,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Override
+	@AuthConstraint(id = "oauth2server_auth", role = "authenticated", comment = "Must be logged in to the User Manager")
 	public Response userMadeAuthDecision(final String responseType,
 	                                     final String clientId,
 	                                     final String redirectUri,
