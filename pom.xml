@@ -36,7 +36,7 @@
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
 		<guice.version>4.2.2</guice.version>
 		<metrics.version>4.0.2</metrics.version>
-		<resteasy.version>3.6.1.Final</resteasy.version>
+		<resteasy.version>3.12.0.Final</resteasy.version>
 		<javassist.version>3.23.1-GA</javassist.version>
 		<hibernate.version>5.3.6.Final</hibernate.version>
 		<dbunit.version>2.5.1</dbunit.version>

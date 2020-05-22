@@ -59,6 +59,14 @@
 			<version>${resteasy.version}</version>
 			<exclusions>
 				<exclusion>
+					<groupId>org.jboss.spec.javax.xml.bind</groupId>
+					<artifactId>jboss-jaxb-api</artifactId>
+				</exclusion>
+				<exclusion>
+					<groupId>org.glassfish.jaxb</groupId>
+					<artifactId>jaxb-runtime</artifactId>
+				</exclusion>
+				<exclusion>
 					<groupId>com.sun.xml.bind</groupId>
 					<artifactId>jaxb-impl</artifactId>
 				</exclusion>
