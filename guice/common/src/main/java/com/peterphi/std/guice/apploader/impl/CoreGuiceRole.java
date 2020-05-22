@@ -8,7 +8,7 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.JAXBModule;
-import com.peterphi.std.guice.common.logging.Log4JModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.cached.module.CacheModule;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
@@ -50,7 +50,7 @@ class CoreGuiceRole implements GuiceRole
 		modules.add(new CacheModule(metrics));
 		modules.add(new RetryModule(metrics));
 		modules.add(new JAXBModule(config));
-		modules.add(new Log4JModule(config));
+		modules.add(new LoggingModule(config));
 	}
 
 
