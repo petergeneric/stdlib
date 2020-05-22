@@ -5,7 +5,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.logging.Log4JModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
@@ -49,7 +49,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 
 	private String getLog4jPropertiesAsString()
 	{
-		PropertyFile properties = Log4JModule.getProperties(config);
+		PropertyFile properties = LoggingModule.getProperties(config);
 
 		if (properties == null)
 		{
@@ -79,7 +79,7 @@ public class GuiceRestLoggingServiceImpl implements GuiceRestLoggingService
 		// Modify the in-memory config to point at the user-specified properties file
 		config.set(GuiceProperties.LOG4J_PROPERTIES_FILE, properties);
 
-		Log4JModule.manualReconfigure(config);
+		LoggingModule.manualReconfigure(config);
 
 		// Now redirect back to the main logging page
 		return Response.seeOther(URI.create(restEndpoint.toString() + "/guice/logging")).build();
