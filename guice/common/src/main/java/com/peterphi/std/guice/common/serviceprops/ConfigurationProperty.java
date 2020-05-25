@@ -44,6 +44,14 @@ public class ConfigurationProperty
 	}
 
 
+	public String getLiveValueForUI(GuiceConfig config, String defaultOrSensitiveResult)
+	{
+		if (isSensitive())
+			return defaultOrSensitiveResult;
+		else
+			return config.get(name, defaultOrSensitiveResult);
+	}
+
 	public boolean isFrameworkProperty()
 	{
 		for (ConfigurationPropertyBindingSite site : bindings)
@@ -154,6 +162,12 @@ public class ConfigurationProperty
 			         name +
 			         " are reconfigurable. Restart will be required to apply this change.");
 		}
+	}
+
+
+	public boolean isSensitive()
+	{
+		return name.contains("password") || name.contains("secret");
 	}
 
 

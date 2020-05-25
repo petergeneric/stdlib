@@ -64,8 +64,8 @@
 			<form th:action="@{|${coreRestPrefix}/guice/config/reconfigure|}" method="POST">
 				<input type="hidden" name="key" th:value="${prop.name}"/>
 
-				<input th:if="${showProperties}" type="text" name="value" th:value="${config.get(prop.name,'')}"/>
-				<input th:unless="${showProperties}" type="text" name="value" th:value=""/>
+				<input th:if="${showProperties and !prop.isSensitive()}" type="text" name="value" th:value="${prop.getLiveValueForUI(config, '')}"/>
+				<input th:unless="${showProperties and !prop.isSensitive()}" type="text" name="value" value=""/>
 
 				<input type="submit" value="Change"/>
 			</form>
@@ -75,10 +75,10 @@
 		<h5>Binding Information</h5>
 		<table class="table">
 			<tbody>
-			<tr th:if="${showProperties}">
+			<tr th:if="${showProperties and !prop.isSensitive()}">
 				<th class="span3">Configured Value</th>
 				<td data-content-meaning="liveValue"
-				    th:text="${config.get(prop.name, 'Not configured - using internal default')}">prop value
+				    th:text="${prop.getLiveValueForUI(config, '(not configured or using internal default)')}">prop value
 				</td>
 			</tr>
 			<tr>
@@ -106,7 +106,7 @@
 					</ul>
 				</td>
 			</tr>
-			<th:block th:if="${showBoundValues}">
+			<th:block th:if="${showBoundValues and !prop.sensitive}">
 				<th:block th:with="boundValues = ${prop.boundValues}">
 					<tr th:unless="${boundValues.isEmpty() or prop.bindings.isEmpty()}">
 						<th class="span3">Bound values</th>
