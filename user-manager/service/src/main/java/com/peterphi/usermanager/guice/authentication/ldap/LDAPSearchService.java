@@ -103,6 +103,12 @@ public class LDAPSearchService
 	public String groupAdmin = null;
 
 	@Inject(optional = true)
+	@Named("ldap.group.user")
+	@Doc("The group name (after group-regex execution) to treat as builtin group user (ignored if omitted)")
+	@Reconfigurable
+	public String groupUser = null;
+
+	@Inject(optional = true)
 	@Named("ldap.group.framework-admin")
 	@Doc("The group name (after group-regex execution) to treat as builtin group framework-admin (ignored if omitted)")
 	@Reconfigurable
@@ -313,6 +319,7 @@ public class LDAPSearchService
 		id = replaceGroupName(id, groupFrameworkInfo, "framework-info"); // able to see /guice pages
 		id = replaceGroupName(id, groupFrameworkAdmin, "framework-admin"); // able to admin /guice pages
 		id = replaceGroupName(id, groupAdmin, "admin"); // application admin
+		id = replaceGroupName(id, groupUser, "user"); // application user
 		id = replaceGroupName(id, groupUserManagerAdmin, UserLogin.ROLE_ADMIN); // User Manager admin
 
 		return new LDAPGroup(id, dn);
