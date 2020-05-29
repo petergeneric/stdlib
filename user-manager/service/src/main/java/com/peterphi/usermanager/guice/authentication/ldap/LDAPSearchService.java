@@ -284,7 +284,12 @@ public class LDAPSearchService
 	{
 		try
 		{
-			return ldapContext.search(ldapSearchBase, searchFilter, search);
+			log.trace("LDAP Search: base='" + ldapSearchBase + "', filter='" + searchFilter + "'");
+			final NamingEnumeration<SearchResult> answer = ldapContext.search(ldapSearchBase, searchFilter, search);
+
+			log.trace("LDAP Search returned results: " + ((answer == null) ? false : answer.hasMore()));
+
+			return answer;
 		}
 		catch (NamingException e)
 		{
