@@ -40,6 +40,18 @@ public class LDAPSearchService
 	@Reconfigurable
 	public String ldapEndpoint;
 
+	@Inject(optional = true)
+	@Named("ldap.authentication")
+	@Doc("The LDAP authentication type - sets java.naming.security.authentication (default 'simple')")
+	@Reconfigurable
+	public String ldapAuthenticationType = "simple";
+
+	@Inject(optional = true)
+	@Named("ldap.read-timeout")
+	@Doc("The LDAP read timeout - sets com.sun.jndi.ldap.read.timeout (default Integer.MIN_VALUE which leaves at default)")
+	@Reconfigurable
+	public long ldapReadTimeout = Integer.MIN_VALUE;
+
 	@Inject
 	@Named("ldap.search-base")
 	@Reconfigurable
@@ -125,7 +137,7 @@ public class LDAPSearchService
 
 			final String searchFilter = String.format(this.ldapGroupFilter, dn);
 
-			answer = ldap.search(ldapSearchBase, searchFilter, search);
+			answer = executeLdapSearch(ldap, search, searchFilter);
 		}
 
 		List<LDAPGroup> groups = new ArrayList<>();
@@ -204,9 +216,12 @@ public class LDAPSearchService
 				Hashtable<String, String> ldapEnv = new Hashtable<>();
 				ldapEnv.put(Context.INITIAL_CONTEXT_FACTORY, "com.sun.jndi.ldap.LdapCtxFactory");
 				ldapEnv.put(Context.PROVIDER_URL, ldapEndpoint);
-				ldapEnv.put(Context.SECURITY_AUTHENTICATION, "simple");
+				ldapEnv.put(Context.SECURITY_AUTHENTICATION, ldapAuthenticationType);
 				ldapEnv.put(Context.SECURITY_PRINCIPAL, authUser.fullyQualifiedUsername);
 				ldapEnv.put(Context.SECURITY_CREDENTIALS, password);
+				if (ldapReadTimeout != Integer.MIN_VALUE)
+					ldapEnv.put("com.sun.jndi.ldap.read.timeout", Long.toString(ldapReadTimeout)); // 90 seconds
+
 				ldapContext = new InitialDirContext(ldapEnv); // N.B. sometimes takes ~10 seconds
 
 				Map<LDAPUser, LDAPUserRecord> results = new HashMap<>();
@@ -223,7 +238,7 @@ public class LDAPSearchService
 
 						final String searchFilter = String.format(this.ldapFilter, searchFor.username);
 
-						answer = ldapContext.search(ldapSearchBase, searchFilter, search);
+						answer = executeLdapSearch(ldapContext, search, searchFilter);
 					}
 
 					LDAPUserRecord record = null;
@@ -259,6 +274,28 @@ public class LDAPSearchService
 			throw new RuntimeException(
 					"Error accessing LDAP server (incorrect username/password or server connection issue, please try again)",
 					e);
+		}
+	}
+
+
+	public NamingEnumeration<SearchResult> executeLdapSearch(final DirContext ldapContext,
+	                                                         final SearchControls search,
+	                                                         final String searchFilter) throws LDAPSearchException
+	{
+		try
+		{
+			return ldapContext.search(ldapSearchBase, searchFilter, search);
+		}
+		catch (NamingException e)
+		{
+			throw new LDAPSearchException("Error performing LDAP search filter '" +
+			                              searchFilter +
+			                              "', base DN '" +
+			                              ldapSearchBase +
+			                              "'. (resolvedName '" +
+			                              e.getResolvedName() +
+			                              "'). Error: " +
+			                              e.getMessage(), e);
 		}
 	}
 
