@@ -48,11 +48,11 @@ public class RetryManager
 			{
 				attemptFailures.mark();
 
-				final boolean retry = (!maxAttemptsReached(attempt)) && operation.shouldRetry(attempt, e);
+				final RetryDecision retryDecision = maxAttemptsReached(attempt) ? RetryDecision.LOG_AND_THROW : operation.shouldRetry(attempt, e);
 
-				if (!retry)
+				if (retryDecision != RetryDecision.BACKOFF_AND_RETRY)
 				{
-					return finalAttemptFailed(operation, attempt, e);
+					return finalAttemptFailed(operation, attempt, retryDecision == RetryDecision.LOG_AND_THROW , e);
 				}
 				else
 				{
@@ -100,13 +100,15 @@ public class RetryManager
 	 * 		- the operation being attempted
 	 * @param attempt
 	 * 		- the attempt number that failed
+	 * @param logError if true, log the failure
 	 * @param e
 	 * 		- the exception thrown when the operation failed
 	 *
 	 * @throws Exception
 	 */
-	protected <T> T finalAttemptFailed(final Retryable<T> operation, final int attempt, final Throwable e) throws Exception
+	protected <T> T finalAttemptFailed(final Retryable<T> operation, final int attempt, final boolean logError, final Throwable e) throws Exception
 	{
+		if(logError)
 		log.error("Final attempt #" + attempt + " of " + operation + " failed.", e);
 
 		if (e instanceof Exception)

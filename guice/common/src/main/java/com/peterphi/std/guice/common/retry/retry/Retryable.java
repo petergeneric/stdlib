@@ -17,5 +17,5 @@ public interface Retryable<T>
 	 *
 	 * @return true if a further attempt should be made after the listed exception
 	 */
-	public boolean shouldRetry(int attempt, Throwable e);
+	RetryDecision shouldRetry(int attempt, Throwable e);
 }

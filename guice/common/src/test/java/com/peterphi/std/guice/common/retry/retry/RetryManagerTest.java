@@ -43,9 +43,9 @@ public class RetryManagerTest
 				}
 
 
-				public boolean shouldRetry(int attempt, Throwable e)
+				public RetryDecision shouldRetry(int attempt, Throwable e)
 				{
-					return true; // always retry
+					return RetryDecision.BACKOFF_AND_RETRY; // always retry
 				}
 			});
 
