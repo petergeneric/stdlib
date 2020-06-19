@@ -139,7 +139,9 @@ public class OAuth2SessionRef
 		}
 		catch (Throwable e)
 		{
-			// ignore
+			if (log.isTraceEnabled())
+				log.trace("isValid encountered exception calling getToken: " + e.getMessage(), e);
+			// otherwise ignore
 		}
 
 		return response != null;
