@@ -23,7 +23,7 @@
 		<p>Allow the application access?</p>
 
 		<form method="POST" th:action="@{/oauth2/authorize}">
-			<input type="hidden" name="nonce" th:value="${nonce}"/>
+			<input type="hidden" name="token" th:value="${token}"/>
 			<input type="hidden" name="response_type" th:value="${responseType}"/>
 			<input type="hidden" name="scope" th:value="${scope}"/>
 			<input type="hidden" name="client_id" th:value="${clientId}"/>

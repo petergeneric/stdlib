@@ -29,25 +29,25 @@ public interface RoleUIService
 	@Path("/roles/create")
 	@Produces(MediaType.TEXT_HTML)
 	Response create(@FormParam("id") final String id,
-	                @FormParam("nonce") String nonce,
+	                @FormParam("token") String token,
 	                @FormParam("caption") final String caption);
 
 	@POST
 	@Path("/role/{role_id}/delete")
 	@Produces(MediaType.TEXT_HTML)
-	Response delete(@PathParam("role_id") String roleId, @FormParam("nonce") String nonce);
+	Response delete(@PathParam("role_id") String roleId, @FormParam("token") String token);
 
 	@POST
 	@Path("/role/{role_id}/change-caption")
 	@Produces(MediaType.TEXT_HTML)
 	Response changeCaption(@PathParam("role_id") String roleId,
-	                       @FormParam("nonce") String nonce,
+	                       @FormParam("token") String token,
 	                       @FormParam("caption") final String newPassword);
 
 	@POST
 	@Path("/role/{role_id}/change-members")
 	@Produces(MediaType.TEXT_HTML)
-	Response changeMembers(@PathParam("role_id") String roleId, @FormParam("nonce") String nonce, @FormParam("members")
+	Response changeMembers(@PathParam("role_id") String roleId, @FormParam("token") String token, @FormParam("members")
 
 	final List<Integer> members);
 }

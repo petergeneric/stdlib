@@ -33,7 +33,7 @@
 						th:text="${entity.name}"/>)?
 				</p>
 				<input type="hidden" name="alter" value="delete"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 				<input type="hidden" name="id" th:value="${entity.id}"/>
 			</div>
 			<div class="modal-footer">
@@ -107,7 +107,7 @@
 				</div>
 
 				<div class="modal-footer">
-					<input type="hidden" name="nonce" th:value="${nonce}"/>
+					<input type="hidden" name="token" th:value="${token}"/>
 					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 					<input class="btn btn-primary" type="submit" value="Save"/>
 				</div>
@@ -127,7 +127,7 @@
 				<p>Assign a new API key for this service? If an Access Key is already assigned then a new key will be assigned and the old key will be moved to the Access Key Secondary field (and will continue to work until a subsequent rotation or until that key is revoked). Are you sure?</p>
 				<input type="hidden" name="alter" value="rotateKey"/>
 				<input type="hidden" name="id" th:value="${entity.id}"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 			</div>
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>

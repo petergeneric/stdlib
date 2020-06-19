@@ -55,7 +55,7 @@
 					  </ul>
 					</div>
                     <form th:if="${session.login.isLoggedIn() == false and page != 'login' and page != 'register'}" class="navbar-form pull-right" method="POST" th:action="@{/login}">
-	                    <input type="hidden" name="nonce" th:value="${nonceProvider.get().allocate()}" />
+	                    <input type="hidden" name="token" th:value="${csrfTokens.get().allocate()}" />
                         <input type="hidden" name="returnTo" th:value="${#httpServletRequest.requestURL + ((#httpServletRequest.queryString) ? ('?' + #httpServletRequest.queryString) : '')}" />
                         <input class="span2" type="text" name="email" placeholder="Email" />
                         <input class="span2" type="password" name="password" placeholder="Password" />

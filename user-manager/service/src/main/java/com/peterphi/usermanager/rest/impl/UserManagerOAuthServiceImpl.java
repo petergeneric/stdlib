@@ -23,7 +23,7 @@ import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
@@ -82,7 +82,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	Templater templater;
 
 	@Inject
-	Provider<CSRFTokenStore> nonceStoreProvider;
+	Provider<CSRFTokenStore> tokenStoreProvider;
 
 	@Inject
 	Provider<UserLogin> loginProvider;
@@ -136,11 +136,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			final TemplateCall call = templater.template("connect_to_service");
 
-			CSRFTokenStore nonceStore = nonceStoreProvider.get();
+			CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
 			// Provide additional client information
 			call.set("client", client);
-			call.set("nonce", nonceStore.allocate());
+			call.set("token", tokenStore.allocate());
 
 			// Scopes as a list
 			if (StringUtils.isBlank(scope))
@@ -167,13 +167,13 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	                                     final String redirectUri,
 	                                     final String state,
 	                                     final String scope,
-	                                     final String nonce,
+	                                     final String token,
 	                                     final String decision)
 	{
-		final CSRFTokenStore nonceStore = nonceStoreProvider.get();
+		final CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
-		// Make sure the nonce is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
-		nonceStore.validate(nonce);
+		// Make sure the token is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
+		tokenStore.validate(token);
 
 		if (StringUtils.equalsIgnoreCase(decision, "allow"))
 		{

@@ -14,7 +14,7 @@ import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
 import org.apache.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	boolean allowAnonymousRegistration = false;
 
 	@Inject
-	CSRFTokenStore nonceStore;
+	CSRFTokenStore tokenStore;
 
 
 	@AuthConstraint(id = "register_service", skip = true, comment = "register page handles own constraints")
@@ -65,7 +65,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 
 
 		TemplateCall call = templater.template("register");
-		call.set("nonce", nonceStore.allocate());
+		call.set("token", tokenStore.allocate());
 
 		if (login.isAdmin())
 			call.set("roles", roleDao.getAll()); // Admin user, role picker will be available
@@ -79,7 +79,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	@AuthConstraint(id = "register_service", skip = true, comment = "register page handles own constraints")
 	@Override
 	@Transactional
-	public Response doRegister(String nonce,
+	public Response doRegister(String token,
 	                           String email,
 	                           String name,
 	                           String dateFormat,
@@ -88,7 +88,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	                           String passwordConfirm,
 	                           List<String> roles)
 	{
-		nonceStore.validate(nonce, true);
+		tokenStore.validate(token, true);
 
 		if (!allowAnonymousRegistration && !login.isAdmin())
 			throw new AuthenticationFailureException("Anonymous registration is not enabled. Please log in as an admin to register users");

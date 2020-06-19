@@ -28,7 +28,7 @@ public interface ServiceUIService
 	@POST
 	@Path("/services/create")
 	@Produces(MediaType.TEXT_HTML)
-	Response create(@FormParam("nonce") final String nonce,
+	Response create(@FormParam("token") final String token,
 	                @FormParam("name") final String name,
 	                @FormParam("required_role") final String requiredRoleName,
 	                @FormParam("endpoints") final String endpoints,
@@ -37,12 +37,12 @@ public interface ServiceUIService
 	@POST
 	@Path("/service/{id}/disable")
 	@Produces(MediaType.TEXT_HTML)
-	Response disable(@PathParam("id") String id, @FormParam("nonce") final String nonce);
+	Response disable(@PathParam("id") String id, @FormParam("token") final String token);
 
 	@POST
 	@Path("/service/{id}/edit")
 	@Produces(MediaType.TEXT_HTML)
-	Response edit(@FormParam("nonce") final String nonce,
+	Response edit(@FormParam("token") final String token,
 	              @PathParam("id") String id,
 	              @FormParam("required_role") final String requiredRoleName,
 	              @FormParam("endpoints") final String endpoints,
@@ -52,5 +52,5 @@ public interface ServiceUIService
 	@POST
 	@Path("/service/{service_id}/rotate-access-key")
 	@Produces(MediaType.TEXT_HTML)
-	Response rotateAccessKey(@PathParam("service_id") String serviceId, @FormParam("nonce") String nonce);
+	Response rotateAccessKey(@PathParam("service_id") String serviceId, @FormParam("token") String token);
 }

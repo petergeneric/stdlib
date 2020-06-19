@@ -23,7 +23,7 @@ public interface LoginUIService
 	@POST
 	@Path("/login")
 	@Produces(MediaType.TEXT_HTML)
-	Response doLogin(@FormParam("nonce") String nonce,
+	Response doLogin(@FormParam("token") String token,
 	                 @FormParam("returnTo") @DefaultValue("/") String returnTo,
 	                 @FormParam("email") String user,
 	                 @FormParam("password") String password);

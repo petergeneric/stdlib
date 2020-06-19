@@ -1,4 +1,4 @@
-package com.peterphi.usermanager.guice.nonce;
+package com.peterphi.usermanager.guice.token;
 
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import org.apache.log4j.Logger;
@@ -18,7 +18,7 @@ public class CSRFTokenStore
 
 	public synchronized String allocate()
 	{
-		// Make sure we don't go above the maximum number of nonces by simply clearing everything
+		// Make sure we don't go above the maximum number of tokens by simply clearing everything
 		// In normal operation we shouldn't experience this issue
 		if (tokens.size() >= MAX_SIZE)
 		{
@@ -37,15 +37,15 @@ public class CSRFTokenStore
 	}
 
 
-	public void validate(String nonce)
+	public void validate(String token)
 	{
-		validate(nonce, true);
+		validate(token, true);
 	}
 
 
-	public synchronized void validate(String nonce, final boolean remove)
+	public synchronized void validate(String token, final boolean remove)
 	{
-		final UUID uuid = UUID.fromString(nonce);
+		final UUID uuid = UUID.fromString(token);
 
 		final boolean existed;
 
@@ -57,6 +57,6 @@ public class CSRFTokenStore
 		if (existed)
 			return; // All is OK
 		else
-			throw new RuntimeException("Unknown CSRF Token value received for this session! " + nonce);
+			throw new RuntimeException("Unknown CSRF Token value received for this session! " + token);
 	}
 }
