@@ -10,7 +10,7 @@ import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 public class ThymeleafNonceStoreRegistration implements GuiceLifecycleListener
 {
 	@Inject
-	Provider<SessionNonceStore> nonceStore;
+	Provider<CSRFTokenStore> nonceStore;
 
 	@Inject
 	ThymeleafTemplater templater;

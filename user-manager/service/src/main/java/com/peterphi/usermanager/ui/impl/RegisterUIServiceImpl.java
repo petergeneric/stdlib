@@ -14,7 +14,7 @@ import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
 import org.apache.log4j.Logger;
 
@@ -52,7 +52,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 	boolean allowAnonymousRegistration = false;
 
 	@Inject
-	SessionNonceStore nonceStore;
+	CSRFTokenStore nonceStore;
 
 
 	@AuthConstraint(id = "register_service", skip = true, comment = "register page handles own constraints")
