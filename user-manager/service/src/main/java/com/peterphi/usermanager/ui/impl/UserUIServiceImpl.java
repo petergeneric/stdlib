@@ -67,6 +67,18 @@ public class UserUIServiceImpl implements UserUIService
 
 
 	@Override
+	@AuthConstraint(id = "warn-and-redirect", skip = true)
+	public String getWarnAndRedirect(final String url)
+	{
+		TemplateCall call = templater.template("redirect");
+
+		call.set("url", url);
+
+		return call.process();
+	}
+
+
+	@Override
 	@Transactional(readOnly = true)
 	@AuthConstraint(role=UserLogin.ROLE_ADMIN)
 	public String getUsers(UriInfo query)

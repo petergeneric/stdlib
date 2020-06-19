@@ -23,7 +23,7 @@ import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
@@ -83,7 +83,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	Templater templater;
 
 	@Inject
-	Provider<SessionNonceStore> nonceStoreProvider;
+	Provider<CSRFTokenStore> nonceStoreProvider;
 
 	@Inject
 	Provider<UserLogin> loginProvider;
@@ -137,7 +137,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			final TemplateCall call = templater.template("connect_to_service");
 
-			SessionNonceStore nonceStore = nonceStoreProvider.get();
+			CSRFTokenStore nonceStore = nonceStoreProvider.get();
 
 			// Provide additional client information
 			call.set("client", client);
@@ -170,7 +170,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	                                     final String nonce,
 	                                     final String decision)
 	{
-		final SessionNonceStore nonceStore = nonceStoreProvider.get();
+		final CSRFTokenStore nonceStore = nonceStoreProvider.get();
 
 		// Make sure the nonce is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
 		nonceStore.validate(nonce);
