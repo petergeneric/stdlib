@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 @AuthConstraint(role = UserLogin.ROLE_ADMIN, comment = "Must be user manager admin to view/modify services")
 public class ServiceUIServiceImpl implements ServiceUIService
 {
-	private static final String NONCE_USE = "configui";
+	private static final String TOKEN_USE = "configui";
 
 	@Inject
 	Templater templater;
@@ -65,7 +65,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final TemplateCall call = templater.template("services");
 
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 		call.set("resultset", resultset);
 		call.set("entities", resultset.getList());
 
@@ -86,7 +86,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final List<RoleEntity> roles = roleDao.find(new WebQuery().limit(0).orderAsc("id")).getList();
 
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 		call.set("entity", entity);
 		call.set("localEndpoint", localEndpoint);
 		call.set("roles", roles);
@@ -104,7 +104,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	                       final String endpoints,
 	                       final List<String> roles)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		if (!userProvider.get().isAdmin())
 			throw new IllegalArgumentException("Only an admin can create a service!");
@@ -131,7 +131,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Transactional
 	public Response disable(final String id, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -158,7 +158,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	                     final String endpoints,
 	                     final List<String> roles)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -184,7 +184,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	@Transactional
 	public Response rotateAccessKey(final String id, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 

@@ -42,7 +42,7 @@ public interface UserManagerOAuthService
 	                              @FormParam("redirect_uri") @Doc("Original redirect_uri") String redirectUri,
 	                              @FormParam("state") @Doc("Original state") String state,
 	                              @FormParam("scope") @Doc("Original scope") String scope,
-	                              @FormParam("nonce") @Doc("For CSRF prevention") String nonce,
+	                              @FormParam("token") @Doc("For CSRF prevention") String token,
 	                              @FormParam("decision") @Doc("decision (Allow/Deny)") String decision);
 
 	/**

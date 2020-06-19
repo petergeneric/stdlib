@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @AuthConstraint(role = "authenticated", comment = "login required")
 public class UserUIServiceImpl implements UserUIService
 {
-	private static final String NONCE_USE = "configui";
+	private static final String TOKEN_USE = "configui";
 
 	@Inject
 	Templater templater;
@@ -89,7 +89,7 @@ public class UserUIServiceImpl implements UserUIService
 
 		call.set("resultset", resultset);
 		call.set("users", resultset.getList());
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
 	}
@@ -115,7 +115,7 @@ public class UserUIServiceImpl implements UserUIService
 		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
 		call.set("entityRoleIds", getRoles(user));
 		call.set("roles", roleDao.getAll());
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
 	}
@@ -137,7 +137,7 @@ public class UserUIServiceImpl implements UserUIService
 	                                final String email,
 	                                final List<String> roles)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -193,7 +193,7 @@ public class UserUIServiceImpl implements UserUIService
 	@Override
 	public Response rotateAccessKey(final int userId, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -212,7 +212,7 @@ public class UserUIServiceImpl implements UserUIService
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public Response deleteUser(final int userId, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -240,7 +240,7 @@ public class UserUIServiceImpl implements UserUIService
 	                               final String newPassword,
 	                               final String newPasswordConfirm)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -265,7 +265,7 @@ public class UserUIServiceImpl implements UserUIService
 	@AuthConstraint(id = "impersonation", role = UserLogin.ROLE_ADMIN, comment = "only admins can impersonate other users")
 	public Response impersonate(final int userId, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		// N.B. because we do not wish to impersonate the user for a long time we aren't changing the session reconnect cookie
 		// This means when the servlet session ends (inactivity, browser closing, etc.) the user will be logged back in as themselves

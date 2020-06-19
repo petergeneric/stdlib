@@ -44,7 +44,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 				<input class="btn btn-primary" type="submit" value="Change"/>
 			</div>
@@ -76,7 +76,7 @@
 				</div>
 			</div>
 			<div class="modal-footer">
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 				<input class="btn btn-primary" type="submit" value="Save"/>
 			</div>
@@ -103,7 +103,7 @@
 				<input type="hidden" name="id" th:value="${entity.id}"/>
 			</div>
 			<div class="modal-footer">
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 				<input class="btn btn-primary" type="submit" value="Delete"/>
 			</div>

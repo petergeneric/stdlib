@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 @AuthConstraint(role = UserLogin.ROLE_ADMIN, comment = "Must be user manager admin to view/modify roles")
 public class RoleUIServiceImpl implements RoleUIService
 {
-	private static final String NONCE_USE = "configui";
+	private static final String TOKEN_USE = "configui";
 
 	@Inject
 	Templater templater;
@@ -52,7 +52,7 @@ public class RoleUIServiceImpl implements RoleUIService
 
 		call.set("resultset", resultset);
 		call.set("roles", resultset.getList());
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
 	}
@@ -72,7 +72,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		call.set("entity", entity);
 		call.set("allUsers", userDao.getAll());
 		call.set("users", userDao.findByUriQuery(new WebQuery().eq("roles.id", id)).getList());
-		call.set("token", tokenStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
 	}
@@ -82,7 +82,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Transactional
 	public Response create(final String id, final String token, final String caption)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		if (dao.getById(id) != null)
 			throw new IllegalArgumentException("Role with name already exists: " + id);
@@ -102,7 +102,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Transactional
 	public Response delete(final String id, final String token)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		if (StringUtils.equalsIgnoreCase(id, UserLogin.ROLE_ADMIN))
 			throw new IllegalArgumentException("Cannot delete the user manager admin role!");
@@ -122,7 +122,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Transactional
 	public Response changeCaption(final String id, final String token, final String caption)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final RoleEntity entity = dao.getById(id);
 
@@ -141,7 +141,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	@Transactional
 	public Response changeMembers(final String id, final String token, final List<Integer> members)
 	{
-		tokenStore.validate(NONCE_USE, token);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final RoleEntity entity = dao.getById(id);
 

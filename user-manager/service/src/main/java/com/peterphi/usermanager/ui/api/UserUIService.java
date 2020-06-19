@@ -43,7 +43,7 @@ public interface UserUIService
 	@Path("/user/{user_id}")
 	@Produces(MediaType.TEXT_HTML)
 	Response editUserProfile(@PathParam("user_id") int userId,
-	                         @FormParam("nonce") String nonce,
+	                         @FormParam("token") String token,
 	                         @FormParam("dateFormat") String dateFormat,
 	                         @FormParam("timeZone") String timeZone,
 	                         @FormParam("name") String name,
@@ -53,23 +53,23 @@ public interface UserUIService
 	@POST
 	@Path("/user/{user_id}/rotate-access-key")
 	@Produces(MediaType.TEXT_HTML)
-	Response rotateAccessKey(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
+	Response rotateAccessKey(@PathParam("user_id") int userId, @FormParam("token") String token);
 
 	@POST
 	@Path("/user/{user_id}/delete")
 	@Produces(MediaType.TEXT_HTML)
-	Response deleteUser(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
+	Response deleteUser(@PathParam("user_id") int userId, @FormParam("token") String token);
 
 	@POST
 	@Path("/user/{user_id}/change_password")
 	@Produces(MediaType.TEXT_HTML)
 	Response changePassword(@PathParam("user_id") int userId,
-	                        @FormParam("nonce") String nonce,
+	                        @FormParam("token") String token,
 	                        @FormParam("password") final String newPassword,
 	                        @FormParam("passwordConfirm") final String newPasswordConfirm);
 
 	@POST
 	@Path("/user/{user_id}/impersonate")
 	@Produces(MediaType.TEXT_HTML)
-	Response impersonate(@PathParam("user_id") int userId, @FormParam("nonce") String nonce);
+	Response impersonate(@PathParam("user_id") int userId, @FormParam("token") String token);
 }
