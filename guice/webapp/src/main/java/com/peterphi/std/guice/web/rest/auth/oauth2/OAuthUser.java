@@ -265,4 +265,29 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 			}
 		}
 	}
+
+
+	@Override
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder("OAuthUser{");
+		if (isAnonymous())
+		{
+			sb.append("anonymous=true");
+		}
+		else
+		{
+			try
+			{
+				final String username = getUsername();
+				sb.append("username=").append(username);
+			}
+			catch (Throwable t)
+			{
+				sb.append("anonymous=false, username-fetch-error=").append(t.getMessage());
+			}
+		}
+		sb.append('}');
+		return sb.toString();
+	}
 }
