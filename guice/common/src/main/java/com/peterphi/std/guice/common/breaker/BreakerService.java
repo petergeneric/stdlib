@@ -60,6 +60,12 @@ public class BreakerService
 		metrics.register("breakers_tripped_total", (Gauge) tripped :: size);
 	}
 
+	@Inject
+	public BreakerService(MetricRegistry metrics)
+	{
+		metrics.register("breakers_tripped_total", (Gauge) tripped :: size);
+	}
+
 	/**
 	 * Create a new Breaker which trips if any of the named breakers are tripped
 	 *
