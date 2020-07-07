@@ -11,6 +11,7 @@ import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.guice.UMConfig;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.token.CSRFTokenStore;
@@ -45,10 +46,16 @@ public class LoginUIServiceImpl implements LoginUIService
 	CSRFTokenStore tokenStore;
 
 	@Inject(optional = true)
-	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
-	@Named("authentication.allowAnonymousRegistration")
+	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default). Default false")
+	@Named(UMConfig.ALLOW_ANONYMOUS_REGISTRATION)
 	@Reconfigurable
 	boolean allowAnonymousRegistration = false;
+
+	@Inject(optional = true)
+	@Doc("If enabled, if a CSRF Token Validation fails then we'll simply present the user with the login screen again. Defaults to true")
+	@Named(UMConfig.ON_CSRF_TOKEN_FAILURE_REDIRECT_TO_LOGIN_AGAIN)
+	@Reconfigurable
+	boolean onTokenFailureRedirectToLogin = true;
 
 	@Inject
 	RedirectValidatorService redirectValidator;
@@ -88,7 +95,20 @@ public class LoginUIServiceImpl implements LoginUIService
 		}
 		else
 		{
-			tokenStore.validate(token, true);
+			final boolean isTokenValid = tokenStore.validateWithoutException(token, true);
+
+			// If the token validation failed, and we're in a less secure (but more user-friendly) mode, simply present the user with the login page again.
+			if (!isTokenValid && onTokenFailureRedirectToLogin)
+			{
+				final String page = getLogin(returnTo, "An unexpected browser security error occurred, please try again");
+
+				return Response.status(200).entity(page).build();
+			}
+			else if (!isTokenValid)
+			{
+				throw new RuntimeException(
+						"An unexpected browser security error occurred. Please try closing your browser window and enter the system again.");
+			}
 
 			final UserEntity account = authenticationService.authenticate(user, password, false);
 

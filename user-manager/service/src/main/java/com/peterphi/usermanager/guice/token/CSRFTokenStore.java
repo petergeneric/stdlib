@@ -43,7 +43,17 @@ public class CSRFTokenStore
 	}
 
 
-	public synchronized void validate(String token, final boolean remove)
+	public void validate(String token, final boolean remove)
+	{
+		final boolean existed = validateWithoutException(token,remove);
+
+		// Throw
+		if (!existed)
+			throw new RuntimeException("Unknown CSRF Token value received for this session! " + token);
+	}
+
+
+	public synchronized boolean validateWithoutException(final String token, final boolean remove)
 	{
 		final UUID uuid = UUID.fromString(token);
 
@@ -54,9 +64,6 @@ public class CSRFTokenStore
 		else
 			existed = tokens.contains(uuid);
 
-		if (existed)
-			return; // All is OK
-		else
-			throw new RuntimeException("Unknown CSRF Token value received for this session! " + token);
+		return existed;
 	}
 }
