@@ -13,7 +13,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RoleUIService;
 import org.apache.commons.lang.StringUtils;
 
@@ -39,7 +39,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	UserDaoImpl userDao;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore tokenStore;
 
 
 	@Override
@@ -52,7 +52,7 @@ public class RoleUIServiceImpl implements RoleUIService
 
 		call.set("resultset", resultset);
 		call.set("roles", resultset.getList());
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -72,7 +72,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		call.set("entity", entity);
 		call.set("allUsers", userDao.getAll());
 		call.set("users", userDao.findByUriQuery(new WebQuery().eq("roles.id", id)).getList());
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(NONCE_USE));
 
 		return call.process();
 	}
@@ -80,9 +80,9 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	public Response create(final String id, final String nonce, final String caption)
+	public Response create(final String id, final String token, final String caption)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		if (dao.getById(id) != null)
 			throw new IllegalArgumentException("Role with name already exists: " + id);
@@ -100,9 +100,9 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	public Response delete(final String id, final String nonce)
+	public Response delete(final String id, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		if (StringUtils.equalsIgnoreCase(id, UserLogin.ROLE_ADMIN))
 			throw new IllegalArgumentException("Cannot delete the user manager admin role!");
@@ -120,9 +120,9 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	public Response changeCaption(final String id, final String nonce, final String caption)
+	public Response changeCaption(final String id, final String token, final String caption)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		final RoleEntity entity = dao.getById(id);
 
@@ -139,9 +139,9 @@ public class RoleUIServiceImpl implements RoleUIService
 
 	@Override
 	@Transactional
-	public Response changeMembers(final String id, final String nonce, final List<Integer> members)
+	public Response changeMembers(final String id, final String token, final List<Integer> members)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		final RoleEntity entity = dao.getById(id);
 

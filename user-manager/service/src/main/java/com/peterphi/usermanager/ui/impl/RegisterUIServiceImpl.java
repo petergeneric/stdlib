@@ -14,7 +14,7 @@ import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

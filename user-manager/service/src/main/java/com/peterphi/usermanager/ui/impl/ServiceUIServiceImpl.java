@@ -17,7 +17,7 @@ import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.ui.api.ServiceUIService;
 import org.apache.commons.lang.StringUtils;
 
@@ -54,7 +54,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	URI localEndpoint;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore tokenStore;
 
 
 	@Override
@@ -65,7 +65,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final TemplateCall call = templater.template("services");
 
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(NONCE_USE));
 		call.set("resultset", resultset);
 		call.set("entities", resultset.getList());
 
@@ -86,7 +86,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 		final List<RoleEntity> roles = roleDao.find(new WebQuery().limit(0).orderAsc("id")).getList();
 
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(NONCE_USE));
 		call.set("entity", entity);
 		call.set("localEndpoint", localEndpoint);
 		call.set("roles", roles);
@@ -98,13 +98,13 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response create(final String nonce,
+	public Response create(final String token,
 	                       final String name,
 	                       String requiredRole,
 	                       final String endpoints,
 	                       final List<String> roles)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		if (!userProvider.get().isAdmin())
 			throw new IllegalArgumentException("Only an admin can create a service!");
@@ -129,9 +129,9 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response disable(final String id, final String nonce)
+	public Response disable(final String id, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -152,13 +152,13 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response edit(final String nonce,
+	public Response edit(final String token,
 	                     final String id,
 	                     final String requiredRole,
 	                     final String endpoints,
 	                     final List<String> roles)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 
@@ -182,9 +182,9 @@ public class ServiceUIServiceImpl implements ServiceUIService
 
 	@Override
 	@Transactional
-	public Response rotateAccessKey(final String id, final String nonce)
+	public Response rotateAccessKey(final String id, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(NONCE_USE, token);
 
 		final OAuthServiceEntity entity = dao.getById(id);
 

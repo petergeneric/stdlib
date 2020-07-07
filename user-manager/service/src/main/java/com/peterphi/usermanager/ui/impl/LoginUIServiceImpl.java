@@ -13,7 +13,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.CSRFTokenStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.service.RedirectValidatorService;
 import com.peterphi.usermanager.ui.api.LoginUIService;
 
@@ -42,7 +42,7 @@ public class LoginUIServiceImpl implements LoginUIService
 	UserAuthenticationService authenticationService;
 
 	@Inject
-	CSRFTokenStore nonceStore;
+	CSRFTokenStore tokenStore;
 
 	@Inject(optional = true)
 	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
@@ -79,7 +79,7 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@AuthConstraint(skip = true, comment = "login page")
 	@Override
-	public Response doLogin(String nonce, String returnTo, String user, String password)
+	public Response doLogin(String token, String returnTo, String user, String password)
 	{
 		if (login.isLoggedIn())
 		{
@@ -88,7 +88,7 @@ public class LoginUIServiceImpl implements LoginUIService
 		}
 		else
 		{
-			nonceStore.validate(nonce, true);
+			tokenStore.validate(token, true);
 
 			final UserEntity account = authenticationService.authenticate(user, password, false);
 
