@@ -356,4 +356,10 @@
 			<column name="access_key_alt" type="VARCHAR(100)" />
 		</addColumn>
 	</changeSet>
+
+	<!-- User's names and Role Captions should use NVARCHAR to reflect that they need to be unicode-safe -->
+	<changeSet author="peter@peterphi.com" id="nvarchar_for_user_text">
+		<modifyDataType tableName="user_account" columnName="name" newDataType="NVARCHAR(100)" />
+		<modifyDataType tableName="role_definition" columnName="caption" newDataType="NVARCHAR(1024)" />
+	</changeSet>
 </databaseChangeLog>
