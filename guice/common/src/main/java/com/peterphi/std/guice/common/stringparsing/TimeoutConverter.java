@@ -9,7 +9,12 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Interprets a number of milliseconds as a Timeout
+ * Interprets a number of milliseconds as a Timeout<br /> Supports the following string representations:
+ * <ul>
+ *     <li>{@link Duration#parse(java.lang.CharSequence) ISO-8601 Duration}</li>
+ *     <li><em>###</em> - treated as milliseconds</li>
+ *     <li><em>###</em><em>(d|h|m|s|ms)</em> (days, hours, minutes, seconds, milliseconds)</li>
+ * </ul>
  */
 public class TimeoutConverter
 {
