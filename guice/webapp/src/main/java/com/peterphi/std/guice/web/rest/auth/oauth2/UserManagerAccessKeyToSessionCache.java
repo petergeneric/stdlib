@@ -1,5 +1,7 @@
 package com.peterphi.std.guice.web.rest.auth.oauth2;
 
+import com.codahale.metrics.Counter;
+import com.codahale.metrics.MetricRegistry;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
@@ -20,11 +22,21 @@ public class UserManagerAccessKeyToSessionCache
 	@Inject
 	public Provider<OAuth2SessionRef> sessionRefProvider;
 
-	private final Cache<String, OAuth2SessionRef> bearerToSessionRefCache = CacheManager.build(getClass().getSimpleName(), CacheBuilder
-			                                                                        .newBuilder()
-			                                                                        .expireAfterAccess(20, TimeUnit.MINUTES)
-			                                                                        .maximumSize(1024));
+	private final Counter expiredTokensReturnedFromCache;
 
+	private final Cache<String, OAuth2SessionRef> bearerToSessionRefCache = CacheManager.build(getClass().getSimpleName(),
+	                                                                                           CacheBuilder
+			                                                                                           .newBuilder()
+			                                                                                           .expireAfterAccess(90,
+			                                                                                                              TimeUnit.MINUTES)
+			                                                                                           .maximumSize(1024));
+
+
+	@Inject
+	public UserManagerAccessKeyToSessionCache(MetricRegistry registry)
+	{
+		this.expiredTokensReturnedFromCache = registry.counter("access_key_to_session_cache.expired_tokens_returned");
+	}
 
 	public OAuth2SessionRef getOrCreateSessionRef(final String token)
 	{
@@ -37,7 +49,11 @@ public class UserManagerAccessKeyToSessionCache
 
 			// If the back-end session is invalid or has expired then re-initialise it with the token
 			if (!ref.isValid())
+			{
+				this.expiredTokensReturnedFromCache.inc();
+
 				ref.initialiseFromAPIToken(token);
+			}
 
 			return ref;
 		}
