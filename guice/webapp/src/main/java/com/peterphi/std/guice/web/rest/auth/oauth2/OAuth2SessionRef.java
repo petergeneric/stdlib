@@ -97,6 +97,8 @@ public class OAuth2SessionRef
 		this.clientId = clientId;
 		this.clientSecret = clientSecret;
 		this.localEndpoint = localEndpoint;
+
+		log.trace("OAuth2SessionRef::new");
 	}
 
 
@@ -131,7 +133,10 @@ public class OAuth2SessionRef
 	public boolean isValid()
 	{
 		if (response == null)
+		{
+			log.trace("OAuth2SessionRef - isNotValid (no recheck needed)");
 			return false; // Cannot be valid because there is no response data available at all
+		}
 
 		try
 		{
@@ -143,6 +148,9 @@ public class OAuth2SessionRef
 				log.trace("isValid encountered exception calling getToken: " + e.getMessage(), e);
 			// otherwise ignore
 		}
+
+		if (response == null)
+			log.trace("OAuth2SessionRef - isNotValid");
 
 		return response != null;
 	}
@@ -350,6 +358,8 @@ public class OAuth2SessionRef
 
 	private synchronized void clearUserInfo()
 	{
+		log.trace("OAuth2SessionRef::clearUserInfo");
+
 		this.cachedInfo = null;
 
 		// Clear the delegated token too
@@ -374,7 +384,7 @@ public class OAuth2SessionRef
 	}
 
 
-	public void load(final OAuth2TokenResponse response)
+	public synchronized void load(final OAuth2TokenResponse response)
 	{
 		clearUserInfo();
 
@@ -427,7 +437,9 @@ public class OAuth2SessionRef
 		// Check that the user session is still valid
 		if (!isValid())
 			throw new IllegalArgumentException("Failed to generate delegated token: user session no longer valid!");
-		
+
+		log.trace("OAuth2SessionRef::generateNewDelegatedToken");
+
 		final long refreshAfter = System.currentTimeMillis() + delegatedTokenRefreshPeriod.getMilliseconds();
 
 		// Create a new delegation token

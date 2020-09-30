@@ -327,6 +327,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	{
 		final HttpServletRequest request = HttpCallContext.get().getRequest();
 
+
 		final String forwardedFor = request.getHeader("X-Forwarded-For");
 
 		if (StringUtils.isBlank(forwardedFor))
