@@ -130,7 +130,7 @@ public class OAuth2SessionRef
 	}
 
 
-	public boolean isValid()
+	public synchronized boolean isValid()
 	{
 		if (response == null)
 		{
