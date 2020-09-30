@@ -33,6 +33,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
@@ -260,15 +261,41 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			}
 			catch (Exception e)
 			{
-				if (shouldRollback(annotation, e))
+				try
 				{
-					errorRollbacks.mark();
+					if (!readOnly && shouldRollback(annotation, e))
+					{
+						errorRollbacks.mark();
 
-					rollback(tx, e);
+						rollback(tx, e);
+					}
+					else
+					{
+						complete(tx, readOnly);
+					}
 				}
-				else
+				catch (Throwable txre)
 				{
-					complete(tx, readOnly);
+					// Don't throw the rollback error, since the user really only cares about the actual original error
+					// But we should notify them that a rollback error did occur
+					if (!readOnly)
+					{
+						log.warn("TX encountered error and then failed during rollback! Original Error: " + e.getMessage(), e);
+						log.warn("TX encountered error and then failed during rollback! Rollback Error: ", txre);
+
+						throw new TransactionException(
+								"Encountered Exception while rolling back transaction! Cause contains original error causing rollback. Rollback error was:" +
+								e.getMessage() +
+								", original cause of rollback was: " +
+								e.getMessage(),
+								e);
+					}
+					else
+					{
+						log.warn("Read-Only TX encountered error and then failed during rollback! Original Error: " +
+						         e.getMessage(), e);
+						log.warn("Read-Only TX encountered error and then failed during rollback! Rollback Error: ", txre);
+					}
 				}
 
 				// propagate the exception
@@ -292,11 +319,19 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			}
 			catch (RuntimeException e)
 			{
-				commitFailures.mark();
+				if (readOnly)
+				{
+					log.warn("Read-Only TX encountered error during rollback! Will not share this with user (since actual read-only TX method completed normally). Error is: " +
+					         e.getMessage(), e);
+				}
+				else
+				{
+					commitFailures.mark();
 
-				rollback(tx);
+					rollback(tx);
 
-				commitException = e;
+					commitException = e;
+				}
 			}
 
 			// propagate anyway
