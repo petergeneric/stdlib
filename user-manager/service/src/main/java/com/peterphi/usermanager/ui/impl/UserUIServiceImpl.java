@@ -112,7 +112,7 @@ public class UserUIServiceImpl implements UserUIService
 		call.set("user", user);
 
 		call.set("timezones", Arrays.asList(TimeZone.getAvailableIDs()));
-		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
+		call.set("dateformats", Arrays.asList("yyyy-MM-dd HH:mm:ss zzz", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm"));
 		call.set("entityRoleIds", getRoles(user));
 		call.set("roles", roleDao.getAll());
 		call.set("token", tokenStore.getValue(TOKEN_USE));
