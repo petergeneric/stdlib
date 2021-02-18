@@ -24,8 +24,6 @@ public class ConfigurationPropertyRegistry
 
 	private final GuiceConfig configuration;
 
-	private boolean internalPropertiesLoaded = false;
-
 	public ConfigurationPropertyRegistry(final GuiceConfig configuration)
 	{
 		this.configuration = configuration;
@@ -76,12 +74,6 @@ public class ConfigurationPropertyRegistry
 	{
 		assert (predicate != null);
 
-		if (!internalPropertiesLoaded)
-		{
-			// Make sure that all properties defined in GuiceProperties, as well as properties nominated in Roles + Modules are registered
-			registerAllAppProperties();
-		}
-
 		// Sort application properties, then framework properties
 		// Within these groups, sort alphabetically
 
@@ -93,14 +85,6 @@ public class ConfigurationPropertyRegistry
 			return properties.values().stream().filter(predicate).sorted(sort).collect(Collectors.toList());
 		}
 	}
-
-
-	private void registerAllAppProperties()
-	{
-		// TODO lazy-trigger InternalConfigPropertyDocumenterGuiceRole to index all properties
-		internalPropertiesLoaded = true;
-	}
-
 
 	public List<ConfigurationProperty> getFrameworkProperties()
 	{

@@ -9,12 +9,17 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.daemon.GuiceDaemon;
+import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
+import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.common.serviceprops.annotations.GuicePropertyRegistry;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
+import com.peterphi.std.threading.Timeout;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Modifier;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -58,7 +63,6 @@ public class InternalConfigPropertyDocumenterGuiceRole implements GuiceRole
 		if (config.getBoolean(GuiceProperties.UNIT_TEST, false))
 			return; // Skip property indexing if we're in a unit test (performance)
 
-		// TODO make the actual registration lazy
 		bindAllGuiceProperties(injectorRef.get().getInstance(ConfigurationPropertyRegistry.class), injectorRef, modules, setup);
 	}
 
@@ -86,6 +90,29 @@ public class InternalConfigPropertyDocumenterGuiceRole implements GuiceRole
 			{
 				addClassRef(classes, module.getClass());
 			}
+		}
+
+		// TODO add service.(x) properties for REST clients?
+
+		// Add daemon.(x).interval properties for GuiceRecurringDaemons
+		{
+			final Field sleepTimeField = Arrays
+					                             .stream(GuiceRecurringDaemon.class.getDeclaredFields())
+					                             .filter(f -> f.getName().equals("sleepTime"))
+					                             .findFirst()
+					                             .orElse(null);
+
+			final GuiceDaemonRegistry daemonRegistry = injector.get().getInstance(GuiceDaemonRegistry.class);
+
+			daemonRegistry.addRegisterHook((GuiceDaemon d) -> {
+				if (d instanceof GuiceRecurringDaemon)
+					registry.register(d.getClass(),
+					                  injector,
+					                  "daemon." + d.getName() + ".interval",
+					                  Timeout.class,
+					                  sleepTimeField,
+					                  true);
+			});
 		}
 
 		// Find all "public static final String ..." fields in the referenced classes with a @Doc annotation
