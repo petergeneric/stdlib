@@ -17,12 +17,6 @@
 
 	<dependencies>
 		<dependency>
-			<groupId>com.peterphi.std</groupId>
-			<artifactId>stdlib</artifactId>
-			<version>${project.version}</version>
-		</dependency>
-
-		<dependency>
 			<groupId>ognl</groupId>
 			<artifactId>ognl</artifactId>
 			<version>3.1.17</version>

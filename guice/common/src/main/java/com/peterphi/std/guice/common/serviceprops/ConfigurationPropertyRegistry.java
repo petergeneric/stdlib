@@ -2,7 +2,6 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Injector;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import org.apache.log4j.Logger;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
@@ -20,13 +19,12 @@ import java.util.stream.Collectors;
 
 public class ConfigurationPropertyRegistry
 {
-	private static final Logger log = Logger.getLogger(ConfigurationPropertyRegistry.class);
-
 	private final SortedMap<String, ConfigurationProperty> properties = new TreeMap<>();
 	private final Map<Class, WeakHashMap<Object, Void>> instances = new HashMap<>();
 
 	private final GuiceConfig configuration;
 
+	private boolean internalPropertiesLoaded = false;
 
 	public ConfigurationPropertyRegistry(final GuiceConfig configuration)
 	{
@@ -38,9 +36,10 @@ public class ConfigurationPropertyRegistry
 	                     AtomicReference<Injector> injector,
 	                     String name,
 	                     Class<T> type,
-	                     AnnotatedElement element)
+	                     AnnotatedElement element,
+	                     boolean canonical)
 	{
-		register(new ConfigurationPropertyBindingSite<>(this, injector, owner, name, type, element));
+		register(new ConfigurationPropertyBindingSite<>(this, injector, owner, name, type, element, canonical));
 	}
 
 
@@ -77,6 +76,12 @@ public class ConfigurationPropertyRegistry
 	{
 		assert (predicate != null);
 
+		if (!internalPropertiesLoaded)
+		{
+			// Make sure that all properties defined in GuiceProperties, as well as properties nominated in Roles + Modules are registered
+			registerAllAppProperties();
+		}
+
 		// Sort application properties, then framework properties
 		// Within these groups, sort alphabetically
 
@@ -87,6 +92,13 @@ public class ConfigurationPropertyRegistry
 		{
 			return properties.values().stream().filter(predicate).sorted(sort).collect(Collectors.toList());
 		}
+	}
+
+
+	private void registerAllAppProperties()
+	{
+		// TODO lazy-trigger InternalConfigPropertyDocumenterGuiceRole to index all properties
+		internalPropertiesLoaded = true;
 	}
 
 

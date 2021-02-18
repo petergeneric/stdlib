@@ -34,7 +34,10 @@ public class ConfigurationProperty
 
 	public void add(ConfigurationPropertyBindingSite site)
 	{
-		bindings.add(site);
+		if (site.isCanonical())
+			bindings.add(0, site);
+		else
+			bindings.add(site);
 	}
 
 

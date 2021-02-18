@@ -22,6 +22,7 @@ public class ConfigurationPropertyBindingSite<T, O>
 	private final String name;
 	private final Class<T> type;
 	private final AnnotatedElement element;
+	private final boolean canonical;
 
 
 	public ConfigurationPropertyBindingSite(final ConfigurationPropertyRegistry registry,
@@ -29,7 +30,8 @@ public class ConfigurationPropertyBindingSite<T, O>
 	                                        final Class<O> owner,
 	                                        final String name,
 	                                        final Class<T> type,
-	                                        final AnnotatedElement element)
+	                                        final AnnotatedElement element,
+	                                        final boolean canonical)
 	{
 		if (owner == null)
 			throw new IllegalArgumentException("Binding owner must not be null!");
@@ -40,6 +42,7 @@ public class ConfigurationPropertyBindingSite<T, O>
 		this.name = name;
 		this.type = type;
 		this.element = element;
+		this.canonical = canonical;
 	}
 
 
@@ -171,5 +174,11 @@ public class ConfigurationPropertyBindingSite<T, O>
 		{
 			return Collections.emptySet();
 		}
+	}
+
+
+	public boolean isCanonical()
+	{
+		return canonical;
 	}
 }
