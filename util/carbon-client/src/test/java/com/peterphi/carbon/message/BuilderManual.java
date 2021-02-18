@@ -1,7 +1,6 @@
 package com.peterphi.carbon.message;
 
 import com.google.inject.Injector;
-import com.google.inject.Module;
 import com.peterphi.carbon.CarbonClient;
 import com.peterphi.carbon.guice.CarbonClientModule;
 import com.peterphi.carbon.type.immutable.CarbonJobInfo;
@@ -13,8 +12,6 @@ import org.junit.After;
 import org.junit.Before;
 import org.junit.Test;
 
-import java.util.Collections;
-
 public class BuilderManual
 {
 	private Injector injector;
@@ -23,8 +20,7 @@ public class BuilderManual
 	@Before
 	public void setUp()
 	{
-		this.injector = new GuiceBuilder().withSetup(new BasicSetup(Collections.singletonList((Module) new CarbonClientModule())))
-		                                  .build();
+		this.injector = new GuiceBuilder().withSetup(new BasicSetup(new CarbonClientModule())).build();
 	}
 
 
