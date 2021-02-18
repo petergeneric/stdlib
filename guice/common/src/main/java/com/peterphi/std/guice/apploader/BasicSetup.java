@@ -13,6 +13,12 @@ public class BasicSetup implements GuiceSetup
 	private final List<Module> modules;
 
 
+	public BasicSetup()
+	{
+		this.modules = Collections.emptyList();
+	}
+
+
 	public BasicSetup(List<Module> modules)
 	{
 		this.modules = modules;
