@@ -72,7 +72,6 @@
 		<module>service-manager</module>
 		<module>user-manager</module>
 		<module>rules</module>
-		<module>azure</module>
 		<module>moxy</module>
 	</modules>
 
