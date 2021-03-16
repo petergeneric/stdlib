@@ -3,7 +3,7 @@ package com.peterphi.std.guice.common.serviceprops.composite;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.common.cached.CacheManager;
-import com.peterphi.std.guice.common.ognl.DefaultMemberAccess;
+import com.peterphi.std.guice.common.ognl.OgnlEvaluator;
 import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
@@ -99,7 +99,7 @@ class GuiceConfigVariableResolver extends StrLookup
 		final Node node;
 		try
 		{
-			node = ognlCache.get(expression, () -> Ognl.compileExpression(new OgnlContext(null, null, new DefaultMemberAccess(false)), properties, expression));
+			node = ognlCache.get(expression, () -> Ognl.compileExpression(new OgnlContext(null, null, OgnlEvaluator.PUBLIC_ACCESS), properties, expression));
 		}
 		catch (ExecutionException e)
 		{
@@ -108,7 +108,7 @@ class GuiceConfigVariableResolver extends StrLookup
 
 		try
 		{
-			final Object obj = node.getValue(new OgnlContext(null, null, new DefaultMemberAccess(false)), properties);
+			final Object obj = node.getValue(new OgnlContext(null, null, OgnlEvaluator.PUBLIC_ACCESS), properties);
 
 			if (obj == null)
 				return "";

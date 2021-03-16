@@ -8,7 +8,7 @@ import com.peterphi.rules.types.OgnlCommand;
 import com.peterphi.rules.types.Rule;
 import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
-import com.peterphi.std.guice.common.ognl.DefaultMemberAccess;
+import com.peterphi.std.guice.common.ognl.OgnlEvaluator;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import ognl.MethodFailedException;
 import ognl.OgnlContext;
@@ -56,7 +56,7 @@ public class RulesEngineImpl implements RulesEngine, StoppableService
 	OgnlContext createContext(final Map<String, Object> vars)
 	{
 
-		OgnlContext ognlContext = new OgnlContext(null, null, new DefaultMemberAccess(false));
+		OgnlContext ognlContext = new OgnlContext(null, null, OgnlEvaluator.PUBLIC_ACCESS);
 		ognlContext.putAll(vars);
 		ognlContext.put("logger", log);
 		return ognlContext;
