@@ -102,7 +102,7 @@ public class GuiceCoreTemplater
 	{
 		ClassLoaderTemplateResolver resolver = new ClassLoaderTemplateResolver();
 
-		resolver.setTemplateMode("HTML5");
+		resolver.setTemplateMode("HTML");
 
 		resolver.setCacheTTLMs(60 * 1000L);
 		resolver.setCacheable(true);

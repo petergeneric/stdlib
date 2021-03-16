@@ -26,7 +26,7 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 	{
 		ServletContextTemplateResolver resolver = new ServletContextTemplateResolver(ctx);
 
-		resolver.setTemplateMode("HTML5");
+		resolver.setTemplateMode("HTML");
 
 		// Load templates from WEB-INF/templates/{name}.html
 		resolver.setPrefix("/WEB-INF/template/");
