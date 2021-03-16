@@ -116,7 +116,7 @@ public class OgnlEvaluator
 
 		try
 		{
-			return expr.getValue(new OgnlContext(), obj);
+			return expr.getValue(new OgnlContext(null, null, new DefaultMemberAccess(false)), obj);
 		}
 		catch (Throwable e)
 		{
@@ -134,7 +134,10 @@ public class OgnlEvaluator
 	{
 		try
 		{
-			return (T) Ognl.getValue(getExpression(root), root, expected);
+			return (T) Ognl.getValue(getExpression(root),
+			                         new OgnlContext(null, null, new DefaultMemberAccess(false)),
+			                         root,
+			                         expected);
 		}
 		catch (Throwable e)
 		{
@@ -168,7 +171,7 @@ public class OgnlEvaluator
 		{
 			log.debug("OGNL Expression used enough times for compile: " + expr);
 
-			return Ognl.compileExpression(new OgnlContext(), root, expr);
+			return Ognl.compileExpression(new OgnlContext(null, null, new DefaultMemberAccess(false)), root, expr);
 		}
 		catch (Throwable e)
 		{
