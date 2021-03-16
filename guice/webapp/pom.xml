@@ -43,9 +43,9 @@
 		</dependency>
 
 		<dependency>
-			<groupId>org.thymeleaf</groupId>
+			<groupId>com.peterphi.thymeleaf</groupId>
 			<artifactId>thymeleaf</artifactId>
-			<version>3.0.12.RELEASE</version>
+			<version>3.0.12</version>
 			<exclusions>
                 <exclusion>
                     <artifactId>ognl</artifactId>
