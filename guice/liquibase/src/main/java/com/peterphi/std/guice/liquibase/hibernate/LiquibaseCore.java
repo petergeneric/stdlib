@@ -17,6 +17,7 @@ import liquibase.diff.compare.CompareControl;
 import liquibase.diff.output.DiffOutputControl;
 import liquibase.diff.output.changelog.DiffToChangeLog;
 import liquibase.exception.LiquibaseException;
+import liquibase.logging.LogFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.ResourceAccessor;
@@ -47,6 +48,11 @@ import java.util.Properties;
 class LiquibaseCore
 {
 	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
+
+	static
+	{
+		LogFactory.setInstance(new LiquibaseLog4j());
+	}
 
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
