@@ -40,8 +40,8 @@
 		<javassist.version>3.27.0-GA</javassist.version>
 		<jackson.version>2.12.2</jackson.version>
 		<hibernate.version>5.4.28.Final</hibernate.version>
-		<dbunit.version>2.5.1</dbunit.version>
-		<hsqldb.version>2.4.0</hsqldb.version>
+		<dbunit.version>2.7.0</dbunit.version>
+		<hsqldb.version>2.5.1</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
 		<moxy.version>2.7.8</moxy.version>
 		<mockito.version>2.28.2</mockito.version>
