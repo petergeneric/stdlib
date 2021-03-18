@@ -4,7 +4,6 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.IContext;
 
 import javax.ws.rs.core.Response;
@@ -18,14 +17,14 @@ import java.util.Map;
 public class ThymeleafCall implements TemplateCall
 {
 	private final TemplateEngine engine;
-	private final AbstractContext context;
+	private final IContext context;
 	private final String name;
 
 	private final Timer calls;
 	private final Meter failures;
 
 
-	ThymeleafCall(TemplateEngine engine, AbstractContext context, String name, final Timer calls, final Meter failures)
+	ThymeleafCall(TemplateEngine engine, IContext context, String name, final Timer calls, final Meter failures)
 	{
 		this.engine = engine;
 		this.context = context;
@@ -63,7 +62,7 @@ public class ThymeleafCall implements TemplateCall
 	 */
 	public ThymeleafCall set(String name, Object value)
 	{
-		context.setVariable(name, value);
+		context.getVariables().put(name, value);
 
 		return this;
 	}
