@@ -7,6 +7,7 @@ import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
 import org.thymeleaf.TemplateEngine;
@@ -44,6 +45,28 @@ public class GuiceCoreTemplater
 	private WeakReference<TemplateEngine> engine = new WeakReference<>(null);
 	private WeakReference<ThymeleafTemplater> templater = new WeakReference<>(null);
 
+	/**
+	 * Populated at guice creation
+	 */
+	private final ThymeleafCacheEmptyHook templateCacheClearer;
+
+
+	public GuiceCoreTemplater()
+	{
+		// Set up a hook to allow the template cache to be cleared proactively
+		this.templateCacheClearer = new ThymeleafCacheEmptyHook(this :: getEngineIfExists);
+		CacheManager.register("GuiceCoreTemplates", this.templateCacheClearer);
+	}
+
+
+	public TemplateEngine getEngineIfExists()
+	{
+		if (this.engine == null)
+			return null;
+		else
+			return this.engine.get();
+	}
+
 
 	public ThymeleafCall template(String template)
 	{
@@ -67,7 +90,7 @@ public class GuiceCoreTemplater
 		{
 			final TemplateEngine engine = getOrCreateEngine();
 
-			templater = new ThymeleafTemplater(engine, configuration, metrics, userProvider);
+			templater = new ThymeleafTemplater(engine, configuration, metrics, userProvider, true);
 
 			templater.set("coreRestPrefix", coreRestPrefix);
 			templater.set("coreRestEndpoint", coreRestEndpoint.toString());
