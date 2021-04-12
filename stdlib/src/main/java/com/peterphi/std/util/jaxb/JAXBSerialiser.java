@@ -294,7 +294,10 @@ public class JAXBSerialiser
 	 */
 	public Object deserialise(String xml)
 	{
-		return deserialise(new InputSource(new StringReader(xml)));
+		if (xml == null)
+			throw new IllegalArgumentException("Must provide non-null XML to deserialise!");
+		else
+			return deserialise(new InputSource(new StringReader(xml)));
 	}
 
 
@@ -307,7 +310,10 @@ public class JAXBSerialiser
 	 */
 	public Object deserialise(final InputStream is)
 	{
-		return deserialise(new InputSource(is));
+		if (is == null)
+			throw new IllegalArgumentException("Must provide non-null InputStream XML to deserialise!");
+		else
+			return deserialise(new InputSource(is));
 	}
 
 
