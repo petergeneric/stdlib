@@ -1,7 +1,5 @@
 package com.peterphi.std.util.jaxb;
 
-import org.apache.log4j.Logger;
-
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
 import java.util.Map;
@@ -15,12 +13,9 @@ import java.util.function.Supplier;
  */
 public class JAXBSerialiserFactory
 {
-	private static final Logger log = Logger.getLogger(JAXBSerialiserFactory.class);
-
 	private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 	private final boolean useMoxy;
 	private boolean useSoftReferences;
-
 
 	public JAXBSerialiserFactory(boolean useMoxy)
 	{
@@ -64,17 +59,11 @@ public class JAXBSerialiserFactory
 
 		if (instance == null)
 		{
-			log.debug("Cache miss for: " + key);
-
 			instance = provider.get();
 			cache.put(key, reference(instance));
 
 			// We just took the penalty to create a JAXBContext, do some maintenance on the map while we're at it
 			prune();
-		}
-		else if (log.isTraceEnabled())
-		{
-			log.trace("Cache hit for: " + key);
 		}
 
 		return instance;
