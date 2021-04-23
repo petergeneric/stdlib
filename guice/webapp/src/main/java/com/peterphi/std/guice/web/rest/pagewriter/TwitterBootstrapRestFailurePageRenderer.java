@@ -28,7 +28,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private boolean renderStackTrace = false;
 	private boolean renderRequestInfo = false;
 	private boolean renderRequestAttributes = false;
-	private boolean renderEnvironmentVariables = true;
+	private boolean renderEnvironmentVariables = false;
 	private boolean suppressPasswordFields = true;
 
 

@@ -159,11 +159,11 @@ public class GuiceProperties
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED = "rest.exception.html.enabled.only-for-logged-in";
 	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED_ROLE = "rest.exception.html.enabled.only-for-logged-in.role";
-	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, JVM config info will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO = "rest.exception.html.feature.jvminfo";
 	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT = "rest.exception.html.feature.jvminfo.environment";
-	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, request info (including cookie data) will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_REQUESTINFO = "rest.exception.html.feature.requestinfo";
 	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
