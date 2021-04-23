@@ -61,7 +61,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Reconfigurable
 	@Inject(optional = true)
 	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JVMINFO)
-	protected boolean jvmInfoEnabled = true;
+	protected boolean jvmInfoEnabled = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
@@ -71,7 +71,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Reconfigurable
 	@Inject(optional = true)
 	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_REQUESTINFO)
-	protected boolean requestInfoEnabled = true;
+	protected boolean requestInfoEnabled = false;
 
 	@Reconfigurable
 	@Inject(optional = true)
