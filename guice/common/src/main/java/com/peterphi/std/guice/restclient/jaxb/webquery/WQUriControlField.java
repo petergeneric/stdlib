@@ -55,7 +55,8 @@ public enum WQUriControlField
 	/**
 	 * An optional name for the query, to allow server-side optimisation/hinting
 	 */
-	NAME("_name");
+	NAME("_name"),
+	TEXT_QUERY("q");
 
 	private final String name;
 
