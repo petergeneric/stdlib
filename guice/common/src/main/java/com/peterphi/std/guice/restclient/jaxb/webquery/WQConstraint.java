@@ -1,6 +1,5 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
-import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
@@ -28,9 +27,8 @@ public class WQConstraint extends WQConstraintLine
 	public String value;
 
 	/**
-	 * The second value (for binary functions).<br />
-	 * Should only be supplied if {@link #function} is supplied and if it refers to a binary function such as {@link
-	 * WQFunctionType#RANGE}
+	 * The second value (for binary functions).<br /> Should only be supplied if {@link #function} is supplied and if it refers to
+	 * a binary function such as {@link WQFunctionType#RANGE}
 	 */
 	@XmlAttribute(name = "value2", required = false)
 	public String value2;
@@ -232,7 +230,6 @@ public class WQConstraint extends WQConstraintLine
 	 *
 	 * @param field
 	 * @param rawValue
-	 *
 	 * @return
 	 */
 	public static WQConstraint decode(final String field, final String rawValue)
@@ -282,9 +279,9 @@ public class WQConstraint extends WQConstraintLine
 	public String toQueryFragment()
 	{
 		if (function.hasBinaryParam())
-			return field + " " + function + " " + escape(value) + "\" TO " + escape(value2);
+			return field + " " + function.getQueryFragmentForm() + " " + escape(value) + " AND " + escape(value2);
 		else if (function.hasParam())
-			return field + " " + function + " " + escape(value);
+			return field + " " + function.getQueryFragmentForm() + " " + escape(value);
 		else
 			return field + " " + function;
 	}
@@ -293,11 +290,31 @@ public class WQConstraint extends WQConstraintLine
 	private static String escape(String val)
 	{
 		if (val == null)
-			return "NIL"; // avoid using null
+			return "(NIL)"; // avoid using null
 		else if (!val.isEmpty() && StringUtils.isNumeric(val))
 			return val; // Don't quote numbers
+		else if (isBareWord(val))
+			return val; // no spaces, no quotes so can be a bare value
+		else if (val.indexOf('\'') == -1)
+			return "'" + val + "'"; // no single quotes in string, so use single quotes
 		else
-			return "\"" + StringEscapeUtils.escapeJava(val) + "\""; // Quote all strings
+			return "\"" + StringUtils.replace(val, "\"", "\\\"") + "\""; // both quote forms, so double quotes with escape chars
+	}
+
+
+	private static boolean isBareWord(final String val)
+	{
+		if (val.length() == 0)
+			return false;
+
+		if (!Character.isJavaIdentifierPart(val.charAt(0)))
+			return false;
+
+		for (int i = 0; i < val.length(); i++)
+			if (!WebQueryParser.isBareWordPart(val.charAt(i)))
+				return false;
+
+		return true;
 	}
 
 

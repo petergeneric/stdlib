@@ -149,7 +149,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	 */
 	private String constraintsToQueryFragment()
 	{
-		return new WQGroup(WQGroupType.AND, constraints.constraints).toQueryFragment();
+		return constraints.toQueryFragment();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -311,12 +311,21 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 		for (Map.Entry<String, List<String>> entry : map.entrySet())
 		{
-			if (entry.getKey().charAt(0) == '_')
+			final String key = entry.getKey();
+
+			if (key.charAt(0) == '_' || (key.charAt(0) == 'q' && key.length() == 1))
 			{
-				final WQUriControlField specialField = WQUriControlField.getByName(entry.getKey());
+				final WQUriControlField specialField = WQUriControlField.getByName(key);
 
 				switch (specialField)
 				{
+					case TEXT_QUERY:
+						if (entry.getValue().size() != 1)
+							throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
+
+						WebQueryParser.parse(entry.getValue().get(0), this);
+
+						break;
 					case OFFSET:
 						def.offset(Integer.valueOf(entry.getValue().get(0)));
 						break;
@@ -370,7 +379,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 				if (entry.getValue().size() == 1)
 				{
-					def.constraints.constraints.add(WQConstraint.decode(entry.getKey(), entry.getValue().get(0)));
+					def.constraints.constraints.add(WQConstraint.decode(key, entry.getValue().get(0)));
 				}
 				else if (entry.getValue().size() > 0)
 				{
@@ -381,7 +390,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 					group.constraints = entry
 							                    .getValue()
 							                    .stream()
-							                    .map(value -> WQConstraint.decode(entry.getKey(), value))
+							                    .map(value -> WQConstraint.decode(key, value))
 							                    .collect(Collectors.toList());
 
 					def.constraints.constraints.add(group);
