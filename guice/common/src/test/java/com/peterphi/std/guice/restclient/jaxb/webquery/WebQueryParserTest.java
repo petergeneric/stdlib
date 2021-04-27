@@ -34,4 +34,14 @@ public class WebQueryParserTest
 				             .parse("id=1 and (name=foo or title=dr)order by id asc, name desc, title, title2", new WebQuery())
 				             .toQueryFragment());
 	}
+
+
+	@Test
+	public void testEmptyQueryWithOrder()
+	{
+		assertEquals("empty text query", "", WebQueryParser.parse("", new WebQuery()).toQueryFragment());
+		assertEquals("text query with only ordering",
+		             "ORDER BY id",
+		             WebQueryParser.parse("ORDER BY id", new WebQuery()).toQueryFragment());
+	}
 }
