@@ -6,7 +6,6 @@ import javax.xml.bind.annotation.XmlElementRefs;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 @XmlType(name = "ConstraintsType")
 public class WQConstraints
@@ -52,13 +51,31 @@ public class WQConstraints
 
 	public String toQueryFragment()
 	{
+		StringBuilder sb = new StringBuilder();
+
+		toQueryFragment(sb);
+
+		return sb.toString();
+	}
+
+	public void toQueryFragment(StringBuilder sb)
+	{
 		if (constraints.size() != 1)
 		{
-			return constraints.stream().map(WQConstraintLine :: toQueryFragment).collect(Collectors.joining(" AND "));
+			boolean first = true;
+			for (WQConstraintLine constraint : constraints)
+			{
+				if (!first)
+					sb.append(" AND ");
+				else
+					first = false;
+
+				constraint.toQueryFragment(sb);
+			}
 		}
 		else
 		{
-			return constraints.get(0).toQueryFragment();
+			constraints.get(0).toQueryFragment(sb);
 		}
 	}
 }

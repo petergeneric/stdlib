@@ -48,9 +48,7 @@ public class WQGroup extends WQConstraintLine
 	@Override
 	public String toString()
 	{
-		return "WQGroup{" + operator +
-		       ", constraints=" + constraints +
-		       "} ";
+		return "WQGroup{" + operator + ", constraints=" + constraints + "} ";
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,17 +285,27 @@ public class WQGroup extends WQConstraintLine
 
 
 	@Override
-	public String toQueryFragment()
+	public void toQueryFragment(StringBuilder sb)
 	{
 		if (constraints.size() == 1)
-			return constraints.get(0).toQueryFragment();
+			constraints.get(0).toQueryFragment(sb);
 		else
 		{
-			final String operatorStr = " " + operator.name() + " ";
+			sb.append('(');
 
-			return constraints.stream().map(WQConstraintLine:: toQueryFragment).collect(Collectors.joining(operatorStr,
-			                                                                                               "(",
-			                                                                                               ")"));
+			final String operatorStr = operator == WQGroupType.AND ? " AND " : " OR ";
+			boolean first = true;
+			for (WQConstraintLine constraint : constraints)
+			{
+				if (!first)
+					sb.append(operatorStr);
+				else
+					first = false;
+
+				constraint.toQueryFragment(sb);
+			}
+
+			sb.append(')');
 		}
 	}
 }

@@ -276,29 +276,39 @@ public class WQConstraint extends WQConstraintLine
 
 
 	@Override
-	public String toQueryFragment()
+	public void toQueryFragment(StringBuilder sb)
 	{
-		if (function.hasBinaryParam())
-			return field + " " + function.getQueryFragmentForm() + " " + escape(value) + " AND " + escape(value2);
-		else if (function.hasParam())
-			return field + " " + function.getQueryFragmentForm() + " " + escape(value);
-		else
-			return field + " " + function;
+		sb.append(field).append(' ').append(function.getQueryFragmentForm());
+
+		if (function.hasParam())
+		{
+			sb.append(' ');
+			appendEscaped(sb, value);
+
+			if (function.hasBinaryParam())
+			{
+				sb.append(" AND ");
+				appendEscaped(sb, value2);
+			}
+		}
 	}
 
 
-	private static String escape(String val)
+	private static void appendEscaped(final StringBuilder sb, final String val)
 	{
 		if (val == null)
-			return "(NIL)"; // avoid using null
+			sb.append("(NIL)"); // avoid using null
 		else if (!val.isEmpty() && StringUtils.isNumeric(val))
-			return val; // Don't quote numbers
+			sb.append(val); // Don't quote numbers
 		else if (isBareWord(val))
-			return val; // no spaces, no quotes so can be a bare value
+			sb.append(val); // no spaces, no quotes so can be a bare value
 		else if (val.indexOf('\'') == -1)
-			return "'" + val + "'"; // no single quotes in string, so use single quotes
+			sb.append('\'').append(val).append('\''); // no single quotes in string, so use single quotes
 		else
-			return "\"" + StringUtils.replace(val, "\"", "\\\"") + "\""; // both quote forms, so double quotes with escape chars
+			sb
+					.append('"')
+					.append(StringUtils.replace(val, "\"", "\\\""))
+					.append('"'); // both quote forms, so double quotes with escape chars
 	}
 
 
