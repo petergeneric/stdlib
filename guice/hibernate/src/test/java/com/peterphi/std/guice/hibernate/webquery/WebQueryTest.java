@@ -45,6 +45,15 @@ public class WebQueryTest
 	}
 
 
+	@Test
+	public void testParseComplexQueryStringToWebQuery()
+	{
+		WebQuery actual = new WebQuery().decode(new ResteasyUriInfo(URI.create("http://example.com/search?q=id+%3C+100+AND+id+%3E+200+AND+%28id+%3D+1+OR+id+%3D+2+OR+%28id+%3D+3+AND+id+%3D+4%29%29")));
+
+		assertEquals("id < 100 AND id > 200 AND (id = 1 OR id = 2 OR (id = 3 AND id = 4))", actual.constraints.toQueryFragment());
+	}
+
+
 	/**
 	 * Tests that a complex query that cannot easily be represented using the expanded Query String form is converted to a text
 	 * query using q=...
@@ -55,7 +64,7 @@ public class WebQueryTest
 		final UriBuilder ub = UriBuilder.fromUri(URI.create("/search"));
 
 		for (Map.Entry<String, List<String>> kvp : WebQueryParser
-				                                           .parse("id < 100 and id > 200", new WebQuery())
+				                                           .parse("id < 100 and id > 200 and (id=1 or id=2 or (id=3 and id=4))", new WebQuery())
 				                                           .encode()
 				                                           .entrySet())
 		{
@@ -67,6 +76,6 @@ public class WebQueryTest
 			}
 		}
 
-		assertEquals("/search?q=id+%3C+100+AND+id+%3E+200", ub.build().toASCIIString());
+		assertEquals("/search?q=id+%3C+100+AND+id+%3E+200+AND+%28id+%3D+1+OR+id+%3D+2+OR+%28id+%3D+3+AND+id+%3D+4%29%29", ub.build().toASCIIString());
 	}
 }
