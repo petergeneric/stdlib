@@ -60,7 +60,7 @@ public class WQConstraints
 
 	public void toQueryFragment(StringBuilder sb)
 	{
-		if (constraints.size() != 1)
+		if (constraints.size() > 1)
 		{
 			boolean first = true;
 			for (WQConstraintLine constraint : constraints)
@@ -73,7 +73,7 @@ public class WQConstraints
 				constraint.toQueryFragment(sb);
 			}
 		}
-		else
+		else if (constraints.size() == 1)
 		{
 			constraints.get(0).toQueryFragment(sb);
 		}
