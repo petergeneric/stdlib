@@ -79,6 +79,9 @@ public class WebQueryParser
 			}
 			else if (start.equals(")"))
 			{
+				if (query != null)
+					throw new IllegalArgumentException("Unbalanced brackets: closed without corresponding open!"); // close bracket encountered at root
+
 				// Step back one symbol so that the caller will see the expected close bracket
 				t.previous();
 
