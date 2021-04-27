@@ -24,7 +24,6 @@ class WebQueryToQueryStringConverter
 	 * @return
 	 * @throws IllegalArgumentException if the provided query definition cannot be represented using legacy semantics
 	 */
-	@SuppressWarnings("deprecation")
 	public static Map<String, List<String>> convert(WebQuery query)
 	{
 		MultivaluedHashMap<String, String> map = new MultivaluedHashMap<>();
@@ -37,26 +36,35 @@ class WebQueryToQueryStringConverter
 		if (query.expand != null)
 			map.put(WQUriControlField.EXPAND.getName(), list(query.expand));
 
-		map.put(WQUriControlField.ORDER.getName(),
-		        query.orderings.stream().map(WQOrder :: toLegacyForm).collect(Collectors.toList()));
-
 		if (query.getOffset() > 0)
 			map.putSingle(WQUriControlField.OFFSET.getName(), String.valueOf(query.getOffset()));
 
 		map.putSingle(WQUriControlField.LIMIT.getName(), String.valueOf(query.getLimit()));
 
 		if (query.constraints.computeSize)
-			map.putSingle(WQUriControlField.COMPUTE_SIZE.getName(), String.valueOf(query.constraints.computeSize));
+			map.putSingle(WQUriControlField.COMPUTE_SIZE.getName(), "true");
 		if (query.constraints.subclass != null)
 			map.put(WQUriControlField.CLASS.getName(), list(query.constraints.subclass));
 
-		addConstraints(map, query.constraints);
+
+		if (isSimpleQuery(query.constraints))
+		{
+			map.put(WQUriControlField.ORDER.getName(),
+			        query.orderings.stream().map(WQOrder :: toLegacyForm).collect(Collectors.toList()));
+
+			addConstraints(map, query.constraints);
+		}
+		else
+		{
+			// Constraints and Order in text form
+			map.put(WQUriControlField.TEXT_QUERY.getName(), Collections.singletonList(query.toQueryFragment()));
+		}
 
 		return map;
 	}
 
 
-	private static boolean canFullyRepresentWithQueryString(final WQConstraints constraints)
+	private static boolean isSimpleQuery(final WQConstraints constraints)
 	{
 		Set<String> fieldNames = new HashSet<>();
 
@@ -100,27 +108,20 @@ class WebQueryToQueryStringConverter
 
 	private static void addConstraints(final MultivaluedHashMap<String, String> builder, final WQConstraints constraints)
 	{
-		if (canFullyRepresentWithQueryString(constraints))
+		for (WQConstraintLine line : constraints.constraints)
 		{
-			for (WQConstraintLine line : constraints.constraints)
+			if (line instanceof WQConstraint)
 			{
-				if (line instanceof WQConstraint)
-				{
-					WQConstraint c = (WQConstraint) line;
+				WQConstraint c = (WQConstraint) line;
 
-					builder.add(c.field, c.encodeValue());
-				}
-				else if (line instanceof WQGroup)
-				{
-					WQGroup g = (WQGroup) line;
-
-					g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
-				}
+				builder.add(c.field, c.encodeValue());
 			}
-		}
-		else
-		{
-			builder.add(WQUriControlField.TEXT_QUERY.getName(), constraints.toQueryFragment());
+			else if (line instanceof WQGroup)
+			{
+				WQGroup g = (WQGroup) line;
+
+				g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
+			}
 		}
 	}
 

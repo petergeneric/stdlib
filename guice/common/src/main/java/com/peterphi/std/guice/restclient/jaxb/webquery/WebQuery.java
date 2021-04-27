@@ -398,7 +398,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 				}
 			}
 		}
-		
+
 		return this;
 	}
 
@@ -453,5 +453,37 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		       ", orderings=" +
 		       orderings +
 		       '}';
+	}
+
+
+	public String toQueryFragment()
+	{
+		StringBuilder sb = new StringBuilder();
+
+		constraints.toQueryFragment(sb);
+
+		if (orderings.size() != 0)
+		{
+			if (sb.length() != 0)
+				sb.append(' ');
+
+			sb.append("ORDER BY ");
+
+			boolean first = true;
+			for (WQOrder order : orderings)
+			{
+				if (!first)
+					sb.append(", ");
+				else
+					first = false;
+
+				sb.append(order.field);
+
+				if (!order.isAsc())
+					sb.append(" DESC");
+			}
+		}
+
+		return sb.toString();
 	}
 }
