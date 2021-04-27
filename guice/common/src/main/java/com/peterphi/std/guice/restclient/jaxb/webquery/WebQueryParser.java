@@ -403,6 +403,6 @@ public class WebQueryParser
 
 	public static boolean isBareWordPart(final char c)
 	{
-		return Character.isJavaIdentifierPart(c) || c == ':' || c == '.' || c == '[' || c == ']';
+		return Character.isJavaIdentifierPart(c) || c == ':' || c == '.' || c == '[' || c == ']' || c == '-';
 	}
 }

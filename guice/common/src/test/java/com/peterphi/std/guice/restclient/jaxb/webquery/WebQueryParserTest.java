@@ -20,8 +20,8 @@ public class WebQueryParserTest
 		assertEquals("(id = 1 OR id = 2) AND name STARTS alice",
 		             WebQueryParser.parse("id in (1,2) and name starts alice", new WebQuery()).toQueryFragment());
 		assertEquals("speed BETWEEN 1 AND 30", WebQueryParser.parse("speed between 1 and 30", new WebQuery()).toQueryFragment());
-		assertEquals("dob >= 'now-PT5M'", WebQueryParser.parse("dob >= 'now-PT5M'", new WebQuery()).toQueryFragment());
-		assertEquals("dob >= '2000-01-01T00:00:00Z'",
+		assertEquals("dob >= now-PT5M", WebQueryParser.parse("dob >= now-PT5M", new WebQuery()).toQueryFragment());
+		assertEquals("dob >= 2000-01-01T00:00:00Z",
 		             WebQueryParser.parse("dob >= '2000-01-01T00:00:00Z'", new WebQuery()).toQueryFragment());
 	}
 
