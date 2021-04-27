@@ -144,28 +144,6 @@ public class WebQuery
 	}
 
 
-	@Override
-	public String toString()
-	{
-		return "WebQuery{" +
-		       "fetch='" +
-		       fetch +
-		       '\'' +
-		       ", expand='" +
-		       expand +
-		       '\'' +
-		       ", constraints=" +
-		       constraintsToQueryFragment() +
-		       ", limit=" +
-		       constraints.limit +
-		       ", logSQL=" +
-		       logSQL +
-		       ", orderings=" +
-		       orderings +
-		       '}';
-	}
-
-
 	/**
 	 * Encode the constraints of this query to a readable string representation
 	 *
@@ -655,7 +633,7 @@ public class WebQuery
 				}
 			}
 		}
-		
+
 		return this;
 	}
 
@@ -688,5 +666,59 @@ public class WebQuery
 	public Map<String, List<String>> encode()
 	{
 		return WebQueryToQueryStringConverter.convert(this);
+	}
+
+
+	@Override
+	public String toString()
+	{
+		return "WebQuery{" +
+		       "fetch='" +
+		       fetch +
+		       '\'' +
+		       ", expand='" +
+		       expand +
+		       '\'' +
+		       ", constraints=" +
+		       constraintsToQueryFragment() +
+		       ", limit=" +
+		       constraints.limit +
+		       ", logSQL=" +
+		       logSQL +
+		       ", orderings=" +
+		       orderings +
+		       '}';
+	}
+
+
+	public String toQueryFragment()
+	{
+		StringBuilder sb = new StringBuilder();
+
+		constraints.toQueryFragment(sb);
+
+		if (orderings.size() != 0)
+		{
+			if (sb.length() != 0)
+				sb.append(' ');
+
+			sb.append("ORDER BY ");
+
+			boolean first = true;
+			for (WQOrder order : orderings)
+			{
+				if (!first)
+					sb.append(", ");
+				else
+					first = false;
+
+				sb.append(order.field);
+
+				if (!order.isAsc())
+					sb.append(" DESC");
+			}
+		}
+
+		return sb.toString();
 	}
 }

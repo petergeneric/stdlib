@@ -12,15 +12,13 @@ public class WebQueryParser
 {
 	public static WebQuery parse(String search, WebQuery query)
 	{
-		final List<String> tokens = tokenise(search);
-		final ListIterator<String> t = tokens.listIterator();
-
+		final ListIterator<String> t = tokenise(search).listIterator();
 		{
 			final WQGroup group = new WQGroup();
 
 			try
 			{
-				parseExpressions(t, group);
+				parseExpressions(t, query, group);
 			}
 			catch (Throwable e)
 			{
@@ -59,7 +57,7 @@ public class WebQueryParser
 	}
 
 
-	private static void parseExpressions(final ListIterator<String> t, final WQGroup group)
+	private static void parseExpressions(final ListIterator<String> t, final WebQuery query, final WQGroup group)
 	{
 		Boolean isAnd = null;
 
@@ -70,7 +68,7 @@ public class WebQueryParser
 			if (start.equals("("))
 			{
 				WQGroup newGroup = new WQGroup();
-				parseExpressions(t, newGroup);
+				parseExpressions(t, null, newGroup);
 
 				expect(t, ")");
 
@@ -97,6 +95,39 @@ public class WebQueryParser
 					                             (isAnd ? "AND" : "OR") +
 					                             " but encountered " +
 					                             start);
+			}
+			else if (start.equalsIgnoreCase("order"))
+			{
+				if (query == null)
+					throw new WebQueryParseError("Unexpected symbol: ORDER");
+
+				expect(t, "by");
+
+				boolean first = true;
+
+				do
+				{
+					if (!first)
+						expect(t, ",");
+					else
+						first = false;
+
+					final String field = t.next();
+					final String direction = t.hasNext() ? t.next() : null;
+
+					if (StringUtils.equalsIgnoreCase(direction, "asc"))
+						query.orderAsc(field); // Explicit ASC
+					else if (StringUtils.equalsIgnoreCase(direction, "desc"))
+						query.orderDesc(field);
+					else
+					{
+						query.orderAsc(field); // Implicit ASC
+
+						if (direction != null)
+							t.previous(); // Implicit ASC but not last token
+					}
+				}
+				while (StringUtils.equals(peek(t), ","));
 			}
 			else
 			{
