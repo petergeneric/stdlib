@@ -302,10 +302,8 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	 */
 	public WebQuery decode(Map<String, List<String>> map)
 	{
-		WebQuery def = new WebQuery();
-
 		// incoming queries from a map get a default limit set
-		def.limit(QUERY_STRING_DEFAULT_LIMIT);
+		limit(QUERY_STRING_DEFAULT_LIMIT);
 
 		boolean hasConstraints = false;
 
@@ -323,42 +321,45 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 						if (entry.getValue().size() != 1)
 							throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
 
+						this.constraints.constraints.clear();
+						hasConstraints = true;
+
 						WebQueryParser.parse(entry.getValue().get(0), this);
 
 						break;
 					case OFFSET:
-						def.offset(Integer.valueOf(entry.getValue().get(0)));
+						offset(Integer.valueOf(entry.getValue().get(0)));
 						break;
 					case LIMIT:
-						def.limit(Integer.valueOf(entry.getValue().get(0)));
+						limit(Integer.valueOf(entry.getValue().get(0)));
 						break;
 					case CLASS:
-						def.subclass(entry.getValue().toArray(new String[entry.getValue().size()]));
+						subclass(entry.getValue().toArray(new String[entry.getValue().size()]));
 						break;
 					case COMPUTE_SIZE:
-						def.computeSize(parseBoolean(entry.getValue().get(0)));
+						computeSize(parseBoolean(entry.getValue().get(0)));
 						break;
 					case LOG_SQL:
-						def.logSQL(parseBoolean(entry.getValue().get(0)));
+						logSQL(parseBoolean(entry.getValue().get(0)));
 						break;
 					case LOG_PERFORMANCE:
-						def.logPerformance(parseBoolean(entry.getValue().get(0)));
+						logPerformance(parseBoolean(entry.getValue().get(0)));
 						break;
 					case EXPAND:
-						def.expand(entry.getValue().toArray(new String[entry.getValue().size()]));
+						expand(entry.getValue().toArray(new String[entry.getValue().size()]));
 						break;
 					case ORDER:
-						def.orderings = entry.getValue().stream().map(WQOrder :: parseLegacy).collect(Collectors.toList());
+						orderings = entry.getValue().stream().map(WQOrder :: parseLegacy).collect(Collectors.toList());
 						break;
 					case FETCH:
 						// Ordinarily we'd expect a single value here, but allow for multiple values to be provided as a comma-separated list
-						def.fetch = entry.getValue().stream().collect(Collectors.joining(","));
+						fetch = entry.getValue().stream().collect(Collectors.joining(","));
 						break;
 					case DBFETCH:
-						def.dbfetch = entry.getValue().stream().collect(Collectors.joining(","));
+						dbfetch = entry.getValue().stream().collect(Collectors.joining(","));
 						break;
 					case NAME:
-						def.name(entry.getValue().get(0));
+						name(entry.getValue().get(0));
 						break;
 					default:
 						throw new IllegalArgumentException("Unknown query field: " +
@@ -372,14 +373,14 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 				// If this is the first constraint, clear any pre-defined default constraints
 				if (!hasConstraints)
 				{
-					def.constraints.constraints = new ArrayList<>();
+					constraints.constraints = new ArrayList<>();
 
 					hasConstraints = true;
 				}
 
 				if (entry.getValue().size() == 1)
 				{
-					def.constraints.constraints.add(WQConstraint.decode(key, entry.getValue().get(0)));
+					constraints.constraints.add(WQConstraint.decode(key, entry.getValue().get(0)));
 				}
 				else if (entry.getValue().size() > 0)
 				{
@@ -393,13 +394,12 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 							                    .map(value -> WQConstraint.decode(key, value))
 							                    .collect(Collectors.toList());
 
-					def.constraints.constraints.add(group);
+					constraints.constraints.add(group);
 				}
 			}
 		}
-
-
-		return def;
+		
+		return this;
 	}
 
 
