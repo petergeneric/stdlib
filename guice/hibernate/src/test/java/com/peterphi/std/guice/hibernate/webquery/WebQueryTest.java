@@ -2,10 +2,14 @@ package com.peterphi.std.guice.hibernate.webquery;
 
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryParser;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Test;
 
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.List;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -38,5 +42,31 @@ public class WebQueryTest
 		WebQuery actual = new WebQuery().decode(new ResteasyUriInfo(URI.create("http://example.com?_log_sql=true&id=123")));
 
 		assertEquals(expected.encode().toString(), actual.encode().toString());
+	}
+
+
+	/**
+	 * Tests that a complex query that cannot easily be represented using the expanded Query String form is converted to a text
+	 * query using q=...
+	 */
+	@Test
+	public void testEncodeOfComplexQuery()
+	{
+		final UriBuilder ub = UriBuilder.fromUri(URI.create("/search"));
+
+		for (Map.Entry<String, List<String>> kvp : WebQueryParser
+				                                           .parse("id < 100 and id > 200", new WebQuery())
+				                                           .encode()
+				                                           .entrySet())
+		{
+			if (!kvp.getKey().startsWith("_"))
+			{
+				String[] array = new String[kvp.getValue().size()];
+				kvp.getValue().toArray(array);
+				ub.queryParam(kvp.getKey(), array);
+			}
+		}
+
+		assertEquals("/search?q=id+%3C+100+AND+id+%3E+200", ub.build().toASCIIString());
 	}
 }

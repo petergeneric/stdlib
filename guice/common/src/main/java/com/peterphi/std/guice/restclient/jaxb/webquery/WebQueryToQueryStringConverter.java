@@ -6,8 +6,10 @@ import javax.ws.rs.core.MultivaluedHashMap;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -19,11 +21,8 @@ class WebQueryToQueryStringConverter
 	 * Convert a WebQueryDefinition to the equivalent legacy ResultSetConstraint (if possible)
 	 *
 	 * @param query
-	 *
 	 * @return
-	 *
-	 * @throws IllegalArgumentException
-	 * 		if the provided query definition cannot be represented using legacy semantics
+	 * @throws IllegalArgumentException if the provided query definition cannot be represented using legacy semantics
 	 */
 	@SuppressWarnings("deprecation")
 	public static Map<String, List<String>> convert(WebQuery query)
@@ -39,7 +38,7 @@ class WebQueryToQueryStringConverter
 			map.put(WQUriControlField.EXPAND.getName(), list(query.expand));
 
 		map.put(WQUriControlField.ORDER.getName(),
-		        query.orderings.stream().map(WQOrder:: toLegacyForm).collect(Collectors.toList()));
+		        query.orderings.stream().map(WQOrder :: toLegacyForm).collect(Collectors.toList()));
 
 		if (query.getOffset() > 0)
 			map.putSingle(WQUriControlField.OFFSET.getName(), String.valueOf(query.getOffset()));
@@ -57,40 +56,73 @@ class WebQueryToQueryStringConverter
 	}
 
 
-	private static void addConstraints(final MultivaluedHashMap<String, String> builder, final WQConstraints constraints)
+	private static boolean canFullyRepresentWithQueryString(final WQConstraints constraints)
 	{
-		for (WQConstraintLine line : constraints.constraints)
-		{
-			if (line instanceof WQConstraint)
-			{
-				WQConstraint c = (WQConstraint) line;
+		Set<String> fieldNames = new HashSet<>();
 
-				builder.add(c.field, c.encodeValue());
-			}
-			else if (line instanceof WQGroup)
+		for (WQConstraintLine item : constraints.constraints)
+		{
+			if (item instanceof WQConstraint)
 			{
-				WQGroup g = (WQGroup) line;
+				if (!fieldNames.add(((WQConstraint) item).field))
+					return false; // field name referenced multiple times
+			}
+			else if (item instanceof WQGroup)
+			{
+				WQGroup g = (WQGroup) item;
 
 				if (g.operator != WQGroupType.OR)
-					throw new IllegalArgumentException("Can only convert OR groups to legacy ResultSetConstraint type!");
-				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint))
-					throw new IllegalArgumentException("Can only convert un-nested groups to legacy ResultSetConstraint type!");
-				else if (g.constraints
-						         .stream()
-						         .map(l -> ((WQConstraint) l).field)
-						         .distinct()
-						         .collect(Collectors.toList())
-						         .size() > 1)
-					throw new IllegalArgumentException("Can only convert OR groups containing same field name to legacy ResultSetConstraint type! Fields: " +
-					                                   g.constraints
-							                                   .stream()
-							                                   .map(l -> ((WQConstraint) l).field)
-							                                   .distinct()
-							                                   .collect(Collectors.toList()));
+					return false; // Can only convert OR groups
+				else if (!g.constraints
+						          .stream()
+						          .allMatch(l -> l instanceof WQConstraint && ((WQConstraint) l).function == WQFunctionType.EQ))
+					return false; // Must all be regular constraints (no nested groups), and must all use a simple equals constraint
+				else
+				{
+					final Set<String> namesInGroup = g.constraints
+							                                 .stream()
+							                                 .map(l -> ((WQConstraint) l).field)
+							                                 .collect(Collectors.toSet());
 
-				// Add all the constraints
-				g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
+					if (namesInGroup.size() != 1)
+						return false; // multiple field names referenced in group
+					else if (!fieldNames.addAll(namesInGroup))
+						return false; // field name already referenced
+				}
 			}
+			else
+			{
+				return false; // unrecognised constraint type
+			}
+		}
+
+		return true; // all checks passed
+	}
+
+
+	private static void addConstraints(final MultivaluedHashMap<String, String> builder, final WQConstraints constraints)
+	{
+		if (canFullyRepresentWithQueryString(constraints))
+		{
+			for (WQConstraintLine line : constraints.constraints)
+			{
+				if (line instanceof WQConstraint)
+				{
+					WQConstraint c = (WQConstraint) line;
+
+					builder.add(c.field, c.encodeValue());
+				}
+				else if (line instanceof WQGroup)
+				{
+					WQGroup g = (WQGroup) line;
+
+					g.constraints.stream().map(l -> (WQConstraint) l).forEach(c -> builder.add(c.field, c.encodeValue()));
+				}
+			}
+		}
+		else
+		{
+			builder.add(WQUriControlField.TEXT_QUERY.getName(), constraints.toQueryFragment());
 		}
 	}
 
