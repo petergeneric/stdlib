@@ -47,7 +47,7 @@ public class WebQueryParser
 					query.constraints.add(constraint);
 				}
 			}
-			else
+			else if (group.constraints.size() > 1)
 			{
 				query.constraints.add(group);
 			}
