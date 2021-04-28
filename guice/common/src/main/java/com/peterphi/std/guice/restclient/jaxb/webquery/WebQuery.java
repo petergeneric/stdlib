@@ -700,7 +700,7 @@ public class WebQuery
 		if (orderings.size() != 0)
 		{
 			if (sb.length() != 0)
-				sb.append(' ');
+				sb.append('\n');
 
 			sb.append("ORDER BY ");
 
@@ -708,7 +708,7 @@ public class WebQuery
 			for (WQOrder order : orderings)
 			{
 				if (!first)
-					sb.append(", ");
+					sb.append(",\n\t");
 				else
 					first = false;
 
