@@ -50,7 +50,7 @@ public class WebQueryTest
 	{
 		WebQuery actual = new WebQuery().decode(new ResteasyUriInfo(URI.create("http://example.com/search?q=id+%3C+100+AND+id+%3E+200+AND+%28id+%3D+1+OR+id+%3D+2+OR+%28id+%3D+3+AND+id+%3D+4%29%29")));
 
-		assertEquals("id < 100 AND id > 200 AND (id = 1 OR id = 2 OR (id = 3 AND id = 4))", actual.constraints.toQueryFragment());
+		assertEquals("id < 100\nAND id > 200\nAND (id = 1 OR id = 2 OR (id = 3 AND id = 4))", actual.constraints.toQueryFragment());
 	}
 
 
@@ -76,6 +76,6 @@ public class WebQueryTest
 			}
 		}
 
-		assertEquals("/search?q=id+%3C+100+AND+id+%3E+200+AND+%28id+%3D+1+OR+id+%3D+2+OR+%28id+%3D+3+AND+id+%3D+4%29%29", ub.build().toASCIIString());
+		assertEquals("/search?q=id+%3C+100%0AAND+id+%3E+200%0AAND+%28id+%3D+1+OR+id+%3D+2+OR+%28id+%3D+3+AND+id+%3D+4%29%29", ub.build().toASCIIString());
 	}
 }

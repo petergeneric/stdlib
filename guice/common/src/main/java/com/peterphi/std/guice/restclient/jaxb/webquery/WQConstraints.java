@@ -68,24 +68,18 @@ public class WQConstraints implements ConstraintContainer<WQConstraints>
 		return sb.toString();
 	}
 
+
 	public void toQueryFragment(StringBuilder sb)
 	{
-		if (constraints.size() > 1)
+		boolean first = true;
+		for (WQConstraintLine constraint : constraints)
 		{
-			boolean first = true;
-			for (WQConstraintLine constraint : constraints)
-			{
-				if (!first)
-					sb.append(" AND ");
-				else
-					first = false;
+			if (!first)
+				sb.append("\nAND ");
+			else
+				first = false;
 
-				constraint.toQueryFragment(sb);
-			}
-		}
-		else if (constraints.size() == 1)
-		{
-			constraints.get(0).toQueryFragment(sb);
+			constraint.toQueryFragment(sb);
 		}
 	}
 }
