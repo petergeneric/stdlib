@@ -67,22 +67,27 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 		// Represent the exception as a RestFailure object
 		final RestFailure failure = marshaller.renderFailure(exception);
 
-		// Log the failure
-		log.error(failure.id + " " + HttpCallContext.get().getRequestInfo() + " threw exception:", exception);
-
 		Response response = null;
 
+		boolean doNotLog = false;
 		// Try to use the custom renderer (if present)
 		if (renderer != null)
 		{
 			try
 			{
 				response = renderer.render(failure);
+				doNotLog = renderer.shouldSuppressLog(failure);
 			}
 			catch (Exception e)
 			{
 				log.warn("Exception rendering RestFailure", e);
 			}
+		}
+
+		if (!doNotLog)
+		{
+			// Log the failure
+			log.error(failure.id + " " + HttpCallContext.get().getRequestInfo() + " threw exception:", exception);
 		}
 
 		// Give the HTML render an opportunity to run
