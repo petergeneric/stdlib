@@ -327,7 +327,7 @@ public class WebQueryParser
 				// Ignore whitespace
 				if (!Character.isWhitespace(c))
 				{
-					if (c == '"' || c == '\'')
+					if (c == '"' || c == '\'' || c == '`')
 					{
 						final int endPos = search.indexOf(c, i + 1);
 

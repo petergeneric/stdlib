@@ -304,11 +304,12 @@ public class WQConstraint extends WQConstraintLine
 			sb.append(val); // no spaces, no quotes so can be a bare value
 		else if (val.indexOf('\'') == -1)
 			sb.append('\'').append(val).append('\''); // no single quotes in string, so use single quotes
+		else if (val.indexOf('"') == -1)
+			sb.append('"').append(val).append('"'); // no double quotes
+		else if (val.indexOf('`') == -1)
+			sb.append('`').append(val).append('`'); // no backticks
 		else
-			sb
-					.append('"')
-					.append(StringUtils.replace(val, "\"", "\\\""))
-					.append('"'); // both quote forms, so double quotes with escape chars
+			throw new IllegalArgumentException("Cannot escape string value: contains all 3 quote types!");
 	}
 
 
