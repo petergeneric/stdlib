@@ -3,7 +3,7 @@ package com.peterphi.std.guice.web.rest.pagewriter;
 import com.peterphi.std.guice.web.rest.util.BootstrapStaticResources;
 import org.apache.commons.lang.StringEscapeUtils;
 
-public class TwitterBootstrapPageWriter
+public class BootstrapPageWriter
 {
 	public void writeHTML(StringBuilder sb)
 	{

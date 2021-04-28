@@ -13,7 +13,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPageWriter
+public class BootstrapRestFailurePageRenderer extends BootstrapPageWriter
 {
 	private final RestFailure failure;
 
@@ -32,7 +32,7 @@ public class TwitterBootstrapRestFailurePageRenderer extends TwitterBootstrapPag
 	private boolean suppressPasswordFields = true;
 
 
-	public TwitterBootstrapRestFailurePageRenderer(RestFailure failure)
+	public BootstrapRestFailurePageRenderer(RestFailure failure)
 	{
 		this.failure = failure;
 	}

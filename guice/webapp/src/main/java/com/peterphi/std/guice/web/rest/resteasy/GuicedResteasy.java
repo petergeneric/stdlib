@@ -17,7 +17,7 @@ import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.JAXRSExceptionMapper;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
-import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.guice.web.rest.pagewriter.BootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
@@ -287,7 +287,7 @@ class GuicedResteasy implements GuiceApplication
 			RestFailureMarshaller marshaller = new RestFailureMarshaller();
 			RestFailure failure = marshaller.renderFailure(t);
 
-			TwitterBootstrapRestFailurePageRenderer renderer = new TwitterBootstrapRestFailurePageRenderer(failure);
+			BootstrapRestFailurePageRenderer renderer = new BootstrapRestFailurePageRenderer(failure);
 
 			response.setStatus(500); // internal error
 

@@ -11,7 +11,7 @@ import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
-import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.guice.web.rest.pagewriter.BootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.lang.StringUtils;
 
@@ -123,7 +123,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 		else if (requireLoggedIn && isLoggedIn(requireRole))
 			return null;
 
-		TwitterBootstrapRestFailurePageRenderer writer = new TwitterBootstrapRestFailurePageRenderer(failure);
+		BootstrapRestFailurePageRenderer writer = new BootstrapRestFailurePageRenderer(failure);
 
 		// Optionally enable highlighting
 		if (highlightEnabled)
