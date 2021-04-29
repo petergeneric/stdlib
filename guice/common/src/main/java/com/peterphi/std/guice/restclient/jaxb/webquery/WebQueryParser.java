@@ -106,6 +106,8 @@ public class WebQueryParser
 
 				expect(t, "by");
 
+				query.orderings.clear(); // reset any default orderings
+
 				boolean first = true;
 
 				do
