@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.function.Consumer;
 
@@ -52,7 +53,7 @@ public interface ConstraintContainer<T>
 	{
 		if (values == null)
 			throw new IllegalArgumentException("Must supply at least one value to .eq when passing a Collection");
-		else if (values.size() == 0)
+		else if (values.size() == 1)
 			return eq(field, values.stream().findFirst().get());
 		else
 		{
@@ -63,6 +64,33 @@ public interface ConstraintContainer<T>
 
 			return add(or);
 		}
+	}
+
+
+	default T in(final String field, final Object... values)
+	{
+		return in(field, Arrays.asList(values));
+	}
+
+	default T in(final String field, final Collection<?> values)
+	{
+		if (values == null || values.isEmpty())
+			throw new IllegalArgumentException("Must supply at least one value to IN when passing a Collection");
+		else
+			return add(WQConstraint.in(field, values));
+	}
+
+	default T notIn(final String field, final Object... values)
+	{
+		return notIn(field, Arrays.asList(values));
+	}
+
+	default T notIn(final String field, final Collection<?> values)
+	{
+		if (values == null || values.isEmpty())
+			throw new IllegalArgumentException("Must supply at least one value to NOT IN when passing a Collection");
+		else
+			return add(WQConstraint.notIn(field, values));
 	}
 
 	default T neq(final String field, final Object value)

@@ -281,6 +281,27 @@ public class DynamicQueryTest
 	}
 
 
+	@Test
+	public void testNotInConstraint()
+	{
+		dao.find(new WebQuery().notIn("otherObject.name", "Alice", "Bob", "Carol"));
+	}
+
+
+	@Test
+	public void testInConstraint()
+	{
+		dao.find(new WebQuery().in("otherObject.name", "Alice", "Bob", "Carol"));
+	}
+
+
+	@Test
+	public void testInConstraintWithOneItem()
+	{
+		dao.find(new WebQuery().in("otherObject.name", "Alice"));
+	}
+
+
 	/**
 	 * This does not work natively with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed, so this
 	 * test confirms that WebQuery is able to implement it
