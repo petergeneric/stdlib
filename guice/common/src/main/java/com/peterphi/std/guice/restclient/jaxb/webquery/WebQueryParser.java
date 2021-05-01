@@ -175,8 +175,13 @@ public class WebQueryParser
 
 					group.range(start, val1, val2);
 				}
-				else if (operator.equalsIgnoreCase("in"))
+				else if (operator.equalsIgnoreCase("in") || operator.equalsIgnoreCase("not"))
 				{
+					final boolean notted = operator.equalsIgnoreCase("not");
+
+					if (notted)
+						expect(t, "in");
+
 					expect(t, "(");
 
 					if (StringUtils.equals(peek(t), ")"))
@@ -194,7 +199,10 @@ public class WebQueryParser
 					}
 					expect(t, ")");
 
-					group.eq(start, values);
+					if (!notted)
+						group.in(start, values);
+					else
+						group.notIn(start, values);
 				}
 				else
 				{

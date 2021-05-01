@@ -28,7 +28,9 @@ public enum WQFunctionType
 	LE_REF("_f_leref_", "LEREF", true, true),
 	LT_REF("_f_ltref_", "LTREF", true, true),
 	GE_REF("_f_geref_", "GEREF", true, true),
-	GT_REF("_f_gtref_", "GTREF", true, true);
+	GT_REF("_f_gtref_", "GTREF", true, true),
+	IN("f_in_", "IN", true),
+	NOT_IN("f_notin_", "NOT IN", true);
 
 	private final String prefix;
 	private final String queryFragForm;

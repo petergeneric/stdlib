@@ -81,8 +81,8 @@ class WebQueryToQueryStringConverter
 
 				if (g.operator != WQGroupType.OR)
 					return false; // Can only convert OR groups
-				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint))
-					return false; // Must all be regular constraints (no nested groups)
+				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint && ((WQConstraint) l).valuelist == null))
+					return false; // Must all be regular constraints (no nested groups) and have no constraints with a valuelist
 				else
 				{
 					final Set<String> namesInGroup = g.constraints
