@@ -260,6 +260,8 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				return criteriaBuilder.like(property, "%" + line.value + "%");
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
+			case NOT_STARTS_WITH:
+				return criteriaBuilder.notLike(property, line.value + "%");
 			case RANGE:
 				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
 			case GE:

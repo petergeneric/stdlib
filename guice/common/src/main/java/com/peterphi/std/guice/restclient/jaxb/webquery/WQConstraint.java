@@ -245,6 +245,12 @@ public class WQConstraint extends WQConstraintLine
 	}
 
 
+	public static WQConstraint notStartsWith(final String field, final Object value)
+	{
+		return new WQConstraint(field, WQFunctionType.NOT_STARTS_WITH, toString(value));
+	}
+
+
 	public static WQConstraint range(final String field, final Object from, final Object to)
 	{
 		return new WQConstraint(field, WQFunctionType.RANGE, toString(from), toString(to));

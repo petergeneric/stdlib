@@ -142,30 +142,26 @@ public class WebQueryParser
 				if (!Character.isJavaIdentifierStart(start.charAt(0)) && start.indexOf(' ') == -1)
 					throw new IllegalArgumentException("Expected FIELD NAME, got «" + start + "»");
 
+				final boolean notted = takeIf(t, "not");
 				final String operator = t.next();
 
 				if (operator.equalsIgnoreCase("is"))
 				{ // Unary expression
-					final boolean notted;
-					if (StringUtils.equalsIgnoreCase(peek(t), "not"))
-					{
-						t.next();
-						notted = true;
-					}
-					else
-					{
-						notted = false;
-					}
+					final boolean isNotNullExpr = takeIf(t, "not");
 
 					expect(t, "null");
 
-					if (notted)
+					if (isNotNullExpr)
 						group.isNotNull(start);
 					else
 						group.isNull(start);
 				}
 				else if (operator.equalsIgnoreCase("between"))
-				{ // Tenary expression
+				{
+					if (notted)
+						throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+					// Tenary expression
 					final String val1 = t.next();
 					expect(t, "and");
 					final String val2 = t.next();
@@ -175,13 +171,8 @@ public class WebQueryParser
 
 					group.range(start, val1, val2);
 				}
-				else if (operator.equalsIgnoreCase("in") || operator.equalsIgnoreCase("not"))
+				else if (operator.equalsIgnoreCase("in"))
 				{
-					final boolean notted = operator.equalsIgnoreCase("not");
-
-					if (notted)
-						expect(t, "in");
-
 					expect(t, "(");
 
 					if (StringUtils.equals(peek(t), ")"))
@@ -214,38 +205,65 @@ public class WebQueryParser
 					// Boolean expression
 					if (operator.equalsIgnoreCase("starts"))
 					{
-						group.startsWith(start, val);
+						if (!notted)
+							group.startsWith(start, val);
+						else
+							group.notStartsWith(start, val);
 					}
 					else if (operator.equalsIgnoreCase("contains") || operator.equals("~="))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.contains(start, val);
 					}
 					else if (operator.equalsIgnoreCase("eqref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.eqRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("neqref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.neqRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("leref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.leRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("geref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.geRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("ltref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.ltRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("gtref"))
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						group.gtRef(start, val);
 					}
 					else
 					{
+						if (notted)
+							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 						switch (operator.toLowerCase(Locale.ROOT))
 						{
 							case "=":
@@ -292,9 +310,9 @@ public class WebQueryParser
 	}
 
 
-	private static String expect(ListIterator<String> it, final String expected)
+	private static String expect(ListIterator<String> tokens, final String expected)
 	{
-		final String val = it.next();
+		final String val = tokens.next();
 
 		if (StringUtils.equalsIgnoreCase(val, expected))
 			return val;
@@ -305,13 +323,36 @@ public class WebQueryParser
 	}
 
 
-	private static String peek(ListIterator<String> it)
+	/**
+	 * If the next token is equal to (ignoring case) <code>expected</code>, consume it and return true
+	 *
+	 * @param tokens   token stream
+	 * @param expected the token to consume if present
+	 * @return true if the token was <code>expected</code>; token is also consumed
+	 */
+	private static boolean takeIf(ListIterator<String> tokens, final String expected)
 	{
-		if (it.hasNext())
-		{
-			final String val = it.next();
+		final String val = peek(tokens);
 
-			it.previous();
+		if (StringUtils.equalsIgnoreCase(val, expected))
+		{
+			tokens.next();
+			return true;
+		}
+		else
+		{
+			return false;
+		}
+	}
+
+
+	private static String peek(ListIterator<String> tokens)
+	{
+		if (tokens.hasNext())
+		{
+			final String val = tokens.next();
+
+			tokens.previous();
 
 			return val;
 		}

@@ -17,6 +17,7 @@ public enum WQFunctionType
 	IS_NULL("_null", "is null", false),
 	NOT_NULL("_notnull", "IS NOT NULL", false),
 	CONTAINS("_f_contains_", "~=", true),
+	NOT_STARTS_WITH("_f_nstarts_", "NOT STARTS", true),
 	STARTS_WITH("_f_starts_", "STARTS", true),
 	RANGE("_f_range_", "BETWEEN", true),
 	GE("_f_ge_", ">=", true),
