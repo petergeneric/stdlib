@@ -321,10 +321,8 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 						if (entry.getValue().size() != 1)
 							throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
 
-						this.constraints.constraints.clear();
 						hasConstraints = true;
-
-						WebQueryParser.parse(entry.getValue().get(0), this);
+						this.decode(entry.getValue().get(0));
 
 						break;
 					case OFFSET:
@@ -398,6 +396,20 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 				}
 			}
 		}
+
+		return this;
+	}
+
+
+	/**
+	 *
+	 * @param textQuery
+	 */
+	public WebQuery decode(final String textQuery)
+	{
+		this.constraints.constraints.clear();
+
+		WebQueryParser.parse(textQuery, this);
 
 		return this;
 	}

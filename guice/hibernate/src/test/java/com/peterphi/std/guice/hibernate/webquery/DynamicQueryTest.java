@@ -424,6 +424,20 @@ public class DynamicQueryTest
 		assertEquals(1, dao.findByUriQuery(new WebQuery().isNull("otherObject.id")).getList().size());
 	}
 
+	@Test
+	public void testGetByNameStartsAndNotStarts() throws Exception
+	{
+		ParentEntity obj = new ParentEntity();
+		obj.setName("Name");
+		dao.save(obj);
+
+
+		assertEquals("starts Nam = 1", 1, dao.find(new WebQuery().decode("name STARTS Nam")).getList().size());
+		assertEquals("starts Alice = 0", 0, dao.find(new WebQuery().decode("name STARTS Alice")).getList().size());
+
+		assertEquals("not starts Alice = 1", 1, dao.find(new WebQuery().decode("name NOT STARTS Alice")).getList().size());
+	}
+
 
 	/**
 	 * Test that the dynamic query logic sees a ManyToOne which references a column in another Entity (a property of type

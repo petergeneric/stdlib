@@ -146,6 +146,11 @@ public interface ConstraintContainer<T>
 		return add(WQConstraint.startsWith(field, value));
 	}
 
+	default T notStartsWith(final String field, final Object value)
+	{
+		return add(WQConstraint.notStartsWith(field, value));
+	}
+
 
 	default T range(final String field, final Object from, final Object to)
 	{

@@ -10,6 +10,7 @@ public class WebQueryParserTest
 	public void testSimpleFragments()
 	{
 		assertEquals("id = 1", WebQueryParser.parse("id=1", new WebQuery()).toQueryFragment());
+		assertEquals("name NOT STARTS alice", WebQueryParser.parse("name not starts alice", new WebQuery()).toQueryFragment());
 		assertEquals("id != 1", WebQueryParser.parse("id!=1", new WebQuery()).toQueryFragment());
 		assertEquals("id ~= x", WebQueryParser.parse("id~=x", new WebQuery()).toQueryFragment());
 		assertEquals("id IN(1, 2, 3)", WebQueryParser.parse("id in (1,2,3)", new WebQuery()).toQueryFragment());
