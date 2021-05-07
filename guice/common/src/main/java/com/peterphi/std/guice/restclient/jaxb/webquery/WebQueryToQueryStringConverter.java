@@ -72,8 +72,12 @@ class WebQueryToQueryStringConverter
 		{
 			if (item instanceof WQConstraint)
 			{
-				if (!fieldNames.add(((WQConstraint) item).field))
+				final WQConstraint c = (WQConstraint) item;
+
+				if (!fieldNames.add(c.field))
 					return false; // field name referenced multiple times
+				else if (c.valuelist != null)
+					return false; // uses IN/NOT_IN constraint
 			}
 			else if (item instanceof WQGroup)
 			{
@@ -82,7 +86,7 @@ class WebQueryToQueryStringConverter
 				if (g.operator != WQGroupType.OR)
 					return false; // Can only convert OR groups
 				else if (!g.constraints.stream().allMatch(l -> l instanceof WQConstraint && ((WQConstraint) l).valuelist == null))
-					return false; // Must all be regular constraints (no nested groups) and have no constraints with a valuelist
+					return false; // Must all be regular constraints (no nested groups) and have no constraints with a valuelist (e.g. IN/NOT_IN)
 				else
 				{
 					final Set<String> namesInGroup = g.constraints
