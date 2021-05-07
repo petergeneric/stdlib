@@ -29,6 +29,11 @@ public interface UserUIService
 	String getUsers(@Context UriInfo query);
 
 	@GET
+	@Path("/user")
+	@Produces(MediaType.TEXT_HTML)
+	Response getLocalUserEdit();
+
+	@GET
 	@Path("/user/{user_id}")
 	@Produces(MediaType.TEXT_HTML)
 	String getUserEdit(@PathParam("user_id") int userId);
