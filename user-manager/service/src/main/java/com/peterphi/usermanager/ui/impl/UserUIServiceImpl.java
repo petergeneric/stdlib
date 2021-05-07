@@ -96,6 +96,13 @@ public class UserUIServiceImpl implements UserUIService
 
 
 	@Override
+	public Response getLocalUserEdit()
+	{
+		return Response.seeOther(URI.create("/user/" + login.getId())).build();
+	}
+
+
+	@Override
 	@Transactional(readOnly = true)
 	public String getUserEdit(final int userId)
 	{
