@@ -14,7 +14,8 @@ public enum WQUriControlField
 	 */
 	OFFSET("_offset"),
 	/**
-	 * Set to the maximum results to return for this query
+	 * Set to the maximum results to return for this query; a special limit of -1 (see {@link WebQuery#LIMIT_RETURN_ZERO})
+	 * requests no row data (useful when just wanting a count of resultset size.
 	 */
 	LIMIT("_limit"),
 	ORDER("_order"),
