@@ -244,6 +244,27 @@ public class DynamicQueryTest
 	}
 
 
+	@Test
+	public void testNotInConstraint()
+	{
+		dao.find(new WebQuery().notIn("otherObject.name", "Alice", "Bob", "Carol"));
+	}
+
+
+	@Test
+	public void testInConstraint()
+	{
+		dao.find(new WebQuery().in("otherObject.name", "Alice", "Bob", "Carol"));
+	}
+
+
+	@Test
+	public void testInConstraintWithOneItem()
+	{
+		dao.find(new WebQuery().in("otherObject.name", "Alice"));
+	}
+
+
 	/**
 	 * This does not work natively with HSQLDB because HSQLDB cannot perform an ORDER BY on a column that isn't SELECTed, so this
 	 * test confirms that WebQuery is able to implement it
@@ -364,6 +385,20 @@ public class DynamicQueryTest
 		dao.save(obj);
 
 		assertEquals(1, dao.findByUriQuery(new WebQuery().isNull("otherObject.id")).getList().size());
+	}
+
+	@Test
+	public void testGetByNameStartsAndNotStarts() throws Exception
+	{
+		ParentEntity obj = new ParentEntity();
+		obj.setName("Name");
+		dao.save(obj);
+
+
+		assertEquals("starts Nam = 1", 1, dao.find(new WebQuery().decode("name STARTS Nam")).getList().size());
+		assertEquals("starts Alice = 0", 0, dao.find(new WebQuery().decode("name STARTS Alice")).getList().size());
+
+		assertEquals("not starts Alice = 1", 1, dao.find(new WebQuery().decode("name NOT STARTS Alice")).getList().size());
 	}
 
 

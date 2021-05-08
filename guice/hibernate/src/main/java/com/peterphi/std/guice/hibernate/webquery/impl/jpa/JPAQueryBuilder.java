@@ -244,12 +244,24 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				return criteriaBuilder.isNotNull(property);
 			case EQ:
 				return criteriaBuilder.equal(property, parse(property, line.value));
+			case NOT_IN:
+				return criteriaBuilder.not(property.in(param(line.valuelist
+						                                             .stream()
+						                                             .map(val -> parseValue(property, val))
+						                                             .collect(Collectors.toList()))));
+			case IN:
+				return property.in(param(line.valuelist
+						                         .stream()
+						                         .map(val -> parseValue(property, val))
+						                         .collect(Collectors.toList())));
 			case NEQ:
 				return criteriaBuilder.notEqual(property, parse(property, line.value));
 			case CONTAINS:
 				return criteriaBuilder.like(property, "%" + line.value + "%");
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
+			case NOT_STARTS_WITH:
+				return criteriaBuilder.notLike(property, line.value + "%");
 			case RANGE:
 				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
 			case GE:
