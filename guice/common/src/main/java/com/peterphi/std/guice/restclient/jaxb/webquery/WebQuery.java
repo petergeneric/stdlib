@@ -12,12 +12,10 @@ import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
 /**
@@ -27,7 +25,7 @@ import java.util.stream.Collectors;
 @XmlRootElement(name = "WebQueryDefinition")
 @XmlType(name = "QueryDefinitionType")
 @Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")
-public class WebQuery
+public class WebQuery implements ConstraintContainer<WebQuery>
 {
 	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
 
@@ -273,237 +271,8 @@ public class WebQuery
 
 	public WebQuery add(final WQConstraintLine line)
 	{
-		this.constraints.constraints.add(line);
-
-		return this;
-	}
-
-
-	/**
-	 * Assert that a field equals one of the provided values. Implicitly creates a new OR group if multiple values are supplied
-	 *
-	 * @param field
-	 * @param values
-	 *
-	 * @return
-	 */
-	public WebQuery eq(final String field, final Object... values)
-	{
-		if (values == null)
-		{
-			add(WQConstraint.eq(field, null));
-		}
-		else if (values.length == 1)
-		{
-			add(WQConstraint.eq(field, values[0]));
-		}
-		else if (values.length > 1)
-		{
-			final WQGroup or = or();
-
-			for (Object value : values)
-				or.eq(field, value);
-		}
-
-		return this;
-	}
-
-
-	/**
-	 * Assert that a field equals one of the provided values. Implicitly creates a new OR group if multiple values are supplied.
-	 * At least one value must be supplied.
-	 *
-	 * @param field
-	 * @param values
-	 *
-	 * @return
-	 */
-	public WebQuery eq(final String field, final Collection<?> values)
-	{
-		if (values == null)
-			throw new IllegalArgumentException("Must supply at least one value to .eq when passing a Collection");
-		else if (values.size() == 0)
-			return eq(field, values.stream().findFirst().get());
-		else
-		{
-			final WQGroup or = or();
-
-			for (Object value : values)
-				or.eq(field, value);
-
-			return this;
-		}
-	}
-
-
-	public WebQuery neq(final String field, final Object value)
-	{
-		return add(WQConstraint.neq(field, value));
-	}
-
-
-	public WebQuery isNull(final String field)
-	{
-		return add(WQConstraint.isNull(field));
-	}
-
-
-	public WebQuery isNotNull(final String field)
-	{
-		return add(WQConstraint.isNotNull(field));
-	}
-
-
-	public WebQuery lt(final String field, final Object value)
-	{
-		return add(WQConstraint.lt(field, value));
-	}
-
-
-	public WebQuery le(final String field, final Object value)
-	{
-		return add(WQConstraint.le(field, value));
-	}
-
-
-	public WebQuery gt(final String field, final Object value)
-	{
-		return add(WQConstraint.gt(field, value));
-	}
-
-
-	public WebQuery ge(final String field, final Object value)
-	{
-		return add(WQConstraint.ge(field, value));
-	}
-
-
-	public WebQuery contains(final String field, final Object value)
-	{
-		return add(WQConstraint.contains(field, value));
-	}
-
-
-	public WebQuery startsWith(final String field, final Object value)
-	{
-		return add(WQConstraint.startsWith(field, value));
-	}
-
-
-	public WebQuery range(final String field, final Object from, final Object to)
-	{
-		return add(WQConstraint.range(field, from, to));
-	}
-
-
-	public WebQuery eqRef(final String field, final String field2)
-	{
-		return add(WQConstraint.eqRef(field, field2));
-	}
-
-
-	public WebQuery neqRef(final String field, final String field2)
-	{
-		return add(WQConstraint.neqRef(field, field2));
-	}
-
-
-	public WebQuery leRef(final String field, final String field2)
-	{
-		return add(WQConstraint.leRef(field, field2));
-	}
-
-
-	public WebQuery ltRef(final String field, final String field2)
-	{
-		return add(WQConstraint.ltRef(field, field2));
-	}
-
-
-	public WebQuery geRef(final String field, final String field2)
-	{
-		return add(WQConstraint.geRef(field, field2));
-	}
-
-
-	public WebQuery gtRef(final String field, final String field2)
-	{
-		return add(WQConstraint.gtRef(field, field2));
-	}
-
-
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-	// Sub-groups
-	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-
-	/**
-	 * Construct a new AND group and return it for method chaining
-	 *
-	 * @return
-	 */
-	public WQGroup and()
-	{
-		final WQGroup and = WQGroup.newAnd();
-
-		add(and);
-
-		return and;
-	}
-
-
-	/**
-	 * Construct a new OR group and return it for method chaining
-	 *
-	 * @return
-	 */
-	public WQGroup or()
-	{
-		final WQGroup or = WQGroup.newOr();
-
-		add(or);
-
-		return or;
-	}
-
-
-	/**
-	 * Construct a new AND group, using the supplier to add the constraints to the group. Returns the original {@link WebQuery}
-	 * for method chaining
-	 *
-	 * @param consumer
-	 *
-	 * @return
-	 */
-	public WebQuery and(Consumer<WQGroup> consumer)
-	{
-		final WQGroup and = and();
-
-		// Let the consumer build their sub-constraints
-		if (consumer != null)
-			consumer.accept(and);
-
-		return this;
-	}
-
-
-	/**
-	 * Construct a new OR group, using the supplier to add the constraints to the group. Returns the original {@link WebQuery}
-	 * for
-	 * method chaining
-	 *
-	 * @param consumer
-	 *
-	 * @return
-	 */
-	public WebQuery or(Consumer<WQGroup> consumer)
-	{
-		final WQGroup or = or();
-
-
-		// Let the consumer build their sub-constraints
-		if (consumer != null)
-			consumer.accept(or);
+		if (line != null)
+			this.constraints.add(line);
 
 		return this;
 	}
@@ -516,9 +285,7 @@ public class WebQuery
 	/**
 	 * Overwrite any fields in this WebQuery using the query defined in the Query String of the provided UriInfo
 	 *
-	 * @param qs
-	 * 		the UriInfo to extract the QueryParameters from
-	 *
+	 * @param qs the UriInfo to extract the QueryParameters from
 	 * @return this WebQuery for chaining
 	 */
 	public WebQuery decode(UriInfo qs)
@@ -530,9 +297,7 @@ public class WebQuery
 	/**
 	 * Overwrite any fields in this WebQuery using the query defined in the provided map
 	 *
-	 * @param map
-	 * 		a map of fields (or control fields) to encoded constraints
-	 *
+	 * @param map a map of fields (or control fields) to encoded constraints
 	 * @return this WebQuery for chaining
 	 */
 	public WebQuery decode(Map<String, List<String>> map)

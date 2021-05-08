@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlType(name = "ConstraintsType")
-public class WQConstraints
+public class WQConstraints implements ConstraintContainer<WQConstraints>
 {
 	@XmlAttribute
 	public int offset = 0;
@@ -28,6 +28,16 @@ public class WQConstraints
 	 */
 	@XmlElementRefs({@XmlElementRef(type = WQConstraint.class), @XmlElementRef(type = WQGroup.class)})
 	public List<WQConstraintLine> constraints = new ArrayList<>();
+
+
+	@Override
+	public WQConstraints add(final WQConstraintLine line)
+	{
+		if (line != null)
+			constraints.add(line);
+
+		return this;
+	}
 
 
 	@Override
