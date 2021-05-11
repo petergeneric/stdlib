@@ -6,16 +6,19 @@ import com.google.inject.AbstractModule;
 import com.google.inject.matcher.Matcher;
 import com.google.inject.matcher.Matchers;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
+import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import org.aopalliance.intercept.MethodInterceptor;
 
 import java.lang.reflect.Method;
+import java.util.Objects;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.StreamSupport;
 
 /**
  * Provides the basic authentication implementation
@@ -45,8 +48,35 @@ public class AuthConstraintInterceptorModule extends AbstractModule
 	@Override
 	protected void configure()
 	{
+		final ServiceLoader<AuthConstraintUserInterrogator> loader = ServiceLoader.load(AuthConstraintUserInterrogator.class);
+		{
+
+			final Class<? extends AuthConstraintUserInterrogator> clazz;
+			try
+			{
+				clazz = StreamSupport
+						        .stream(loader.spliterator(), false)
+						        .map(t -> t.getClass())
+						        .filter(Objects :: nonNull)
+						        .findFirst()
+						        .orElse(null);
+			}
+			catch (Throwable t)
+			{
+				throw new RuntimeException(
+						"Encountered error loading AuthConstraintUserInterrogator; is there a no-arg constructor available for your custom implementation? Due to JDK8 ServiceLoader limitations one must be available",
+						t);
+			}
+
+			if (clazz != null)
+				bind(AuthConstraintUserInterrogator.class).to(clazz).in(SessionScoped.class);
+			else
+				bind(AuthConstraintUserInterrogator.class).to(PassthroughUserInterrogator.class).asEagerSingleton();
+		}
+
+
 		// Use interceptor that checks CurrentUser and calls AccessRefuser to deny access
-		final MethodInterceptor interceptor = new AuthConstraintMethodInterceptor(getProvider(CurrentUser.class),
+		final MethodInterceptor interceptor = new AuthConstraintMethodInterceptor(getProvider(AuthConstraintUserInterrogator.class),
 		                                                                          config,
 		                                                                          calls,
 		                                                                          granted,
