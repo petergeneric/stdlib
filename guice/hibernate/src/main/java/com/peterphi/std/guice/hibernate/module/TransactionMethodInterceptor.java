@@ -59,13 +59,14 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 	private final Provider<Session> sessionProvider;
 
+	private final boolean forceReadOnly;
 	private final Timer calls;
 	private final Timer transactionStartedCalls;
 	private final Meter errorRollbacks;
 	private final Meter commitFailures;
 
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics)
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly)
 	{
 		this.sessionProvider = sessionProvider;
 
@@ -73,6 +74,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		this.transactionStartedCalls = metrics.timer(GuiceMetricNames.TRANSACTION_OWNER_CALLS_TIMER);
 		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
 		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
+		this.forceReadOnly = forceReadOnly;
 	}
 
 
@@ -201,7 +203,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			                   "Creating new transaction to call ",
 			                   (Supplier) () -> invocation.getMethod().toGenericString());
 
-		final boolean readOnly = annotation.readOnly();
+		final boolean readOnly = forceReadOnly || annotation.readOnly();
 
 		// We are responsible for creating+closing the connection
 		Timer.Context ownerTimer = transactionStartedCalls.time();
