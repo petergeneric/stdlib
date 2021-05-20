@@ -37,6 +37,12 @@ public class GuiceProperties
 	public static final String INSTANCE_ID = "service.instance-id";
 
 	//
+	// Breakers Properties
+	//
+	@Doc("The names of breakers to trip on startup (default none)")
+	public static final String BREAKERS_TRIPPED_BY_DEFAULT = "framework.breakers.trip-on-startup";
+
+	//
 	// Configuration Service Properties
 	//
 	@Doc("The path to the network configuration service (default null)")
