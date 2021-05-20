@@ -45,6 +45,9 @@ public class GuiceProperties
 	@Doc("Optional absolute path to a breaker folder; if specified then breaker trips will be persisted across servlet restarts. Presence of files named (context-name).(breaker-name) means this breaker will be treated as tripped. Only re-read at startup (default not specified)")
 	public static final String BREAKERS_PERSIST_STORE = "framework.breakers.persist.folder";
 
+	@Doc("The names of breakers to trip on startup (default none)")
+	public static final String BREAKERS_TRIPPED_BY_DEFAULT = "framework.breakers.trip-on-startup";
+
 	//
 	// Configuration Service Properties
 	//
