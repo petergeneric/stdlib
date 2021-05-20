@@ -9,6 +9,7 @@ import java.util.List;
 
 class EmbeddedPkDaoImpl extends HibernateDao<EmbeddedPkEntity, SomePrimaryKey>
 {
+	@SuppressWarnings("deprecation")
 	public List<EmbeddedPkEntity> findByTimestamp(final long timestamp)
 	{
 		Criteria criteria = createCriteria();
@@ -22,6 +23,6 @@ class EmbeddedPkDaoImpl extends HibernateDao<EmbeddedPkEntity, SomePrimaryKey>
 	@Transactional
 	public List<EmbeddedPkEntity> runQuery(String query)
 	{
-		return createQuery(query).list();
+		return createReadQuery(query).list();
 	}
 }
