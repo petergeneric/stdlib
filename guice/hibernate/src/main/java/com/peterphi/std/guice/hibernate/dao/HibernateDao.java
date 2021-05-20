@@ -362,6 +362,18 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	/**
+	 * Create a {@link Query} instance for the given HQL query string, signalling intent to write (and failing immediately if TX is read-only)
+	 *
+	 * @param hql The HQL query
+	 * @return The query instance for manipulation and execution
+	 */
+	protected Query createWriteQuery(String hql)
+	{
+		return getWriteSession().createQuery(hql);
+	}
+
+
+	/**
 	 * Execute a Criteria search, returning the results as a checked list
 	 *
 	 * @param criteria
