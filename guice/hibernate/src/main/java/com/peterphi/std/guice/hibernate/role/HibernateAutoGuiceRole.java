@@ -35,7 +35,7 @@ public class HibernateAutoGuiceRole implements GuiceRole
 		// Unless the user has disabled automatic hibernate setup...
 		if (scanner != null && config.getBoolean(GuiceProperties.ROLE_HIBERNATE_AUTO, true))
 		{
-			modules.add(new AutoHibernateModule(scanner, metrics));
+			modules.add(new AutoHibernateModule(scanner, metrics, config));
 		}
 	}
 

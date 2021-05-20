@@ -192,6 +192,11 @@ public class GuiceProperties
 	@Doc("If true then hibernate configurations permitting the dropping and recreating of database tables will be allowed (default false)")
 	public static final String HIBERNATE_ALLOW_HBM2DDL_CREATE = "hibernate.allow-hbm2ddl-create";
 
+	@Doc("If true then only read-only transactions will be permitted. Should ensure that " +
+	     HIBERNATE_ALLOW_HBM2DDL_CREATE +
+	     " is at default false and liquibase.action is set to IGNORE (default false)")
+	public static final String HIBERNATE_READ_ONLY = "hibernate.read-only";
+
 	@Doc("If true then when the guice hibernate jar is loaded it'll search for all @Entity annotated classes in the scan.packages packages and register them (default true)")
 	public static final String ROLE_HIBERNATE_AUTO = "role.hibernate.auto";
 

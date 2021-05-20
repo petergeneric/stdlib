@@ -40,14 +40,15 @@ public abstract class HibernateModule extends AbstractModule
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
 
 
-	public HibernateModule(final MetricRegistry registry)
+	public HibernateModule(final MetricRegistry registry, GuiceConfig config)
 	{
 		this.registry = registry;
+		this.forceReadOnly=config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
 	}
 
 
 	private final MetricRegistry registry;
-
+	private final boolean forceReadOnly;
 
 	@Override
 	protected void configure()
@@ -58,10 +59,10 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor txinterceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry);
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry, forceReadOnly);
 
 		// handles @Transactional methods
-		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), txinterceptor);
+		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
 	}
 
 

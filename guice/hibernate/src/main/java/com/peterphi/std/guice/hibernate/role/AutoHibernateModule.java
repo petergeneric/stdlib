@@ -3,6 +3,7 @@ package com.peterphi.std.guice.hibernate.role;
 import com.codahale.metrics.MetricRegistry;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
+import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.Configuration;
@@ -16,9 +17,9 @@ class AutoHibernateModule extends HibernateModule
 	private final ClassScannerFactory scannerFactory;
 
 
-	public AutoHibernateModule(final ClassScannerFactory scannerFactory, final MetricRegistry metrics)
+	public AutoHibernateModule(final ClassScannerFactory scannerFactory, final MetricRegistry metrics, final GuiceConfig config)
 	{
-		super(metrics);
+		super(metrics, config);
 
 		this.scannerFactory = scannerFactory;
 	}
@@ -34,7 +35,9 @@ class AutoHibernateModule extends HibernateModule
 
 		for (Class<?> clazz : scanner.getAnnotatedClasses(Entity.class))
 		{
-			log.trace("Registering @Entity class with hibernate: " + clazz.getName());
+			if (log.isTraceEnabled())
+				log.trace("Registering @Entity class with hibernate: " + clazz.getName());
+			
 			config.addAnnotatedClass(clazz);
 		}
 	}
