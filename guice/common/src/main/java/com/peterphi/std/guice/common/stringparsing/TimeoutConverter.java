@@ -21,7 +21,7 @@ public class TimeoutConverter
 	private static final Pattern pattern = Pattern.compile("^([0-9]+)\\s*([a-zA-Z]+)$", Pattern.CASE_INSENSITIVE);
 
 
-	public Object convert(String value)
+	public Timeout convert(String value)
 	{
 		value = value.trim();
 
