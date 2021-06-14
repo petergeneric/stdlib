@@ -3,11 +3,16 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryParser;
+import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
+import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryPresetPlugin;
+import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.spi.ResteasyUriInfo;
 import org.junit.Test;
 
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
+import java.util.Arrays;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +20,53 @@ import static org.junit.Assert.assertEquals;
 
 public class WebQueryTest
 {
+	@Test(expected = IllegalArgumentException.class)
+	public void testPluginBanning()
+	{
+		new WebQueryDecodePlugin.Builder().ban("password").build().handles("password");
+	}
+
+
+	@Test(expected = IllegalArgumentException.class)
+	public void testPluginValidation()
+	{
+		new WebQueryDecodePlugin.Builder()
+				.validate("_fetch", s -> !StringUtils.containsIgnoreCase(s, "password"))
+				.build()
+				.handles("_fetch", Arrays.asList("id,username,password"));
+	}
+
+
+	@Test
+	public void testPluginPreset()
+	{
+		Map<String, List<String>> qs = new LinkedHashMap<>();
+
+		qs.put("preset", Arrays.asList("important", "terminated"));
+		qs.put("created", Arrays.asList("_f_ge_today"));
+
+		final WebQuery wq = new WebQuery().decode(qs,
+		                                          new WebQueryDecodePlugin.Builder()
+				                                          .with(new WebQueryPresetPlugin("preset")
+						                                                .withAllowMultiple(true)
+						                                                .withOption("running",
+						                                                            q -> q.eq("state",
+						                                                                      "QUEUED",
+						                                                                      "RUNNING",
+						                                                                      "PAUSED"))
+						                                                .withOption("important", q -> q.ge("priority", "10"))
+						                                                .withOption("terminated",
+						                                                            q -> q.eq("state",
+						                                                                      "FAILED",
+						                                                                      "SUCCESS",
+						                                                                      "CANCELLED")))
+				                                          .build());
+
+		assertEquals("priority >= 10\nAND (state = FAILED OR state = SUCCESS OR state = CANCELLED)\nAND created >= today",
+		             wq.toQueryFragment());
+	}
+
+
 	@Test
 	public void testEncodeResultStable()
 	{
