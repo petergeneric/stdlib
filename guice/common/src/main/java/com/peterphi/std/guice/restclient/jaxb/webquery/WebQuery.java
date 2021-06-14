@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
 
@@ -294,13 +295,25 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	}
 
 
+	public WebQuery decode(UriInfo qs, WebQueryDecodePlugin parserPlugin)
+	{
+		return decode(qs.getQueryParameters(), parserPlugin);
+	}
+
+
+	public WebQuery decode(Map<String, List<String>> map)
+	{
+		return decode(map, null);
+	}
+
+
 	/**
 	 * Overwrite any fields in this WebQuery using the query defined in the provided map
 	 *
 	 * @param map a map of fields (or control fields) to encoded constraints
 	 * @return this WebQuery for chaining
 	 */
-	public WebQuery decode(Map<String, List<String>> map)
+	public WebQuery decode(Map<String, List<String>> map, WebQueryDecodePlugin parserPlugin)
 	{
 		// incoming queries from a map get a default limit set
 		limit(QUERY_STRING_DEFAULT_LIMIT);
@@ -310,54 +323,73 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		for (Map.Entry<String, List<String>> entry : map.entrySet())
 		{
 			final String key = entry.getKey();
+			final boolean special = key.charAt(0) == '_';
+			final boolean textQuery = (key.length() == 1 && key.charAt(0) == 'q');
+			final List<String> value = entry.getValue();
 
-			if (key.charAt(0) == '_' || (key.charAt(0) == 'q' && key.length() == 1))
+
+			if (parserPlugin != null && parserPlugin.handles(key, value))
+			{
+				// If this is the first non-Special-Field, clear any default constraints and mark that we now have constraints
+				// N.B. we use "special" as distinct from "textQuery", since technically a plugin could decide to implement textQuery itself
+				if (!special && !hasConstraints)
+				{
+					constraints.constraints = new ArrayList<>();
+
+					hasConstraints = true;
+				}
+
+				parserPlugin.process(this, key, value);
+				continue;
+			}
+
+			if (special || textQuery)
 			{
 				final WQUriControlField specialField = WQUriControlField.getByName(key);
 
 				switch (specialField)
 				{
 					case TEXT_QUERY:
-						if (entry.getValue().size() != 1)
+						if (value.size() != 1)
 							throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
 
 						hasConstraints = true;
-						this.decode(entry.getValue().get(0));
+						this.decode(value.get(0));
 
 						break;
 					case OFFSET:
-						offset(Integer.valueOf(entry.getValue().get(0)));
+						offset(Integer.valueOf(value.get(0)));
 						break;
 					case LIMIT:
-						limit(Integer.valueOf(entry.getValue().get(0)));
+						limit(Integer.valueOf(value.get(0)));
 						break;
 					case CLASS:
-						subclass(entry.getValue().toArray(new String[entry.getValue().size()]));
+						subclass(value.toArray(new String[value.size()]));
 						break;
 					case COMPUTE_SIZE:
-						computeSize(parseBoolean(entry.getValue().get(0)));
+						computeSize(parseBoolean(value.get(0)));
 						break;
 					case LOG_SQL:
-						logSQL(parseBoolean(entry.getValue().get(0)));
+						logSQL(parseBoolean(value.get(0)));
 						break;
 					case LOG_PERFORMANCE:
-						logPerformance(parseBoolean(entry.getValue().get(0)));
+						logPerformance(parseBoolean(value.get(0)));
 						break;
 					case EXPAND:
-						expand(entry.getValue().toArray(new String[entry.getValue().size()]));
+						expand(value.toArray(new String[value.size()]));
 						break;
 					case ORDER:
-						orderings = entry.getValue().stream().map(WQOrder :: parseLegacy).collect(Collectors.toList());
+						orderings = value.stream().map(WQOrder :: parseLegacy).collect(Collectors.toList());
 						break;
 					case FETCH:
 						// Ordinarily we'd expect a single value here, but allow for multiple values to be provided as a comma-separated list
-						fetch = entry.getValue().stream().collect(Collectors.joining(","));
+						fetch = value.stream().collect(Collectors.joining(","));
 						break;
 					case DBFETCH:
-						dbfetch = entry.getValue().stream().collect(Collectors.joining(","));
+						dbfetch = value.stream().collect(Collectors.joining(","));
 						break;
 					case NAME:
-						name(entry.getValue().get(0));
+						name(value.get(0));
 						break;
 					default:
 						throw new IllegalArgumentException("Unknown query field: " +
@@ -376,21 +408,17 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 					hasConstraints = true;
 				}
 
-				if (entry.getValue().size() == 1)
+				if (value.size() == 1)
 				{
-					constraints.constraints.add(WQConstraint.decode(key, entry.getValue().get(0)));
+					constraints.constraints.add(WQConstraint.decode(key, value.get(0)));
 				}
-				else if (entry.getValue().size() > 0)
+				else if (value.size() > 0)
 				{
 					WQGroup group = new WQGroup();
 
 					group.operator = WQGroupType.OR;
 
-					group.constraints = entry
-							                    .getValue()
-							                    .stream()
-							                    .map(value -> WQConstraint.decode(key, value))
-							                    .collect(Collectors.toList());
+					group.constraints = value.stream().map(val -> WQConstraint.decode(key, val)).collect(Collectors.toList());
 
 					constraints.constraints.add(group);
 				}
@@ -402,7 +430,6 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 
 	/**
-	 *
 	 * @param textQuery
 	 */
 	public WebQuery decode(final String textQuery)
