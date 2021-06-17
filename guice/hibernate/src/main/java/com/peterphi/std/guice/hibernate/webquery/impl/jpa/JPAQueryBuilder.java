@@ -258,6 +258,8 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				return criteriaBuilder.notEqual(property, parse(property, line.value));
 			case CONTAINS:
 				return criteriaBuilder.like(property, "%" + line.value + "%");
+			case NOT_CONTAINS:
+				return criteriaBuilder.notLike(property, "%" + line.value + "%");
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
 			case NOT_STARTS_WITH:

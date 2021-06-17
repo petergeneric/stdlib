@@ -212,10 +212,10 @@ public class WebQueryParser
 					}
 					else if (operator.equalsIgnoreCase("contains") || operator.equals("~="))
 					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.contains(start, val);
+						if (!notted)
+							group.contains(start, val);
+						else
+							group.notContains(start, val);
 					}
 					else if (operator.equalsIgnoreCase("eqref"))
 					{

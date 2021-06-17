@@ -238,6 +238,11 @@ public class WQConstraint extends WQConstraintLine
 		return new WQConstraint(field, WQFunctionType.CONTAINS, toString(value));
 	}
 
+	public static WQConstraint notContains(final String field, final Object value)
+	{
+		return new WQConstraint(field, WQFunctionType.NOT_CONTAINS, toString(value));
+	}
+
 
 	public static WQConstraint startsWith(final String field, final Object value)
 	{

@@ -140,6 +140,11 @@ public interface ConstraintContainer<T>
 		return add(WQConstraint.contains(field, value));
 	}
 
+	default T notContains(final String field, final Object value)
+	{
+		return add(WQConstraint.notContains(field, value));
+	}
+
 
 	default T startsWith(final String field, final Object value)
 	{
