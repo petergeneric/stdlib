@@ -219,17 +219,17 @@ public class WebQueryParser
 					}
 					else if (operator.equalsIgnoreCase("eqref"))
 					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.eqRef(start, val);
+						if (!notted)
+							group.eqRef(start, val);
+						else
+							group.neqRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("neqref"))
 					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.neqRef(start, val);
+						if (!notted)
+							group.neqRef(start, val);
+						else
+							group.eqRef(start, val);
 					}
 					else if (operator.equalsIgnoreCase("leref"))
 					{
