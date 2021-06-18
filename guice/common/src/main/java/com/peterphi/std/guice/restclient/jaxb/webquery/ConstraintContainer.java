@@ -231,6 +231,15 @@ public interface ConstraintContainer<T>
 		return or;
 	}
 
+	default WQGroup none()
+	{
+		final WQGroup none = new WQGroup();
+
+		add(none);
+
+		return none;
+	}
+
 
 	/**
 	 * Construct a new AND group, using the supplier to add the constraints to the group. Returns the original {@link WQGroup} for

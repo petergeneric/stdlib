@@ -30,6 +30,21 @@ public class WebQueryParserTest
 
 
 	@Test
+	public void testNotGroups()
+	{
+		assertEquals("NOT(id = 1)", WebQueryParser.parse("NOT(id=1)", new WebQuery()).toQueryFragment());
+		assertEquals("NOT(id = 1 OR id = 2)", WebQueryParser.parse("NOT(id=1 OR id=2)", new WebQuery()).toQueryFragment());
+
+		// NOTting an AND group is against the native NONE representation, so NOT(a AND b) gets inverted into OR(NOT a, NOT b)
+		assertEquals("(id != 1 OR name != alice)",
+		             WebQueryParser.parse("NOT(id = 1 AND name = alice)", new WebQuery()).toQueryFragment());
+
+		assertEquals("NOT((id != 1 OR name != alice))",
+		             WebQueryParser.parse("NOT(NOT(id = 1 AND name = alice))", new WebQuery()).toQueryFragment());
+
+	}
+
+	@Test
 	public void testWithOrder()
 	{
 		assertEquals("id = 1 AND (name = foo OR title = dr) ORDER BY id, name DESC, title, title2",

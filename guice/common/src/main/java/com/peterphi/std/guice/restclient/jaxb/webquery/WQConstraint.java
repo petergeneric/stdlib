@@ -76,6 +76,23 @@ public class WQConstraint extends WQConstraintLine
 
 
 	@Override
+	public WQConstraintLine not()
+	{
+		final WQFunctionType inverted = function.invert();
+
+		if (inverted != null)
+		{
+			this.function = inverted;
+			return this;
+		}
+		else
+		{
+			return super.not();
+		}
+	}
+
+
+	@Override
 	public String toString()
 	{
 		if (function.hasBinaryParam())
