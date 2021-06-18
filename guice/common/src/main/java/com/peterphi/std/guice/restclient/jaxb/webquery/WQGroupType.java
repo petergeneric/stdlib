@@ -11,5 +11,9 @@ import javax.xml.bind.annotation.XmlType;
 public enum WQGroupType
 {
 	AND,
-	OR;
+	OR,
+	/**
+	 * NOT implemented as an OR group with a NOT around it
+	 */
+	NONE;
 }

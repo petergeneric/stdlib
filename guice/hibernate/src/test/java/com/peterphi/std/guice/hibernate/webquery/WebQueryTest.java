@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.restclient.jaxb.webquery.WQFunctionType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryParser;
 import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
@@ -34,6 +35,20 @@ public class WebQueryTest
 				.validate("_fetch", s -> !StringUtils.containsIgnoreCase(s, "password"))
 				.build()
 				.handles("_fetch", Arrays.asList("id,username,password"));
+	}
+
+
+	@Test
+	public void testInversionIsConsistent()
+	{
+		for (WQFunctionType val : WQFunctionType.values())
+		{
+			final WQFunctionType inverted = val.invert();
+
+			// If there is an inversion, the inversion of that should be this
+			if (inverted != null)
+				assertEquals("Expect inversion of " + inverted + " to be " + val, val, inverted.invert());
+		}
 	}
 
 

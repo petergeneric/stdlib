@@ -85,6 +85,52 @@ public enum WQFunctionType
 	}
 
 
+	/**
+	 * Return the inversion of this condition, if available<br /> If no inversion is currently possible, returns null
+	 *
+	 * @return
+	 */
+	public WQFunctionType invert()
+	{
+		switch (this)
+		{
+			case EQ:
+				return NEQ;
+			case NEQ:
+				return EQ;
+			case EQ_REF:
+				return NEQ_REF;
+			case NEQ_REF:
+				return EQ_REF;
+			case GE:
+				return LT;
+			case LT:
+				return GE;
+			case GT:
+				return LE;
+			case LE:
+				return GT;
+			case IS_NULL:
+				return NOT_NULL;
+			case NOT_NULL:
+				return IS_NULL;
+			case IN:
+				return NOT_IN;
+			case NOT_IN:
+				return IN;
+			case CONTAINS:
+				return NOT_CONTAINS;
+			case NOT_CONTAINS:
+				return CONTAINS;
+			case STARTS_WITH:
+				return NOT_STARTS_WITH;
+			case NOT_STARTS_WITH:
+				return STARTS_WITH;
+			default:
+				return null;
+		}
+	}
+
 	public static WQFunctionType getByPrefix(String value)
 	{
 		for (WQFunctionType function : values())

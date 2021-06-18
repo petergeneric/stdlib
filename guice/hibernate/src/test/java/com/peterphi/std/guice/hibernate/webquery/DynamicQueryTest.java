@@ -358,6 +358,10 @@ public class DynamicQueryTest
 
 		assertEquals(1, dao.findByUriQuery(new WebQuery().eqRef("name", "otherObject.name")).getList().size());
 		assertEquals(0, dao.findByUriQuery(new WebQuery().neqRef("name", "otherObject.name")).getList().size());
+
+		// Test inversion of the above conditions
+		assertEquals(1, dao.findByUriQuery(new WebQuery().decode("NOT(name NEQREF otherObject.name)")).getList().size());
+		assertEquals(0, dao.findByUriQuery(new WebQuery().decode("NOT(name EQREF otherObject.name)")).getList().size());
 	}
 
 

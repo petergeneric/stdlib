@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 
+import static com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType.NONE;
+
 public class WebQueryParser
 {
 	public static WebQuery parse(String search, WebQuery query)
@@ -65,14 +67,32 @@ public class WebQueryParser
 		{
 			final String start = t.next();
 
-			if (start.equals("("))
+			if (start.equals("(") || (start.equalsIgnoreCase("not") && takeIf(t, "(")))
 			{
+				final boolean isNoneGroup = start.equalsIgnoreCase("not");
+
 				WQGroup newGroup = new WQGroup();
 				parseExpressions(t, null, newGroup);
 
 				expect(t, ")");
 
-				if (newGroup.constraints.size() > 1)
+				// NOTted group, which we will convert to a NONE group
+				// We can NONE an OR group, but if the user supplied an AND group then we must invert each expression within that group and OR those together
+				if (isNoneGroup)
+				{
+					if (newGroup.operator == WQGroupType.OR || newGroup.constraints.size() <= 1)
+					{
+						newGroup.operator = WQGroupType.NONE;
+					}
+					else if (newGroup.operator == WQGroupType.AND)
+					{
+						// We need to flip all the conditions within this group around
+						newGroup.constraints.replaceAll(expr -> invert(expr));
+						newGroup.operator = WQGroupType.OR;
+					}
+				}
+
+				if (newGroup.operator == NONE || newGroup.constraints.size() > 1)
 					group.add(newGroup);
 				else if (newGroup.constraints.size() == 1)
 					group.add(newGroup.constraints.get(0));
@@ -307,6 +327,22 @@ public class WebQueryParser
 		}
 
 		group.operator = isAnd ? WQGroupType.AND : WQGroupType.OR;
+	}
+
+
+	private static WQConstraintLine invert(final WQConstraintLine line)
+	{
+		if (line instanceof WQConstraint)
+		{
+			final WQConstraint expr = (WQConstraint) line;
+
+			return expr.not();
+		}
+		else
+		{
+			// Fallback: wrap in a NONE group
+			return WQGroup.newNone().add(line);
+		}
 	}
 
 

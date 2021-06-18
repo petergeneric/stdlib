@@ -88,29 +88,59 @@ public class WQGroup extends WQConstraintLine implements ConstraintContainer<WQG
 		return new WQGroup(WQGroupType.OR);
 	}
 
+	/**
+	 * Construct a new empty NONE group
+	 *
+	 * @return
+	 */
+	public static WQGroup newNone()
+	{
+		return new WQGroup(WQGroupType.NONE);
+	}
+
 
 	@Override
 	public void toQueryFragment(StringBuilder sb)
 	{
-		if (constraints.size() == 1)
-			constraints.get(0).toQueryFragment(sb);
-		else
+		if (operator == WQGroupType.NONE)
 		{
-			sb.append('(');
+			sb.append("NOT(");
 
-			final String operatorStr = operator == WQGroupType.AND ? " AND " : " OR ";
 			boolean first = true;
 			for (WQConstraintLine constraint : constraints)
 			{
 				if (!first)
-					sb.append(operatorStr);
+					sb.append(" OR ");
 				else
 					first = false;
 
 				constraint.toQueryFragment(sb);
 			}
-
 			sb.append(')');
+		}
+		else
+		{
+			if (constraints.size() == 1)
+			{
+				constraints.get(0).toQueryFragment(sb);
+			}
+			else
+			{
+				sb.append('(');
+				final String operatorStr = operator == WQGroupType.AND ? " AND " : " OR ";
+				boolean first = true;
+				for (WQConstraintLine constraint : constraints)
+				{
+					if (!first)
+						sb.append(operatorStr);
+					else
+						first = false;
+
+					constraint.toQueryFragment(sb);
+				}
+
+				sb.append(')');
+			}
 		}
 	}
 }
