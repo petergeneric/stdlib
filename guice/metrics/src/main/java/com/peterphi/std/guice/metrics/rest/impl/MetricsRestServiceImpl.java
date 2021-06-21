@@ -8,6 +8,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.Metered;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Sampling;
+import com.codahale.metrics.Snapshot;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
@@ -114,9 +115,20 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		for (Map.Entry<String, Timer> entry : registry.getTimers().entrySet())
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
-			final Object value = entry.getValue().getCount();
+			final Timer timer = entry.getValue();
+			final Object value = timer.getCount();
 
 			appendMetric(sb, serviceProperties, servicePropertiesPartial, name, "counter", value);
+
+			final Snapshot snap = timer.getSnapshot();
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p75_ns"), "gauge",
+			             snap.get75thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p95_ns"), "gauge",
+			             snap.get95thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p99_ns"), "gauge",
+			             snap.get99thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p999_ns"), "gauge",
+			             snap.get999thPercentile());
 		}
 
 		sb.append("# Histograms\n");
@@ -124,12 +136,21 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		for (Map.Entry<String, Histogram> entry : registry.getHistograms().entrySet())
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
-			final Object value = entry.getValue().getCount();
+			final Histogram histo = entry.getValue();
+			final Object value = histo.getCount();
 
 			appendMetric(sb, serviceProperties, servicePropertiesPartial, name, "counter", value);
-		}
 
-		// TODO expose timers
+			final Snapshot snap = histo.getSnapshot();
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p75_ns"), "gauge",
+			             snap.get75thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p95_ns"), "gauge",
+			             snap.get95thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p99_ns"), "gauge",
+			             snap.get99thPercentile());
+			appendMetric(sb, serviceProperties, servicePropertiesPartial, toPrometheusMetricName(entry.getKey() + "_p999_ns"), "gauge",
+			             snap.get999thPercentile());
+		}
 
 		return sb.toString();
 	}
