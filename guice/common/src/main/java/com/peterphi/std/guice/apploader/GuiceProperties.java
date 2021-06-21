@@ -216,6 +216,9 @@ public class GuiceProperties
 	@Doc("If true then the metric data returned by the metric rest service will include raw measurements as well as computed aggregates (default false)")
 	public static final String METRICS_JAXRS_SHOW_SAMPLES = "metrics-jaxrs.show-samples";
 
+	@Doc("If true, metrics will include core JVM monitoring. Only one application per JVM should do this so that metrics aren't unnecessarily duplicated (default false)")
+	public static final String METRICS_INCLUDE_JVM = "metrics.monitor-jvm";
+
 	//
 	// Guice DbUnit module
 	//
