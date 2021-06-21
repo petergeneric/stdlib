@@ -214,6 +214,9 @@ public class GuiceProperties
 	@Doc("If set, will be added as labels to any metrics handed, should be of the form key=\"value\",key2=\"value2\" (default empty)")
 	public static final String METRIC_CUSTOM_LABELS = "metrics.labels";
 
+	@Doc("If true, metrics will include core JVM monitoring. Only one application per JVM should do this so that metrics aren't unnecessarily duplicated (default false)")
+	public static final String METRICS_INCLUDE_JVM = "metrics.monitor-jvm";
+
 	//
 	// Guice DbUnit module
 	//

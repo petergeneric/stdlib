@@ -257,7 +257,9 @@ class GuiceFactory
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
 
-		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
+		final boolean includeJvmMetrics = config.getBoolean(GuiceProperties.METRICS_INCLUDE_JVM, false);
+
+		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry(includeJvmMetrics);
 
 		try
 		{
