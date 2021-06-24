@@ -18,7 +18,19 @@ public class TimeoutConverter
 
 	public Object convert(String value)
 	{
+		return doConvert(value);
+	}
+
+
+	public static Timeout doConvert(String value)
+	{
+		if (value == null)
+			return null;
+
 		value = value.trim();
+
+		if (value.isEmpty())
+			return null;
 
 		final char last = value.charAt(value.length() - 1);
 
@@ -64,11 +76,9 @@ public class TimeoutConverter
 	 * Identify the largest unit that can accurately represent the provided duration
 	 *
 	 * @param iso
-	 *
 	 * @return
 	 */
-	private static @NotNull
-	TimeUnit pickUnit(final @NotNull Duration iso)
+	private static @NotNull TimeUnit pickUnit(final @NotNull Duration iso)
 	{
 		final long millis = iso.toMillis();
 
@@ -94,7 +104,7 @@ public class TimeoutConverter
 	}
 
 
-	private TimeUnit parseUnit(final String unit)
+	private static TimeUnit parseUnit(final String unit)
 	{
 		if ("ms".equalsIgnoreCase(unit) || "millisecond".equalsIgnoreCase(unit) || "milliseconds".equalsIgnoreCase(unit))
 		{
