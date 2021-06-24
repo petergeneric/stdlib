@@ -82,6 +82,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 
 		sb.append("# Counters\n");
 
+
 		for (Map.Entry<String, Counter> entry : registry.getCounters().entrySet())
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
@@ -105,7 +106,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		for (Map.Entry<String, Meter> entry : registry.getMeters().entrySet())
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
-			final Object value = entry.getValue().getCount();
+			final long value = entry.getValue().getCount();
 
 			appendMetric(sb, serviceProperties, servicePropertiesPartial, name, "counter", value);
 		}
@@ -116,7 +117,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
 			final Timer timer = entry.getValue();
-			final Object value = timer.getCount();
+			final long value = timer.getCount();
 
 			appendMetric(sb, serviceProperties, servicePropertiesPartial, name, "counter", value);
 
@@ -137,7 +138,7 @@ public class MetricsRestServiceImpl implements MetricsRestService
 		{
 			final String name = toPrometheusMetricName(entry.getKey());
 			final Histogram histo = entry.getValue();
-			final Object value = histo.getCount();
+			final long value = histo.getCount();
 
 			appendMetric(sb, serviceProperties, servicePropertiesPartial, name, "counter", value);
 
