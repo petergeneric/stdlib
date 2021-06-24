@@ -24,11 +24,10 @@ public interface MetricsRestService
 	@Produces({MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON})
 	public MetricsDocument getMetrics();
 
-
 	@GET
-	@Path("/")
+	@Path("/prometheus")
 	@Produces(MediaType.TEXT_PLAIN)
-	public String getTextMetrics();
+	public String getPrometheusMetrics();
 
 	@GET
 	@Path("/")

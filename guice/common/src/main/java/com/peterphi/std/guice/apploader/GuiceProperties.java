@@ -213,8 +213,8 @@ public class GuiceProperties
 	@Doc("If true then when the guice metrics jar is loaded it'll auto-register the metrics JAX-RS services (default true)")
 	public static final String ROLE_METRICS_JAXRS_AUTO = "role.metrics-jaxrs.auto";
 
-	@Doc("If true then the metric data returned by the metric rest service will include raw measurements as well as computed aggregates (default false)")
-	public static final String METRICS_JAXRS_SHOW_SAMPLES = "metrics-jaxrs.show-samples";
+	@Doc("If set, will be added as labels to any metrics handed, should be of the form key=\"value\",key2=\"value2\" (default empty)")
+	public static final String METRIC_CUSTOM_LABELS = "metrics.labels";
 
 	@Doc("If true, metrics will include core JVM monitoring. Only one application per JVM should do this so that metrics aren't unnecessarily duplicated (default false)")
 	public static final String METRICS_INCLUDE_JVM = "metrics.monitor-jvm";
