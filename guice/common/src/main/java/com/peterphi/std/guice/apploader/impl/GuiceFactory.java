@@ -12,6 +12,7 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.logging.LoggingModule;
+import com.peterphi.std.guice.common.GuiceModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
@@ -281,6 +282,11 @@ class GuiceFactory
 
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
+
+			// Allow any GuiceModule subclasses to automatically receive a copy of GuiceConfig
+			for (Module module : modules)
+				if (module instanceof GuiceModule)
+					((GuiceModule) module).setConfig(config);
 
 			if (log.isTraceEnabled())
 				log.trace("Creating Injector with modules: " + modules);
