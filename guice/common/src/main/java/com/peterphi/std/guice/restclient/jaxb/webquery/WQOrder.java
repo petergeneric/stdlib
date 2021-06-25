@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 import javax.xml.bind.annotation.XmlAttribute;
 import javax.xml.bind.annotation.XmlType;
+import java.beans.Transient;
 
 /**
  * Defines a sort instruction
@@ -34,6 +35,18 @@ public class WQOrder
 	}
 
 
+	public String getField()
+	{
+		return field;
+	}
+
+
+	public String getDirection()
+	{
+		return direction;
+	}
+
+	@Transient
 	public boolean isAsc()
 	{
 		return this.direction.equalsIgnoreCase("asc");
