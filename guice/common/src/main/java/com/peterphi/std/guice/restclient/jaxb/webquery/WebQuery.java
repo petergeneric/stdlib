@@ -320,13 +320,34 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 		boolean hasConstraints = false;
 
+		// First, handle text query
+		// This is so that a _order expression can be used to override the ordering in the text query
+		{
+			final List<String> textQuery = map.get(WQUriControlField.TEXT_QUERY.getName());
+			if (textQuery != null)
+			{
+				if (textQuery.size() != 1)
+					throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
+
+				hasConstraints = true;
+
+				if (parserPlugin != null && parserPlugin.handles(WQUriControlField.TEXT_QUERY.getName(), textQuery))
+				{
+					parserPlugin.process(this, WQUriControlField.TEXT_QUERY.getName(), textQuery);
+				}
+				else
+				{
+					this.decode(textQuery.get(0));
+				}
+			}
+		}
+
 		for (Map.Entry<String, List<String>> entry : map.entrySet())
 		{
 			final String key = entry.getKey();
 			final boolean special = key.charAt(0) == '_';
-			final boolean textQuery = (key.length() == 1 && key.charAt(0) == 'q');
+			final boolean textQuery = (key.charAt(0) == 'q' && key.length() == 1);
 			final List<String> value = entry.getValue();
-
 
 			if (parserPlugin != null && parserPlugin.handles(key, value))
 			{
@@ -343,19 +364,17 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 				continue;
 			}
 
-			if (special || textQuery)
+			// Text query is already handled before this for loop so no need to process it here
+			if (textQuery)
+				continue;
+			else if (special)
 			{
 				final WQUriControlField specialField = WQUriControlField.getByName(key);
 
 				switch (specialField)
 				{
 					case TEXT_QUERY:
-						if (value.size() != 1)
-							throw new IllegalArgumentException("May only have one TEXT_QUERY element!");
-
-						hasConstraints = true;
-						this.decode(value.get(0));
-
+						// Explicitly ignore (should never be executed anyway)
 						break;
 					case OFFSET:
 						offset(Integer.valueOf(value.get(0)));
