@@ -20,7 +20,7 @@
 # -- Project information -----------------------------------------------------
 
 project = u'stdlib'
-copyright = u'2018, Peter Wright'
+copyright = u'2018-2021, Peter Wright'
 author = u'Peter Wright'
 
 # The short X.Y version

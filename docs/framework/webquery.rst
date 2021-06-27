@@ -35,7 +35,9 @@ Many operators are supported to simplify field constraints by providing a prefix
  * **equals**: prefix `_f_eq_`, also by specifying no prefix, since it is the default function (e.g. `visibility=_f_eq_PUBLIC`)
  * **not equals**: prefix `_f_neq_` (e.g. `visibility=_f_neq_PRIVATE`)
  * **starts with**: prefix `_f_starts_` (only possible on string fields) (e.g. `text=_f_starts_four score and seven years ago`)
+ * **not starts with**: prefix `_f_nstarts_` (only possible on string fields) (e.g. `text=_f_nstarts_four score and seven years ago`)
  * **contains**: prefix `_f_contains_` (only possible on string fields, uses SQL LIKE so this is a very slow operation) (e.g. `text=_f_contains_java`)
+ * **not contains**: prefix `_f_ncontains_` (only possible on string fields, uses SQL LIKE so this is a very slow operation) (e.g. `text=_f_ncontains_python`)
  * **range**: prefix `_f_range_`, with the value expressed as MIN..MAX (e.g. `quantity=_f_range_1..100`, `id=_f_range_alpha..omega`)
  * **greater than**: prefix `_f_gt_`
  * **greater than or equal to**: prefix `_f_ge_`
@@ -252,3 +254,41 @@ The WebQuery type may be instantiated in Java and helper functions used to gener
 	                 .contains("java", "python") // Automatically creates an OR group
 	                 .orderAsc("id")
 	                 .limit(250));
+
+Text Format
+-----------
+
+The text format provides a simple but expressive syntax similar to a basic SQL query. In particular it allows combinations of ANDs and ORs, as well as NOTs to form complex queries, which can then be supplied as a Query String.
+This query format is intended for human use, not for programmatic access - in the latter case, the XML form should be preferred.
+
+and strings can optionally be quoted - the following strings are treated identically:
+
+.. code-block:: sql
+
+	Alice
+	"Alice"
+	'Alice'
+	`Alice`
+
+Quoted strings must start and end with the same character, and may not contain that character (so a string that must contain double-quotes should be quoted with a ' or ` character. Operators and keywords should be quoted for clarity (unquoted strings otherwise could lead to confusing error messages in the case of a syntax error) but this is not mandatory.
+
+
+Here's the format listed above in the XML Format, expressed as a text query:
+
+
+.. code-block:: sql
+
+	postType = PUBLIC
+	AND deleted = false
+	AND author.first_name != Alice
+	AND datePosted BETWEEN 2014-01-01T00:00:00Z and 2014-02-01T00:00:00Z
+	AND (someRelation:id CONTAINS java OR someRelation:id CONTAINS python)
+	ORDER BY id
+
+
+In addition to allowing ANDs, ORs and NOTs to be arbitrarily combined, the text mode also allows the use of the IN function, just like the XML mode. The syntax for this is:
+
+.. code-block:: sql
+
+	id IN (1,2,3,4,5) AND parent:id NOT IN (7,8,9)
+
