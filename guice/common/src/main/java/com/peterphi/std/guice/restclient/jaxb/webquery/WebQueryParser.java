@@ -451,6 +451,34 @@ public class WebQueryParser
 							tokens.add(search.substring(start, i + 1));
 						}
 					}
+					else if ((c == '-' && tokenPeekIs(search, i, '-')) || (c == '/' && tokenPeekIs(search, i, '/')))
+					{
+						i++;
+
+						// Comment remainder of line (-- or // comment)
+						final int endPos = search.indexOf('\n', i + 1);
+
+						if (endPos == -1)
+							return tokens; // Ends on a commented line
+
+						// Skip over all data
+						i = endPos;
+					}
+					else if (c == '/' && tokenPeekIs(search, i, '*'))
+					{
+						i++;
+
+						// Multiline comment of style /* commented data */
+						// Comment remainder of line (-- or // comment)
+						final int endPos = search.indexOf("*/", i + 1);
+
+						if (endPos == -1)
+							throw new IllegalArgumentException("Unterminated multiline comment: " + search.substring(i - 2));
+
+						// Skip over whole comment
+
+						i = endPos +1;
+					}
 					else if (ArrayUtils.indexOf(operators, c) != -1)
 					{
 						final int start = i;
@@ -487,6 +515,14 @@ public class WebQueryParser
 		return tokens;
 	}
 
+
+	public static boolean tokenPeekIs(final String s, final int i, final char c)
+	{
+		if (s.length() > i)
+			return c == s.charAt(i + 1);
+		else
+			return false;
+	}
 
 	public static boolean isBareWordPart(final char c)
 	{

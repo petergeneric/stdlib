@@ -10,6 +10,11 @@ public class WebQueryParserTest
 	public void testSimpleFragments()
 	{
 		assertEquals("id = 1", WebQueryParser.parse("id=1", new WebQuery()).toQueryFragment());
+		assertEquals("multiline comment","id = 1", WebQueryParser.parse("/* some comment goes here */ id=1", new WebQuery()).toQueryFragment());
+		assertEquals("single line comment","id = 1", WebQueryParser.parse("id=1 --some comment", new WebQuery()).toQueryFragment());
+		assertEquals("single line comment","id = 1\nAND id = 2", WebQueryParser.parse("id=1 //some comment\nand id=2", new WebQuery()).toQueryFragment());
+		assertEquals("single line comment in middle of expression","id = 1", WebQueryParser.parse("id= -- some comment\n1 --some other comment", new WebQuery()).toQueryFragment());
+
 		assertEquals("name NOT STARTS alice", WebQueryParser.parse("name not starts alice", new WebQuery()).toQueryFragment());
 		assertEquals("id != 1", WebQueryParser.parse("id!=1", new WebQuery()).toQueryFragment());
 		assertEquals("id ~= x", WebQueryParser.parse("id~=x", new WebQuery()).toQueryFragment());
@@ -26,6 +31,8 @@ public class WebQueryParserTest
 		assertEquals("dob >= now-PT5M", WebQueryParser.parse("dob >= now-PT5M", new WebQuery()).toQueryFragment());
 		assertEquals("dob >= 2000-01-01T00:00:00Z",
 		             WebQueryParser.parse("dob >= '2000-01-01T00:00:00Z'", new WebQuery()).toQueryFragment());
+		assertEquals("Allow GT in use of >","id > 1", WebQueryParser.parse("id GT 1", new WebQuery()).toQueryFragment());
+
 	}
 
 
