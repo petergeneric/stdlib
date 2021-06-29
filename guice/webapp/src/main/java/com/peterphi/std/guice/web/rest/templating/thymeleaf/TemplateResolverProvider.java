@@ -8,6 +8,7 @@ import com.peterphi.std.threading.Timeout;
 import org.thymeleaf.templateresolver.ITemplateResolver;
 import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
 
+import javax.servlet.ServletContext;
 import java.util.concurrent.TimeUnit;
 
 public class TemplateResolverProvider implements Provider<ITemplateResolver>
@@ -17,13 +18,20 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 	@Doc("The maximum Time-To-Live value on the thymeleaf in-memory template cache")
 	Timeout cacheTTL = new Timeout(1, TimeUnit.HOURS);
 
+	@Inject(optional = true)
+	@Named("thymeleaf.mode")
+	@Doc("The thymeleaf template mode (default HTML5)")
+	public String templateMode = "HTML5";
+
+	@Inject
+	ServletContext ctx;
 
 	@Override
 	public ITemplateResolver get()
 	{
 		ServletContextTemplateResolver resolver = new ServletContextTemplateResolver();
 
-		resolver.setTemplateMode("HTML5");
+		resolver.setTemplateMode(templateMode);
 
 		// Load templates from WEB-INF/templates/{name}.html
 		resolver.setPrefix("/WEB-INF/template/");
