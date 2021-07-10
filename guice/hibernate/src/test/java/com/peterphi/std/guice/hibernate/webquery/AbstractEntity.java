@@ -8,10 +8,16 @@ import javax.persistence.MappedSuperclass;
 import javax.persistence.Version;
 
 @MappedSuperclass
-abstract class AbstractEntity
+abstract class AbstractEntity<E extends Enum>
 {
 	private DateTime created = DateTime.now();
 	private DateTime updated;
+
+	@Column(name="state_val")
+	abstract E getState();
+
+
+	abstract void setState(final E state);
 
 
 	@Column(name = "created_ts", nullable = false)

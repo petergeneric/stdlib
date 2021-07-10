@@ -12,21 +12,18 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
-class ChildEntity
+class ChildEntity extends AbstractEntity<SomeStateEnum>
 {
-	@Id
-	@GeneratedValue(strategy = GenerationType.AUTO)
 	private Long id;
 
-	@Column(name = "obj_name")
 	private String name;
 
-	@EagerFetch
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "parent_id")
 	private ParentEntity parent;
 
+	private SomeStateEnum state;
 
+	@Id
+	@GeneratedValue(strategy = GenerationType.AUTO)
 	public Long getId()
 	{
 		return id;
@@ -39,6 +36,21 @@ class ChildEntity
 	}
 
 
+	@Override
+	public SomeStateEnum getState()
+	{
+		return this.state;
+	}
+
+
+	@Override
+	public void setState(SomeStateEnum v)
+	{
+		this.state = v;
+	}
+
+
+	@Column(name = "obj_name")
 	public String getName()
 	{
 		return name;
@@ -51,6 +63,9 @@ class ChildEntity
 	}
 
 
+	@EagerFetch
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name = "parent_id")
 	public ParentEntity getParent()
 	{
 		return parent;

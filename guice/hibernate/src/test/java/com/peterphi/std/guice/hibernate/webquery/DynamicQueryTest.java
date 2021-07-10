@@ -85,6 +85,12 @@ public class DynamicQueryTest
 	}
 
 
+	@Test
+	public void testQueryForStateEnum()
+	{
+		childDao.find(new WebQuery().eq("state", 0));
+	}
+
 	/**
 	 * Test that supplying a comma-separated list of values to WebQuery.fetch results in those fields being returned from the db a an <code>Object[]</code>
 	 *
