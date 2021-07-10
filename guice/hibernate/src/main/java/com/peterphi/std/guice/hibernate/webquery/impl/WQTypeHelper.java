@@ -8,9 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
 import java.nio.charset.Charset;
-import java.util.Arrays;
 import java.util.Date;
-import java.util.List;
 import java.util.UUID;
 
 public class WQTypeHelper
@@ -163,7 +161,7 @@ public class WQTypeHelper
 		}
 		else if (clazz.isEnum())
 		{
-			return parseEnum(clazz, value);
+			return parseEnum((Class<? extends Enum>) clazz, value);
 		}
 		else if (clazz.equals(byte[].class))
 		{
@@ -176,25 +174,29 @@ public class WQTypeHelper
 	}
 
 
-	private static Object parseEnum(final Class<?> clazz, final String value)
+	private static <E extends Enum> E parseEnum(final Class<E> clazz, final String value)
 	{
-		final List<Enum> values = enumValues(clazz);
+		final E[] values = clazz.getEnumConstants();
 
-		for (Enum val : values)
+		for (E val : values)
 		{
 			if (value.equalsIgnoreCase(val.name()))
 				return val;
 		}
 
+		// Fall back on an ordinal value
+		if (value.length() > 0 && Character.isDigit(value.charAt(0)))
+		{
+			try
+			{
+				return values[Integer.valueOf(value)];
+			}
+			catch (Throwable t)
+			{
+				// ignore, return to normal codepath
+			}
+		}
+
 		throw new IllegalArgumentException(value + " is not a valid " + clazz.getSimpleName() + ": expected one of " + values);
-	}
-
-
-	@SuppressWarnings({"unchecked", "rawtypes"})
-	private static List<Enum> enumValues(Class clazz)
-	{
-		final List values = Arrays.asList(clazz.getEnumConstants());
-
-		return (List<Enum>) values;
 	}
 }
