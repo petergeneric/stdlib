@@ -1,7 +1,6 @@
 package com.peterphi.std.guice.web.rest.jaxrs.exception;
 
 import com.google.inject.Inject;
-import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceConstants;
@@ -27,7 +26,7 @@ import java.util.List;
  * A HTML renderer that will only emit HTML when the caller lists text/html as their primary Accept header value
  */
 @Singleton
-public class HTMLFailureRenderer implements RestFailureRenderer
+public class HTMLFailureRenderer extends XMLFailureRenderer implements RestFailureRenderer
 {
 	/**
 	 * A comma-delimited list of terms that identify highlightable stack trace lines)
@@ -107,9 +106,6 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 	@Inject
 	GuiceConfig config;
 
-	@Inject
-	Provider<CurrentUser> currentUserProvider;
-
 
 	@Override
 	public Response render(RestFailure failure)
@@ -155,7 +151,7 @@ public class HTMLFailureRenderer implements RestFailureRenderer
 			writer.enableEnvironmentVariables();
 		}
 
-		if (stackTraceEnabled)
+		if (stackTraceEnabled && !shouldStripStackTrace())
 		{
 			writer.enableStackTrace();
 		}

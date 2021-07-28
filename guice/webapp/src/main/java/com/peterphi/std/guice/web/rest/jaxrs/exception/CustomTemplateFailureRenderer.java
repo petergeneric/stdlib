@@ -19,7 +19,7 @@ import java.util.Enumeration;
  * A RestFailureRenderer that uses the configured templating engine to render exceptions destined for humans.
  */
 @Singleton
-public class CustomTemplateFailureRenderer implements RestFailureRenderer
+public class CustomTemplateFailureRenderer extends XMLFailureRenderer implements RestFailureRenderer
 {
 	private static final Logger log = Logger.getLogger(CustomTemplateFailureRenderer.class);
 
