@@ -7,11 +7,36 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
+import java.util.stream.Collectors;
 
 import static com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType.NONE;
 
 public class WebQueryParser
 {
+	private static final String SELECT = "SELECT";
+	private static final String EXPAND = "EXPAND";
+	private static final String WHERE = "WHERE";
+
+	private static final String OPEN_BRACKET = "(";
+	private static final String CLOSE_BRACKET = ")";
+	private static final String COMMA = ",";
+
+	private static final String AND = "AND";
+	private static final String OR = "OR";
+	private static final String NOT = "NOT";
+	private static final String ORDER = "ORDER";
+	private static final String BY = "BY";
+	private static final String ASC = "ASC";
+	private static final String DESC = "DESC";
+	private static final String BETWEEN = "BETWEEN";
+	private static final String IN = "IN";
+	private static final String IS = "IS";
+	private static final String NULL = "NULL";
+
+	private static final String STARTS = "STARTS";
+	private static final String CONTAINS = "CONTAINS";
+	private static final String CONTAINS2 = "~=";
+	
 	public static WebQuery parse(String search, WebQuery query)
 	{
 		final ListIterator<String> t = tokenise(search).listIterator();
@@ -67,14 +92,14 @@ public class WebQueryParser
 		{
 			final String start = t.next();
 
-			if (start.equals("(") || (start.equalsIgnoreCase("not") && takeIf(t, "(")))
+			if (start.equals(OPEN_BRACKET) || (start.equalsIgnoreCase(NOT) && takeIf(t, OPEN_BRACKET)))
 			{
-				final boolean isNoneGroup = start.equalsIgnoreCase("not");
+				final boolean isNoneGroup = start.equalsIgnoreCase(NOT);
 
 				WQGroup newGroup = new WQGroup();
 				parseExpressions(t, null, newGroup);
 
-				expect(t, ")");
+				expect(t, CLOSE_BRACKET);
 
 				// NOTted group, which we will convert to a NONE group
 				// We can NONE an OR group, but if the user supplied an AND group then we must invert each expression within that group and OR those together
@@ -97,7 +122,7 @@ public class WebQueryParser
 				else if (newGroup.constraints.size() == 1)
 					group.add(newGroup.constraints.get(0));
 			}
-			else if (start.equals(")"))
+			else if (start.equals(CLOSE_BRACKET))
 			{
 				if (query != null)
 					throw new IllegalArgumentException("Unbalanced brackets: closed without corresponding open!"); // close bracket encountered at root
@@ -107,24 +132,24 @@ public class WebQueryParser
 
 				break;
 			}
-			else if (start.equalsIgnoreCase("and") || start.equalsIgnoreCase("or"))
+			else if (start.equalsIgnoreCase(AND) || start.equalsIgnoreCase(OR))
 			{
-				final boolean thisIsAnd = start.equalsIgnoreCase("and");
+				final boolean thisIsAnd = start.equalsIgnoreCase(AND);
 
 				if (isAnd == null)
 					isAnd = thisIsAnd;
 				else if (isAnd.booleanValue() != thisIsAnd)
 					throw new WebQueryParseError("Mismatch: all boolean operators in group must be the same. Group started with " +
-					                             (isAnd ? "AND" : "OR") +
+					                             (isAnd ? AND : OR) +
 					                             " but encountered " +
 					                             start);
 			}
-			else if (start.equalsIgnoreCase("order"))
+			else if (start.equalsIgnoreCase(ORDER))
 			{
 				if (query == null)
 					throw new WebQueryParseError("Unexpected symbol: ORDER");
 
-				expect(t, "by");
+				expect(t, BY);
 
 				query.orderings.clear(); // reset any default orderings
 
@@ -133,16 +158,16 @@ public class WebQueryParser
 				do
 				{
 					if (!first)
-						expect(t, ",");
+						expect(t, COMMA);
 					else
 						first = false;
 
 					final String field = t.next();
 					final String direction = t.hasNext() ? t.next() : null;
 
-					if (StringUtils.equalsIgnoreCase(direction, "asc"))
+					if (StringUtils.equalsIgnoreCase(direction, ASC))
 						query.orderAsc(field); // Explicit ASC
-					else if (StringUtils.equalsIgnoreCase(direction, "desc"))
+					else if (StringUtils.equalsIgnoreCase(direction, DESC))
 						query.orderDesc(field);
 					else
 					{
@@ -152,7 +177,94 @@ public class WebQueryParser
 							t.previous(); // Implicit ASC but not last token
 					}
 				}
-				while (StringUtils.equals(peek(t), ","));
+				while (StringUtils.equals(peek(t), COMMA));
+			}
+			else if (start.equalsIgnoreCase(EXPAND)) {
+				boolean first = true;
+
+				List<String> selects = new ArrayList<>();
+
+				do
+				{
+					if (!first)
+						expect(t, COMMA);
+					else
+						first = false;
+
+					final String field = t.next();
+
+					if (!field.startsWith("not:"))
+						selects.add(field);
+					else
+						selects.add("-" + field.substring(4));
+				}
+				while (StringUtils.equals(peek(t), COMMA));
+
+				query.expand(selects.stream().collect(Collectors.joining(",")));
+
+				// Allow EOF, WHERE or ORDER
+				final String token = peek(t);
+
+				if (token == null)
+				{
+					// EOF is permitted at this point
+				}
+				else if (token.equalsIgnoreCase(WHERE))
+				{
+					expect(t, WHERE);
+				}
+				else if (token.equalsIgnoreCase(ORDER))
+				{
+					// No action necessary - continuing to process tokens will result in an ORDER expression
+				}
+				else
+				{
+					throw new IllegalArgumentException("SELECT: expected EOF, WHERE or ORDER, got «" + token + "»");
+				}
+			}
+			else if (start.equalsIgnoreCase(SELECT))
+			{
+				boolean first = true;
+
+				List<String> selects = new ArrayList<>();
+
+				do
+				{
+					if (!first)
+						expect(t, COMMA);
+					else
+						first = false;
+
+					final String field = t.next();
+
+					selects.add(field);
+				}
+				while (StringUtils.equals(peek(t), COMMA));
+
+				query.fetch(selects.stream().collect(Collectors.joining(",")));
+
+				// Allow EOF, EXPAND, WHERE or ORDER
+				final String token = peek(t);
+
+				if (token == null)
+				{
+					// EOF is permitted at this point
+				}
+				else if (token.equalsIgnoreCase(EXPAND)) {
+					continue;
+				}
+				else if (token.equalsIgnoreCase(WHERE))
+				{
+					expect(t, WHERE);
+				}
+				else if (token.equalsIgnoreCase(ORDER))
+				{
+					// No action necessary - continuing to process tokens will result in an ORDER expression
+				}
+				else
+				{
+					throw new IllegalArgumentException("SELECT: expected EOF, WHERE, EXPAND or ORDER, got «" + token + "»");
+				}
 			}
 			else
 			{
@@ -162,28 +274,28 @@ public class WebQueryParser
 				if (!Character.isJavaIdentifierStart(start.charAt(0)) && start.indexOf(' ') == -1)
 					throw new IllegalArgumentException("Expected FIELD NAME, got «" + start + "»");
 
-				final boolean notted = takeIf(t, "not");
+				final boolean notted = takeIf(t, NOT);
 				final String operator = t.next();
 
-				if (operator.equalsIgnoreCase("is"))
+				if (operator.equalsIgnoreCase(IS))
 				{ // Unary expression
-					final boolean isNotNullExpr = takeIf(t, "not");
+					final boolean isNotNullExpr = takeIf(t, NOT);
 
-					expect(t, "null");
+					expect(t, NULL);
 
 					if (isNotNullExpr)
 						group.isNotNull(start);
 					else
 						group.isNull(start);
 				}
-				else if (operator.equalsIgnoreCase("between"))
+				else if (operator.equalsIgnoreCase(BETWEEN))
 				{
 					if (notted)
 						throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
 
 					// Tenary expression
 					final String val1 = t.next();
-					expect(t, "and");
+					expect(t, AND);
 					final String val2 = t.next();
 
 					if (val2 == null)
@@ -191,24 +303,24 @@ public class WebQueryParser
 
 					group.range(start, val1, val2);
 				}
-				else if (operator.equalsIgnoreCase("in"))
+				else if (operator.equalsIgnoreCase(IN))
 				{
-					expect(t, "(");
+					expect(t, OPEN_BRACKET);
 
-					if (StringUtils.equals(peek(t), ")"))
+					if (StringUtils.equals(peek(t), CLOSE_BRACKET))
 						throw new IllegalArgumentException("Empty IN list provided!");
 
 					List<String> values = new ArrayList<>();
 
 					values.add(t.next()); // first value
 
-					while (StringUtils.equals(peek(t), ","))
+					while (StringUtils.equals(peek(t), COMMA))
 					{
-						expect(t, ",");
+						expect(t, COMMA);
 
 						values.add(t.next());
 					}
-					expect(t, ")");
+					expect(t, CLOSE_BRACKET);
 
 					if (!notted)
 						group.in(start, values);
@@ -223,14 +335,14 @@ public class WebQueryParser
 					final String val = t.next();
 
 					// Boolean expression
-					if (operator.equalsIgnoreCase("starts"))
+					if (operator.equalsIgnoreCase(STARTS))
 					{
 						if (!notted)
 							group.startsWith(start, val);
 						else
 							group.notStartsWith(start, val);
 					}
-					else if (operator.equalsIgnoreCase("contains") || operator.equals("~="))
+					else if (operator.equalsIgnoreCase(CONTAINS) || operator.equals(CONTAINS2))
 					{
 						if (!notted)
 							group.contains(start, val);
@@ -426,7 +538,7 @@ public class WebQueryParser
 
 						tokens.add(str);
 					}
-					else if (c == '(' || c == ')' || c == ',')
+					else if (c == OPEN_BRACKET.charAt(0) || c == CLOSE_BRACKET.charAt(0) || c == COMMA.charAt(0))
 					{
 						tokens.add(Character.toString(c));
 					}
