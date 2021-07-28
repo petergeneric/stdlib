@@ -527,7 +527,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		{
 			if (StringUtils.isNotEmpty(fetch) && !StringUtils.equals(fetch, "entity"))
 			{
-				sb.append("SELECT\n\t").append(fetch);
+				sb.append("SELECT ").append(fetch);
 			}
 
 			if (StringUtils.isNotEmpty(expand))
