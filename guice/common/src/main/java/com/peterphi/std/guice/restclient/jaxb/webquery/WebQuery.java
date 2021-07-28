@@ -516,7 +516,37 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 	public String toQueryFragment()
 	{
+		return toQueryFragment(true);
+	}
+
+	public String toQueryFragment(final boolean includeSelectAndExpand)
+	{
 		StringBuilder sb = new StringBuilder();
+
+		if (includeSelectAndExpand)
+		{
+			if (StringUtils.isNotEmpty(fetch) && !StringUtils.equals(fetch, "entity"))
+			{
+				sb.append("SELECT\n\t").append(fetch);
+			}
+
+			if (StringUtils.isNotEmpty(expand))
+			{
+				// If we already had a SELECT then we need to insert a line break
+				if (sb.length() != 0)
+					sb.append('\n');
+
+				sb.append("EXPAND\n\t");
+				if (!expand.contains("-"))
+					sb.append(expand);
+				else
+					sb.append(expand.replace("-", "not:"));
+			}
+		}
+
+
+		if (sb.length() != 0 && !constraints.constraints.isEmpty())
+			sb.append("\nWHERE\n");
 
 		constraints.toQueryFragment(sb);
 
@@ -543,5 +573,11 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		}
 
 		return sb.toString();
+	}
+
+
+	public static WebQuery parse(final String str)
+	{
+		return new WebQuery().decode(str);
 	}
 }
