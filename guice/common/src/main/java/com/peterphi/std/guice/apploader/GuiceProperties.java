@@ -174,6 +174,13 @@ public class GuiceProperties
 	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
 
+	@Doc("If true, stack traces will be returned in XML mode")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE = "rest.exception.stacktrace";
+	@Doc("If true, stack traces will only be returned in XML mode for admin or service users; this is to minimise on wasted bandwidth to clients (or if combined with require-logged-in, only shows stack traces to services/admins)")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_ADMIN_OR_SERVICE_IF_LOGGED_IN = "rest.exception.stacktrace.require-admin-role-if-logged-in";
+	@Doc("If true, stack traces will only be returned in XML mode if the session is authenticated")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_LOGGED_IN = "rest.exception.stacktrace.require-logged-in";
+
 	// Create JIRA issue from exception
 	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
 	public static final String JAXRS_EXCEPTION_HTML_JIRA_ENABLED = "rest.exception.html.jira.enabled";

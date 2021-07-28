@@ -40,6 +40,11 @@ public interface CurrentUser
 	String ROLE_SERVICE_CALL = "service-call";
 
 	/**
+	 * Standard name for role conveying administrative privileges
+	 */
+	String ROLE_ADMIN = "admin";
+
+	/**
 	 * Return the type of authentication used
 	 *
 	 * @return
