@@ -8,7 +8,7 @@ import org.hibernate.criterion.Projections;
 import org.hibernate.criterion.Restrictions;
 import org.hibernate.criterion.Subqueries;
 
- class MyTestDaoImpl extends HibernateDao<LargeTableSimplePKEntity, Long>
+public class MyTestDaoImpl extends HibernateDao<LargeTableSimplePKEntity, Long>
 {
 	/**
 	 * Run
