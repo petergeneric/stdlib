@@ -291,4 +291,75 @@
 
 	</changeSet>
 
+	<!-- N.B. not set up as a foreign key so that roles that do not yet exist can be referenced -->
+	<changeSet author="peter@peterphi.com" id="add_service_required_role">
+		<addColumn tableName="oauth_service">
+			<column name="required_role_id" type="VARCHAR(255)"/>
+		</addColumn>
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="widen_service_required_role">
+		<modifyDataType tableName="oauth_service" columnName="required_role_id" newDataType="VARCHAR(4096)" />
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_service_roles">
+		<!-- joins service and role -->
+		<createTable tableName="service_has_role">
+			<column name="service_id" type="VARCHAR(36)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="role_id" type="VARCHAR(255)">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint baseColumnNames="service_id" baseTableName="service_has_role"
+		                         constraintName="FK__service_has_role__service_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="oauth_service"/>
+		<addForeignKeyConstraint baseColumnNames="role_id" baseTableName="service_has_role"
+		                         constraintName="FK__service_has_role__role_id" deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE" referencedColumnNames="id"
+		                         referencedTableName="role_definition"/>
+
+		<addPrimaryKey tableName="service_has_role" columnNames="service_id, role_id"
+		               constraintName="PK__service_has_role"/>
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_delegated_token_table">
+		<createTable tableName="delegated_token">
+			<column name="id" type="VARCHAR(36)">
+				<constraints primaryKey="true" primaryKeyName="PK__delegated_token"/>
+			</column>
+			<column name="session_id" type="VARCHAR(36)">
+				<constraints nullable="false"/>
+			</column>
+			<column name="expires_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+
+			<column name="created_ts" type="BIGINT">
+				<constraints nullable="false"/>
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint baseTableName="delegated_token" baseColumnNames="session_id"
+		                         constraintName="FK__delegated_token__session_id"
+		                         deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
+		                         referencedTableName="oauth_session" referencedColumnNames="id"/>
+	</changeSet>
+
+	<changeSet author="peter@peterphi.com" id="add_service_access_keys">
+		<addColumn tableName="oauth_service">
+			<column name="access_key" type="VARCHAR(100)" />
+			<column name="access_key_alt" type="VARCHAR(100)" />
+		</addColumn>
+	</changeSet>
+
+	<!-- User's names and Role Captions should use NVARCHAR to reflect that they need to be unicode-safe -->
+	<changeSet author="peter@peterphi.com" id="nvarchar_for_user_text">
+		<modifyDataType tableName="user_account" columnName="name" newDataType="NVARCHAR(100)" />
+		<modifyDataType tableName="role_definition" columnName="caption" newDataType="NVARCHAR(1024)" />
+	</changeSet>
 </databaseChangeLog>

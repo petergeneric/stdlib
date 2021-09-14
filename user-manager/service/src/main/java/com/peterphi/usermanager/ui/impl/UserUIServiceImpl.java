@@ -15,7 +15,7 @@ import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.ImpersonationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.service.UserDeleteService;
 import com.peterphi.usermanager.ui.api.UserUIService;
 
@@ -33,7 +33,7 @@ import java.util.stream.Collectors;
 @AuthConstraint(role = "authenticated", comment = "login required")
 public class UserUIServiceImpl implements UserUIService
 {
-	private static final String NONCE_USE = "configui";
+	private static final String TOKEN_USE = "configui";
 
 	@Inject
 	Templater templater;
@@ -51,7 +51,7 @@ public class UserUIServiceImpl implements UserUIService
 	ImpersonationService impersonationService;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore tokenStore;
 
 	@Inject
 	UserDeleteService deleteService;
@@ -61,6 +61,18 @@ public class UserUIServiceImpl implements UserUIService
 	public String getIndex()
 	{
 		TemplateCall call = templater.template("index");
+
+		return call.process();
+	}
+
+
+	@Override
+	@AuthConstraint(id = "warn-and-redirect", skip = true)
+	public String getWarnAndRedirect(final String url)
+	{
+		TemplateCall call = templater.template("redirect");
+
+		call.set("url", url);
 
 		return call.process();
 	}
@@ -77,9 +89,16 @@ public class UserUIServiceImpl implements UserUIService
 
 		call.set("resultset", resultset);
 		call.set("users", resultset.getList());
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
+	}
+
+
+	@Override
+	public Response getLocalUserEdit()
+	{
+		return Response.seeOther(URI.create("/user/" + login.getId())).build();
 	}
 
 
@@ -100,10 +119,10 @@ public class UserUIServiceImpl implements UserUIService
 		call.set("user", user);
 
 		call.set("timezones", Arrays.asList(TimeZone.getAvailableIDs()));
-		call.set("dateformats", Arrays.asList("YYYY-MM-dd HH:mm:ss zzz", "YYYY-MM-dd HH:mm:ss", "YYYY-MM-dd HH:mm"));
+		call.set("dateformats", Arrays.asList("yyyy-MM-dd HH:mm:ss zzz", "yyyy-MM-dd HH:mm:ss", "yyyy-MM-dd HH:mm"));
 		call.set("entityRoleIds", getRoles(user));
 		call.set("roles", roleDao.getAll());
-		call.set("nonce", nonceStore.getValue(NONCE_USE));
+		call.set("token", tokenStore.getValue(TOKEN_USE));
 
 		return call.process();
 	}
@@ -118,14 +137,14 @@ public class UserUIServiceImpl implements UserUIService
 	@Override
 	@Transactional
 	public Response editUserProfile(final int userId,
-	                                final String nonce,
+	                                final String token,
 	                                final String dateFormat,
 	                                final String timeZone,
 	                                final String name,
 	                                final String email,
 	                                final List<String> roles)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -179,9 +198,9 @@ public class UserUIServiceImpl implements UserUIService
 
 
 	@Override
-	public Response rotateAccessKey(final int userId, final String nonce)
+	public Response rotateAccessKey(final int userId, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -198,9 +217,9 @@ public class UserUIServiceImpl implements UserUIService
 	@Override
 	@Transactional
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
-	public Response deleteUser(final int userId, final String nonce)
+	public Response deleteUser(final int userId, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -224,11 +243,11 @@ public class UserUIServiceImpl implements UserUIService
 	@Override
 	@Transactional
 	public Response changePassword(final int userId,
-	                               final String nonce,
+	                               final String token,
 	                               final String newPassword,
 	                               final String newPasswordConfirm)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(TOKEN_USE, token);
 
 		final int localUser = login.getId();
 
@@ -251,9 +270,9 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@AuthConstraint(id = "impersonation", role = UserLogin.ROLE_ADMIN, comment = "only admins can impersonate other users")
-	public Response impersonate(final int userId, final String nonce)
+	public Response impersonate(final int userId, final String token)
 	{
-		nonceStore.validate(NONCE_USE, nonce);
+		tokenStore.validate(TOKEN_USE, token);
 
 		// N.B. because we do not wish to impersonate the user for a long time we aren't changing the session reconnect cookie
 		// This means when the servlet session ends (inactivity, browser closing, etc.) the user will be logged back in as themselves

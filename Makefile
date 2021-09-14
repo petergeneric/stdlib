@@ -29,22 +29,13 @@ endif
 
 all: install
 
-hagent: clean
-	$(MVN) package -am --projects service-manager/host-agent
-
-sman: clean
-	$(MVN) package -am --projects service-manager/service-manager
-
 uman: clean
 	$(MVN) package -DskipTests=true -am --projects user-manager/service
 
-sman-full: sman
-ifndef host
-		$(error host is not set)
-endif
-	 $(RSYNC) service-manager/configuration/target/*.war $(WEBAPPS)/configuration.war
+uman-deploy:
 	 $(RSYNC) user-manager/service/target/*.war $(WEBAPPS)/user-manager.war
-	 $(RSYNC) service-manager/service-manager/target/*.war $(WEBAPPS)/service-manager.war
+
+uman-full: uman uman-deploy
 
 
 #
@@ -54,36 +45,9 @@ endif
 
 #
 #
-# PW Targets
-#
-#
-
-pwconfig-service-full:
-	$(MVN) package -DskipTests=true -am --projects service-manager/configuration
-	rsync -avzr --progress service-manager/configuration/target/*.war /opt/tomcat/webapps/config.war
-
-pwuman: uman
-	rsync -avzr --progress user-manager/service/target/*.war /opt/tomcat/webapps/user-manager.war
-
-pwsman:
-	$(MVN) package -DskipTests=true -am --projects service-manager/service-manager
-	rsync -avzr --progress service-manager/service-manager/target/*.war /opt/tomcat/webapps/service-manager.war	
-
-pwsmtail:
-	rsync -avzr --progress service-manager/service-manager/src/main/webapp/vendor/logui-SNAPSHOT/* /opt/tomcat/webapps/service-manager/vendor/logui-SNAPSHOT/
-	rsync -avzr --progress service-manager/service-manager/src/main/webapp/WEB-INF/template/* /opt/tomcat/webapps/service-manager/WEB-INF/template/
-
-pwhagent: hagent
-	rsync -avzr --progress service-manager/host-agent/target/*.war /opt/tomcat/webapps/host-agent.war
-
-#
-#
 # Code Generation
 #
 #
-colf:
-	-rm guice/common/src/main/java/com/peterphi/std/guice/common/logging/logreport/*.java
-	colf -b guice/common/src/main/java/ -p com/peterphi/std/guice/common/logging java guice/common/src/main/colfer/logreport.colf
 
 #
 #
@@ -95,7 +59,8 @@ compile:
 	$(MVN) clean compile
 
 dependencies:
-	$(MVN) clean dependency:tree
+	$(MVN) install -DskipTests
+	$(MVN) dependency:tree
 
 package:
 	$(MVN) clean package

@@ -7,13 +7,14 @@ import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import com.peterphi.std.guice.common.auth.iface.CurrentUser;
+import com.peterphi.std.guice.common.cached.CacheManager;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import java.util.List;
 
 /**
  * Intercepts calls to methods annotated with AuthConstraint (or whose superclass is annotated with AuthConstraint) and enforces
@@ -23,9 +24,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
 	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
 
-	public static final String SCOPE_DEFAULT = "default";
-
-	private final Provider<CurrentUser> userProvider;
+	private final Provider<AuthConstraintUserInterrogator> interrogatorProvider;
 	private final GuiceConfig config;
 	private final Meter calls;
 	private final Meter granted;
@@ -33,20 +32,22 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private final Meter authenticatedDenied;
 	private final boolean onlyServletRequest;
 
-	private final Cache<String, AuthScope> scopes = CacheBuilder.newBuilder().build();
+	private final Cache<String, AuthScope> scopes = CacheManager.build("AuthScopes", CacheBuilder.newBuilder());
+
+	private final String noAnnotationScopeId;
 
 
-	public AuthConstraintMethodInterceptor(final Provider<CurrentUser> userProvider,
+	public AuthConstraintMethodInterceptor(final Provider<AuthConstraintUserInterrogator> interrogatorProvider,
 	                                       final GuiceConfig config,
 	                                       final Meter calls,
 	                                       final Meter granted,
 	                                       final Meter denied,
 	                                       final Meter authenticatedDenied)
 	{
-		if (userProvider == null)
-			throw new IllegalArgumentException("Must have a Provider for CurrentUser!");
+		if (interrogatorProvider == null)
+			throw new IllegalArgumentException("Must provide a user interrogator!");
 
-		this.userProvider = userProvider;
+		this.interrogatorProvider = interrogatorProvider;
 		this.config = config;
 		this.calls = calls;
 		this.granted = granted;
@@ -54,6 +55,8 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		this.authenticatedDenied = authenticatedDenied;
 
 		this.onlyServletRequest = config.getBoolean(GuiceProperties.AUTHZ_ONLY_SERVLET_REQUEST, true);
+		this.noAnnotationScopeId = config.get(GuiceProperties.AUTHZ_UNANNOTATED_WEB_METHOD_AUTHSCOPE_ID,
+		                                      AuthConstraint.DEFAULT_ID);
 	}
 
 
@@ -79,17 +82,17 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		calls.mark();
 
 		final AuthConstraint constraint = readConstraint(invocation);
-		final CurrentUser user = userProvider.get();
+		final AuthConstraintUserInterrogator interrogator = interrogatorProvider.get();
 
-		if (user == null)
-			throw new IllegalArgumentException("Provider for CurrentUser returned null! Cannot apply AuthConstraint to method " +
+		if (interrogator == null)
+			throw new IllegalArgumentException("Provider for AuthConstraintUserInterrogator returned null! Cannot apply AuthConstraint to method " +
 			                                   invocation.getMethod());
 
 		// Acquire the auth scope (for constraint override)
 		final AuthScope scope = getScope(constraint);
 
 		// Test the user
-		if (passes(scope, constraint, user))
+		if (passes(scope, constraint, interrogator))
 		{
 			granted.mark();
 
@@ -97,13 +100,13 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		}
 		else
 		{
-			if (!user.isAnonymous())
+			if (!interrogator.getUser().isAnonymous())
 				authenticatedDenied.mark();
 
 			denied.mark();
 
 			// Throw an exception to refuse access
-			throw user.getAccessRefuser().refuse(scope, constraint, user);
+			throw interrogator.getUser().getAccessRefuser().refuse(scope, constraint, interrogator.getUser());
 		}
 	}
 
@@ -118,7 +121,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	 *
 	 * @return true if the user passes, otherwise false
 	 */
-	private boolean passes(final AuthScope scope, final AuthConstraint constraint, final CurrentUser user)
+	private boolean passes(final AuthScope scope, final AuthConstraint constraint, final AuthConstraintUserInterrogator user)
 	{
 		if (scope.getSkip(constraint))
 		{
@@ -129,13 +132,24 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 		}
 		else
 		{
-			final boolean pass = user.hasRole(scope.getRole(constraint));
+			final List<String> requireAnyRoles = scope.getRoles(constraint);
 
-			if (log.isTraceEnabled())
-				if (pass)
-					log.trace("Allow method invocation: user " + user + " has role " + scope.getRole(constraint));
-				else
-					log.trace("Deny method invocation: user " + user + " does not have role " + scope.getRole(constraint));
+			assert (requireAnyRoles != null);
+
+			boolean pass = false;
+			for (String role : requireAnyRoles)
+			{
+				if (!pass && user.hasRole(role))
+				{
+					if (log.isTraceEnabled())
+						log.trace("Allow method invocation: user " + user + " has role " + role);
+
+					pass = true;
+				}
+			}
+
+			if (!pass && log.isTraceEnabled())
+				log.trace("Deny method invocation: user " + user + " does not have any of roles " + requireAnyRoles);
 
 			return pass;
 		}
@@ -145,7 +159,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 	private AuthScope getScope(final AuthConstraint constraint)
 	{
 		if (constraint == null)
-			return getScope(SCOPE_DEFAULT);
+			return getScope(noAnnotationScopeId);
 		else
 			return getScope(constraint.id());
 	}
@@ -157,21 +171,21 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 
 		if (scope == null)
 		{
-			final String role;
+			final List<String> roles;
 			final Boolean skip;
+			final Boolean forceSkip;
 
-			if (StringUtils.equals(SCOPE_DEFAULT, id))
+			/**
+			 * N.B. With the scope as 'default', the effective guice properties read are {@link GuiceProperties#AUTHZ_DEFAULT_ROLE}, {@link GuiceProperties#AUTHZ_DEFAULT_SKIP}, {@link GuiceProperties#AUTHZ_DEFAULT_FORCE_SKIP} -
+			 * these are documented as separate properties for the convenience of users.
+			 */
 			{
-				role = config.get(GuiceProperties.AUTHZ_DEFAULT_ROLE, null);
-				skip = config.getBoolean(GuiceProperties.AUTHZ_DEFAULT_SKIP, true);
-			}
-			else
-			{
-				role = config.get("framework.webauth.scope." + id + ".role", null);
+				roles = config.getList("framework.webauth.scope." + id + ".role", null);
 				skip = config.getBoolean("framework.webauth.scope." + id + ".skip", null);
+				forceSkip = config.getBoolean("framework.webauth.scope." + id + ".force-skip", null);
 			}
 
-			scope = new AuthScope(id, role, skip);
+			scope = new AuthScope(id, roles, skip, forceSkip);
 
 			scopes.put(id, scope);
 		}

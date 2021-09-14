@@ -3,8 +3,10 @@ package com.peterphi.usermanager.guice.authentication;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.usermanager.db.entity.IDPrefix;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.async.AsynchronousActionService;
+import liquibase.util.StringUtils;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
@@ -124,12 +126,18 @@ public class UserLoginProvider implements Provider<UserLogin>
 
 		if (header != null)
 		{
+			// N.B. returns null if not BASIC auth (e.g. Bearer auth)
 			final String[] credentials = BasicAuthHelper.parseHeader(header);
 
 			if (credentials != null)
 			{
 				final String username = credentials[0];
 				final String password = credentials[1];
+
+				// Special-case OAuth2 Client providing their credentials with BASIC, allow services to handle this directly
+				if (StringUtils.startsWith(username, IDPrefix.OAUTH_SERVICE) &&
+				    StringUtils.startsWith(password, IDPrefix.OAUTH_SERVICE_SECRET))
+					return null;
 
 				final Future<UserEntity> future = asynchService.get().submit(() -> tryLogin(authService,
 				                                                                            username,

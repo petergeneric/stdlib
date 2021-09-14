@@ -4,6 +4,7 @@ import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
 import com.codahale.metrics.Timer;
 import com.google.inject.Inject;
+import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
@@ -28,6 +29,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	private Timer calls;
 	private Meter exceptions;
 
+	@Doc("The amount of time to sleep between daemon invocations")
 	protected Timeout sleepTime;
 
 	private Instant lastRan = null;

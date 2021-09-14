@@ -221,16 +221,23 @@ public class GuiceUnit extends BlockJUnit4ClassRunner
 
 		private final RunNotifier notifier;
 
-		public FrameworkUsageValidator(RunNotifier notifier) {
+
+		public FrameworkUsageValidator(RunNotifier notifier)
+		{
 			this.notifier = notifier;
 		}
 
+
 		@Override
-		public void testFinished(Description description) throws Exception {
+		public void testFinished(Description description) throws Exception
+		{
 			super.testFinished(description);
-			try {
+			try
+			{
 				Mockito.validateMockitoUsage();
-			} catch(Throwable t) {
+			}
+			catch (Throwable t)
+			{
 				notifier.fireTestFailure(new Failure(description, t));
 			}
 		}

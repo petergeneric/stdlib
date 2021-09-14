@@ -8,7 +8,9 @@ import org.joda.time.DateTimeZone;
 import org.joda.time.format.DateTimeFormat;
 import org.joda.time.format.DateTimeFormatter;
 
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -71,6 +73,20 @@ class UserLoginImpl implements UserLogin
 
 
 	@Override
+	public boolean isDelegated()
+	{
+		return false;
+	}
+
+
+	@Override
+	public boolean isService()
+	{
+		return false;
+	}
+
+
+	@Override
 	public String getName()
 	{
 		return name;
@@ -84,6 +100,18 @@ class UserLoginImpl implements UserLogin
 			return isLoggedIn();
 		else
 			return roles.contains(role);
+	}
+
+
+	@Override
+	public Collection<String> getRoles()
+	{
+		final Set<String> set = new HashSet<>(roles);
+
+		if (isLoggedIn())
+			set.add(UserLogin.ROLE_LOGGED_IN);
+
+		return Collections.unmodifiableSet(set);
 	}
 
 
@@ -108,5 +136,30 @@ class UserLoginImpl implements UserLogin
 	public String getEmail()
 	{
 		return email;
+	}
+
+
+	@Override
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder("UserLoginImpl{");
+
+		if (!isAnonymous())
+		{
+			sb.append("id=").append(id);
+			sb.append(", name='").append(name).append('\'');
+			sb.append(", email='").append(email).append('\'');
+			sb.append(", dateFormatter=").append(dateFormatter);
+			sb.append(", local=").append(local);
+			sb.append(", roles=").append(roles);
+		}
+		else
+		{
+			sb.append("anonymous");
+		}
+
+		sb.append('}');
+
+		return sb.toString();
 	}
 }

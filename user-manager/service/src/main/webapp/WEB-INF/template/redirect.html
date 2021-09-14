@@ -1,0 +1,26 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>User Manager - External Redirect</title>
+	<link th:replace="includes :: htmlhead"/>
+</head>
+<body th:with="page='home'">
+<span th:replace="includes :: navbar"></span>
+
+<div class="container">
+	<h2>Visit external site?</h2>
+
+	<p>Are you sure you wish to visit the below external site?</p>
+
+	<p><strong th:text="${url}"></strong></p>
+
+	<a class="button btn btn-primary btn-large" th:href="${url}">Yes</a>
+	<a class="button btn btn-large" th:href="@{/}">No</a>
+
+	<footer th:replace="includes :: footer"></footer>
+</div>
+<!-- /container -->
+<!-- Include jquery etc -->
+<div th:replace="includes :: htmlfoot"></div>
+</body>
+</html>

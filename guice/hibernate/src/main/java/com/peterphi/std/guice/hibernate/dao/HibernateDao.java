@@ -16,6 +16,7 @@ import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import org.apache.commons.lang.StringUtils;
 import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -348,16 +349,35 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	/**
-	 * Create a {@link Query} instance for the given HQL query string.
+	 * Create a {@link Query} instance for the given HQL query string, signalling no intent to write (and as such working if the
+	 * TX is read-only)<br />
+	 * This method also makes an effort to prevent accidental update operations being called. This protection cannot be relied upon for untrusted input!
 	 *
-	 * @param hql
-	 * 		The HQL query
-	 *
+	 * @param hql The HQL query
 	 * @return The query instance for manipulation and execution
 	 */
-	protected Query createQuery(String hql)
+	protected Query createReadQuery(String hql)
 	{
+		if (StringUtils.startsWithIgnoreCase(hql, "update") ||
+		    StringUtils.startsWithIgnoreCase(hql, "delete") ||
+		    StringUtils.startsWithIgnoreCase(hql, "insert"))
+			throw new IllegalArgumentException(
+					"Read Query cannot start with UPDATE/DELETE/INSERT (did you mean to use createWriteQuery?)");
+
 		return getSession().createQuery(hql);
+	}
+
+
+	/**
+	 * Create a {@link Query} instance for the given HQL query string, signalling intent to write (and failing immediately if TX
+	 * is read-only)
+	 *
+	 * @param hql The HQL query
+	 * @return The query instance for manipulation and execution
+	 */
+	protected Query createWriteQuery(String hql) throws ReadOnlyTransactionException
+	{
+		return getWriteSession().createQuery(hql);
 	}
 
 
@@ -537,6 +557,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	public ConstrainedResultSet<ID> findIds(final WebQuery query)
 	{
 		return find(query, JPASearchStrategy.ID, null);
+	}
+
+	@Override
+	public long count(final WebQuery query)
+	{
+		final ConstrainedResultSet<?> resultset = find(query, JPASearchStrategy.COUNT_ONLY, null);
+
+		return resultset.getTotal().longValue();
 	}
 
 

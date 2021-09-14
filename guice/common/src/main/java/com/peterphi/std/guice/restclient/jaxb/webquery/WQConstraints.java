@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.List;
 
 @XmlType(name = "ConstraintsType")
-public class WQConstraints
+public class WQConstraints implements ConstraintContainer<WQConstraints>
 {
 	@XmlAttribute
 	public int offset = 0;
@@ -31,6 +31,16 @@ public class WQConstraints
 
 
 	@Override
+	public WQConstraints add(final WQConstraintLine line)
+	{
+		if (line != null)
+			constraints.add(line);
+
+		return this;
+	}
+
+
+	@Override
 	public String toString()
 	{
 		return "WebQueryConstraints{" +
@@ -46,5 +56,30 @@ public class WQConstraints
 		       ", constraints=" +
 		       constraints +
 		       '}';
+	}
+
+
+	public String toQueryFragment()
+	{
+		StringBuilder sb = new StringBuilder();
+
+		toQueryFragment(sb);
+
+		return sb.toString();
+	}
+
+
+	public void toQueryFragment(StringBuilder sb)
+	{
+		boolean first = true;
+		for (WQConstraintLine constraint : constraints)
+		{
+			if (!first)
+				sb.append("\nAND ");
+			else
+				first = false;
+
+			constraint.toQueryFragment(sb);
+		}
 	}
 }

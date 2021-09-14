@@ -174,7 +174,13 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 	{
 		final LDAPUser user = ldap.parseUser(inputUsername);
 
-		return ldap.search(user, password, user);
+		final LDAPUserRecord record = ldap.search(user, password, user);
+
+		if (record == null)
+			throw new RuntimeException(
+					"Error authorising user: credentials appear valid, however user does not meet the defined LDAP criteria. Please contact your administrator.");
+		else
+			return record;
 	}
 
 

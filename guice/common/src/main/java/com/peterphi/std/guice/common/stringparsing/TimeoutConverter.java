@@ -9,16 +9,33 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
- * Interprets a number of milliseconds as a Timeout
+ * Interprets a number of milliseconds as a Timeout<br /> Supports the following string representations:
+ * <ul>
+ *     <li>{@link Duration#parse(java.lang.CharSequence) ISO-8601 Duration}</li>
+ *     <li><em>###</em> - treated as milliseconds</li>
+ *     <li><em>###</em><em>(d|h|m|s|ms)</em> (days, hours, minutes, seconds, milliseconds)</li>
+ * </ul>
  */
 public class TimeoutConverter
 {
 	private static final Pattern pattern = Pattern.compile("^([0-9]+)\\s*([a-zA-Z]+)$", Pattern.CASE_INSENSITIVE);
 
 
-	public Object convert(String value)
+	public Timeout convert(String value)
 	{
+		return doConvert(value);
+	}
+
+
+	public static Timeout doConvert(String value)
+	{
+		if (value == null)
+			return null;
+
 		value = value.trim();
+
+		if (value.isEmpty())
+			return null;
 
 		final char last = value.charAt(value.length() - 1);
 
@@ -64,11 +81,9 @@ public class TimeoutConverter
 	 * Identify the largest unit that can accurately represent the provided duration
 	 *
 	 * @param iso
-	 *
 	 * @return
 	 */
-	private static @NotNull
-	TimeUnit pickUnit(final @NotNull Duration iso)
+	private static @NotNull TimeUnit pickUnit(final @NotNull Duration iso)
 	{
 		final long millis = iso.toMillis();
 
@@ -94,7 +109,7 @@ public class TimeoutConverter
 	}
 
 
-	private TimeUnit parseUnit(final String unit)
+	private static TimeUnit parseUnit(final String unit)
 	{
 		if ("ms".equalsIgnoreCase(unit) || "millisecond".equalsIgnoreCase(unit) || "milliseconds".equalsIgnoreCase(unit))
 		{

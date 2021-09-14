@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyWriter;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
@@ -98,10 +97,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
-
-		// Register the LogReport reader
-		// TODO find a better way to handle registration for external applications?
-		resteasyProviderFactory.registerProviderInstance(new LogReportMessageBodyWriter());
 
 		// Register the exception processor
 		if (remoteExceptionClientResponseFilter != null)

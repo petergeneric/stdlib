@@ -32,7 +32,7 @@
 			<p>Please enter a new password</p>
 			<input type="hidden" name="alter" value="password"/>
 			<input type="hidden" name="email" th:value="${user.email}"/>
-			<input type="hidden" name="nonce" th:value="${nonce}"/>
+			<input type="hidden" name="token" th:value="${token}"/>
 
 			<!-- password -->
 			<div class="control-group">
@@ -81,7 +81,7 @@
 						th:text="${user.email}"/>&gt;?</p>
 				<input type="hidden" name="alter" value="delete"/>
 				<input type="hidden" name="id" th:value="${user.id}"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 			</div>
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -102,7 +102,7 @@
 						th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;. Are you sure?</p>
 				<input type="hidden" name="alter" value="impersonate"/>
 				<input type="hidden" name="id" th:value="${user.id}"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 			</div>
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -123,7 +123,7 @@
 				<p>Assign a new API key for this user? If an Access Key is already assigned then a new key will be assigned and the old key will be moved to the Access Key Secondary field (and will continue to work until a subsequent rotation or until that key is revoked). Are you sure?</p>
 				<input type="hidden" name="alter" value="rotateKey"/>
 				<input type="hidden" name="id" th:value="${user.id}"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 			</div>
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
@@ -134,7 +134,7 @@
 
 	<form class="form-horizontal" method="POST">
 		<input type="hidden" name="alter" value="profile"/>
-		<input type="hidden" name="nonce" th:value="${nonce}"/>
+		<input type="hidden" name="token" th:value="${token}"/>
 
 		<!-- id -->
 		<div class="control-group">

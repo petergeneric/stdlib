@@ -75,5 +75,5 @@ public @interface Retry
 	 *
 	 * @return
 	 */
-	int[] exceptOnRestExceptionCodes() default {403, 401};
+	int[] exceptOnRestExceptionCodes() default {403, 401, 303};
 }

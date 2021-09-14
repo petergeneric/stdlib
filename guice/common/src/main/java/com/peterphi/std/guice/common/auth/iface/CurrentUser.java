@@ -7,6 +7,7 @@ import org.joda.time.format.DateTimeFormatter;
 
 import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.List;
@@ -15,7 +16,8 @@ import java.util.Set;
 
 public interface CurrentUser
 {
-	String DEFAULT_DATE_FORMAT_STRING = "YYYY-MM-dd HH:mm:ss zzz";
+	String DEFAULT_DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss zzz";
+	String ISO_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ssZ";
 	String DEFAULT_TIMEZONE = "Europe/London";
 
 	DateTimeFormatter DEFAULT_DATE_FORMAT = DateTimeFormat.forPattern(DEFAULT_DATE_FORMAT_STRING).withZone(DateTimeZone.forID(DEFAULT_TIMEZONE));
@@ -24,6 +26,23 @@ public interface CurrentUser
 	 * Special role string indicating that the user is logged in
 	 */
 	String ROLE_AUTHENTICATED = "authenticated";
+
+	/**
+	 * Special role string indicating that the user was authenticated via a Delegate Token, and is not calling in directly<br />
+	 * This is important when a service will not talk to a user directly but will talk to services acting on behalf of the user
+	 */
+	String ROLE_DELEGATED = "delegated";
+
+	/**
+	 * Special role string indicating that this is a service call, not a direct user request.
+	 * This is important when a service will not talk to a user directly but will talk to services acting on behalf of the user
+	 */
+	String ROLE_SERVICE_CALL = "service-call";
+
+	/**
+	 * Standard name for role conveying administrative privileges
+	 */
+	String ROLE_ADMIN = "admin";
 
 	/**
 	 * Return the type of authentication used
@@ -38,6 +57,22 @@ public interface CurrentUser
 	 * @return true if the user is not authenticated, false if the user is authenticated
 	 */
 	boolean isAnonymous();
+
+	/**
+	 * Return true if the user was authenticated by a delegated access token; this is important to know when a service will not
+	 * talk to a user directly but will talk to services acting on behalf of the user.
+	 *
+	 * @return
+	 */
+	boolean isDelegated();
+
+	/**
+	 * Returns true if the calling user is a service user. This indicates that a call is being made by a service directly, not on
+	 * behalf of a particular user.
+	 *
+	 * @return
+	 */
+	boolean isService();
 
 	/**
 	 * Get the name of the current user
@@ -70,6 +105,13 @@ public interface CurrentUser
 	 * @return
 	 */
 	DateTime getExpires();
+
+	/**
+	 * Get all the verified role claims for this user. The returned collection MUST NOT be modified.
+	 * Returns an empty collection if no role list data is available.
+	 * @return
+	 */
+	Collection<String> getRoles();
 
 	/**
 	 * Get all the (verified) claims for this user. The returned collection MUST NOT be modified.

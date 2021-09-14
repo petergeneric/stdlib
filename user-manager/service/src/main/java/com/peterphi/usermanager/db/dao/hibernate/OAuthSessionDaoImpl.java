@@ -5,6 +5,7 @@ import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.types.SimpleId;
+import com.peterphi.usermanager.db.entity.IDPrefix;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
@@ -17,11 +18,11 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 	public OAuthSessionEntity create(final OAuthSessionContextEntity context, final String initiator, final DateTime expires)
 	{
 		OAuthSessionEntity session = new OAuthSessionEntity();
-		session.setId(SimpleId.alphanumeric("ses-", 36));
+		session.setId(SimpleId.alphanumeric(IDPrefix.OAUTH_SESSION, 36));
 		session.setContext(context);
 		session.setInitiator(initiator);
 
-		session.setAuthorisationCode(SimpleId.alphanumeric("authc-", 36));
+		session.setAuthorisationCode(SimpleId.alphanumeric(IDPrefix.OAUTH_AUTHORISATION_CODE, 36));
 
 		session.setExpires(expires);
 
@@ -45,10 +46,23 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 		if (session == null)
 			return null;
 
-		session.setToken(SimpleId.alphanumeric("tok-", 36));
+		session.setToken(SimpleId.alphanumeric(IDPrefix.OAUTH_SESSION_TOKEN, 36));
 		session.setExpires(newExpires);
 
 		update(session);
+
+		return session;
+	}
+
+
+	@Transactional
+	public OAuthSessionEntity getSessionToDelegateByRefreshToken(final OAuthServiceEntity service, final String refreshToken)
+	{
+		final OAuthSessionEntity session = uniqueResult(new WebQuery()
+				                                                .eq("id", refreshToken)
+				                                                .isNotNull("token")
+				                                                .eq("alive", true)
+				                                                .eq("context.service:id", service.getId()));
 
 		return session;
 	}
@@ -66,7 +80,7 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 		if (session == null)
 			return null;
 
-		session.setToken(SimpleId.alphanumeric("tok-", 36));
+		session.setToken(SimpleId.alphanumeric(IDPrefix.OAUTH_SESSION_TOKEN, 36));
 		session.setAuthorisationCode(null);
 
 		update(session);
@@ -86,7 +100,7 @@ public class OAuthSessionDaoImpl extends HibernateDao<OAuthSessionEntity, String
 			throw new IllegalArgumentException("Invalid refresh token: no live session by id  " + refreshToken);
 
 		session.setExpires(newExpires);
-		session.setToken(SimpleId.alphanumeric("tkn-", 36));
+		session.setToken(SimpleId.alphanumeric(IDPrefix.OAUTH_SESSION_TOKEN, 36));
 
 		update(session);
 

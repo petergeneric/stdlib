@@ -6,15 +6,17 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.guice.UMConfig;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
+import com.peterphi.usermanager.service.RedirectValidatorService;
 import com.peterphi.usermanager.ui.api.LoginUIService;
-import org.apache.commons.lang.StringUtils;
 
 import javax.servlet.http.HttpSession;
 import javax.ws.rs.core.NewCookie;
@@ -41,14 +43,22 @@ public class LoginUIServiceImpl implements LoginUIService
 	UserAuthenticationService authenticationService;
 
 	@Inject
-	SessionNonceStore nonceStore;
+	CSRFTokenStore tokenStore;
 
 	@Inject(optional = true)
-	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
-	@Named("authentication.allowAnonymousRegistration")
+	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default). Default false")
+	@Named(UMConfig.ALLOW_ANONYMOUS_REGISTRATION)
 	@Reconfigurable
 	boolean allowAnonymousRegistration = false;
 
+	@Inject(optional = true)
+	@Doc("If enabled, if a CSRF Token Validation fails then we'll simply present the user with the login screen again. Defaults to true")
+	@Named(UMConfig.ON_CSRF_TOKEN_FAILURE_REDIRECT_TO_LOGIN_AGAIN)
+	@Reconfigurable
+	boolean onTokenFailureRedirectToLogin = true;
+
+	@Inject
+	RedirectValidatorService redirectValidator;
 
 	@Override
 	@AuthConstraint(skip = true, comment = "login page")
@@ -56,7 +66,10 @@ public class LoginUIServiceImpl implements LoginUIService
 	{
 		if (login.isLoggedIn())
 		{
-			throw new IllegalArgumentException("You are already logged in!");
+			// User is already logged in, send them on their way
+			throw new LiteralRestResponseException(Response
+					                                       .seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo)))
+					                                       .build());
 		}
 		else
 		{
@@ -73,16 +86,30 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@AuthConstraint(skip = true, comment = "login page")
 	@Override
-	public Response doLogin(String nonce, String returnTo, String user, String password)
+	public Response doLogin(String token, String returnTo, String user, String password)
 	{
-		nonceStore.validate(nonce, true);
-
 		if (login.isLoggedIn())
 		{
-			throw new IllegalArgumentException("You are already logged in!");
+			// User is already logged in, send them on their way
+			return Response.seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo))).build();
 		}
 		else
 		{
+			final boolean isTokenValid = tokenStore.validateWithoutException(token, true);
+
+			// If the token validation failed, and we're in a less secure (but more user-friendly) mode, simply present the user with the login page again.
+			if (!isTokenValid && onTokenFailureRedirectToLogin)
+			{
+				final String page = getLogin(returnTo, "An unexpected browser security error occurred, please try again");
+
+				return Response.status(200).entity(page).build();
+			}
+			else if (!isTokenValid)
+			{
+				throw new RuntimeException(
+						"An unexpected browser security error occurred. Please try closing your browser window and enter the system again.");
+			}
+
 			final UserEntity account = authenticationService.authenticate(user, password, false);
 
 			if (account != null)
@@ -92,10 +119,7 @@ public class LoginUIServiceImpl implements LoginUIService
 
 				final Response.ResponseBuilder builder;
 
-				if (returnTo != null)
-					builder = Response.seeOther(URI.create(returnTo));
-				else
-					builder = Response.seeOther(URI.create("/"));
+				builder = Response.seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo)));
 
 				// If this account has a Session Reconnect Key we should give it to the browser
 				if (account.getSessionReconnectKey() != null)
@@ -145,9 +169,6 @@ public class LoginUIServiceImpl implements LoginUIService
 		// Clear the login (in case the session isn't correctly invalidated)
 		login.clear();
 
-		if (StringUtils.isEmpty(returnTo))
-			return Response.seeOther(URI.create("/")).build();
-		else
-			return Response.seeOther(URI.create(returnTo)).build();
+		return Response.seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo))).build();
 	}
 }

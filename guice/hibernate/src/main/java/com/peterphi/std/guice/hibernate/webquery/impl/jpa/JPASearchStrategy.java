@@ -27,7 +27,11 @@ public enum JPASearchStrategy
 	 * Run a query that returns a custom projection based on the fetch value of the WebQuery<br />
 	 * The result from the database <strong>will</strong> be an Object[] with the first few elements the same as fetch. N.B. the Object[] may be larger than the number of fetched columns (if, for example, the system had to add selections to satisfy SQL limitations - the most obvious case being for ORDER BYs)
 	 */
-	CUSTOM_PROJECTION;
+	CUSTOM_PROJECTION,
+	/**
+	 * Run a query that returns a count of the number of results (the same as count on ID)
+	 */
+	COUNT_ONLY;
 
 
 	/**

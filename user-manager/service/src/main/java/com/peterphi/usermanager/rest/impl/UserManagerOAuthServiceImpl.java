@@ -5,27 +5,35 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
+import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
+import com.peterphi.usermanager.db.dao.hibernate.OAuthDelegatedTokenDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthServiceDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthSessionContextDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthSessionDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
+import com.peterphi.usermanager.db.entity.OAuthDelegatedTokenEntity;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionContextEntity;
 import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
+import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
+import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.codehaus.jettison.json.JSONException;
+import org.codehaus.jettison.json.JSONObject;
+import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -34,9 +42,14 @@ import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
+import java.io.StringWriter;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
@@ -46,8 +59,8 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Inject(optional = true)
 	@Named("auth.token.refresh-period")
-	@Doc("The period after which an OAuth2 consumer will have to refresh their access token (default PT30M)")
-	public Period tokenRefreshInterval = Period.parse("PT30M");
+	@Doc("The period after which an OAuth2 consumer will have to refresh their access token. If they do not expire it by this timeout then a new session must be re-established (default PT3H)")
+	public Period tokenRefreshInterval = Period.parse("PT3H");
 
 	@Inject(optional = true)
 	@Named("auth.all.create-new-session-context-if-necessary")
@@ -69,7 +82,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	Templater templater;
 
 	@Inject
-	Provider<SessionNonceStore> nonceStoreProvider;
+	Provider<CSRFTokenStore> tokenStoreProvider;
 
 	@Inject
 	Provider<UserLogin> loginProvider;
@@ -85,6 +98,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 	@Inject
 	OAuthServiceDaoImpl serviceDao;
+
+	@Inject
+	OAuthDelegatedTokenDaoImpl delegatedTokenDao;
 
 	@Inject
 	UserMarshaller marshaller;
@@ -120,11 +136,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			final TemplateCall call = templater.template("connect_to_service");
 
-			SessionNonceStore nonceStore = nonceStoreProvider.get();
+			CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
 			// Provide additional client information
 			call.set("client", client);
-			call.set("nonce", nonceStore.allocate());
+			call.set("token", tokenStore.allocate());
 
 			// Scopes as a list
 			if (StringUtils.isBlank(scope))
@@ -145,18 +161,19 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Override
+	@AuthConstraint(id = "oauth2server_auth", role = "authenticated", comment = "Must be logged in to the User Manager")
 	public Response userMadeAuthDecision(final String responseType,
 	                                     final String clientId,
 	                                     final String redirectUri,
 	                                     final String state,
 	                                     final String scope,
-	                                     final String nonce,
+	                                     final String token,
 	                                     final String decision)
 	{
-		final SessionNonceStore nonceStore = nonceStoreProvider.get();
+		final CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
-		// Make sure the nonce is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
-		nonceStore.validate(nonce);
+		// Make sure the token is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
+		tokenStore.validate(token);
 
 		if (StringUtils.equalsIgnoreCase(decision, "allow"))
 		{
@@ -174,7 +191,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Transactional
-	public Response createSessionAndRedirect(final String responseType,
+	Response createSessionAndRedirect(final String responseType,
 	                                         final String clientId,
 	                                         final String redirectUri,
 	                                         final String state,
@@ -241,12 +258,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		return Response.seeOther(redirectTo).build();
 	}
 
-
-	public OAuthSessionEntity createSession(final int userId,
+	OAuthSessionEntity createSession(final int userId,
 	                                        final String clientId,
 	                                        final String redirectUri,
 	                                        final String scope,
-	                                        final boolean allowCreateApproval)
+	                                        final boolean allowCreateApproval) throws ServiceAccessPreconditionFailed
 	{
 		final OAuthServiceEntity client = serviceDao.getByClientIdAndEndpoint(clientId, redirectUri);
 
@@ -254,6 +270,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			throw new IllegalArgumentException("No such client with id " +
 			                                   clientId +
 			                                   " at the provided endpoint! There is a problem with the service that sent you here.");
+
+		final boolean canAccessService = canUserAccessService(userId, client.getRequiredRoleName());
+
+		if (!canAccessService)
+			throw new ServiceAccessPreconditionFailed("This user is missing the required role to permit it to use this service!");
 
 		OAuthSessionContextEntity context = contextDao.get(userId, client.getId(), scope);
 
@@ -271,9 +292,41 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	}
 
 
+	private boolean canUserAccessService(final int userId, final String requiredRoleName)
+	{
+		if (StringUtils.isNotEmpty(requiredRoleName))
+		{
+			final UserEntity user = userDao.getById(userId);
+
+			final Set<String> roleNames = user
+					                              .getRoles()
+					                              .stream()
+					                              .map(r -> StringUtils.lowerCase(r.getId()))
+					                              .collect(Collectors.toSet());
+
+			for (String role : StringUtils.split(requiredRoleName, '|'))
+			{
+				if (roleNames.contains(StringUtils.lowerCase(StringUtils.trimToEmpty(role))))
+				{
+					// Found role match
+					return true;
+				}
+			}
+
+			// No roles matched
+			return false;
+		}
+		else
+		{
+			return true; // no restriction
+		}
+	}
+
+
 	private String computeInitiatorInfo()
 	{
 		final HttpServletRequest request = HttpCallContext.get().getRequest();
+
 
 		final String forwardedFor = request.getHeader("X-Forwarded-For");
 
@@ -290,14 +343,28 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	public String getToken(final String grantType,
 	                       final String code,
 	                       final String redirectUri,
-	                       final String clientId,
-	                       final String secret,
+	                       String clientId,
+	                       String secret,
 	                       final String refreshToken,
 	                       final String username,
 	                       final String password,
-	                       final String subjectToken)
+	                       final String subjectToken,
+	                       final String authorizationHeader)
 	{
 		OAuthSessionEntity session;
+
+		// Allow clients to supply their ID and Secret using Basic Auth (per RFC)
+		if (StringUtils.isNotEmpty(authorizationHeader) && StringUtils.isEmpty(clientId) && StringUtils.isEmpty(secret))
+		{
+			// N.B. returns null if not BASIC auth (e.g. Bearer auth)
+			final String[] credentials = BasicAuthHelper.parseHeader(authorizationHeader);
+
+			if (credentials != null)
+			{
+				clientId = credentials[0];
+				secret = credentials[1];
+			}
+		}
 
 		switch (grantType)
 		{
@@ -309,19 +376,49 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
 				session = sessionDao.exchangeCodeForToken(service, code);
+
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange authorisation code for a token!");
+
 				break;
 			}
 			case GRANT_TYPE_REFRESH_TOKEN:
 			{
-				final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId, secret, redirectUri);
+				if (UserManagerBearerToken.isUserManagerServiceBearer(refreshToken))
+				{
+					// If a Service Token is provied as a Refresh Token, treat the call as a Service API Key Token Exchange
+					// This is necessary because a Service User isn't a real user and so can't have a Session
+					return getToken(GRANT_TYPE_TOKEN_EXCHANGE,
+					                code,
+					                redirectUri,
+					                clientId,
+					                secret,
+					                null,
+					                username,
+					                password,
+					                refreshToken, // Use provided refresh token as the subject token for new invocation
+					                authorizationHeader);
+				}
+				else
+				{
+					// Regular refresh token
+					final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretAndEndpoint(clientId,
+					                                                                                secret,
+					                                                                                redirectUri);
 
-				if (service == null)
-					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+					if (service == null)
+						throw new IllegalArgumentException(
+								"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
-				session = sessionDao.exchangeRefreshTokenForNewToken(service,
-				                                                     refreshToken,
-				                                                     new DateTime().plus(tokenRefreshInterval));
-				break;
+					session = sessionDao.exchangeRefreshTokenForNewToken(service,
+					                                                     refreshToken,
+					                                                     new DateTime().plus(tokenRefreshInterval));
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange refresh token for a token!");
+
+					break;
+				}
 			}
 			case GRANT_TYPE_PASSWORD:
 			{
@@ -338,6 +435,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				// Take the authorisation code internally and exchange it for a token
 				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
 
+				if (session == null)
+					throw new IllegalArgumentException("Unable to exchange username/password for a token!");
+
 				break;
 			}
 			case GRANT_TYPE_TOKEN_EXCHANGE:
@@ -347,23 +447,55 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				if (service == null)
 					throw new IllegalArgumentException("One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
 
-				final UserEntity user = userDao.loginByAccessKey(subjectToken);
+				if (UserManagerBearerToken.isUserManagerDelegatedBearer(subjectToken))
+				{
+					final String delegatedTokenId = subjectToken.substring(UserManagerBearerToken.PREFIX_DELEGATED.length());
 
-				if (user == null)
-					throw new IllegalArgumentException("Access Key not recognised");
+					OAuthDelegatedTokenEntity delegated = delegatedTokenDao.getByIdUnlessExpired(delegatedTokenId);
 
-				// Accept the use of the service and create a new session
-				// N.B. do not allow token exchange to be used to gain access to a service this user has not explicitly granted
-				session = createSession(user.getId(), clientId, redirectUri, GRANT_TYPE_TOKEN_EXCHANGE,
-				                        autoGrantAccessKeysToAccessAllServices);
+					if (delegated == null)
+						throw new IllegalArgumentException("Delegated Token ID invalid, expired or refers to expired or invalidated Session!");
 
-				if (session == null)
-					throw new IllegalArgumentException("The User associated with this Access Key (" +
-					                                   user.getName() +
-					                                   ") has not approved access to this service yet");
+					// Return a fake session reference
+					return new OAuth2TokenResponse(subjectToken, null, delegated.getExpires().toDate()).encode();
+				}
+				else if (UserManagerBearerToken.isUserManagerServiceBearer(subjectToken))
+				{
+					final OAuthServiceEntity serviceUser = serviceDao.getByAccessKey(subjectToken);
 
-				// Take the authorisation code internally and exchange it for a token
-				session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+					if (serviceUser == null)
+						throw new IllegalArgumentException("Service Access Key not recognised");
+
+					// Return an expiring session (to allow old keys to be rotated and invalidated)
+					// N.B. refresh token is the same as this token, which will cause this logic to run again on refresh
+					return new OAuth2TokenResponse(subjectToken, subjectToken, new DateTime().plus(tokenRefreshInterval).toDate()).encode();
+				}
+				else
+				{
+					final UserEntity user = userDao.loginByAccessKey(subjectToken);
+
+					if (user == null)
+						throw new IllegalArgumentException("Access Key not recognised");
+
+					// Accept the use of the service and create a new session
+					// N.B. do not allow token exchange to be used to gain access to a service this user has not explicitly granted
+					session = createSession(user.getId(),
+					                        clientId,
+					                        redirectUri,
+					                        GRANT_TYPE_TOKEN_EXCHANGE,
+					                        autoGrantAccessKeysToAccessAllServices);
+
+					if (session == null)
+						throw new IllegalArgumentException("The User associated with this Access Key (" +
+						                                   user.getName() +
+						                                   ") has not approved access to this service yet");
+
+					// Take the authorisation code internally and exchange it for a token
+					session = sessionDao.exchangeCodeForToken(session.getContext().getService(), session.getAuthorisationCode());
+
+					if (session == null)
+						throw new IllegalArgumentException("Unable to exchange token!");
+				}
 
 				break;
 			}
@@ -374,6 +506,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 		}
 
+		if (session == null)
+			throw new IllegalArgumentException("Unable to acquire token.");
+
 		return new OAuth2TokenResponse(session.getToken(), session.getId(), session.getExpires().toDate()).encode();
 	}
 
@@ -383,6 +518,68 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
 	public UserManagerUser get(final String token, final String clientId)
 	{
+		if (UserManagerBearerToken.isUserManagerDelegatedBearer(token))
+		{
+			final String delegatedTokenId = token.substring(UserManagerBearerToken.PREFIX_DELEGATED.length());
+			final OAuthDelegatedTokenEntity delegated = delegatedTokenDao.getByIdUnlessExpired(delegatedTokenId);
+
+			if (delegated == null)
+				throw new IllegalArgumentException("Delegated Token provided is invalid or has expired!");
+
+			final UserEntity user = delegated.getSession().getContext().getUser();
+
+			UserManagerUser obj = marshaller.marshal(user);
+
+			obj.delegated = true;
+			obj.originService = delegated.getSession().getContext().getService().getId();
+			obj.roles.add("origin_" + obj.originService); // Expose the service in communication with the user as a role too for legacy clients
+
+			obj.roles.add(CurrentUser.ROLE_DELEGATED);
+			obj.roles.add(CurrentUser.ROLE_SERVICE_CALL);
+
+			// Add the service's roles too
+			for (RoleEntity serviceRole : delegated.getSession().getContext().getService().getRoles())
+			{
+				obj.roles.add(serviceRole.getId());
+			}
+
+			return obj;
+		}
+		else if (UserManagerBearerToken.isUserManagerServiceBearer(token))
+		{
+			final OAuthServiceEntity serviceUser = serviceDao.getByAccessKey(token);
+
+			if (serviceUser == null)
+				throw new IllegalArgumentException("Service Access Key not recognised");
+
+			UserEntity fakeUser = new UserEntity();
+
+			fakeUser.setName(serviceUser.getId());
+			fakeUser.setEmail(serviceUser.getId() + "@service.localhost");
+			fakeUser.setLocal(true);
+			fakeUser.setRoles(new ArrayList<>(serviceUser.getRoles()));
+			fakeUser.setTimeZone(CurrentUser.DEFAULT_TIMEZONE);
+			fakeUser.setDateFormat(CurrentUser.ISO_DATE_FORMAT_STRING);
+
+			UserManagerUser obj = marshaller.marshal(fakeUser);
+
+			obj.service = true;
+			obj.delegated = false;
+
+			obj.roles.add(CurrentUser.ROLE_SERVICE_CALL);
+
+			return obj;
+		}
+		else
+		{
+			final OAuthSessionEntity session = getSessionForToken(token, clientId);
+
+			return marshaller.marshal(session.getContext().getUser());
+		}
+	}
+
+
+	OAuthSessionEntity getSessionForToken(final String token, final String clientId) {
 		OAuthSessionEntity session = sessionDao.getByToken(token);
 
 		if (session == null)
@@ -407,6 +604,132 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			}
 		}
 
-		return marshaller.marshal(session.getContext().getUser());
+		return session;
+	}
+
+
+	@Override
+	@Transactional(readOnly = true)
+	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
+	public Response getOIDCUserInfo(final String bearerTokenHeader)
+	{
+		if (StringUtils.isEmpty(bearerTokenHeader))
+		{
+			return Response.status(401).header("WWW-Authenticate", "Bearer").build();
+		}
+		else
+		{
+			try
+			{
+				final String token = UserManagerBearerToken.getTokenFromBearerAuthorizationHeader(bearerTokenHeader);
+
+				// OpenID Connect userinfo doesn't provide Client ID, so we can't provide additional protection against this token from being forced into a different client
+				final OAuthSessionEntity session = getSessionForToken(token, null);
+
+				final String json = createOpenIDConnectUserInfo(session);
+				return Response.ok(json, MediaType.APPLICATION_JSON).build();
+			}
+			catch (Throwable t)
+			{
+				log.warn("Error in UserInfo resource", t);
+
+				return Response
+						       .status(401)
+						       .header("WWW-Authenticate",
+						               "error=\"invalid_token\", error_description=\"invalid or expired token\"")
+						       .build();
+			}
+		}
+	}
+
+	String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
+		try
+		{
+			StringWriter sw = new StringWriter();
+
+			JSONObject obj = new JSONObject();
+
+			final UserEntity user = session.getContext().getUser();
+
+			obj.put("sub", user.getId()); // Unique ID for this user
+			obj.put("client_id", session.getContext().getService().getId()); // Audience
+			obj.put("iat", session.getCreated().getMillis() / 1000); // Issued At
+			obj.put("exp", session.getExpires().getMillis() / 1000); // Expires
+
+			// Optional fields (N.B. technically per spec this info should be in a specifically requested scope)
+			obj.put("name", user.getName());
+			obj.put("email", user.getEmail());
+			obj.put("zoneinfo", user.getTimeZone());
+			obj.put("datetime_format", user.getDateFormat());
+
+			List<String> roles = user.getRoles().stream().map(r->r.getId()).collect(Collectors.toList());
+
+			// Different clients use different key names here, so populate many claims with the same data
+			obj.put("groups", roles);
+			obj.put("roles", roles);
+			obj.put("group", roles);
+			obj.put("role", roles);
+
+			obj.write(sw);
+
+			return sw.toString();
+		}
+		catch (JSONException e)
+		{
+			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
+	}
+
+
+	@Override
+	@AuthConstraint(id = "oauth2server_token_to_userinfo", skip = true)
+	public Response getOIDCUserInfoPost(final String bearerTokenHeader)
+	{
+		return getOIDCUserInfo(bearerTokenHeader);
+	}
+
+
+	@Override
+	@Transactional
+	@AuthConstraint(id = "oauth2server_token", skip = true)
+	public String createDelegatedAccessToken(String clientId,
+	                                         String secret,
+	                                         final long validityPeriod,
+	                                         final String refreshToken,
+	                                         final String authorizationHeader)
+	{
+		if (validityPeriod > Integer.MAX_VALUE)
+			throw new IllegalArgumentException("Validity period too long!");
+
+		// Allow clients to supply their ID and Secret using Basic Auth (per RFC)
+		if (StringUtils.isNotEmpty(authorizationHeader) && StringUtils.isEmpty(clientId) && StringUtils.isEmpty(secret))
+		{
+			// N.B. returns null if not BASIC auth (e.g. Bearer auth)
+			final String[] credentials = BasicAuthHelper.parseHeader(authorizationHeader);
+
+			if (credentials != null)
+			{
+				clientId = credentials[0];
+				secret = credentials[1];
+			}
+		}
+
+		final OAuthServiceEntity service = serviceDao.getByClientIdAndSecretOnly(clientId, secret);
+
+		if (service == null)
+			throw new IllegalArgumentException(
+					"One or more of OAuth Client's Client ID / Client Secret / Redirect URI were not valid");
+
+		final OAuthSessionEntity session = sessionDao.getSessionToDelegateByRefreshToken(service, refreshToken);
+
+		if (session == null)
+			throw new IllegalArgumentException("Refresh Token provided is no longer valid!");
+
+		final DateTime expires = DateTime.now().plusMillis((int) validityPeriod);
+
+		final OAuthDelegatedTokenEntity delegatedToken = delegatedTokenDao.create(session, expires);
+
+		// Return the delegated token as a User Manager Bearer Token (opaque to the client service)
+		return UserManagerBearerToken.PREFIX_DELEGATED + delegatedToken.getId();
 	}
 }

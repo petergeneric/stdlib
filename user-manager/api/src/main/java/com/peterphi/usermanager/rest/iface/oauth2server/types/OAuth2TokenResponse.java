@@ -2,6 +2,7 @@ package com.peterphi.usermanager.rest.iface.oauth2server.types;
 
 import org.codehaus.jettison.json.JSONException;
 import org.codehaus.jettison.json.JSONObject;
+import org.joda.time.DateTime;
 
 import java.io.StringWriter;
 import java.util.Date;
@@ -11,6 +12,7 @@ public class OAuth2TokenResponse
 	public String access_token;
 	public String refresh_token;
 	public Date expires;
+	public Date refresh;
 	public String error;
 
 
@@ -40,12 +42,12 @@ public class OAuth2TokenResponse
 		{
 			final JSONObject obj = new JSONObject(json);
 
-			final int expiresIn = obj.has("expires_in") ? obj.getInt("expires_in") : 0;
+			final int expiresIn = obj.has("expires_in") ? obj.getInt("expires_in") : Integer.MIN_VALUE;
 
 			// Set expires 1m before expires_in
 			final Date expires;
-			if (expiresIn == 0)
-				expires = new Date(System.currentTimeMillis() + ((expiresIn - 60) * 1000));
+			if (expiresIn != Integer.MIN_VALUE)
+				expires = DateTime.now().plusSeconds(expiresIn).minusMinutes(1).toDate();
 			else
 				expires = null;
 
@@ -84,13 +86,13 @@ public class OAuth2TokenResponse
 			if (expires != null)
 				expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
 			else
-				expiresIn = -1;
+				expiresIn = 0;
 
 			if (access_token != null)
 				obj.put("access_token", access_token);
 			if (refresh_token != null)
 				obj.put("refresh_token", refresh_token);
-			if (expires != null)
+			if (expiresIn > 0)
 				obj.put("expires_in", expiresIn);
 			if (error != null)
 				obj.put("error", error);

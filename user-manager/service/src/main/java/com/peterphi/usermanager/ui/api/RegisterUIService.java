@@ -23,7 +23,7 @@ public interface RegisterUIService
 	@POST
 	@Path("/")
 	@Produces(MediaType.TEXT_HTML)
-	Response doRegister(@FormParam("nonce") String nonce,
+	Response doRegister(@FormParam("token") String token,
 	                    @FormParam("email") String email,
 	                    @FormParam("name") String name,
 	                    @FormParam("dateFormat") String dateFormat,

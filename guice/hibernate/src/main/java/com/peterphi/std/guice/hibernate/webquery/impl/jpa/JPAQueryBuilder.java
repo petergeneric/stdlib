@@ -244,12 +244,26 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				return criteriaBuilder.isNotNull(property);
 			case EQ:
 				return criteriaBuilder.equal(property, parse(property, line.value));
+			case NOT_IN:
+				return criteriaBuilder.not(property.in(param(line.valuelist
+						                                             .stream()
+						                                             .map(val -> parseValue(property, val))
+						                                             .collect(Collectors.toList()))));
+			case IN:
+				return property.in(param(line.valuelist
+						                         .stream()
+						                         .map(val -> parseValue(property, val))
+						                         .collect(Collectors.toList())));
 			case NEQ:
 				return criteriaBuilder.notEqual(property, parse(property, line.value));
 			case CONTAINS:
 				return criteriaBuilder.like(property, "%" + line.value + "%");
+			case NOT_CONTAINS:
+				return criteriaBuilder.notLike(property, "%" + line.value + "%");
 			case STARTS_WITH:
 				return criteriaBuilder.like(property, line.value + "%");
+			case NOT_STARTS_WITH:
+				return criteriaBuilder.notLike(property, line.value + "%");
 			case RANGE:
 				return criteriaBuilder.between(property, parse(property, line.value), parse(property, line.value2));
 			case GE:
@@ -293,26 +307,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private Predicate parseConstraint(final WQGroup group)
 	{
-		// If we can't optimise this group into an IN criteria...
-		if (group.operator == WQGroupType.AND || !shouldBeInCriteria(group))
-		{
-			List<Predicate> contents = parseConstraint(group.constraints);
-
-			if (contents.size() == 1)
-				return contents.get(0);
-
-			switch (group.operator)
-			{
-				case AND:
-					return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
-				case OR:
-					return criteriaBuilder.or(contents.toArray(new Predicate[conditions.size()]));
-				default:
-					throw new IllegalArgumentException("Unknown group operator: " + group.operator);
-			}
-		}
-		else
-		{
+		if (shouldBeInCriteria(group)) {
 			// We can optimise this group into an IN criteria
 			final String field = ((WQConstraint) group.constraints.get(0)).field;
 
@@ -322,7 +317,43 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 					                         .stream()
 					                         .map(l -> parseValue(property, ((WQConstraint) l).value))
 					                         .collect(Collectors.toList());
-			return property.in(param(ids));
+
+
+			final Predicate expr = property.in(param(ids));
+
+			if (group.operator == WQGroupType.OR)
+				return expr;
+			else if (group.operator == WQGroupType.NONE)
+				return expr.not();
+			else
+				throw new IllegalArgumentException("Unable to convert to IN criteria for group operator: " + group.operator);
+		}
+		else {
+			List<Predicate> contents = parseConstraint(group.constraints);
+
+			if (contents.size() == 1)
+			{
+				// Generate simpler criteria if the group has only one member
+				if (group.operator == WQGroupType.NONE)
+					return contents.get(0).not();
+				else
+					return contents.get(0);
+			}
+			else
+			{
+				switch (group.operator)
+				{
+					case NONE:
+						contents.replaceAll(Predicate :: not);
+						return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
+					case AND:
+						return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
+					case OR:
+						return criteriaBuilder.or(contents.toArray(new Predicate[conditions.size()]));
+					default:
+						throw new IllegalArgumentException("Unknown group operator: " + group.operator);
+				}
+			}
 		}
 	}
 
@@ -341,7 +372,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private boolean shouldBeInCriteria(final WQGroup group)
 	{
-		if (group.operator == WQGroupType.OR && group.constraints.size() > 1)
+		if ((group.operator == WQGroupType.OR || group.operator == WQGroupType.NONE) && group.constraints.size() > 1)
 		{
 			String property = null;
 

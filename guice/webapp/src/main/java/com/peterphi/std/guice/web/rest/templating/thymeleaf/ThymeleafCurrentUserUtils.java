@@ -6,6 +6,7 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import org.joda.time.DateTime;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -64,6 +65,13 @@ class ThymeleafCurrentUserUtils implements CurrentUser
 
 
 	@Override
+	public Collection<String> getRoles()
+	{
+		return getUser().getRoles();
+	}
+
+
+	@Override
 	public Map<String, Object> getClaims()
 	{
 		return getUser().getClaims();
@@ -95,6 +103,20 @@ class ThymeleafCurrentUserUtils implements CurrentUser
 	public boolean isAnonymous()
 	{
 		return getUser().isAnonymous();
+	}
+
+
+	@Override
+	public boolean isDelegated()
+	{
+		return getUser().isDelegated();
+	}
+
+
+	@Override
+	public boolean isService()
+	{
+		return getUser().isDelegated();
 	}
 
 

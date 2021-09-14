@@ -18,6 +18,15 @@ public class UserManagerUser
 	@XmlAttribute(required = true)
 	public Integer id;
 
+	@XmlAttribute
+	public boolean delegated = false;
+
+	/**
+	 * True if this is a service user
+	 */
+	@XmlAttribute
+	public boolean service = false;
+
 	/**
 	 * User's real name
 	 */
@@ -46,10 +55,14 @@ public class UserManagerUser
 	@XmlElement(name = "role")
 	public Set<String> roles = new HashSet<>();
 
-
 	@XmlElement
 	public Date created;
 
+	/**
+	 * If delegated, the origin service who is acting on behalf of the user
+	 */
+	@XmlElement
+	public String originService;
 
 	/**
 	 * Convert the dateFormat and timeZone to a DateTimeFormatter

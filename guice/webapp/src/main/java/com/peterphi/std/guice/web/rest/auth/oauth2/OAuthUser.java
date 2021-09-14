@@ -1,7 +1,5 @@
 package com.peterphi.std.guice.web.rest.auth.oauth2;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.peterphi.std.guice.apploader.GuiceConstants;
@@ -20,10 +18,10 @@ import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.concurrent.ExecutionException;
 
 @SessionScoped
 public class OAuthUser implements CurrentUser, GuiceLifecycleListener
@@ -43,7 +41,7 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	@Inject
 	Provider<UserManagerAccessKeyToSessionCache> apiSessionRefCacheProvider;
 
-	Cache<String, DateTimeFormatter> dateFormatCache = CacheBuilder.newBuilder().maximumSize(1).build();
+	DateTimeFormatter _dateFormatter = null;
 
 
 	@Override
@@ -57,6 +55,26 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	public boolean isAnonymous()
 	{
 		return !getSession().isValid();
+	}
+
+
+	@Override
+	public boolean isDelegated()
+	{
+		if (isAnonymous())
+			return false;
+		else
+			return getSession().getUserInfo().delegated;
+	}
+
+
+	@Override
+	public boolean isService()
+	{
+		if (isAnonymous())
+			return false;
+		else
+			return getSession().getUserInfo().service;
 	}
 
 
@@ -92,7 +110,6 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	@Override
 	public boolean hasRole(final String role)
 	{
-
 		if (isAnonymous())
 		{
 			return false;
@@ -111,6 +128,24 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	public DateTime getExpires()
 	{
 		return null; // We have no info on hard expiration
+	}
+
+
+	@Override
+	public Set<String> getRoles()
+	{
+		if (isAnonymous())
+		{
+			return Collections.emptySet();
+		}
+		else
+		{
+			final Set<String> roles = new HashSet<>(getSession().getUserInfo().roles);
+
+			roles.add(CurrentUser.ROLE_AUTHENTICATED);
+
+			return Collections.unmodifiableSet(roles);
+		}
 	}
 
 
@@ -156,18 +191,21 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	{
 		if (!isAnonymous())
 		{
-			final UserManagerUser userInfo = getSession().getUserInfo();
-
-			final String key = userInfo.dateFormat + userInfo.timeZone;
-
-			try
+			if (_dateFormatter == null)
 			{
-				return dateFormatCache.get(key, userInfo:: toDateTimeFormatter);
+				final UserManagerUser userInfo = getSession().getUserInfo();
+
+				try
+				{
+					_dateFormatter = userInfo.toDateTimeFormatter();
+				}
+				catch (Throwable t)
+				{
+					throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", t);
+				}
 			}
-			catch (ExecutionException e)
-			{
-				throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", e);
-			}
+
+			return _dateFormatter;
 		}
 
 		return CurrentUser.DEFAULT_DATE_FORMAT;
@@ -201,6 +239,12 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	}
 
 
+	public String getOrCreateDelegatedToken()
+	{
+		return getSession().getOrCreateDelegatedToken();
+	}
+
+
 	@Override
 	public void postConstruct()
 	{
@@ -220,5 +264,30 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 				this.staticSession = apiSessionRefCacheProvider.get().getOrCreateSessionRef(token);
 			}
 		}
+	}
+
+
+	@Override
+	public String toString()
+	{
+		final StringBuilder sb = new StringBuilder("OAuthUser{");
+		if (isAnonymous())
+		{
+			sb.append("anonymous=true");
+		}
+		else
+		{
+			try
+			{
+				final String username = getUsername();
+				sb.append("username=").append(username);
+			}
+			catch (Throwable t)
+			{
+				sb.append("anonymous=false, username-fetch-error=").append(t.getMessage());
+			}
+		}
+		sb.append('}');
+		return sb.toString();
 	}
 }

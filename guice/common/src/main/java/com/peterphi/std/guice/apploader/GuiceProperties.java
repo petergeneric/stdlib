@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.apploader;
 
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 
 /**
  * The properties used directly (that is, not pulled in with a {@link com.google.inject.Inject} and {@link
@@ -23,6 +24,9 @@ public class GuiceProperties
 	@Doc("If set, log4j.properties will be loaded from the named file. If set to embedded then the log4j.properties will be loaded from the current in-memory configuration properties. Can also contain a literal log4j configuration if it has multiple lines (default null)")
 	public static final String LOG4J_PROPERTIES_FILE = "log4j.properties";
 
+	@Doc("If set, logback will be loaded from the named file. If absent then we will fall back on log4j.properties, and failing that we will use the default logback configuration. Can also contain a literal logback configuration if it has multiple lines (default null)")
+	public static final String LOGBACK_CONFIG_FILE = "logback-config";
+
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
 	public static final String MOXY_ENABLED = "guice.jaxb.moxy";
 
@@ -35,11 +39,11 @@ public class GuiceProperties
 	@Doc("The instance id assigned to this execution of the service (internal property, should not be set by user)")
 	public static final String INSTANCE_ID = "service.instance-id";
 
-	@Doc("If true, any connection to the service manager will be skipped - messages directed to the service manager log appender will be ignored rather than forwarded on (default false)")
-	public static final String SERVICE_MANAGER_SKIP = "service-manager.logging.skip";
-
-	@Doc("The maximum number of unsent log messages that will be buffered in memory by the Service Manager appender (default 5000)")
-	public static final String SERVICE_MANAGER_LOGGING_MAX_BACKLOG = "service-manager.logging.max-backlog";
+	//
+	// Breakers Properties
+	//
+	@Doc("The names of breakers to trip on startup (default none)")
+	public static final String BREAKERS_TRIPPED_BY_DEFAULT = "framework.breakers.trip-on-startup";
 
 	//
 	// Configuration Service Properties
@@ -110,10 +114,18 @@ public class GuiceProperties
 	@Doc("If true then web auth will only be enforced for Servlet requests, not for internal requests - e.g. a daemon thread calling into a REST service method directly instead of using an HTTP call (default true)")
 	public static final java.lang.String AUTHZ_ONLY_SERVLET_REQUEST = "framework.webauth.only-servlet-request";
 
-	@Doc("If set, the default role to require when accessing REST methods with no AuthConstraint on the method/class (default not specified)")
+	@Doc("If set, even web methods without AuthConstraint annotations will be intercepted and have the rules for a named AuthScope id applied - see framework.webauth.unannotated-web-method.scope (default true)")
+	public static final String AUTHZ_INTERCEPT_ALL_WEB_METHODS = "framework.webauth.unannotated-web-method.intercept";
+
+	@Doc("If set, the AuthScope id to use for unannotated web methods  (defaults to '" + AuthConstraint.DEFAULT_ID + "')")
+	public static final String AUTHZ_UNANNOTATED_WEB_METHOD_AUTHSCOPE_ID = "framework.webauth.unannotated-web-method.scope";
+
+	@Doc("If set, the default roles (comma separated, ORred together) to require when accessing REST methods with no AuthConstraint on the method/class (default not specified)")
 	public static final String AUTHZ_DEFAULT_ROLE = "framework.webauth.scope.default.role";
-	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default true)")
+	@Doc("If true then skip authorisation on all REST methods with no AuthConstraint on the method/class. Unless skip is true or a role is defined with scope.default.role then these method calls will fail (default unspecified)")
 	public static final String AUTHZ_DEFAULT_SKIP = "framework.webauth.scope.default.skip";
+	@Doc("If true then force the skip value no matter what the AuthConstraint specifies; not recommended for use in the default role! (default null)")
+	public static final String AUTHZ_DEFAULT_FORCE_SKIP = "framework.webauth.scope.default.force-skip";
 
 	@Doc("The JWT Secret value (if not set then JWT will not be usable)")
 	public static final String AUTH_JWT_SECRET = "framework.webauth.jwt.secret";
@@ -153,14 +165,21 @@ public class GuiceProperties
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED = "rest.exception.html.enabled.only-for-logged-in";
 	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED_ROLE = "rest.exception.html.enabled.only-for-logged-in.role";
-	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, JVM config info will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO = "rest.exception.html.feature.jvminfo";
 	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT = "rest.exception.html.feature.jvminfo.environment";
-	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, request info (including cookie data) will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_REQUESTINFO = "rest.exception.html.feature.requestinfo";
 	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
+
+	@Doc("If true, stack traces will be returned in XML mode")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE = "rest.exception.stacktrace";
+	@Doc("If true, stack traces will only be returned in XML mode for admin or service users; this is to minimise on wasted bandwidth to clients (or if combined with require-logged-in, only shows stack traces to services/admins)")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_ADMIN_OR_SERVICE_IF_LOGGED_IN = "rest.exception.stacktrace.require-admin-role-if-logged-in";
+	@Doc("If true, stack traces will only be returned in XML mode if the session is authenticated")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_LOGGED_IN = "rest.exception.stacktrace.require-logged-in";
 
 	// Create JIRA issue from exception
 	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
@@ -180,6 +199,11 @@ public class GuiceProperties
 	@Doc("If true then hibernate configurations permitting the dropping and recreating of database tables will be allowed (default false)")
 	public static final String HIBERNATE_ALLOW_HBM2DDL_CREATE = "hibernate.allow-hbm2ddl-create";
 
+	@Doc("If true then only read-only transactions will be permitted. Should ensure that " +
+	     HIBERNATE_ALLOW_HBM2DDL_CREATE +
+	     " is at default false and liquibase.action is set to IGNORE (default false)")
+	public static final String HIBERNATE_READ_ONLY = "hibernate.read-only";
+
 	@Doc("If true then when the guice hibernate jar is loaded it'll search for all @Entity annotated classes in the scan.packages packages and register them (default true)")
 	public static final String ROLE_HIBERNATE_AUTO = "role.hibernate.auto";
 
@@ -196,8 +220,11 @@ public class GuiceProperties
 	@Doc("If true then when the guice metrics jar is loaded it'll auto-register the metrics JAX-RS services (default true)")
 	public static final String ROLE_METRICS_JAXRS_AUTO = "role.metrics-jaxrs.auto";
 
-	@Doc("If true then the metric data returned by the metric rest service will include raw measurements as well as computed aggregates (default false)")
-	public static final String METRICS_JAXRS_SHOW_SAMPLES = "metrics-jaxrs.show-samples";
+	@Doc("If set, will be added as labels to any metrics handed, should be of the form key=\"value\",key2=\"value2\" (default empty)")
+	public static final String METRIC_CUSTOM_LABELS = "metrics.labels";
+
+	@Doc("If true, metrics will include core JVM monitoring. Only one application per JVM should do this so that metrics aren't unnecessarily duplicated (default false)")
+	public static final String METRICS_INCLUDE_JVM = "metrics.monitor-jvm";
 
 	//
 	// Guice DbUnit module

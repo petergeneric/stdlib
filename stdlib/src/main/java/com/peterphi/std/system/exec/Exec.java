@@ -10,9 +10,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
+import java.util.function.Consumer;
 
 /**
- * An abstraction over ProcessBuilder to simplify the creation of processes
+ * An abstraction over ProcessBuilder to simplify the creation of processes<br />
  */
 public class Exec
 {
@@ -43,6 +44,19 @@ public class Exec
 		{
 			this.cmd.add(segment);
 		}
+	}
+
+
+	/**
+	 * Apply customisations to the internal {@link ProcessBuilder}
+	 *
+	 * @param customiser custom logic to run
+	 * @return this
+	 */
+	public Exec customiseProcessBuilder(Consumer<ProcessBuilder> customiser)
+	{
+		customiser.accept(builder);
+		return this;
 	}
 
 
@@ -117,14 +131,27 @@ public class Exec
 	}
 
 
+	public Exec setRedirectError(final File file)
+	{
+		builder.redirectError(file);
+
+		return this;
+	}
+
+
+	public Exec setRedirectOutput(final File file)
+	{
+		builder.redirectOutput(file);
+		return this;
+	}
+
+
 	/**
 	 * Launches the process, returning a handle to it for IO ops, etc<br />
 	 * <strong>the caller must read the output streams: otherwise the buffers may fill up and the remote program will be
-	 * suspended
-	 * indefinitely</strong>
+	 * suspended indefinitely</strong>
 	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 	public BasicProcessTracker startBasic() throws IOException
@@ -136,12 +163,10 @@ public class Exec
 
 
 	/**
-	 * Launches the process, returning a handle to it for IO ops, etc.<br />
-	 * The finish condition for the OutputProcess is that all processes outputting to standard out must be complete before
-	 * proceeding
+	 * Launches the process, returning a handle to it for IO ops, etc.<br /> The finish condition for the OutputProcess is that
+	 * all processes outputting to standard out must be complete before proceeding
 	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 	public Execed start() throws IOException
@@ -167,8 +192,10 @@ public class Exec
 			String command = cmd.get(0);
 
 			if (command.charAt(0) == '-' && !SudoFeature.hasArgumentsEnd())
-				throw new IllegalArgumentException("Command to runAs starts with - but this version of sudo does not support the -- argument end token: this command cannot, therefore, be executed securely. Command was: '" +
-				                                   command + "'");
+				throw new IllegalArgumentException(
+						"Command to runAs starts with - but this version of sudo does not support the -- argument end token: this command cannot, therefore, be executed securely. Command was: '" +
+						command +
+						"'");
 
 			// Pass the environment in through an "env" command:
 			if (this.environment.size() > 0)
@@ -274,9 +301,7 @@ public class Exec
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
 	 *
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 
@@ -290,9 +315,7 @@ public class Exec
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and running as root
 	 *
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 
@@ -310,9 +333,7 @@ public class Exec
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
 	 *
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 
@@ -326,9 +347,7 @@ public class Exec
 	 * Runs a command in "utility" mode: redirecting stderr to stdout and optionally executing as a different user (eg root)
 	 *
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 
@@ -343,9 +362,7 @@ public class Exec
 	 *
 	 * @param as
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 
@@ -360,9 +377,7 @@ public class Exec
 	 *
 	 * @param as
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 	public static Execed utilityAs(String as, Iterable<String> command) throws IOException
@@ -381,9 +396,7 @@ public class Exec
 	 *
 	 * @param as
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 	public static Execed appAs(String as, String... command) throws IOException
@@ -397,9 +410,7 @@ public class Exec
 	 *
 	 * @param as
 	 * @param command
-	 *
 	 * @return
-	 *
 	 * @throws IOException
 	 */
 	public static Execed appAs(String as, Iterable<String> command) throws IOException

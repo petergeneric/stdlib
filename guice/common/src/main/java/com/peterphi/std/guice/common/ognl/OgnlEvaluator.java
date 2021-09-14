@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common.ognl;
 
 import com.google.common.base.MoreObjects;
+import ognl.MemberAccess;
 import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
@@ -13,8 +14,10 @@ public class OgnlEvaluator
 {
 	private static final Logger log = Logger.getLogger(OgnlEvaluator.class);
 
+	public static final MemberAccess PUBLIC_ACCESS = new OGNLPublicMemberAccess();
+
 	public static boolean ALLOW_COMPILE = true;
-	public static int COMPILE_THRESHOLD = 5000;
+	public static int COMPILE_THRESHOLD = 500;
 
 	private Node parsed = null;
 	private Node compiled = null;
@@ -116,7 +119,7 @@ public class OgnlEvaluator
 
 		try
 		{
-			return expr.getValue(new OgnlContext(), obj);
+			return expr.getValue(new OgnlContext(null, null, PUBLIC_ACCESS), obj);
 		}
 		catch (Throwable e)
 		{
@@ -134,7 +137,10 @@ public class OgnlEvaluator
 	{
 		try
 		{
-			return (T) Ognl.getValue(getExpression(root), root, expected);
+			return (T) Ognl.getValue(getExpression(root),
+			                         new OgnlContext(null, null, PUBLIC_ACCESS),
+			                         root,
+			                         expected);
 		}
 		catch (Throwable e)
 		{
@@ -168,7 +174,7 @@ public class OgnlEvaluator
 		{
 			log.debug("OGNL Expression used enough times for compile: " + expr);
 
-			return Ognl.compileExpression(new OgnlContext(), root, expr);
+			return Ognl.compileExpression(new OgnlContext(null, null, PUBLIC_ACCESS), root, expr);
 		}
 		catch (Throwable e)
 		{

@@ -5,6 +5,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.breaker.BreakerService;
+import com.peterphi.std.guice.common.breaker.TripRecord;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
@@ -57,8 +58,26 @@ public class GuiceRestBreakerServiceImpl implements GuiceRestBreakerService
 
 		final String message = "Breaker " + name + " changed value at " + DateTime.now() + " to " + value;
 
-		return Response.seeOther(UriBuilder.fromUri(restEndpoint.toString() + "/guice/breakers")
-		                                   .queryParam("message", message)
-		                                   .build()).build();
+		return Response
+				       .seeOther(UriBuilder
+						                 .fromUri(restEndpoint.toString() + "/guice/breakers")
+						                 .queryParam("message", message)
+						                 .build())
+				       .build();
+	}
+
+
+	@Override
+	@AuthConstraint(skip = true)
+	public Response testBreaker(final String breakerName)
+	{
+		final TripRecord record = breakerService.getTripRecord(breakerName);
+
+		if (record == null)
+			return Response.status(404).type("text/plain").entity("No breaker exists by that name").build();
+		else if (record.newValue)
+			return Response.status(503).type("text/plain").entity("Tripped").build();
+		else
+			return Response.ok("OK", "text/plain").build();
 	}
 }

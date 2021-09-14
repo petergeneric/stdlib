@@ -1,19 +1,29 @@
 # Minimal makefile for Sphinx documentation
 #
 
+include Makefile.local
+
 # You can set these variables from the command line.
 SPHINXOPTS    =
-SPHINXBUILD   = python3 -msphinx
+SPHINXBUILD   = sphinx-build
+#SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 
-# Put it first so that "make" without argument is like "make help".
+version=latest
+branch=$(shell git rev-parse --abbrev-ref HEAD)
+
+all:
+	@cd ..
+	@$(SPHINXBUILD) -M html "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS)
+	
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
 
-.PHONY: help Makefile
+upload: all
+	rsync -avzr --partial --progress --delete --exclude=_sources _build/html/* $(DOCUMENTATION_FOLDER)/$(version)/
+	rsync -avzr --partial --progress --delete --exclude=_sources _build/html/* $(DOCUMENTATION_FOLDER)/$(branch)/
 
-# Catch-all target: route all unknown targets to Sphinx using the new
-# "make mode" option.  $(O) is meant as a shortcut for $(SPHINXOPTS).
-%: Makefile
-	@$(SPHINXBUILD) -M $@ "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)
+clean:
+	-rm -rf _build
+#	@cd figures && make clean

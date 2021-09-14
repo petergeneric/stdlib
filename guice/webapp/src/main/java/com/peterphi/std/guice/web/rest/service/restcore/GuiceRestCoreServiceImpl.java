@@ -22,7 +22,7 @@ public class GuiceRestCoreServiceImpl implements GuiceRestCoreService
 	@Reconfigurable
 	@Inject(optional = true)
 	@Named(GuiceProperties.ALLOW_RESTART)
-	boolean allowRestart = false;
+	public boolean allowRestart = false;
 
 	@Inject
 	GuiceConfig configuration;

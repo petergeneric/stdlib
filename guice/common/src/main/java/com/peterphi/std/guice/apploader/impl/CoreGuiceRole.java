@@ -4,13 +4,14 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.JAXBModule;
-import com.peterphi.std.guice.common.logging.Log4JModule;
 import com.peterphi.std.guice.common.cached.module.CacheModule;
 import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.retry.module.RetryModule;
 import com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistryModule;
@@ -44,13 +45,17 @@ class CoreGuiceRole implements GuiceRole
 	                     final MetricRegistry metrics)
 	{
 		modules.add(new ServicePropertiesModule(config));
-		modules.add(new ConfigurationPropertyRegistryModule(config, injectorRef));
+
+		// Don't gather all properties if we're in a unit test (performance)
+		if (!config.getBoolean(GuiceProperties.UNIT_TEST, false))
+			modules.add(new ConfigurationPropertyRegistryModule(config, injectorRef));
+
 		modules.add(new GuiceLifecycleModule());
 		modules.add(new CoreMetricsModule(metrics));
 		modules.add(new CacheModule(metrics));
 		modules.add(new RetryModule(metrics));
 		modules.add(new JAXBModule(config));
-		modules.add(new Log4JModule(config));
+		modules.add(new LoggingModule(config));
 	}
 
 

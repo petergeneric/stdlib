@@ -3,13 +3,27 @@ package com.peterphi.usermanager.util;
 public final class UserManagerBearerToken
 {
 	public static final String PREFIX = "UMB/";
+	public static final String PREFIX_DELEGATED = PREFIX + "DTK/";
+	public static final String PREFIX_SERVICE_TOKEN = PREFIX + "STK/";
 	private static final String HTTP_AUTHORIZATION_HEADER_BEARER_CONST = "Bearer ";
 	private static final String HTTP_AUTHORIZATION_HEADER_PREFIX = HTTP_AUTHORIZATION_HEADER_BEARER_CONST + PREFIX;
 
 
 	public static boolean isUserManagerBearer(final String token)
 	{
-		return token.startsWith(PREFIX);
+		return token != null && token.startsWith(PREFIX);
+	}
+
+
+	public static boolean isUserManagerDelegatedBearer(final String token)
+	{
+		return token != null && token.startsWith(PREFIX_DELEGATED);
+	}
+
+
+	public static boolean isUserManagerServiceBearer(final String token)
+	{
+		return token != null && token.startsWith(PREFIX_SERVICE_TOKEN);
 	}
 
 

@@ -15,7 +15,7 @@ import java.lang.annotation.Target;
 public @interface Cache
 {
 	/**
-	 * The time afterwhich cached results will have been considered stale and in need of a refresh
+	 * The time after which cached results will have been considered stale and in need of a refresh
 	 *
 	 * @return
 	 */

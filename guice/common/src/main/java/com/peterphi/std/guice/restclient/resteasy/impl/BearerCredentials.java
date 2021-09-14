@@ -6,18 +6,17 @@ import org.apache.http.auth.Credentials;
 import java.io.Serializable;
 import java.security.Principal;
 import java.util.Objects;
-import java.util.function.Supplier;
 
 class BearerCredentials implements Credentials, Serializable
 {
 	private static final long serialVersionUID = 243343858802739400L;
 
 	private final BasicUserPrincipal principal = new BasicUserPrincipal("BearerToken");
-	private final Supplier<String> supplier;
+	private final BearerGenerator supplier;
 	private final String fixedValue;
 
 
-	public BearerCredentials(final Supplier<String> supplier)
+	public BearerCredentials(final BearerGenerator supplier)
 	{
 		Objects.requireNonNull(supplier, "Must provide a non-null supplier!");
 
@@ -60,7 +59,7 @@ class BearerCredentials implements Credentials, Serializable
 		if (fixedValue != null)
 			return fixedValue;
 		else
-			return supplier.get();
+			return supplier.getToken();
 	}
 }
 

@@ -10,13 +10,13 @@ public class ParentDao extends HibernateDao<ParentEntity, Long>
 	@Transactional(readOnly = true)
 	public List<Long> getIdsByQuery(String query)
 	{
-		return getIdList(createQuery(query));
+		return getIdList(createReadQuery(query));
 	}
 
 
 	@Transactional(readOnly = true)
 	public List<ParentEntity> getByQuery(String query)
 	{
-		return (List<ParentEntity>) getList(createQuery(query));
+		return (List<ParentEntity>) getList(createReadQuery(query));
 	}
 }

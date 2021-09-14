@@ -15,7 +15,8 @@
 	<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
 		<ul class="nav nav-pills">
 			<li><a href="#delModal" data-toggle="modal">Disable Service</a></li>
-			<li><a href="#editEndpointsModal" data-toggle="modal">Edit Endpoints</a>
+			<li><a href="#editEndpointsModal" data-toggle="modal">Edit</a>
+			<li th:if="${session.login.isAdmin()}"><a href="#rotateKeyModal" data-toggle="modal"><span th:text="${entity.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</a></li>
 			</li>
 		</ul>
 
@@ -32,7 +33,7 @@
 						th:text="${entity.name}"/>)?
 				</p>
 				<input type="hidden" name="alter" value="delete"/>
-				<input type="hidden" name="nonce" th:value="${nonce}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
 				<input type="hidden" name="id" th:value="${entity.id}"/>
 			</div>
 			<div class="modal-footer">
@@ -41,37 +42,100 @@
 			</div>
 		</form>
 
-		<!-- Edit endpoints modal -->
+		<!-- Edit modal -->
 		<form id="editEndpointsModal"
-		      class="modal hide fade form-horizontal"
+		      class="modal hide fade form-vertical"
 		      tabindex="-1" role="dialog"
 		      aria-labelledby="editEndpointsModalLabel" aria-hidden="true" method="POST" autocomplete="off"
-		      th:action="@{'/service/'+${entity.id}+'/edit-endpoints'}">
+		      th:action="@{'/service/'+${entity.id}+'/edit'}">
 			<div class="modal-header">
 				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
-				<h3 id="editEndpointsModalLabel">Change Endpoints</h3>
+				<h3 id="editEndpointsModalLabel">Edit</h3>
 			</div>
 			<div class="modal-body">
+				<!-- required role -->
+				<div class="control-group">
+					<label class="control-label" for="input_required_role">Required Role</label>
+
+					<div class="controls">
+						<input
+								type="text"
+								id="input_required_role"
+								name="required_role"
+								placeholder=""
+								th:value="${entity.requiredRoleName}" />
+
+						<!-- Help / Warning text -->
+						<span class="help-inline">Optional; role required to use service, OR condition using pipe ("|") character</span>
+					</div>
+				</div>
+
 				<!-- endpoints -->
 				<div class="control-group">
-					<textarea style="width: 95%" cols="5"
-					          type="text"
-					          id="input_endpoints"
-					          name="endpoints"
-					          placeholder="Endpoint prefixes (one per line)"
-					          th:text="${entity.endpoints}"></textarea>
+					<label class="control-label" for="input_endpoints">Endpoints</label>
 
-					<!-- Help / Warning text -->
-					<span class="help-inline"></span>
+					<div class="controls">
+						<textarea id="input_endpoints"
+						          rows="5" style="width: 95%;"
+						          type="text"
+						          name="endpoints"
+						          placeholder="Endpoint prefixes (one per line)"
+						          th:text="${entity.endpoints}"></textarea>
+
+						<!-- Help / Warning text -->
+						<span class="help-inline">Endpoints, one per line</span>
+					</div>
 				</div>
+
+				<div class="control-group">
+					<label class="control-label" for="input_roles">Service Roles</label>
+
+					<div class="controls">
+						<select multiple="multiple" id="input_roles" name="roles"
+						        class="chosen-select" style="width: 95%;" data-placeholder="Choose some roles (optional)">
+							<option th:each="role: ${roles}" th:value="${role.id}"
+							        th:text="${role.id}"
+							        th:selected="${entityRoleIds.contains(role.id)}"></option>
+						</select>
+					</div>
+
+					<script>
+						$(document).ready(function () {
+							$(".chosen-select").chosen({width: "95%"});
+						});
+					</script>
+				</div>
+
 				<div class="modal-footer">
-					<input type="hidden" name="nonce" th:value="${nonce}"/>
+					<input type="hidden" name="token" th:value="${token}"/>
 					<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 					<input class="btn btn-primary" type="submit" value="Save"/>
 				</div>
 			</div>
 		</form>
+
+
+		<!-- Rotate API keys modal -->
+		<form id="rotateKeyModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="rotateKeyModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/service/' + ${entity.id} + '/rotate-access-key'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="rotateKeyModalLabel"><span th:text="${entity.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</h3>
+			</div>
+			<div class="modal-body">
+				<p>Assign a new API key for this service? If an Access Key is already assigned then a new key will be assigned and the old key will be moved to the Access Key Secondary field (and will continue to work until a subsequent rotation or until that key is revoked). Are you sure?</p>
+				<input type="hidden" name="alter" value="rotateKey"/>
+				<input type="hidden" name="id" th:value="${entity.id}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Rotate"/>
+			</div>
+		</form>
 	</th:block>
+
 
 	<dl class="dl-horizontal" th:fragment="properties">
 		<dt>client_id</dt>
@@ -82,19 +146,35 @@
 		<dd th:text="${entity.owner.email}">owner</dd>
 		<dt>enabled</dt>
 		<dd th:text="${entity.enabled}">enabled</dd>
+		<dt>required role</dt>
+		<dd th:text="${entity.requiredRoleName}">required role</dd>
+		<dt>service roles</dt>
+		<dd>
+			<ul>
+				<li th:each="role: ${entity.roles}"><a th:href="@{'/role/'+${role.id}}" th:text="${role.caption}">role name</a></li>
+			</ul>
+		</dd>
 		<dt>Endpoint Prefixes</dt>
 		<dd>
 			<ul>
 				<li th:each="endpoint: ${entity.endpointsAsList()}" th:text="${endpoint}">endpoint</li>
 			</ul>
 		</dd>
-		<th:block th:if="${((entity.owner != null) and (entity.owner.id == session.login.id)) || session.login.isAdmin()}">
+		<th:block th:if="${session.login.isAdmin()}">
 			<dt>Client Config</dt>
 			<dd>
 				<pre><th:block th:text="'service.oauth2.endpoint='+${localEndpoint}"></th:block>
 <th:block th:text="'service.oauth2.client_id='+${entity.id}"></th:block>
 <th:block th:text="'service.oauth2.client_secret='+${entity.clientSecret}"></th:block></pre>
 			</dd>
+			<th:block th:if="${entity.accessKey}">
+				<dt>Primary API Key</dt>
+				<dd><input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" th:value="${entity.accessKey}" alt="Click to copy" title="Click to copy"/></dd>
+			</th:block>
+			<th:block th:if="${entity.accessKeySecondary}">
+				<dt>Secondary API Key</dt>
+				<dd><input type="text" onClick="this.select(); document.execCommand('Copy');" readonly="readonly" th:value="${entity.accessKeySecondary}" alt="Click to copy" title="Click to copy"/></dd>
+			</th:block>
 		</th:block>
 	</dl>
 

@@ -13,7 +13,7 @@ import javax.persistence.ManyToOne;
 
 @Entity(name = "mapped_superclass_test_entity")
 @BatchSize(size = 250)
-public class MappedSuperclassEntity extends AbstractEntity
+public class MappedSuperclassEntity extends AbstractEntity<SomeStateEnum>
 {
 	private Long id;
 
@@ -21,6 +21,7 @@ public class MappedSuperclassEntity extends AbstractEntity
 
 	private ChildEntity child;
 
+	private SomeStateEnum state;
 
 	@Id
 	@GeneratedValue(strategy = GenerationType.AUTO)
@@ -60,5 +61,19 @@ public class MappedSuperclassEntity extends AbstractEntity
 	public void setChild(final ChildEntity child)
 	{
 		this.child = child;
+	}
+
+
+	@Override
+	SomeStateEnum getState()
+	{
+		return this.state;
+	}
+
+
+	@Override
+	void setState(final SomeStateEnum state)
+	{
+		this.state = state;
 	}
 }

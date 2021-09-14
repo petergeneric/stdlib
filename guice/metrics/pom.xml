@@ -5,7 +5,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-metrics</artifactId>
-	<version>10.1.6-SNAPSHOT</version>
+	<version>12.0.20-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice metrics</name>
@@ -14,12 +14,8 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>10.1.6-SNAPSHOT</version>
+		<version>12.0.20-SNAPSHOT</version>
 	</parent>
-
-	<properties>
-		<jackson.version>2.1.1</jackson.version>
-	</properties>
 
 	<dependencies>
 		<dependency>
@@ -34,6 +30,12 @@
 			<version>2.5</version>
 			<scope>provided</scope>
 		</dependency>
+		
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+		</dependency>
 
 		<!-- metrics -->
 		<dependency>
@@ -43,12 +45,6 @@
 		</dependency>
 
 		<!-- metrics -->
-
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-		</dependency>
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>

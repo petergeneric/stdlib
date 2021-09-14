@@ -1,10 +1,16 @@
 package com.peterphi.std.guice.common.breaker;
 
+import com.codahale.metrics.Gauge;
+import com.codahale.metrics.MetricRegistry;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -43,6 +49,15 @@ public class BreakerService
 	 */
 	private final List<BreakerGroupImpl> groups = new ArrayList<>();
 
+	@Inject(optional = true)
+	@Named(GuiceProperties.BREAKERS_TRIPPED_BY_DEFAULT)
+	public String trippedByDefault = "";
+
+	@Inject
+	public BreakerService(MetricRegistry metrics)
+	{
+		metrics.register("breakers_tripped_total", (Gauge) tripped :: size);
+	}
 
 	/**
 	 * Create a new Breaker which trips if any of the named breakers are tripped
@@ -54,6 +69,11 @@ public class BreakerService
 	public synchronized Breaker register(Consumer<Boolean> onChange, List<String> names)
 	{
 		BreakerGroupImpl group = new BreakerGroupImpl(onChange, names.toArray(new String[names.size()]));
+
+		if (this.tripped.isEmpty() && !this.trippedByDefault.isEmpty() && !this.trippedByDefault.equalsIgnoreCase("none"))
+		{
+			tripped.addAll(Arrays.asList(trippedByDefault.split(",")));
+		}
 
 		// If some isolators are tripped,
 		if (!tripped.isEmpty())
@@ -78,9 +98,25 @@ public class BreakerService
 
 		// If never tripped, return a placeholder record
 		if (record == null)
-			return new TripRecord(new Date(0), "Initial value", false);
+		{
+			if (names.contains(name))
+				return new TripRecord(new Date(0), "Initial value", isBreakerDefaultTripped(name));
+			else
+				return null; // breaker name not known
+		}
 		else
+		{
 			return record;
+		}
+	}
+
+
+	private boolean isBreakerDefaultTripped(final String name)
+	{
+		if (this.trippedByDefault.isEmpty() || this.trippedByDefault.equalsIgnoreCase("none"))
+			return false;
+		else
+			return StringUtils.containsIgnoreCase("," + trippedByDefault + ",", "," + name + ",");
 	}
 
 

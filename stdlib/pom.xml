@@ -5,31 +5,26 @@
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib</artifactId>
 	<packaging>jar</packaging>
-	<version>10.1.6-SNAPSHOT</version>
+	<version>12.0.20-SNAPSHOT</version>
 	<name>stdlib</name>
 	<description>Utility API</description>
 
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>10.1.6-SNAPSHOT</version>
+		<version>12.0.20-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
 		<dependency>
 			<groupId>commons-io</groupId>
 			<artifactId>commons-io</artifactId>
-			<version>2.4</version>
+			<version>2.7</version>
 		</dependency>
 		<dependency>
 			<groupId>commons-lang</groupId>
 			<artifactId>commons-lang</artifactId>
 			<version>2.6</version>
-		</dependency>
-		<dependency>
-			<groupId>commons-logging</groupId>
-			<artifactId>commons-logging</artifactId>
-			<version>1.1.1</version>
 		</dependency>
 		
 		<dependency>
@@ -44,12 +39,6 @@
 			<optional>true</optional>
 		</dependency>
 
-		<dependency>
-			<groupId>sshtools</groupId>
-			<artifactId>j2ssh-core</artifactId>
-			<version>0.2.9</version>
-			<optional>true</optional>
-		</dependency>
 		<dependency>
 			<groupId>org.bouncycastle</groupId>
 			<artifactId>bcprov-jdk15on</artifactId>
@@ -81,10 +70,6 @@
 			<artifactId>junit</artifactId>
 			<version>${junit.version}</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
 		</dependency>
 	</dependencies>
 </project>

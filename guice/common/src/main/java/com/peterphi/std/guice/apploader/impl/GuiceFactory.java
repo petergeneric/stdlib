@@ -11,8 +11,8 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
-import com.peterphi.std.guice.common.logging.ServiceManagerClientGuiceModule;
-import com.peterphi.std.guice.common.logging.appender.ServiceManagerAppender;
+import com.peterphi.std.guice.common.GuiceModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
@@ -132,6 +132,9 @@ class GuiceFactory
 		{
 			applyConfigs(classloader, properties);
 		}
+
+		// Try to re-initialise the logging system with the most up-to-date environment
+		LoggingModule.preconfigure(properties);
 
 		// This is a bit of a hack really, but let's insert the GuiceRole for network config if network config is enabled
 		if (hasNetworkConfiguration(properties))
@@ -259,18 +262,9 @@ class GuiceFactory
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
 
-		// If a service manager endpoint is specified (and skip isn't set) then set up the service manager client
-		if (config.get("service.service-manager.endpoint") != null && !config.getBoolean(GuiceProperties.SERVICE_MANAGER_SKIP,
-		                                                                                 false))
-		{
-			modules.add(new ServiceManagerClientGuiceModule(config, shutdown.getShutdownManager()));
-		}
-		else
-		{
-			ServiceManagerAppender.shutdown(); // Don't store logs in memory waiting for the service manager, they will never be picked up
-		}
+		final boolean includeJvmMetrics = config.getBoolean(GuiceProperties.METRICS_INCLUDE_JVM, false);
 
-		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
+		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry(includeJvmMetrics);
 
 		try
 		{
@@ -290,6 +284,11 @@ class GuiceFactory
 			// Initialise the Setup class
 			setup.registerModules(modules, config);
 
+			// Allow any GuiceModule subclasses to automatically receive a copy of GuiceConfig
+			for (Module module : modules)
+				if (module instanceof GuiceModule)
+					((GuiceModule) module).setConfig(config);
+
 			if (log.isTraceEnabled())
 				log.trace("Creating Injector with modules: " + modules);
 
@@ -305,9 +304,10 @@ class GuiceFactory
 				final long finished = System.currentTimeMillis();
 				final String contextName = config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
-				log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
+				if (log.isDebugEnabled())
+					log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
 
-				if (scanner != null)
+				if (scanner != null && log.isDebugEnabled())
 					log.debug("Class scanner stats: insts=" +
 					          scannerFactory.getMetricNewInstanceCount() +
 					          " cached createTime=" +

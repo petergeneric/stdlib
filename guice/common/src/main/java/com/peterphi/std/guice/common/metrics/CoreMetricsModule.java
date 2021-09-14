@@ -48,14 +48,17 @@ public class CoreMetricsModule extends AbstractModule
 	}
 
 
-	public static MetricRegistry buildRegistry()
+	public static MetricRegistry buildRegistry(final boolean includeJvm)
 	{
 		MetricRegistry registry = new MetricRegistry();
 
-		registry.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
-		registry.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
-		registry.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
-		registry.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
+		if (includeJvm)
+		{
+			registry.register(MetricRegistry.name("jvm", "gc"), new GarbageCollectorMetricSet());
+			registry.register(MetricRegistry.name("jvm", "memory"), new MemoryUsageGaugeSet());
+			registry.register(MetricRegistry.name("jvm", "thread-states"), new ThreadStatesGaugeSet());
+			registry.register(MetricRegistry.name("jvm", "fd", "usage"), new FileDescriptorRatioGauge());
+		}
 
 		return registry;
 	}

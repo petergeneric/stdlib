@@ -1,1 +1,2 @@
 com.peterphi.std.guice.common.eagersingleton.BindEagerSingletonRole
+com.peterphi.std.guice.common.serviceprops.InternalConfigPropertyDocumenterGuiceRole

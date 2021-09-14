@@ -1,6 +1,5 @@
 package com.peterphi.rules;
 
-import com.google.common.util.concurrent.ListenableFuture;
 import com.google.common.util.concurrent.ListeningExecutorService;
 import com.google.common.util.concurrent.MoreExecutors;
 import com.google.inject.Inject;
@@ -9,8 +8,8 @@ import com.peterphi.rules.types.OgnlCommand;
 import com.peterphi.rules.types.Rule;
 import com.peterphi.rules.types.RuleSet;
 import com.peterphi.rules.types.Rules;
+import com.peterphi.std.guice.common.ognl.OgnlEvaluator;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import com.peterphi.std.threading.ThreadRenameCallableWrap;
 import ognl.MethodFailedException;
 import ognl.OgnlContext;
 import ognl.OgnlException;
@@ -25,9 +24,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.stream.Collectors;
 
 /**
@@ -59,7 +56,7 @@ public class RulesEngineImpl implements RulesEngine, StoppableService
 	OgnlContext createContext(final Map<String, Object> vars)
 	{
 
-		OgnlContext ognlContext = new OgnlContext();
+		OgnlContext ognlContext = new OgnlContext(null, null, OgnlEvaluator.PUBLIC_ACCESS);
 		ognlContext.putAll(vars);
 		ognlContext.put("logger", log);
 		return ognlContext;

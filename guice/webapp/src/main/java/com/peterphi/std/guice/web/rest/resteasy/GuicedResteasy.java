@@ -9,7 +9,6 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
-import com.peterphi.std.guice.common.logging.logreport.jaxrs.LogReportMessageBodyReader;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
@@ -18,7 +17,7 @@ import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.JAXRSExceptionMapper;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
-import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.guice.web.rest.pagewriter.BootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
@@ -288,7 +287,7 @@ class GuicedResteasy implements GuiceApplication
 			RestFailureMarshaller marshaller = new RestFailureMarshaller();
 			RestFailure failure = marshaller.renderFailure(t);
 
-			TwitterBootstrapRestFailurePageRenderer renderer = new TwitterBootstrapRestFailurePageRenderer(failure);
+			BootstrapRestFailurePageRenderer renderer = new BootstrapRestFailurePageRenderer(failure);
 
 			response.setStatus(500); // internal error
 
@@ -364,7 +363,6 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory.registerProviderInstance(provider);
 		}
 
-		providerFactory.registerProviderInstance(new LogReportMessageBodyReader());
 		// Register the JAXBContext provider
 		providerFactory.registerProviderInstance(jaxbContextResolver);
 

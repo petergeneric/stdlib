@@ -11,6 +11,7 @@ import org.joda.time.DateTime;
 
 import javax.servlet.http.HttpServletRequest;
 import java.security.Principal;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Map;
 
@@ -33,6 +34,20 @@ class HttpCallUser implements CurrentUser
 		HttpServletRequest request = HttpCallContext.get().getRequest();
 
 		return request.getUserPrincipal() == null;
+	}
+
+
+	@Override
+	public boolean isDelegated()
+	{
+		return false;
+	}
+
+
+	@Override
+	public boolean isService()
+	{
+		return false;
 	}
 
 
@@ -81,6 +96,13 @@ class HttpCallUser implements CurrentUser
 
 
 	@Override
+	public Collection<String> getRoles()
+	{
+		return Collections.emptySet(); // There is no API for this, so we cannot know it
+	}
+
+
+	@Override
 	public Map<String, Object> getClaims()
 	{
 		return Collections.emptyMap();
@@ -94,13 +116,13 @@ class HttpCallUser implements CurrentUser
 		{
 			if (user.isAnonymous())
 				return new RestException(401,
-				                         "You must log in to access this resource. Required role: " + scope.getRole(constraint));
+				                         "You must log in to access this resource. Required one of roles: " + scope.getRoles(constraint));
 			else
 				return new RestException(403,
 				                         "Access denied for your Servlet user by rule: " +
 				                         ((constraint != null) ?
 				                          constraint.comment() :
-				                          "(default)" + ". Required role: " + scope.getRole(constraint)));
+				                          "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
 		};
 	}
 

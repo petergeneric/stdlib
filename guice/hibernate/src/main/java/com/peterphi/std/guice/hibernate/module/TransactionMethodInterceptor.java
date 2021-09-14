@@ -33,6 +33,7 @@ import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
 import org.hibernate.Transaction;
+import org.hibernate.TransactionException;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
@@ -59,13 +60,14 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 	private final Provider<Session> sessionProvider;
 
+	private final boolean forceReadOnly;
 	private final Timer calls;
 	private final Timer transactionStartedCalls;
 	private final Meter errorRollbacks;
 	private final Meter commitFailures;
 
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics)
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly)
 	{
 		this.sessionProvider = sessionProvider;
 
@@ -73,6 +75,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		this.transactionStartedCalls = metrics.timer(GuiceMetricNames.TRANSACTION_OWNER_CALLS_TIMER);
 		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
 		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
+		this.forceReadOnly = forceReadOnly;
 	}
 
 
@@ -201,7 +204,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			                   "Creating new transaction to call ",
 			                   (Supplier) () -> invocation.getMethod().toGenericString());
 
-		final boolean readOnly = annotation.readOnly();
+		final boolean readOnly = forceReadOnly || annotation.readOnly();
 
 		// We are responsible for creating+closing the connection
 		Timer.Context ownerTimer = transactionStartedCalls.time();
@@ -260,15 +263,41 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			}
 			catch (Exception e)
 			{
-				if (shouldRollback(annotation, e))
+				try
 				{
-					errorRollbacks.mark();
+					if (!readOnly && shouldRollback(annotation, e))
+					{
+						errorRollbacks.mark();
 
-					rollback(tx, e);
+						rollback(tx, e);
+					}
+					else
+					{
+						complete(tx, readOnly);
+					}
 				}
-				else
+				catch (Throwable txre)
 				{
-					complete(tx, readOnly);
+					// Don't throw the rollback error, since the user really only cares about the actual original error
+					// But we should notify them that a rollback error did occur
+					if (!readOnly)
+					{
+						log.warn("TX encountered error and then failed during rollback! Original Error: " + e.getMessage(), e);
+						log.warn("TX encountered error and then failed during rollback! Rollback Error: ", txre);
+
+						throw new TransactionException(
+								"Encountered Exception while rolling back transaction! Cause contains original error causing rollback. Rollback error was:" +
+								e.getMessage() +
+								", original cause of rollback was: " +
+								e.getMessage(),
+								e);
+					}
+					else
+					{
+						log.warn("Read-Only TX encountered error and then failed during rollback! Original Error: " +
+						         e.getMessage(), e);
+						log.warn("Read-Only TX encountered error and then failed during rollback! Rollback Error: ", txre);
+					}
 				}
 
 				// propagate the exception
@@ -292,11 +321,19 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			}
 			catch (RuntimeException e)
 			{
-				commitFailures.mark();
+				if (readOnly)
+				{
+					log.warn("Read-Only TX encountered error during rollback! Will not share this with user (since actual read-only TX method completed normally). Error is: " +
+					         e.getMessage(), e);
+				}
+				else
+				{
+					commitFailures.mark();
 
-				rollback(tx);
+					rollback(tx);
 
-				commitException = e;
+					commitException = e;
+				}
 			}
 
 			// propagate anyway

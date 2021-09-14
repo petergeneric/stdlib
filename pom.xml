@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
-	<version>10.1.6-SNAPSHOT</version>
+	<version>12.0.20-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>application framework parent</name>
@@ -29,20 +29,21 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<javalang.version>12</javalang.version>
-		<slf4j.version>1.7.25</slf4j.version>
-		<junit.version>4.12</junit.version>
-		<httpclient.version>4.5.6</httpclient.version>
+		<javalang.version>17</javalang.version>
+		<slf4j.version>1.7.30</slf4j.version>
+		<junit.version>4.13.1</junit.version>
+		<httpclient.version>4.5.13</httpclient.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
-		<guice.version>4.2.2</guice.version>
-		<metrics.version>4.0.2</metrics.version>
-		<resteasy.version>3.6.1.Final</resteasy.version>
-		<javassist.version>3.25.0-GA</javassist.version>
-		<hibernate.version>5.4.3.Final</hibernate.version>
-		<dbunit.version>2.5.1</dbunit.version>
-		<hsqldb.version>2.4.0</hsqldb.version>
+		<guice.version>5.0.1</guice.version>
+		<metrics.version>4.1.18</metrics.version>
+		<resteasy.version>3.15.0.Final</resteasy.version>
+		<javassist.version>3.27.0-GA</javassist.version>
+		<hibernate.version>5.4.28.Final</hibernate.version>
+		<dbunit.version>2.7.0</dbunit.version>
+		<hsqldb.version>2.5.1</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
-		<moxy.version>2.7.3</moxy.version>
+		<moxy.version>2.7.8</moxy.version>
+		<mockito.version>2.28.2</mockito.version>
 	</properties>
 
 	<scm>
@@ -55,7 +56,7 @@
 	<repositories>
 		<repository>
 			<id>central</id>
-			<url>http://repo1.maven.org/maven2</url>
+			<url>https://repo1.maven.org/maven2</url>
 			<releases>
 				<enabled>true</enabled>
 			</releases>
@@ -69,10 +70,8 @@
 		<module>stdlib</module>
 		<module>guice</module>
 		<module>util/carbon-client</module>
-		<module>service-manager</module>
 		<module>user-manager</module>
 		<module>rules</module>
-		<module>azure</module>
 		<module>moxy</module>
 	</modules>
 
@@ -81,13 +80,7 @@
 			<dependency>
 				<groupId>joda-time</groupId>
 				<artifactId>joda-time</artifactId>
-				<version>2.7</version>
-			</dependency>
-			
-			<dependency>
-				<groupId>log4j</groupId>
-				<artifactId>log4j</artifactId>
-				<version>1.2.17</version>
+				<version>2.10.10</version>
 			</dependency>
 
 			<dependency>
@@ -124,6 +117,13 @@
 					</exclusion>
 				</exclusions>
 		</dependency>
+
+
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.2.3</version>
+		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
@@ -131,7 +131,12 @@
 		</dependency>
 		<dependency>
 			<groupId>org.slf4j</groupId>
-			<artifactId>slf4j-log4j12</artifactId>
+			<artifactId>log4j-over-slf4j</artifactId>
+			<version>${slf4j.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
 			<version>${slf4j.version}</version>
 		</dependency>
 	</dependencies>
@@ -143,7 +148,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-war-plugin</artifactId>
-                    <version>3.1.0</version>
+                    <version>3.3.1</version>
                     <!-- Write the build number and maven artifact info to the war manifest -->
                     <configuration>
                         <archive>
@@ -164,7 +169,7 @@
                 <plugin>
                     <groupId>org.apache.maven.plugins</groupId>
                     <artifactId>maven-jar-plugin</artifactId>
-                    <version>3.0.2</version>
+                    <version>3.2.0</version>
 
                     <!-- Write the build number and maven artifact info to the jar manifest -->
                     <configuration>
@@ -195,7 +200,7 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
-				<version>3.0.0-M3</version>
+				<version>3.0.0-M5</version>
 				<configuration>
 					<excludes>
 						<exclude>**/TestUtils.java</exclude>
@@ -204,6 +209,7 @@
 						<exclude>**/TestUtils.*.java</exclude>
 						<!-- non-anonymous inner classes -->
 					</excludes>
+					<argLine>--add-opens java.base/java.lang=ALL-UNNAMED --add-opens java.base/java.util=ALL-UNNAMED</argLine>
 				</configuration>
 			</plugin>
 			<plugin>

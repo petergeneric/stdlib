@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.common.retry.module;
 
+import com.peterphi.std.guice.common.retry.retry.RetryDecision;
 import com.peterphi.std.guice.common.retry.retry.Retryable;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import org.aopalliance.intercept.MethodInvocation;
@@ -59,27 +60,27 @@ final class InvocationRetryable implements Retryable<Object>
 
 
 	@Override
-	public boolean shouldRetry(final int attempt, final Throwable e)
+	public RetryDecision shouldRetry(final int attempt, final Throwable e)
 	{
 		// Throw if the type is in alwaysRetry
 		for (Class<? extends Throwable> type : alwaysRetry)
 		{
 			if (type.isInstance(e))
-				return true;
+				return RetryDecision.BACKOFF_AND_RETRY;
 		}
 
 		// Don't throw if the type is in noRetry
 		for (Class<? extends Throwable> type : noRetry)
 		{
 			if (type.isInstance(e))
-				return false;
+				return RetryDecision.NO_LOG_AND_THROW;
 		}
 
 		// Don't throw if the type is in noRetryCore
 		for (Class<? extends Throwable> type : noRetryCore)
 		{
 			if (type.isInstance(e))
-				return false;
+				return RetryDecision.NO_LOG_AND_THROW;
 		}
 
 		// Don't retry if a RestExeption/WebApplicationException's Response HTTP Code is in noHttpCodes
@@ -93,7 +94,7 @@ final class InvocationRetryable implements Retryable<Object>
 				final int httpCode = httpCodes[0];
 
 				if (ArrayUtils.contains(this.noHttpCodes, httpCode))
-					return false;
+					return RetryDecision.NO_LOG_AND_THROW;
 
 				// See Other (used for login redirects)
 				if (httpCode == 303)
@@ -101,13 +102,13 @@ final class InvocationRetryable implements Retryable<Object>
 					final int causeHttpCode = httpCodes[1];
 
 					if (ArrayUtils.contains(this.noHttpCodes, causeHttpCode))
-						return false;
+						return RetryDecision.NO_LOG_AND_THROW;
 				}
 			}
 		}
 
 		// By default, retry
-		return true;
+		return RetryDecision.BACKOFF_AND_RETRY;
 	}
 
 
