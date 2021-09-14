@@ -29,7 +29,7 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<javalang.version>17</javalang.version>
+		<javalang.version>12</javalang.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<junit.version>4.13.1</junit.version>
 		<httpclient.version>4.5.13</httpclient.version>
