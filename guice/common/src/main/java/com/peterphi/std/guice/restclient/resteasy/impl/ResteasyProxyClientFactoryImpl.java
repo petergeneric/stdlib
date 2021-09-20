@@ -11,9 +11,6 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.auth.UsernamePasswordCredentials;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 import javax.ws.rs.client.WebTarget;
@@ -199,9 +196,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	 * <li>The simple name of the class (the class name without the package prefix)</li>
 	 * </ul>
 	 *
-	 * @param iface
-	 * 		a JAX-RS service interface
-	 *
+	 * @param iface a JAX-RS service interface
 	 * @return An array containing one or more names that could be used for the class; may contain nulls (which should be ignored)
 	 */
 	private static String[] getServiceNames(Class<?> iface)
@@ -250,53 +245,26 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 
 	ResteasyWebTarget createWebTarget(final URI endpoint,
-	                                  boolean fastFail,
-	                                  String username,
-	                                  String password,
+	                                  final boolean fastFail,
+	                                  final String username,
+	                                  final String password,
 	                                  final BearerGenerator bearerToken,
 	                                  final boolean storeCookies,
-	                                  boolean preemptiveAuth)
+	                                  final boolean preemptiveAuth)
 	{
-		final AuthScope scope;
-		final Credentials credentials;
+		final NativeHttpClientBuilder.AuthScope scope = new NativeHttpClientBuilder.AuthScope(endpoint.getScheme(),
+		                                                                                      endpoint.getHost(),
+		                                                                                      -1);
 
-		int port = endpoint.getPort();
-
-		// Default ports for HTTP and HTTPS
-		if (port == -1 && endpoint.getScheme().equalsIgnoreCase("http"))
-			port = 80;
-		else if (port == -1 && endpoint.getScheme().equalsIgnoreCase("https"))
-			port = 443;
-
+		final NativeHttpClientBuilder.AuthCredential credentials;
 		if (bearerToken != null)
-		{
-			scope = new AuthScope(endpoint.getHost(), port, AuthScope.ANY_REALM, "Bearer");
-
-			credentials = new BearerCredentials(bearerToken);
-		}
-		else if (username != null || password != null || StringUtils.isNotEmpty(endpoint.getUserInfo()))
-		{
-			scope = new AuthScope(endpoint.getHost(), port);
-
-			if (username != null || password != null)
-				credentials = new UsernamePasswordCredentials(username, password);
-			else
-				credentials = new UsernamePasswordCredentials(getUsername(endpoint), getPassword(endpoint));
-		}
+			credentials = new NativeHttpClientBuilder.BearerTokenCredentials(scope, bearerToken);
+		else if (username != null)
+			credentials = new NativeHttpClientBuilder.UsernamePasswordCredentials(scope, username, password, preemptiveAuth);
 		else
-		{
-			scope = null;
 			credentials = null;
-		}
 
-		return clientFactory
-				       .getOrCreateClient(fastFail,
-				                          scope,
-				                          credentials,
-				                          (credentials != null) && preemptiveAuth,
-				                          storeCookies,
-				                          null)
-				       .target(endpoint);
+		return clientFactory.getOrCreateClient(credentials, fastFail, storeCookies).target(endpoint);
 	}
 
 

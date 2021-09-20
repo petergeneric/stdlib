@@ -8,27 +8,17 @@ import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
-import org.apache.http.auth.AuthSchemeProvider;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.client.CredentialsProvider;
 import org.apache.http.client.config.RequestConfig;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
 import org.apache.http.impl.NoConnectionReuseStrategy;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.BasicCredentialsProvider;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
 import java.net.ProxySelector;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
@@ -118,131 +108,53 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	}
 
 
-	/**
-	 * Build a new Resteasy Client, optionally with authentication credentials
-	 *
-	 * @param fastFail
-	 * 		if true, use fast fail timeouts, otherwise false to use default timeouts
-	 * @param authScope
-	 * 		the auth scope to use - if null then defaults to <code>AuthScope.ANY</code>
-	 * @param credentials
-	 * 		the credentials to use (optional, e.g. {@link org.apache.http.auth.UsernamePasswordCredentials})
-	 * @param customiser
-	 * 		optional HttpClientBuilder customiser.
-	 *
-	 * @return
-	 */
-	public ResteasyClient getOrCreateClient(final boolean fastFail,
-	                                        final AuthScope authScope,
-	                                        final Credentials credentials,
-	                                        final boolean preemptiveAuth,
-	                                        final boolean storeCookies,
-	                                        Consumer<HttpClientBuilder> customiser)
+	public ResteasyClient getOrCreateClient(final NativeHttpClientBuilder.AuthCredential credentials,
+	                                         final boolean fastFail,
+	                                         final boolean storeCookies)
 	{
-		customiser = createHttpClientCustomiser(fastFail, authScope, credentials, preemptiveAuth, storeCookies, customiser);
+		final boolean useShared = (!fastFail && !storeCookies && credentials == null);
 
+		if (useShared && this.client != null)
+			return client;
 
-		return getOrCreateClient(customiser, null);
-	}
-
-
-	/**
-	 * N.B. This method signature may change in the future to add new parameters
-	 *
-	 * @param fastFail
-	 * @param authScope
-	 * @param credentials
-	 * @param preemptiveAuth
-	 * @param storeCookies
-	 * @param customiser
-	 *
-	 * @return
-	 */
-	public Consumer<HttpClientBuilder> createHttpClientCustomiser(final boolean fastFail,
-	                                                              final AuthScope authScope,
-	                                                              final Credentials credentials,
-	                                                              final boolean preemptiveAuth,
-	                                                              final boolean storeCookies,
-	                                                              Consumer<HttpClientBuilder> customiser)
-	{
-		// Customise timeouts if fast fail mode is enabled
-		if (fastFail)
+		// Now build a resteasy client
 		{
-			customiser = concat(customiser, b ->
+			ResteasyClientBuilder builder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
+
+			// TODO how to register this?
+			//builder.providerFactory(resteasyProviderFactory);
+
+			if (storeCookies)
+				builder.enableCookieManagement();
+
+			if (fastFail)
 			{
-				RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
-				              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
-
-				b.setDefaultRequestConfig(requestBuilder.build());
-			});
-		}
-
-		// If credentials were supplied then we should set them up
-		if (credentials != null)
-		{
-			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
-
-			if (authScope != null)
-				credentialsProvider.setCredentials(authScope, credentials);
+				builder.connectTimeout(this.fastFailConnectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+				builder.readTimeout(fastFailSocketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+			}
 			else
-				credentialsProvider.setCredentials(AuthScope.ANY, credentials);
-
-			// Set up bearer auth scheme provider if we're using bearer credentials
-			if (credentials instanceof BearerCredentials)
 			{
-				customiser = concat(customiser, b ->
-				{
-					Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create().register(
-							"Bearer",
-							new BearerAuthSchemeProvider()).build();
-					b.setDefaultAuthSchemeRegistry(authSchemeRegistry);
-				});
+				builder.connectTimeout(this.connectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+				builder.readTimeout(socketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
 			}
 
-			// Set up the credentials customisation
-			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
-
-			if (preemptiveAuth && credentials instanceof BearerCredentials)
-				customiser = concat(customiser, b -> b.addInterceptorFirst(new PreemptiveBearerAuthInterceptor()));
-			else
-				customiser = concat(customiser, b -> b.addInterceptorLast(new PreemptiveBasicAuthInterceptor()));
-		}
-
-		// If cookies are enabled then set up a cookie store
-		if (storeCookies)
-			customiser = concat(customiser, b -> b.setDefaultCookieStore(new BasicCookieStore()));
-
-		return customiser;
-	}
-
-
-	private ResteasyClient getOrCreateClient(Consumer<HttpClientBuilder> httpCustomiser,
-	                                         Consumer<ResteasyClientBuilder> resteasyCustomiser)
-	{
-		if (httpCustomiser == null && resteasyCustomiser == null)
-		{
-			// Recursively call self to create a shared client for other non-customised consumers
-			if (client == null)
-				client = getOrCreateClient(Objects:: requireNonNull, Objects:: requireNonNull);
-
-			return client; // use shared client
-		}
-		else
-		{
-			final CloseableHttpClient http = createHttpClient(httpCustomiser);
-
-
-			// Now build a resteasy client
+			// Build and apply the HttpEngine
 			{
-				ResteasyClientBuilder builder = new ResteasyClientBuilder();
+				final var engineBuilder = new NativeHttpClientBuilder().resteasyClientBuilder(builder);
 
-				builder.httpEngine(new ApacheHttpClient4Engine(http)).providerFactory(resteasyProviderFactory);
+				if (credentials != null)
+					engineBuilder.withAuth(credentials);
 
-				if (resteasyCustomiser != null)
-					resteasyCustomiser.accept(builder);
+				builder.httpEngine(engineBuilder.build());
+			}
 
+			if (useShared)
+			{
+				this.client = builder.build();
+				return this.client;
+			}
+			else
+			{
 				return builder.build();
 			}
 		}
@@ -253,7 +165,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	 * Build an HttpClient
 	 *
 	 * @param customiser
-	 *
 	 * @return
 	 */
 	public CloseableHttpClient createHttpClient(final Consumer<HttpClientBuilder> customiser)
@@ -264,8 +175,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		{
 			RequestConfig.Builder requestBuilder = RequestConfig.custom();
 
-			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
+			requestBuilder
+					.setConnectTimeout((int) connectionTimeout.getMilliseconds())
+					.setSocketTimeout((int) socketTimeout.getMilliseconds());
 
 			builder.setDefaultRequestConfig(requestBuilder.build());
 		}
@@ -292,12 +204,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	 * Combine two consumers. Consumers may be null, in which case this selects the non-null one. If both are null then will
 	 * return <code>null</code>
 	 *
-	 * @param a
-	 * 		the first consumer (optional)
-	 * @param b
-	 * 		the second consumer (optional)
+	 * @param a   the first consumer (optional)
+	 * @param b   the second consumer (optional)
 	 * @param <T>
-	 *
 	 * @return
 	 */
 	private static <T> Consumer<T> concat(Consumer<T> a, Consumer<T> b)

@@ -60,7 +60,7 @@
 
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jaxrs</artifactId>
+			<artifactId>resteasy-core</artifactId>
 			<version>${resteasy.version}</version>
 		</dependency>
 		<dependency>
@@ -93,7 +93,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jettison-provider</artifactId>
+			<artifactId>resteasy-jackson2-provider</artifactId>
 			<version>${resteasy.version}</version>
 		</dependency>
 
