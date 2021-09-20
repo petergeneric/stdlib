@@ -110,6 +110,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
 		final String authType = config.get("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 		final String bearerToken = config.get("service." + name + ".bearer", null);
+		final boolean h2c = uri.getScheme().equalsIgnoreCase("http") && config.getBoolean("service." + name + ".h2c", false); // h2c with prior knowledge
 		final boolean oauthDelegate = config.getBoolean("service." + name + ".delegation", false);
 		final String defaultBearerGenerator;
 
@@ -160,7 +161,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return createWebTarget(uri, fastFail, username, password, bearerSupplier, storeCookies, preemptiveAuth);
+		return createWebTarget(uri, h2c, fastFail, username, password, bearerSupplier, storeCookies, preemptiveAuth);
 	}
 
 
@@ -240,11 +241,12 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                         boolean storeCookies,
 	                                         boolean preemptiveAuth)
 	{
-		return createWebTarget(endpoint, false, username, password, bearerToken, storeCookies, preemptiveAuth);
+		return createWebTarget(endpoint, false, false, username, password, bearerToken, storeCookies, preemptiveAuth);
 	}
 
 
 	ResteasyWebTarget createWebTarget(final URI endpoint,
+									  final boolean h2c,
 	                                  final boolean fastFail,
 	                                  final String username,
 	                                  final String password,
@@ -252,19 +254,19 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                  final boolean storeCookies,
 	                                  final boolean preemptiveAuth)
 	{
-		final NativeHttpClientBuilder.AuthScope scope = new NativeHttpClientBuilder.AuthScope(endpoint.getScheme(),
-		                                                                                      endpoint.getHost(),
-		                                                                                      -1);
+		final ResteasyClientFactoryImpl.AuthScope scope = new ResteasyClientFactoryImpl.AuthScope(endpoint.getScheme(),
+		                                                                                    endpoint.getHost(),
+		                                                                                    -1);
 
-		final NativeHttpClientBuilder.AuthCredential credentials;
+		final ResteasyClientFactoryImpl.AuthCredential credentials;
 		if (bearerToken != null)
-			credentials = new NativeHttpClientBuilder.BearerTokenCredentials(scope, bearerToken);
+			credentials = new ResteasyClientFactoryImpl.BearerTokenCredentials(scope, bearerToken);
 		else if (username != null)
-			credentials = new NativeHttpClientBuilder.UsernamePasswordCredentials(scope, username, password, preemptiveAuth);
+			credentials = new ResteasyClientFactoryImpl.UsernamePasswordCredentials(scope, username, password, preemptiveAuth);
 		else
 			credentials = null;
 
-		return clientFactory.getOrCreateClient(credentials, fastFail, storeCookies).target(endpoint);
+		return clientFactory.getOrCreateClient(credentials, fastFail, storeCookies, h2c).target(endpoint);
 	}
 
 
@@ -303,6 +305,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
 		return createWebTarget(endpoint,
+							   false,
 		                       fastFail,
 		                       null,
 		                       null,
@@ -321,7 +324,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return createWebTarget(endpoint, fastFail, username, password, null, defaultStoreCookies, preemptiveAuth).proxy(iface);
+		return createWebTarget(endpoint, false, fastFail, username, password, null, defaultStoreCookies, preemptiveAuth).proxy(iface);
 	}
 
 

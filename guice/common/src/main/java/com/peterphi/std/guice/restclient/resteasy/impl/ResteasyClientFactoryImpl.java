@@ -8,19 +8,22 @@ import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
 import com.peterphi.std.threading.Timeout;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.impl.NoConnectionReuseStrategy;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
+import okhttp3.Credentials;
+import okhttp3.OkHttpClient;
+import okhttp3.Protocol;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
 
-import java.net.ProxySelector;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import java.io.IOException;
+import java.net.URI;
+import java.time.Duration;
+import java.util.Collections;
 import java.util.concurrent.TimeUnit;
-import java.util.function.Consumer;
 
 /**
  * Builds ResteasyClient objects
@@ -28,6 +31,8 @@ import java.util.function.Consumer;
 @Singleton
 public class ResteasyClientFactoryImpl implements StoppableService
 {
+	private static final Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
+
 	private final PoolingHttpClientConnectionManager connectionManager;
 	private final ResteasyProviderFactory resteasyProviderFactory;
 
@@ -70,6 +75,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	int maxConnectionsTotal = Integer.MAX_VALUE;
 
 	private ResteasyClient client;
+	private ResteasyClient clientH2C;
+
+	private OkHttpClient defaultH2CClient;
+	private OkHttpClient defaultHttpClient;
 
 
 	@Inject
@@ -108,115 +117,150 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	}
 
 
-	public ResteasyClient getOrCreateClient(final NativeHttpClientBuilder.AuthCredential credentials,
-	                                         final boolean fastFail,
-	                                         final boolean storeCookies)
+	public ResteasyClient getOrCreateClient(final AuthCredential credentials,
+	                                        final boolean fastFail,
+	                                        final boolean storeCookies,
+	                                        final boolean h2c)
 	{
-		final boolean useShared = (!fastFail && !storeCookies && credentials == null);
-
-		if (useShared && this.client != null)
-			return client;
-
-		// Now build a resteasy client
+		// First: get the OkHttp client
+		OkHttpClient httpClient = null;
+		if (!fastFail && !storeCookies)
 		{
-			ResteasyClientBuilder builder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
-
-			// TODO how to register this?
-			//builder.providerFactory(resteasyProviderFactory);
-
-			if (storeCookies)
-				builder.enableCookieManagement();
-
-			if (fastFail)
+			if (h2c)
 			{
-				builder.connectTimeout(this.fastFailConnectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-				builder.readTimeout(fastFailSocketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+				if (this.defaultH2CClient == null)
+				{
+					createDefaultH2CClient();
+				}
+				httpClient = this.defaultH2CClient;
 			}
 			else
 			{
-				builder.connectTimeout(this.connectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-				builder.readTimeout(socketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+				if (this.defaultHttpClient == null)
+				{
+					createDefaultHttpClient();
+				}
+				httpClient = this.defaultHttpClient;
 			}
+		}
 
-			// Build and apply the HttpEngine
+		final boolean isSharedHttpClient = (httpClient != null);
+
+		// Unauthenticated ResteasyClients can be shared
+		if (isSharedHttpClient && credentials == null)
+		{
+			if (httpClient == defaultH2CClient && this.clientH2C != null)
 			{
-				final var engineBuilder = new NativeHttpClientBuilder().resteasyClientBuilder(builder);
-
-				if (credentials != null)
-					engineBuilder.withAuth(credentials);
-
-				builder.httpEngine(engineBuilder.build());
+				return this.clientH2C;
 			}
+			else if (httpClient == defaultHttpClient && this.client != null)
+			{
+				return this.client;
+			}
+		}
 
-			if (useShared)
+		// Now build a resteasy client
+		ResteasyClientBuilder builder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
+
+		// TODO how to register this?
+		//builder.providerFactory(resteasyProviderFactory);
+
+		if (credentials != null)
+		{
+			builder.register(new ClientRequestFilter()
+			{
+				@Override
+				public void filter(final ClientRequestContext ctx) throws IOException
+				{
+					final var uri = ctx.getUri();
+					if (credentials.scope().test(uri.getScheme(), uri.getHost(), uri.getPort()))
+					{
+						if (credentials instanceof BearerTokenCredentials token)
+						{
+							ctx
+									.getHeaders()
+									.putIfAbsent("Authorization",
+									             Collections.singletonList("Bearer " + token.token().getToken()));
+						}
+						else if (credentials instanceof UsernamePasswordCredentials passwd)
+						{
+							final String headerVal = Credentials.basic(passwd.username(), passwd.password());
+
+							ctx.getHeaders().putIfAbsent("Authorization", Collections.singletonList(headerVal));
+						}
+					}
+				}
+			});
+		}
+
+		if (storeCookies)
+			builder.enableCookieManagement();
+
+		if (fastFail)
+		{
+			builder.connectTimeout(this.fastFailConnectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+			builder.readTimeout(fastFailSocketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+		}
+		else
+		{
+			builder.connectTimeout(this.connectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+			builder.readTimeout(socketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
+		}
+
+		// Build and apply the HttpEngine
+		if (isSharedHttpClient)
+		{
+			// Use the shared HTTP client
+			builder.httpEngine(new OkHttpClientEngine(httpClient));
+		}
+		else
+		{
+			// Build a new HTTP client just for this engine
+			builder.httpEngine(new OkHttpClientBuilder().resteasyClientBuilder(builder).build());
+		}
+
+
+		if (credentials == null && httpClient != null)
+		{
+			if (httpClient == defaultH2CClient)
+			{
+				this.clientH2C = builder.build();
+				return this.clientH2C;
+			}
+			else if (httpClient == defaultHttpClient)
 			{
 				this.client = builder.build();
 				return this.client;
 			}
-			else
-			{
-				return builder.build();
-			}
-		}
-	}
-
-
-	/**
-	 * Build an HttpClient
-	 *
-	 * @param customiser
-	 * @return
-	 */
-	public CloseableHttpClient createHttpClient(final Consumer<HttpClientBuilder> customiser)
-	{
-		final HttpClientBuilder builder = HttpClientBuilder.create();
-
-		// By default set long call timeouts
-		{
-			RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-			requestBuilder
-					.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-					.setSocketTimeout((int) socketTimeout.getMilliseconds());
-
-			builder.setDefaultRequestConfig(requestBuilder.build());
 		}
 
-		// Set the default keepalive setting
-		if (noKeepalive)
-			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
-
-		// By default share the common connection provider
-		builder.setConnectionManager(connectionManager);
-
-		// By default use the JRE default route planner for proxies
-		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-
-		// Allow customisation
-		if (customiser != null)
-			customiser.accept(builder);
 
 		return builder.build();
 	}
 
 
-	/**
-	 * Combine two consumers. Consumers may be null, in which case this selects the non-null one. If both are null then will
-	 * return <code>null</code>
-	 *
-	 * @param a   the first consumer (optional)
-	 * @param b   the second consumer (optional)
-	 * @param <T>
-	 * @return
-	 */
-	private static <T> Consumer<T> concat(Consumer<T> a, Consumer<T> b)
+	private synchronized void createDefaultH2CClient()
 	{
-		if (a != null && b != null) // both non-null
-			return a.andThen(b);
-		else if (a != null)
-			return a;
-		else
-			return b;
+		if (this.defaultH2CClient == null)
+		{
+			this.defaultH2CClient = new OkHttpClient.Builder()
+					.protocols(Collections.singletonList(Protocol.H2_PRIOR_KNOWLEDGE))
+					.readTimeout(Duration.ofMillis(this.socketTimeout.getMilliseconds()))
+					.connectTimeout(Duration.ofMillis(this.connectionTimeout.getMilliseconds()))
+					.build();
+		}
+	}
+
+
+	private synchronized void createDefaultHttpClient()
+	{
+		if (this.defaultHttpClient == null)
+		{
+			this.defaultHttpClient = new OkHttpClient.Builder()
+					.readTimeout(Duration.ofMillis(this.socketTimeout.getMilliseconds()))
+					.connectTimeout(Duration.ofMillis(this.connectionTimeout.getMilliseconds()))
+					.build();
+		}
 	}
 
 
@@ -225,7 +269,60 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	{
 		connectionManager.shutdown();
 
-		if (client != null)
-			client.close();
+		try
+		{
+			if (client != null)
+				client.close();
+		}
+		catch (Throwable t)
+		{
+			log.error("Error shutting down shared ResteasyClient!", t);
+		}
+
+		try
+		{
+			if (clientH2C != null)
+				clientH2C.close();
+		}
+		catch (Throwable t)
+		{
+			log.error("Error shutting down shared H2C ResteasyClient!", t);
+		}
+	}
+
+
+	public interface AuthCredential
+	{
+		ResteasyClientFactoryImpl.AuthScope scope();
+	}
+
+	public static record AuthScope(String scheme, String host, int port)
+	{
+		boolean test(URI uri)
+		{
+			return test(uri.getScheme(), uri.getHost(), uri.getPort());
+		}
+
+
+		boolean test(String uriScheme, String uriHost, int uriPort)
+		{
+			if (scheme != null && !scheme.equalsIgnoreCase(uriScheme))
+				return false;
+			else if (port != -1 && uriPort != port)
+				return false;
+			else
+				return host().equalsIgnoreCase(uriHost);
+		}
+	}
+
+
+	public static record BearerTokenCredentials(AuthScope scope, BearerGenerator token) implements AuthCredential
+	{
+
+	}
+
+	public static record UsernamePasswordCredentials(AuthScope scope, String username, String password,
+	                                                 boolean preempt) implements AuthCredential
+	{
 	}
 }
