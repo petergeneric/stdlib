@@ -3,7 +3,6 @@ package com.peterphi.std.guice.restclient.jaxb.webquery;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
 import org.apache.commons.lang.StringUtils;
-import org.jboss.resteasy.annotations.providers.jaxb.json.BadgerFish;
 
 import javax.ws.rs.core.UriInfo;
 import javax.xml.bind.annotation.XmlAttribute;
@@ -22,7 +21,6 @@ import java.util.stream.Collectors;
 /**
  * Describes a database query to be executed
  */
-@BadgerFish
 @XmlRootElement(name = "WebQueryDefinition")
 @XmlType(name = "QueryDefinitionType")
 @Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")

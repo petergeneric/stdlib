@@ -7,9 +7,9 @@ import org.jboss.resteasy.plugins.server.servlet.HttpServletInputMessage;
 import org.jboss.resteasy.plugins.server.servlet.HttpServletResponseWrapper;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.specimpl.ResteasyHttpHeaders;
+import org.jboss.resteasy.specimpl.ResteasyUriInfo;
 import org.jboss.resteasy.spi.HttpRequest;
 import org.jboss.resteasy.spi.HttpResponse;
-import org.jboss.resteasy.spi.ResteasyUriInfo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -26,6 +26,7 @@ class ResteasyRequestResponseFactory implements HttpRequestFactory, HttpResponse
 	{
 		this.dispatcher = dispatcher;
 	}
+
 
 	@Override
 	public HttpRequest createResteasyHttpRequest(final String httpMethod,
@@ -47,8 +48,8 @@ class ResteasyRequestResponseFactory implements HttpRequestFactory, HttpResponse
 
 
 	@Override
-	public HttpResponse createResteasyHttpResponse(HttpServletResponse response)
+	public HttpResponse createResteasyHttpResponse(final HttpServletResponse response, final HttpServletRequest request)
 	{
-		return new HttpServletResponseWrapper(response, dispatcher.getDispatcher().getProviderFactory());
+		return new HttpServletResponseWrapper(response, request, dispatcher.getDispatcher().getProviderFactory());
 	}
 }

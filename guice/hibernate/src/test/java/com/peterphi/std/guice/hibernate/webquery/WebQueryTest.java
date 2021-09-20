@@ -7,7 +7,7 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WebQueryParser;
 import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
 import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryPresetPlugin;
 import org.apache.commons.lang.StringUtils;
-import org.jboss.resteasy.spi.ResteasyUriInfo;
+import org.jboss.resteasy.specimpl.ResteasyUriInfo;
 import org.junit.Test;
 
 import javax.ws.rs.core.UriBuilder;

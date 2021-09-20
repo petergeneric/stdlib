@@ -1,20 +1,29 @@
 package com.peterphi.usermanager.rest.iface.oauth2server.types;
 
-import org.joda.time.DateTime;
 
-import javax.json.Json;
-import javax.json.JsonObject;
-import javax.json.JsonObjectBuilder;
-import java.io.StringReader;
-import java.io.StringWriter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
 import java.util.Date;
 
 public class OAuth2TokenResponse
 {
+	@JsonProperty
 	public String access_token;
+	@JsonProperty
 	public String refresh_token;
+	@JsonSerialize(using = JsonDateAsRelativeSecondsSerializer.class)
+	@JsonDeserialize(using = JsonDateAsRelativeSecondsDeserializer.class)
+	@JsonProperty("expires_in")
 	public Date expires;
+	@JsonSerialize(using = JsonDateAsRelativeSecondsSerializer.class)
+	@JsonDeserialize(using = JsonDateAsRelativeSecondsDeserializer.class)
+	@JsonProperty("refresh_in")
 	public Date refresh;
+	@JsonProperty
 	public String error;
 
 
@@ -40,51 +49,30 @@ public class OAuth2TokenResponse
 
 	public static OAuth2TokenResponse decode(final String json)
 	{
-		final JsonObject obj = Json.createReader(new StringReader(json)).readObject();
+		try
+		{
+			final OAuth2TokenResponse obj = new ObjectMapper().readValue(json, OAuth2TokenResponse.class);
 
+			obj.expires = new Date(obj.expires.getTime() - 60_000);
 
-		final int expiresIn = obj.getInt("expires_in", Integer.MIN_VALUE);
-
-		// Set expires 1m before expires_in
-		final Date expires;
-		if (expiresIn != Integer.MIN_VALUE)
-			expires = DateTime.now().plusSeconds(expiresIn).toDate();
-		else
-			expires = null; // Non-expiring token (!)
-
-		return new OAuth2TokenResponse(obj.getString("access_token", null),
-		                               obj.getString("refresh_token", null),
-		                               expires,
-		                               obj.getString("error", null));
+			return obj;
+		}
+		catch (JsonProcessingException e)
+		{
+			throw new RuntimeException("Unable to deserialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
 	}
 
 
 	public String encode()
 	{
-		StringWriter sw = new StringWriter();
-
-		final JsonObjectBuilder builder = Json.createObjectBuilder();
-
-		final long expiresIn;
-
-		if (expires != null)
-			expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
-		else
-			expiresIn = 0;
-
-		if (access_token != null)
-			builder.add("access_token", access_token);
-		if (refresh_token != null)
-			builder.add("refresh_token", refresh_token);
-		if (expiresIn > 0)
-			builder.add("expires_in", expiresIn);
-		if (error != null)
-			builder.add("error", error);
-
-		JsonObject obj = builder.build();
-
-		Json.createWriter(sw).writeObject(obj);
-
-		return sw.toString();
+		try
+		{
+			return new ObjectMapper().writeValueAsString(this);
+		}
+		catch (JsonProcessingException e)
+		{
+			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
+		}
 	}
 }

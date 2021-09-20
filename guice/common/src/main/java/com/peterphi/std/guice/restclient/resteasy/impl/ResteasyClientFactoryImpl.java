@@ -142,8 +142,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			});
 		}
 
-		if (storeCookies && !builder.isCookieManagementEnabled())
-			throw new IllegalArgumentException("Unable to register for cookies!");
+		if (storeCookies)
+			builder.enableCookieManagement();
 
 		// Build and apply the HttpEngine
 		if (shared != null)

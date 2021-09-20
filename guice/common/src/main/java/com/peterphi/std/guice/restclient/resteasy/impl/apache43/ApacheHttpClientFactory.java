@@ -16,7 +16,7 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
 import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
-import org.jboss.resteasy.client.jaxrs.engines.factory.ApacheHttpClient4EngineFactory;
+import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClientEngine;
 
 import java.net.ProxySelector;
 import java.util.HashMap;
@@ -125,7 +125,7 @@ public class ApacheHttpClientFactory implements HttpClientFactory, StoppableServ
 		if (client == null)
 			client = createClient(key);
 
-		return ApacheHttpClient4EngineFactory.create(client, false);
+		return ApacheHttpClientEngine.create(client, false);
 	}
 
 
