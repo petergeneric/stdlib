@@ -23,6 +23,7 @@ import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.urlconn.URLConnectionHTTPClientFactory;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
@@ -379,7 +380,11 @@ class GuiceFactory
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
-			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, null, jaxb);
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null,
+			                                                                              null,
+			                                                                              null,
+			                                                                              jaxb,
+			                                                                              new URLConnectionHTTPClientFactory());
 
 			try
 			{

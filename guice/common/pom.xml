@@ -12,7 +12,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>12.0.20-SNAPSHOT</version>
+		<version>13.0.1-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -51,8 +51,14 @@
 
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jaxrs</artifactId>
+			<artifactId>resteasy-core</artifactId>
 			<version>${resteasy.version}</version>
+		</dependency>
+		<dependency>
+			<groupId>com.squareup.okhttp3</groupId>
+			<artifactId>okhttp</artifactId>
+			<version>4.9.1</version>
+			<scope>provided</scope>
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
@@ -84,7 +90,7 @@
 		</dependency>
 		<dependency>
 			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jettison-provider</artifactId>
+			<artifactId>resteasy-jackson2-provider</artifactId>
 			<version>${resteasy.version}</version>
 		</dependency>
 

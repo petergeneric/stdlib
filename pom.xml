@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
-	<version>12.0.20-SNAPSHOT</version>
+	<version>13.0.1-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>application framework parent</name>
@@ -29,22 +29,22 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<javalang.version>1.10</javalang.version>
+		<javalang.version>17</javalang.version>
 		<slf4j.version>1.7.30</slf4j.version>
 		<junit.version>4.13.1</junit.version>
 		<httpclient.version>4.5.13</httpclient.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
 		<guice.version>5.0.1</guice.version>
 		<metrics.version>4.1.18</metrics.version>
-		<resteasy.version>3.15.0.Final</resteasy.version>
+		<resteasy.version>4.7.1.Final</resteasy.version>
 		<javassist.version>3.27.0-GA</javassist.version>
-		<jackson.version>2.12.2</jackson.version>
 		<hibernate.version>5.4.28.Final</hibernate.version>
 		<dbunit.version>2.7.0</dbunit.version>
-		<hsqldb.version>2.5.1</hsqldb.version>
+		<hsqldb.version>2.6.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
 		<moxy.version>2.7.8</moxy.version>
 		<mockito.version>2.28.2</mockito.version>
+		<jackson.version>2.12.2</jackson.version>
 	</properties>
 
 	<scm>
@@ -226,9 +226,10 @@
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.3</version>
+				<version>3.3.1</version>
 				<configuration>
 					<additionalparam>-Xdoclint:none</additionalparam>
+					  <failOnError>false</failOnError>
 				</configuration>
 			</plugin>
 

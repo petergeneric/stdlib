@@ -7,7 +7,7 @@ import org.hibernate.criterion.Restrictions;
 
 import java.util.List;
 
-class EmbeddedPkDaoImpl extends HibernateDao<EmbeddedPkEntity, SomePrimaryKey>
+public class EmbeddedPkDaoImpl extends HibernateDao<EmbeddedPkEntity, SomePrimaryKey>
 {
 	@SuppressWarnings("deprecation")
 	public List<EmbeddedPkEntity> findByTimestamp(final long timestamp)

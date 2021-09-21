@@ -1,4 +1,4 @@
-name: JDK11 Build and Test
+name: JDK17 Build and Test
 
 on: [ push, pull_request ]
 
@@ -14,11 +14,11 @@ jobs:
       uses: zcong1993/setup-timezone@f28e5fb1ca95077c81b67be53bcd1923de2175ed
       with:
         timezone: Europe/London
-    - name: Set up JDK 11
+    - name: Set up JDK 17
       uses: actions/setup-java@v2
       with:
-        distribution: adopt
-        java-version: 11
+        java-version: 17
+        distribution: zulu
  # Step that does that actual cache save and restore
     - uses: actions/cache@v1
       with:
