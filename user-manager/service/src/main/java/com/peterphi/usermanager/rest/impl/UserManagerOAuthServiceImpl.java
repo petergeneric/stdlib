@@ -31,18 +31,17 @@ import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
+import org.eclipse.persistence.exceptions.JSONException;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import org.jose4j.json.internal.json_simple.JSONObject;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
-import java.io.StringWriter;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -645,8 +644,6 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
 		try
 		{
-			StringWriter sw = new StringWriter();
-
 			JSONObject obj = new JSONObject();
 
 			final UserEntity user = session.getContext().getUser();
@@ -670,9 +667,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			obj.put("group", roles);
 			obj.put("role", roles);
 
-			obj.write(sw);
-
-			return sw.toString();
+			return obj.toJSONString();
 		}
 		catch (JSONException e)
 		{
