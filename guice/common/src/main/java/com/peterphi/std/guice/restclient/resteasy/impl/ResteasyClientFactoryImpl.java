@@ -2,17 +2,12 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
-import com.peterphi.std.threading.Timeout;
-import okhttp3.Credentials;
-import okhttp3.OkHttpClient;
-import okhttp3.Protocol;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
+import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
+import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
@@ -20,10 +15,9 @@ import org.jboss.resteasy.spi.ResteasyProviderFactory;
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
 import java.io.IOException;
-import java.net.URI;
-import java.time.Duration;
+import java.nio.charset.StandardCharsets;
 import java.util.Collections;
-import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 
 /**
  * Builds ResteasyClient objects
@@ -33,60 +27,22 @@ public class ResteasyClientFactoryImpl implements StoppableService
 {
 	private static final Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
 
-	private final PoolingHttpClientConnectionManager connectionManager;
+	private final HttpClientFactory httpClientFactory;
 	private final ResteasyProviderFactory resteasyProviderFactory;
-
-
-	@Inject(optional = true)
-	@Named("jaxrs.connection.timeout")
-	@Doc("The connection timeout for HTTP sockets (default 20s)")
-	Timeout connectionTimeout = new Timeout(20, TimeUnit.SECONDS);
-
-	@Inject(optional = true)
-	@Named("jaxrs.socket.timeout")
-	@Doc("The Socket Timeout for HTTP sockets (default 5m)")
-	Timeout socketTimeout = new Timeout(5, TimeUnit.MINUTES);
-
-
-	@Inject(optional = true)
-	@Named("jaxrs.fast-fail.connection.timeout")
-	@Doc("The connection timeout for HTTP sockets created for Fast Fail clients (default 15s)")
-	Timeout fastFailConnectionTimeout = new Timeout(15, TimeUnit.SECONDS);
-
-	@Inject(optional = true)
-	@Named("jaxrs.fast-fail.socket.timeout")
-	@Doc("The Socket Timeout for HTTP sockets created for Fast Fail clients (default 15s)")
-	Timeout fastFailSocketTimeout = new Timeout(15, TimeUnit.SECONDS);
-
-
-	@Inject(optional = true)
-	@Named("jaxrs.nokeepalive")
-	@Doc("If true, keepalive will be disabled for HTTP connections (default true)")
-	boolean noKeepalive = true;
-
-	@Inject(optional = true)
-	@Named("jaxrs.max-connections-per-route")
-	@Doc("The maximum number of connections per HTTP route (default MAXINT)")
-	int maxConnectionsPerRoute = Integer.MAX_VALUE;
-
-	@Inject(optional = true)
-	@Named("jaxrs.max-total-connections")
-	@Doc("The maximum number of HTTP connections in total across all routes (default MAXINT)")
-	int maxConnectionsTotal = Integer.MAX_VALUE;
 
 	private ResteasyClient client;
 	private ResteasyClient clientH2C;
-
-	private OkHttpClient defaultH2CClient;
-	private OkHttpClient defaultHttpClient;
 
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
-	                                 final JAXBContextResolver jaxbContextResolver)
+	                                 final JAXBContextResolver jaxbContextResolver,
+	                                 final HttpClientFactory httpClientFactory)
 	{
+		this.httpClientFactory = httpClientFactory;
+
 		// Make sure that if we're called multiple times (e.g. because of a guice CreationException failing startup after us) we start fresh
 		if (ResteasyProviderFactory.peekInstance() != null)
 			ResteasyProviderFactory.clearInstanceIfEqual(ResteasyProviderFactory.peekInstance());
@@ -107,11 +63,6 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		if (tracingRequestFilter != null)
 			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
 
-		// Set up the Connection Manager
-		this.connectionManager = new PoolingHttpClientConnectionManager();
-		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-		connectionManager.setMaxTotal(maxConnectionsTotal);
-
 		if (manager != null)
 			manager.register(this);
 	}
@@ -122,40 +73,31 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                        final boolean storeCookies,
 	                                        final boolean h2c)
 	{
-		// First: get the OkHttp client
-		OkHttpClient httpClient = null;
-		if (!fastFail && !storeCookies)
+		final boolean canShare = !fastFail && !storeCookies;
+
+		// If possible, get a shared Http Client
+		ClientHttpEngine shared = null;
+		if (canShare)
+			shared = httpClientFactory.getClient(h2c, fastFail, storeCookies);
+
+		// We will try to share unauthenticated clients
+		// This returns the existing client if present, otherwise sets up a Consumer to capture that client for future reuse
+		Consumer<ResteasyClient> sharedClientSetter = null;
+		if (shared != null && credentials == null)
 		{
-			if (h2c)
+			if (h2c && httpClientFactory.willVaryWithH2C())
 			{
-				if (this.defaultH2CClient == null)
-				{
-					createDefaultH2CClient();
-				}
-				httpClient = this.defaultH2CClient;
+				if (this.clientH2C != null)
+					return this.clientH2C;
+				else
+					sharedClientSetter = (c) -> this.clientH2C = c;
 			}
 			else
 			{
-				if (this.defaultHttpClient == null)
-				{
-					createDefaultHttpClient();
-				}
-				httpClient = this.defaultHttpClient;
-			}
-		}
-
-		final boolean isSharedHttpClient = (httpClient != null);
-
-		// Unauthenticated ResteasyClients can be shared
-		if (isSharedHttpClient && credentials == null)
-		{
-			if (httpClient == defaultH2CClient && this.clientH2C != null)
-			{
-				return this.clientH2C;
-			}
-			else if (httpClient == defaultHttpClient && this.client != null)
-			{
-				return this.client;
+				if (this.client != null)
+					return this.client;
+				else
+					sharedClientSetter = (c) -> this.client = c;
 			}
 		}
 
@@ -184,7 +126,9 @@ public class ResteasyClientFactoryImpl implements StoppableService
 						}
 						else if (credentials instanceof UsernamePasswordCredentials passwd)
 						{
-							final String headerVal = Credentials.basic(passwd.username(), passwd.password());
+							final String headerVal = "Basic " +
+							                         Base64.encodeBase64((passwd.username() + ":" + passwd.password()).getBytes(
+									                         StandardCharsets.UTF_8));
 
 							ctx.getHeaders().putIfAbsent("Authorization", Collections.singletonList(headerVal));
 						}
@@ -196,79 +140,24 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		if (storeCookies)
 			builder.enableCookieManagement();
 
-		if (fastFail)
-		{
-			builder.connectTimeout(this.fastFailConnectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-			builder.readTimeout(fastFailSocketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-		}
-		else
-		{
-			builder.connectTimeout(this.connectionTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-			builder.readTimeout(socketTimeout.getMilliseconds(), TimeUnit.MILLISECONDS);
-		}
-
 		// Build and apply the HttpEngine
-		if (isSharedHttpClient)
-		{
-			// Use the shared HTTP client
-			builder.httpEngine(new OkHttpClientEngine(httpClient));
-		}
+		if (shared != null)
+			builder.httpEngine(shared); // Use the shared HTTP client
 		else
-		{
-			// Build a new HTTP client just for this engine
-			builder.httpEngine(new OkHttpClientBuilder().resteasyClientBuilder(builder).build());
-		}
+			builder.httpEngine(httpClientFactory.getClient(h2c, fastFail, storeCookies)); // Get an appropriate HttpClient
 
+		var client = builder.build();
 
-		if (credentials == null && httpClient != null)
-		{
-			if (httpClient == defaultH2CClient)
-			{
-				this.clientH2C = builder.build();
-				return this.clientH2C;
-			}
-			else if (httpClient == defaultHttpClient)
-			{
-				this.client = builder.build();
-				return this.client;
-			}
-		}
+		if (sharedClientSetter != null)
+			sharedClientSetter.accept(client);
 
-
-		return builder.build();
-	}
-
-
-	private synchronized void createDefaultH2CClient()
-	{
-		if (this.defaultH2CClient == null)
-		{
-			this.defaultH2CClient = new OkHttpClient.Builder()
-					.protocols(Collections.singletonList(Protocol.H2_PRIOR_KNOWLEDGE))
-					.readTimeout(Duration.ofMillis(this.socketTimeout.getMilliseconds()))
-					.connectTimeout(Duration.ofMillis(this.connectionTimeout.getMilliseconds()))
-					.build();
-		}
-	}
-
-
-	private synchronized void createDefaultHttpClient()
-	{
-		if (this.defaultHttpClient == null)
-		{
-			this.defaultHttpClient = new OkHttpClient.Builder()
-					.readTimeout(Duration.ofMillis(this.socketTimeout.getMilliseconds()))
-					.connectTimeout(Duration.ofMillis(this.connectionTimeout.getMilliseconds()))
-					.build();
-		}
+		return client;
 	}
 
 
 	@Override
 	public void shutdown()
 	{
-		connectionManager.shutdown();
-
 		try
 		{
 			if (client != null)
@@ -298,13 +187,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 	public static record AuthScope(String scheme, String host, int port)
 	{
-		boolean test(URI uri)
-		{
-			return test(uri.getScheme(), uri.getHost(), uri.getPort());
-		}
-
-
-		boolean test(String uriScheme, String uriHost, int uriPort)
+		public boolean test(String uriScheme, String uriHost, int uriPort)
 		{
 			if (scheme != null && !scheme.equalsIgnoreCase(uriScheme))
 				return false;

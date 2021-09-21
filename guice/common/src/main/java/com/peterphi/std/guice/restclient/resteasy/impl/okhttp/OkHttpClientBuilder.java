@@ -1,6 +1,7 @@
-package com.peterphi.std.guice.restclient.resteasy.impl;
+package com.peterphi.std.guice.restclient.resteasy.impl.okhttp;
 
 import com.peterphi.std.NotImplementedException;
+import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
 import okhttp3.Credentials;
 import okhttp3.Interceptor;
 import okhttp3.OkHttpClient;

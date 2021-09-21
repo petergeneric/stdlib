@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.restclient.resteasy.impl;
+package com.peterphi.std.guice.restclient.resteasy.impl.okhttp;
 
 /*
  * Copyright (C) 2015 Thomas Broyer (t.broyer@ltgt.net)
@@ -59,7 +59,7 @@ public class OkHttpClientEngine implements ClientHttpEngine
 {
 	private static final Logger log = Logger.getLogger(OkHttpClientEngine.class);
 
-	private final OkHttpClient client;
+	final OkHttpClient client;
 
 	private SSLContext sslContext;
 
