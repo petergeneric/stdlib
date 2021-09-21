@@ -22,6 +22,7 @@ import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
+import okhttp3.internal.http.HttpMethod;
 import okio.Buffer;
 import okio.BufferedSink;
 import org.apache.log4j.Logger;
@@ -123,8 +124,17 @@ public class OkHttpClientEngine implements ClientHttpEngine
 	private Request createRequest(ClientInvocation request)
 	{
 		Request.Builder builder = new Request.Builder()
-				.method(request.getMethod(), createRequestBody(request))
 				.url(request.getUri().toString());
+
+
+		final var body = createRequestBody(request);
+
+
+		if (body == null && HttpMethod.requiresRequestBody(request.getMethod()))
+			builder.method(request.getMethod(), RequestBody.create(new byte[0], null));
+		else
+			builder.method(request.getMethod(), body);
+
 		for (Map.Entry<String, List<String>> header : request.getHeaders().asMap().entrySet())
 		{
 			String headerName = header.getKey();
