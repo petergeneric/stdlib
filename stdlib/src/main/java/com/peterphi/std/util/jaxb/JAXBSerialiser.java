@@ -3,7 +3,9 @@ package com.peterphi.std.util.jaxb;
 import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
 import org.apache.log4j.Logger;
+import org.eclipse.persistence.internal.oxm.record.DOMInputSource;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
@@ -355,6 +357,24 @@ public class JAXBSerialiser
 			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
 	}
 
+	/**
+	 * Deserialise and cast to a particular type
+	 *
+	 * @param clazz
+	 * @param xml an XML element
+	 *
+	 * @return
+	 */
+	public <T> T deserialise(final Class<T> clazz, final Element xml)
+	{
+		final Object obj = deserialise(new DOMInputSource((xml)));
+
+		if (clazz.isInstance(obj))
+			return clazz.cast(obj);
+		else
+			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
+	}
+
 	//
 	// Core deserialisers
 	//
@@ -561,13 +581,41 @@ public class JAXBSerialiser
 	}
 
 
-	public void serialise(final Object obj, final XMLStreamWriter writer)
+	/**
+	 * Marshals the provided type directly to the provided XMLStreamWriter. This is provided to allow callers to bypass the EclipseLink MOXy mitigation against XmlAnyElements which contain xmlns=""
+	 * @param obj
+	 * @param writer
+	 */
+	public void serialiseWithDirectWriter(final Object obj, final XMLStreamWriter writer)
 	{
 		final Marshaller marshaller = getMarshaller();
 
 		try
 		{
 			marshaller.marshal(obj, writer);
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("serialisation", e);
+		}
+	}
+
+
+	/**
+	 * Marshals the provided type to the given XMLStreamWriter, filtering the XML stream to remove duplicate xmlns="" events if
+	 * present. This is to work around an EclipseLink MOXy issue whereby XmlAnyElements which contain xmlns="" get that namespace
+	 * definition duplicated via STaX
+	 *
+	 * @param obj
+	 * @param writer
+	 */
+	public void serialise(final Object obj, final XMLStreamWriter writer)
+	{
+		final Marshaller marshaller = getMarshaller();
+
+		try
+		{
+			marshaller.marshal(obj, new DuplicateNSFilteringXMLStreamWriter(writer));
 		}
 		catch (JAXBException e)
 		{

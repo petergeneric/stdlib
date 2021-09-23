@@ -6,6 +6,7 @@ import org.junit.ComparisonFailure;
 import org.junit.Test;
 
 import javax.xml.stream.XMLOutputFactory;
+import javax.xml.stream.XMLStreamWriter;
 import java.io.StringWriter;
 import java.util.Objects;
 
@@ -30,7 +31,9 @@ public class MoxyXMLStreamWriterAnyElementBugTest
 		el.someXmlBlock = DOMUtils.parse(INNER_DOC).getDocumentElement();
 
 		StringWriter sw = new StringWriter();
-		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
+		JAXBSerialiser
+				.getInstance(SomeOtherXml.class)
+				.serialiseWithDirectWriter(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
 
 		// Assert what we *SHOULD* see, which is not what we DO see
 		assertEquals(EXPECTED_OUT, sw.toString());
@@ -44,8 +47,8 @@ public class MoxyXMLStreamWriterAnyElementBugTest
 		el.someXmlBlock = DOMUtils.parse(INNER_DOC).getDocumentElement();
 
 		StringWriter sw = new StringWriter();
-		final var streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);
-		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, new DuplicateNSFilteringXMLStreamWriter(streamWriter));
+		final XMLStreamWriter streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);
+		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, streamWriter);
 		assertEquals(EXPECTED_OUT, sw.toString());
 	}
 
@@ -59,8 +62,8 @@ public class MoxyXMLStreamWriterAnyElementBugTest
 			el.someXmlBlock.removeAttribute("xmlns");
 
 		StringWriter sw = new StringWriter();
-		final var streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);
-		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, streamWriter);
+		final XMLStreamWriter streamWriter = XMLOutputFactory.newInstance().createXMLStreamWriter(sw);
+		JAXBSerialiser.getInstance(SomeOtherXml.class).serialiseWithDirectWriter(el, streamWriter);
 		assertEquals(EXPECTED_OUT, sw.toString());
 	}
 
@@ -73,7 +76,9 @@ public class MoxyXMLStreamWriterAnyElementBugTest
 		el.someXmlBlock = DOMUtils.parse("<x xmlns=\"urn:foo\" />").getDocumentElement();
 
 		StringWriter sw = new StringWriter();
-		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
+		JAXBSerialiser
+				.getInstance(SomeOtherXml.class)
+				.serialiseWithDirectWriter(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
 
 		// Assert what we *SHOULD* see, which is not what we DO see
 		assertEquals("<?xml version=\"1.0\"?><someOtherXml xmlns=\"urn:pkg2\"><x xmlns=\"urn:foo\"></x></someOtherXml>",
@@ -89,7 +94,9 @@ public class MoxyXMLStreamWriterAnyElementBugTest
 		el.someXmlBlock = DOMUtils.parse("<x />").getDocumentElement();
 
 		StringWriter sw = new StringWriter();
-		JAXBSerialiser.getInstance(SomeOtherXml.class).serialise(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
+		JAXBSerialiser
+				.getInstance(SomeOtherXml.class)
+				.serialiseWithDirectWriter(el, XMLOutputFactory.newInstance().createXMLStreamWriter(sw));
 
 		// Assert what we *SHOULD* see, which is not what we DO see
 		assertEquals("<?xml version=\"1.0\"?><someOtherXml xmlns=\"urn:pkg2\"><x xmlns=\"\"></x></someOtherXml>", sw.toString());
