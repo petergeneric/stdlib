@@ -18,9 +18,13 @@ import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
+import java.lang.reflect.Proxy;
 import java.net.URI;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
 @Singleton
@@ -38,12 +42,20 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	GuiceConfig config;
 
 	@Inject
+	BreakerService breakerService;
+
+	@Inject
 	Injector guice;
 
 	@Inject(optional = true)
 	@Named("jaxrs.cookie-store")
 	@Doc("Whether default JAX-RS clients should maintain a cookie store (default false); will also default to false if oauth delegation is switched on (or if a bearer generator is configured)")
 	public boolean defaultStoreCookies = false;
+
+	/**
+	 * Counter that keeps track of the number of currently-paused service calls within this service
+	 */
+	private final AtomicInteger pausedCallsCounter = new AtomicInteger(0);
 
 
 	public ResteasyProxyClientFactoryImpl()
@@ -95,7 +107,6 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 		return getWebTarget(fastFail, names);
 	}
-
 
 	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
 	{
@@ -172,7 +183,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public <T> T getClient(final Class<T> iface, final String... names)
 	{
-		return getWebTarget(iface, names).proxy(iface);
+		return getClient(iface, getWebTarget(iface, names), names);
 	}
 
 
@@ -186,9 +197,38 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	@Override
 	public <T> T getClient(final Class<T> iface, final WebTarget target)
 	{
-		final ResteasyWebTarget resteasyTarget = (ResteasyWebTarget) target;
+		return getClient(iface, target, new String[0]);
+	}
 
-		return resteasyTarget.proxy(iface);
+
+	private <T> T getClient(final Class<T> iface, final WebTarget target, final String... names)
+	{
+		final ResteasyWebTarget resteasyTarget = (ResteasyWebTarget) target;
+		final T proxy = resteasyTarget.proxy(iface);
+
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		// Set up a Pausable Proxy that will allow us to pause service calls by tripping a breaker
+		PausableProxy handler = createPausableProxy(proxy, fastFail, names);
+
+		return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
+	}
+
+
+	@NotNull
+	private <T> PausableProxy createPausableProxy(final T proxy, final boolean fastFail, final String[] names)
+	{
+		List<String> nameList = new ArrayList<>();
+		nameList.add("restclient.all");
+		for (String name : names)
+		{
+			nameList.add("restclient." + name);
+		}
+
+		PausableProxy handler = new PausableProxy(proxy, fastFail, pausedCallsCounter);
+		breakerService.register(handler :: setPaused, nameList);
+
+		return handler;
 	}
 
 
