@@ -7,11 +7,14 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceConstants;
+import com.peterphi.std.guice.apploader.GuiceServiceProperties;
+import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
+import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
@@ -70,7 +73,7 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			if (name == null)
 				continue;
 
-			if (config.containsKey("service." + name + ".endpoint"))
+			if (config.containsKey(GuiceServiceProperties.prop(GuiceServiceProperties.ENDPOINT, name)))
 				return name;
 		}
 
@@ -102,17 +105,17 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " +
 			                                   Arrays.asList(names));
 
-		final String endpoint = config.get("service." + name + ".endpoint", null);
+		final String endpoint = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.ENDPOINT, name), null);
 		final URI uri = URI.create(endpoint);
 
 		// TODO allow other per-service configuration?
-		final String username = config.get("service." + name + ".username", getUsername(uri));
-		final String password = config.get("service." + name + ".password", getPassword(uri));
-		final boolean fastFail = config.getBoolean("service." + name + ".fast-fail", defaultFastFail);
-		final String authType = config.get("service." + name + ".auth-type", GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
-		final String bearerToken = config.get("service." + name + ".bearer", null);
-		final boolean h2c = uri.getScheme().equalsIgnoreCase("http") && config.getBoolean("service." + name + ".h2c", false); // h2c with prior knowledge
-		final boolean oauthDelegate = config.getBoolean("service." + name + ".delegation", false);
+		final String username = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.USERNAME, name), getUsername(uri));
+		final String password = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.PASSWORD, name), getPassword(uri));
+		final boolean fastFail = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.FAST_FAIL, name), defaultFastFail);
+		final String authType = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.AUTH_TYPE, name), GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
+		final String bearerToken = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.BEARER_TOKEN, name), null);
+		final boolean h2c = uri.getScheme().equalsIgnoreCase("http") && config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.H2C, name), false); // h2c with prior knowledge
+		final boolean oauthDelegate = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.SHOULD_DELEGATE_USER_TOKEN, name), false);
 		final String defaultBearerGenerator;
 
 		if (oauthDelegate)
@@ -120,10 +123,10 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			defaultBearerGenerator = null;
 
-		final String bearerTokenClassName = config.get("service." + name + ".bearer-generator", defaultBearerGenerator);
+		final String bearerTokenClassName = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.BEARER_GENERATOR, name), defaultBearerGenerator);
 
 		// N.B. do not store cookies by default if we're generating bearer tokens (since this may result in credentials being improperly shared across calls)
-		final boolean storeCookies = config.getBoolean("service." + name + ".cookie-store",
+		final boolean storeCookies = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.STORE_COOKIES, name),
 		                                               defaultStoreCookies && (bearerTokenClassName == null));
 
 		final BearerGenerator bearerSupplier;
