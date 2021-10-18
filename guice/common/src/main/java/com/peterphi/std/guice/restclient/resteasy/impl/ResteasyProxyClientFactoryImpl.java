@@ -108,7 +108,14 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		return getWebTarget(fastFail, names);
 	}
 
-	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
+
+	private record ServiceClientConfig(URI endpoint, String username, String password, boolean fastFail, String authType,
+	                                   boolean h2c, boolean storeCookies, BearerGenerator bearerGenerator, boolean preemptiveAuth)
+	{
+	}
+
+
+	private ServiceClientConfig getServiceClientConfig(final boolean defaultFastFail, final String... names)
 	{
 		final String name = getConfiguredBoundServiceName(config, null, names);
 
@@ -122,11 +129,16 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		// TODO allow other per-service configuration?
 		final String username = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.USERNAME, name), getUsername(uri));
 		final String password = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.PASSWORD, name), getPassword(uri));
-		final boolean fastFail = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.FAST_FAIL, name), defaultFastFail);
-		final String authType = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.AUTH_TYPE, name), GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
+		final boolean fastFail = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.FAST_FAIL, name),
+		                                           defaultFastFail);
+		final String authType = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.AUTH_TYPE, name),
+		                                   GuiceConstants.JAXRS_CLIENT_AUTH_DEFAULT);
 		final String bearerToken = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.BEARER_TOKEN, name), null);
-		final boolean h2c = uri.getScheme().equalsIgnoreCase("http") && config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.H2C, name), false); // h2c with prior knowledge
-		final boolean oauthDelegate = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.SHOULD_DELEGATE_USER_TOKEN, name), false);
+		final boolean h2c = uri.getScheme().equalsIgnoreCase("http") &&
+		                    config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.H2C, name),
+		                                      false); // h2c with prior knowledge
+		final boolean oauthDelegate = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.SHOULD_DELEGATE_USER_TOKEN,
+		                                                                            name), false);
 		final String defaultBearerGenerator;
 
 		if (oauthDelegate)
@@ -134,7 +146,8 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			defaultBearerGenerator = null;
 
-		final String bearerTokenClassName = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.BEARER_GENERATOR, name), defaultBearerGenerator);
+		final String bearerTokenClassName = config.get(GuiceServiceProperties.prop(GuiceServiceProperties.BEARER_GENERATOR, name),
+		                                               defaultBearerGenerator);
 
 		// N.B. do not store cookies by default if we're generating bearer tokens (since this may result in credentials being improperly shared across calls)
 		final boolean storeCookies = config.getBoolean(GuiceServiceProperties.prop(GuiceServiceProperties.STORE_COOKIES, name),
@@ -176,7 +189,30 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return createWebTarget(uri, h2c, fastFail, username, password, bearerSupplier, storeCookies, preemptiveAuth);
+		return new ServiceClientConfig(uri,
+		                               username,
+		                               password,
+		                               fastFail,
+		                               authType,
+		                               h2c,
+		                               storeCookies,
+		                               bearerSupplier,
+		                               preemptiveAuth);
+	}
+
+
+	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
+	{
+		final ServiceClientConfig config = getServiceClientConfig(defaultFastFail, names);
+
+		return createWebTarget(config.endpoint,
+		                       config.h2c,
+		                       config.fastFail,
+		                       config.username,
+		                       config.password,
+		                       config.bearerGenerator,
+		                       config.storeCookies,
+		                       config.preemptiveAuth);
 	}
 
 
