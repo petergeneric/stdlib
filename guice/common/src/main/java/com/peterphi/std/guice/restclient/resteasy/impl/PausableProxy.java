@@ -1,6 +1,6 @@
 package com.peterphi.std.guice.restclient.resteasy.impl;
 
-import com.peterphi.std.guice.restclient.exception.RestException;
+import com.peterphi.std.guice.restclient.exception.ServiceBreakerTripPreventsCallException;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
 import org.slf4j.Logger;
@@ -62,11 +62,7 @@ class PausableProxy implements InvocationHandler
 	{
 		if (paused && method.getDeclaringClass() != Object.class)
 		{
-			if (isFastFailServiceClient)
-				throw new RestException(503,
-				                        "Unable to make outgoing service call: breaker is tripped and client is marked as fast-fail so will not suspend call until breaker reset");
-			else
-				pause();
+			pause(isFastFailServiceClient);
 		}
 
 		return method.invoke(rest, args);
@@ -76,33 +72,40 @@ class PausableProxy implements InvocationHandler
 	/**
 	 * Wait until unpaused (or until we hit the max wait timeout)
 	 */
-	private void pause()
+	private void pause(final boolean fastFail)
 	{
-		final Deadline deadline = isHttpCall() ? MAX_WAIT_IF_HTTP_CONTEXT.start() : MAX_WAIT.start();
-
-		currentlyPausedCount.incrementAndGet();
-
-		try
+		if (!fastFail)
 		{
-			while (paused && deadline.isValid())
+			final Deadline deadline = isHttpCall() ? MAX_WAIT_IF_HTTP_CONTEXT.start() : MAX_WAIT.start();
+
+			currentlyPausedCount.incrementAndGet();
+
+			try
 			{
-				try
+				while (paused && deadline.isValid())
 				{
-					Thread.sleep(500);
-				}
-				catch (InterruptedException e)
-				{
-					return;
+					try
+					{
+						Thread.sleep(500);
+					}
+					catch (InterruptedException e)
+					{
+						return;
+					}
 				}
 			}
-		}
-		finally
-		{
-			currentlyPausedCount.decrementAndGet();
+			finally
+			{
+				currentlyPausedCount.decrementAndGet();
+			}
+
+			if (paused)
+				log.warn("Hit timeout while waiting for service to be unpaused, will now throw exception...");
 		}
 
 		if (paused)
-			log.warn("Hit timeout while waiting for service to be unpaused, allowing call to proceed...");
+			throw new ServiceBreakerTripPreventsCallException(
+					"Unable to make outgoing service call: breaker is still tripped after maximum wait");
 	}
 
 
