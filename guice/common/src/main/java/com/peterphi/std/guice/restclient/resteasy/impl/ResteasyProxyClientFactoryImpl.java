@@ -14,6 +14,7 @@ import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
 import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Objects;
@@ -245,8 +246,8 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	}
 
 
-	ResteasyWebTarget createWebTarget(final URI endpoint,
-									  final boolean h2c,
+	ResteasyWebTarget createWebTarget(URI endpoint,
+									  boolean h2c,
 	                                  final boolean fastFail,
 	                                  final String username,
 	                                  final String password,
@@ -254,6 +255,14 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	                                  final boolean storeCookies,
 	                                  final boolean preemptiveAuth)
 	{
+		// Allow the use of the "h2c://" scheme as an alias for http:// with h2c=true
+		// This allows a broader set of users to set h2c without having to explicitly provide an h2c flag
+		if ("h2c".equalsIgnoreCase(endpoint.getScheme()))
+		{
+			h2c = true;
+			endpoint = UriBuilder.fromUri(endpoint).scheme("http").build();
+		}
+
 		final ResteasyClientFactoryImpl.AuthScope scope = new ResteasyClientFactoryImpl.AuthScope(endpoint.getScheme(),
 		                                                                                    endpoint.getHost(),
 		                                                                                    -1);
