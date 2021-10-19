@@ -48,7 +48,7 @@ public final class CacheManager
 	 * @param <V>   cache value type
 	 * @return
 	 */
-	public static <K, V> Cache<K, V> register(final String name, final Cache<K, V> cache)
+	public static <K, V, T extends Cache<K,V>> T register(final String name, final T cache)
 	{
 		synchronized (CACHES)
 		{
