@@ -6,6 +6,7 @@ import com.google.inject.Injector;
 import com.google.inject.Module;
 import com.google.inject.Scopes;
 import com.google.inject.Stage;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
@@ -74,7 +75,7 @@ public class OkHttpAutoClientRole implements GuiceRole
 	                     final AtomicReference<Injector> injectorRef,
 	                     final MetricRegistry metrics)
 	{
-		if (hasOkHttp)
+		if (hasOkHttp && config.getBoolean(GuiceProperties.USE_OKHTTP, true))
 			modules.add(new OkHttpClientModule());
 	}
 
