@@ -43,7 +43,7 @@ public abstract class GuiceDaemon extends Daemon implements StoppableService, Gu
 	{
 		this.daemonThread = daemonThread;
 
-		this.breakerNames = new ArrayList<>(Arrays.asList("all", "daemon", getName()));
+		this.breakerNames = new ArrayList<>(Arrays.asList("daemon", getName()));
 
 		// Recognise additional breaker names
 		if (getClass().isAnnotationPresent(DaemonBreaker.class))
