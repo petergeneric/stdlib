@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.breaker;
 
 import com.codahale.metrics.Gauge;
 import com.codahale.metrics.MetricRegistry;
+import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
@@ -48,6 +49,7 @@ public class BreakerService
 	private final BreakerPersistStore persist;
 
 
+	@Inject
 	public BreakerService(MetricRegistry metrics, BreakerPersistStore persist)
 	{
 		metrics.register("breakers_tripped_total", (Gauge) tripped :: size);
