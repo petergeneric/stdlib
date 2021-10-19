@@ -80,4 +80,13 @@ public class GuiceRestBreakerServiceImpl implements GuiceRestBreakerService
 		else
 			return Response.ok("OK", "text/plain").build();
 	}
+
+
+	@Override
+	public String setTripped(final String name, final boolean value, final String note)
+	{
+		trigger(name, value, note);
+
+		return "OK";
+	}
 }

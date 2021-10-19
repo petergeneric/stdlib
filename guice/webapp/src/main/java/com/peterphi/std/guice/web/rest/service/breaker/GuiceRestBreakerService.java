@@ -38,4 +38,12 @@ public interface GuiceRestBreakerService
 	@Produces("text/plain")
 	@Doc("Returns 2xx with body 'OK' if breaker is not tripped, otherwise 503 with body 'Tripped'. If no such breaker then returns code 404. No auth is required for this method.")
 	Response testBreaker(@PathParam("breaker_name") String breakerName);
+
+	@POST
+	@Path("/set-breaker-state")
+	@Produces("text/plain")
+	@Doc("Trip or reset a breaker")
+	String setTripped(@FormParam("name") final String name,
+	                  @FormParam("value") @DefaultValue("false") final boolean value,
+	                  @FormParam("note") String note);
 }
