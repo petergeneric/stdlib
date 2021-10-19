@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.web.rest.auth.oauth2.rest.api;
 
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.annotations.NoClientBreaker;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
@@ -9,6 +10,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@NoClientBreaker
 @Path("/oauth2/client")
 public interface OAuth2ClientCallbackRestService
 {

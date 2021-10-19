@@ -11,6 +11,7 @@ import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
+import com.peterphi.std.guice.restclient.annotations.NoClientBreaker;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
 
@@ -108,25 +109,33 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 
 
 		final boolean fastFail = config != null ? config.fastFail : iface.isAnnotationPresent(FastFailServiceClient.class);
+		final boolean ignoreBreakers = iface.isAnnotationPresent(NoClientBreaker.class);
 
 		final String name = (config != null && config.name != null) ? config.name : null;
 
 		// Set up a Pausable Proxy that will allow us to pause service calls by tripping a breaker
-		PausableProxy handler = createPausableProxy(proxy, fastFail, name);
+		PausableProxy handler = createPausableProxy(proxy, fastFail, name, ignoreBreakers);
 
 		return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
 	}
 
 
-	private <T> PausableProxy createPausableProxy(final T proxy, final boolean fastFail, final String name)
+	private <T> PausableProxy createPausableProxy(final T proxy,
+	                                              final boolean fastFail,
+	                                              final String name,
+	                                              final boolean ignoreBreakers)
 	{
-		List<String> nameList = new ArrayList<>(2);
-		nameList.add("restcall");
-		if (name != null)
-			nameList.add("restcall." + name);
-
 		PausableProxy handler = new PausableProxy(proxy, fastFail, pausedCallsCounter);
-		breakerService.register(handler :: setPaused, nameList);
+
+		if (!ignoreBreakers)
+		{
+			List<String> nameList = new ArrayList<>(2);
+			nameList.add("restcall");
+			if (name != null)
+				nameList.add("restcall." + name);
+
+			breakerService.register(handler :: setPaused, nameList);
+		}
 
 		return handler;
 	}

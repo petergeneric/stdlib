@@ -1,6 +1,7 @@
 package com.peterphi.usermanager.rest.iface.oauth2server;
 
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.restclient.annotations.NoClientBreaker;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
@@ -15,6 +16,7 @@ import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
+@NoClientBreaker
 @Path("/oauth2")
 @Doc("Implements the OAuth2 flow")
 public interface UserManagerOAuthService
