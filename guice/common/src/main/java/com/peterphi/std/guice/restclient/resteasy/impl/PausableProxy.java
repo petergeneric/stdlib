@@ -6,6 +6,7 @@ import com.peterphi.std.threading.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.ws.rs.BadRequestException;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -71,7 +72,13 @@ class PausableProxy implements InvocationHandler
 		}
 		catch (InvocationTargetException e)
 		{
-			throw e.getCause();
+			final Throwable cause = e.getCause();
+
+			// Make sure we never throw a BadRequestException, because this bubbles all the way up and throws a 400 Bad Request error against our own service if uncaught
+			if (cause instanceof BadRequestException)
+				throw new RuntimeException("Remote service returned 400 Bad Request!", e);
+			else
+				throw cause;
 		}
 	}
 
