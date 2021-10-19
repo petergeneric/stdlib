@@ -5,7 +5,6 @@ import com.google.inject.Injector;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
-import com.peterphi.std.annotation.ServiceName;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceServiceProperties;
 import com.peterphi.std.guice.common.breaker.BreakerService;
@@ -14,7 +13,6 @@ import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
 import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.client.jaxrs.ResteasyWebTarget;
-import org.jetbrains.annotations.NotNull;
 
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
@@ -23,7 +21,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -57,7 +54,6 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	 */
 	private final AtomicInteger pausedCallsCounter = new AtomicInteger(0);
 
-
 	public ResteasyProxyClientFactoryImpl()
 	{
 	}
@@ -69,34 +65,82 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		this.config = config;
 	}
 
+	//
+	// Core Client Create Methods
+	//
 
-	public static String getConfiguredBoundServiceName(final GuiceConfig config, Class<?> iface, String... names)
+
+	ResteasyWebTarget createWebTarget(ServiceClientConfig c)
 	{
-		if (names == null || names.length == 0)
+		URI endpoint = c.endpoint;
+		boolean h2c = c.h2c;
+
+		// Allow the use of the "h2c://" scheme as an alias for http:// with h2c=true
+		// This allows a broader set of users to set h2c without having to explicitly provide an h2c flag
+		if ("h2c".equalsIgnoreCase(endpoint.getScheme()))
 		{
-			if (iface == null)
-				throw new IllegalArgumentException("If not specifying service names you must provide a service interface");
-			else
-				names = getServiceNames(iface);
+			h2c = true;
+			endpoint = UriBuilder.fromUri(endpoint).scheme("http").build();
 		}
 
-		for (String name : names)
-		{
-			if (name == null)
-				continue;
+		final ResteasyClientFactoryImpl.AuthScope scope = new ResteasyClientFactoryImpl.AuthScope(endpoint.getScheme(),
+		                                                                                          endpoint.getHost(),
+		                                                                                          -1);
 
-			if (config.containsKey(GuiceServiceProperties.prop(GuiceServiceProperties.ENDPOINT, name)))
-				return name;
-		}
+		final ResteasyClientFactoryImpl.AuthCredential credentials;
+		if (c.bearerGenerator != null)
+			credentials = new ResteasyClientFactoryImpl.BearerTokenCredentials(scope, c.bearerGenerator);
+		else if (c.username != null)
+			credentials = new ResteasyClientFactoryImpl.UsernamePasswordCredentials(scope,
+			                                                                        c.username,
+			                                                                        c.password,
+			                                                                        c.preemptiveAuth);
+		else
+			credentials = null;
 
-		return null;
+		return clientFactory.getOrCreateClient(credentials, c.fastFail, c.storeCookies, h2c).target(endpoint);
 	}
+
+
+	private <T> T getClient(final Class<T> iface, final ResteasyWebTarget target, final ServiceClientConfig config)
+	{
+		final T proxy = target.proxy(iface);
+
+
+		final boolean fastFail = config != null ? config.fastFail : iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		final String name = (config != null && config.name != null) ? config.name : null;
+
+		// Set up a Pausable Proxy that will allow us to pause service calls by tripping a breaker
+		PausableProxy handler = createPausableProxy(proxy, fastFail, name);
+
+		return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
+	}
+
+
+	private <T> PausableProxy createPausableProxy(final T proxy, final boolean fastFail, final String name)
+	{
+		List<String> nameList = new ArrayList<>(2);
+		nameList.add("restcall");
+		if (name != null)
+			nameList.add("restcall." + name);
+
+		PausableProxy handler = new PausableProxy(proxy, fastFail, pausedCallsCounter);
+		breakerService.register(handler :: setPaused, nameList);
+
+		return handler;
+	}
+
+
+	//
+	// Interface implementations
+	//
 
 
 	@Override
 	public ResteasyWebTarget getWebTarget(final String... names)
 	{
-		return getWebTarget(false, names);
+		return createWebTarget(getServiceClientConfig(false, names));
 	}
 
 
@@ -105,19 +149,155 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 	{
 		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
 
-		return getWebTarget(fastFail, names);
+		return createWebTarget(getServiceClientConfig(fastFail, names));
 	}
 
 
-	private record ServiceClientConfig(URI endpoint, String username, String password, boolean fastFail, String authType,
-	                                   boolean h2c, boolean storeCookies, BearerGenerator bearerGenerator, boolean preemptiveAuth)
+	@Override
+	public <T> T getClient(final Class<T> iface, final String... names)
 	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		final ServiceClientConfig config = getServiceClientConfig(fastFail, names);
+		return getClient(iface, createWebTarget(config), config);
+	}
+
+
+	@Override
+	public <T> T getClient(final Class<T> iface)
+	{
+		final ServiceClientConfig config = getServiceClientConfig(iface);
+
+		return getClient(iface, config);
+	}
+
+
+	@Override
+	public <T> T getClient(final Class<T> iface, final WebTarget target)
+	{
+		return getClient(iface, (ResteasyWebTarget) target, null);
+	}
+
+
+	private <T> T getClient(final Class<T> iface, final ServiceClientConfig config)
+	{
+		final ResteasyWebTarget target = createWebTarget(config);
+
+		return getClient(iface, target, config);
+	}
+
+
+	@Override
+	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
+	{
+		ServiceClientConfig config = new ServiceClientConfig(null,
+		                                                     endpoint,
+		                                                     username,
+		                                                     password,
+		                                                     false,
+		                                                     false,
+		                                                     defaultStoreCookies,
+		                                                     null,
+		                                                     true);
+		return createWebTarget(config);
+	}
+
+
+	@Override
+	public <T> T createClient(final Class<T> iface, final String endpoint)
+	{
+		return createClient(iface, URI.create(endpoint));
+	}
+
+
+	@Override
+	public <T> T createClient(Class<T> iface, URI endpoint)
+	{
+		return createClient(iface, endpoint, false);
+	}
+
+
+	@Override
+	public <T> T createClient(final Class<T> iface, final URI endpoint, final boolean preemptiveAuth)
+	{
+		return createClientWithPasswordAuth(iface, endpoint, getUsername(endpoint), getPassword(endpoint), preemptiveAuth);
+	}
+
+
+	@Override
+	@Deprecated
+	public <T> T createClientWithPasswordAuth(Class<T> iface, URI endpoint, String username, String password)
+	{
+		return createClientWithPasswordAuth(iface, endpoint, username, password, false);
+	}
+
+
+	@Override
+	public <T> T createClientWithBearerAuth(final Class<T> iface, final URI endpoint, final Supplier<String> token)
+	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		ServiceClientConfig config = new ServiceClientConfig(null,
+		                                                     endpoint,
+		                                                     null,
+		                                                     null,
+		                                                     fastFail,
+		                                                     false,
+		                                                     defaultStoreCookies,
+		                                                     new SupplierBearerGenerator(token),
+		                                                     false);
+
+
+		return getClient(iface, config);
+	}
+
+
+	@Override
+	public <T> T createClientWithPasswordAuth(final Class<T> iface,
+	                                          final URI endpoint,
+	                                          final String username,
+	                                          final String password,
+	                                          final boolean preemptiveAuth)
+	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+
+		ServiceClientConfig config = new ServiceClientConfig(null,
+		                                                     endpoint,
+		                                                     username,
+		                                                     password,
+		                                                     fastFail,
+		                                                     false,
+		                                                     defaultStoreCookies,
+		                                                     null,
+		                                                     preemptiveAuth);
+
+		return getClient(iface, config);
+	}
+
+
+	//
+	// Helper methods
+	//
+
+
+	private record ServiceClientConfig(String name, URI endpoint, String username, String password, boolean fastFail, boolean h2c,
+	                                   boolean storeCookies, BearerGenerator bearerGenerator, boolean preemptiveAuth)
+	{
+	}
+
+
+	private ServiceClientConfig getServiceClientConfig(final Class<?> iface)
+	{
+		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
+		final String[] names = ServiceNameHelper.getServiceNames(iface);
+
+		return getServiceClientConfig(fastFail, names);
 	}
 
 
 	private ServiceClientConfig getServiceClientConfig(final boolean defaultFastFail, final String... names)
 	{
-		final String name = getConfiguredBoundServiceName(config, null, names);
+		final String name = ServiceNameHelper.getName(config, null, names);
 
 		if (name == null)
 			throw new IllegalArgumentException("Cannot find service in configuration by any of these names: " +
@@ -189,230 +369,15 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		else
 			throw new IllegalArgumentException("Illegal auth-type for service " + name + ": " + authType);
 
-		return new ServiceClientConfig(uri,
+		return new ServiceClientConfig(name,
+		                               uri,
 		                               username,
 		                               password,
 		                               fastFail,
-		                               authType,
 		                               h2c,
 		                               storeCookies,
 		                               bearerSupplier,
 		                               preemptiveAuth);
-	}
-
-
-	private ResteasyWebTarget getWebTarget(final boolean defaultFastFail, final String... names)
-	{
-		final ServiceClientConfig config = getServiceClientConfig(defaultFastFail, names);
-
-		return createWebTarget(config.endpoint,
-		                       config.h2c,
-		                       config.fastFail,
-		                       config.username,
-		                       config.password,
-		                       config.bearerGenerator,
-		                       config.storeCookies,
-		                       config.preemptiveAuth);
-	}
-
-
-	@Override
-	public <T> T getClient(final Class<T> iface, final String... names)
-	{
-		return getClient(iface, getWebTarget(iface, names), names);
-	}
-
-
-	@Override
-	public <T> T getClient(final Class<T> iface)
-	{
-		return getClient(iface, getServiceNames(iface));
-	}
-
-
-	@Override
-	public <T> T getClient(final Class<T> iface, final WebTarget target)
-	{
-		return getClient(iface, target, new String[0]);
-	}
-
-
-	private <T> T getClient(final Class<T> iface, final WebTarget target, final String... names)
-	{
-		final ResteasyWebTarget resteasyTarget = (ResteasyWebTarget) target;
-		final T proxy = resteasyTarget.proxy(iface);
-
-		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
-
-		// Set up a Pausable Proxy that will allow us to pause service calls by tripping a breaker
-		PausableProxy handler = createPausableProxy(proxy, fastFail, names);
-
-		return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
-	}
-
-
-	@NotNull
-	private <T> PausableProxy createPausableProxy(final T proxy, final boolean fastFail, final String[] names)
-	{
-		List<String> nameList = new ArrayList<>();
-		nameList.add("restclient.all");
-		for (String name : names)
-		{
-			nameList.add("restclient." + name);
-		}
-
-		PausableProxy handler = new PausableProxy(proxy, fastFail, pausedCallsCounter);
-		breakerService.register(handler :: setPaused, nameList);
-
-		return handler;
-	}
-
-
-	/**
-	 * Computes the default set of names for a service based on an interface class. The names produced are an ordered list:
-	 * <ul>
-	 * <li>The fully qualified class name</li>
-	 * <li>If present, the {@link com.peterphi.std.annotation.ServiceName} annotation on the class (OR if not specified on the
-	 * class, the {@link com.peterphi.std.annotation.ServiceName} specified on the package)</li>
-	 * <li>The simple name of the class (the class name without the package prefix)</li>
-	 * </ul>
-	 *
-	 * @param iface a JAX-RS service interface
-	 * @return An array containing one or more names that could be used for the class; may contain nulls (which should be ignored)
-	 */
-	private static String[] getServiceNames(Class<?> iface)
-	{
-		Objects.requireNonNull(iface, "Missing param: iface!");
-
-		return new String[]{iface.getName(), getServiceName(iface), iface.getSimpleName()};
-	}
-
-
-	private static String getServiceName(Class<?> iface)
-	{
-		Objects.requireNonNull(iface, "Missing param: iface!");
-
-		if (iface.isAnnotationPresent(ServiceName.class))
-		{
-			return iface.getAnnotation(ServiceName.class).value();
-		}
-		else if (iface.getPackage().isAnnotationPresent(ServiceName.class))
-		{
-			return iface.getPackage().getAnnotation(ServiceName.class).value();
-		}
-		else
-		{
-			return null; // No special name
-		}
-	}
-
-
-	@Override
-	public ResteasyWebTarget createWebTarget(final URI endpoint, String username, String password)
-	{
-		return createWebTarget(endpoint, username, password, null, defaultStoreCookies, true);
-	}
-
-
-	public ResteasyWebTarget createWebTarget(final URI endpoint,
-	                                         String username,
-	                                         String password,
-	                                         BearerGenerator bearerToken,
-	                                         boolean storeCookies,
-	                                         boolean preemptiveAuth)
-	{
-		return createWebTarget(endpoint, false, false, username, password, bearerToken, storeCookies, preemptiveAuth);
-	}
-
-
-	ResteasyWebTarget createWebTarget(URI endpoint,
-									  boolean h2c,
-	                                  final boolean fastFail,
-	                                  final String username,
-	                                  final String password,
-	                                  final BearerGenerator bearerToken,
-	                                  final boolean storeCookies,
-	                                  final boolean preemptiveAuth)
-	{
-		// Allow the use of the "h2c://" scheme as an alias for http:// with h2c=true
-		// This allows a broader set of users to set h2c without having to explicitly provide an h2c flag
-		if ("h2c".equalsIgnoreCase(endpoint.getScheme()))
-		{
-			h2c = true;
-			endpoint = UriBuilder.fromUri(endpoint).scheme("http").build();
-		}
-
-		final ResteasyClientFactoryImpl.AuthScope scope = new ResteasyClientFactoryImpl.AuthScope(endpoint.getScheme(),
-		                                                                                    endpoint.getHost(),
-		                                                                                    -1);
-
-		final ResteasyClientFactoryImpl.AuthCredential credentials;
-		if (bearerToken != null)
-			credentials = new ResteasyClientFactoryImpl.BearerTokenCredentials(scope, bearerToken);
-		else if (username != null)
-			credentials = new ResteasyClientFactoryImpl.UsernamePasswordCredentials(scope, username, password, preemptiveAuth);
-		else
-			credentials = null;
-
-		return clientFactory.getOrCreateClient(credentials, fastFail, storeCookies, h2c).target(endpoint);
-	}
-
-
-	@Override
-	public <T> T createClient(final Class<T> iface, final String endpoint)
-	{
-		return createClient(iface, URI.create(endpoint));
-	}
-
-
-	@Override
-	public <T> T createClient(Class<T> iface, URI endpoint)
-	{
-		return createClient(iface, endpoint, false);
-	}
-
-
-	@Override
-	public <T> T createClient(final Class<T> iface, final URI endpoint, final boolean preemptiveAuth)
-	{
-		return createClientWithPasswordAuth(iface, endpoint, getUsername(endpoint), getPassword(endpoint), preemptiveAuth);
-	}
-
-
-	@Override
-	@Deprecated
-	public <T> T createClientWithPasswordAuth(Class<T> iface, URI endpoint, String username, String password)
-	{
-		return createClientWithPasswordAuth(iface, endpoint, username, password, false);
-	}
-
-
-	@Override
-	public <T> T createClientWithBearerAuth(final Class<T> iface, final URI endpoint, final Supplier<String> token)
-	{
-		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
-
-		return createWebTarget(endpoint,
-							   false,
-		                       fastFail,
-		                       null,
-		                       null,
-		                       new SupplierBearerGenerator(token),
-		                       defaultStoreCookies,
-		                       true).proxy(iface);
-	}
-
-
-	@Override
-	public <T> T createClientWithPasswordAuth(final Class<T> iface,
-	                                          final URI endpoint,
-	                                          final String username,
-	                                          final String password,
-	                                          final boolean preemptiveAuth)
-	{
-		final boolean fastFail = iface.isAnnotationPresent(FastFailServiceClient.class);
-
-		return createWebTarget(endpoint, false, fastFail, username, password, null, defaultStoreCookies, preemptiveAuth).proxy(iface);
 	}
 
 
