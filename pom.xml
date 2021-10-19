@@ -72,7 +72,6 @@
 		<module>guice</module>
 		<module>util/carbon-client</module>
 		<module>user-manager</module>
-		<module>rules</module>
 		<module>moxy</module>
 	</modules>
 
