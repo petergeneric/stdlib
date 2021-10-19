@@ -65,7 +65,14 @@ class PausableProxy implements InvocationHandler
 			pause(isFastFailServiceClient);
 		}
 
-		return method.invoke(rest, args);
+		try
+		{
+			return method.invoke(rest, args);
+		}
+		catch (InvocationTargetException e)
+		{
+			throw e.getCause();
+		}
 	}
 
 
