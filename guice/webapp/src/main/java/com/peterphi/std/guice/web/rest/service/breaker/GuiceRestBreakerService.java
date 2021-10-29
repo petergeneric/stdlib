@@ -12,6 +12,7 @@ import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 import javax.ws.rs.QueryParam;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/guice/breakers")
@@ -29,9 +30,15 @@ public interface GuiceRestBreakerService
 	@Path("/set-breaker-state")
 	@Produces("text/html")
 	@Doc("Trip or reset a breaker")
-	Response trigger(@FormParam("name") final String name,
-	                 @FormParam("value") @DefaultValue("false") final boolean value,
-	                 @FormParam("note") String note);
+	Response setState(@FormParam("name") final String name,
+	                  @FormParam("value") @DefaultValue("false") final boolean value,
+	                  @FormParam("note") String note);
+
+	@GET
+	@Path("/state")
+	@Produces(MediaType.TEXT_PLAIN)
+	@Doc("Return CSV of breaker,state")
+	String getOverview();
 
 	@GET
 	@Path("/breaker/{breaker_name}/test")
