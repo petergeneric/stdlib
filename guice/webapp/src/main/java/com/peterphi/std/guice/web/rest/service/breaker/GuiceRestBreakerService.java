@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.service.breaker;
 import com.google.inject.ImplementedBy;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.annotation.ServiceName;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
 
 import javax.ws.rs.DefaultValue;
 import javax.ws.rs.FormParam;
@@ -16,6 +17,7 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 
 @Path("/guice/breakers")
+@FastFailServiceClient
 @ServiceName("Breakers")
 @Doc("Displays breakers and allows them to be tripped or reset")
 @ImplementedBy(GuiceRestBreakerServiceImpl.class)
