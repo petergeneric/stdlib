@@ -24,7 +24,7 @@ import java.util.List;
  * <p>
  * If there are no implementations found then it is assumed the interface is a client interface in this context and it is
  * either bound to a service (if an endpoint is found of the form <code>service.<em>name</em>.endpoint</code> (see {@link
- * com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl#getServiceNames(Class)}  for how the
+ * com.peterphi.std.guice.restclient.resteasy.impl.ServiceNameHelper#getServiceNames(Class)}  for how the
  * <em>name</em> is computed)
  */
 class JAXRSAutoRegisterServicesModule extends AbstractModule
