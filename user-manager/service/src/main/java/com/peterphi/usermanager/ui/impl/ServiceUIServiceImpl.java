@@ -17,7 +17,7 @@ import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.ui.api.ServiceUIService;
 import org.apache.commons.lang.StringUtils;
 
@@ -54,7 +54,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 	URI localEndpoint;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore nonceStore;
 
 
 	@Override

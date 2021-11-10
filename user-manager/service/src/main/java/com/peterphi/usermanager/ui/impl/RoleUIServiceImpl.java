@@ -13,7 +13,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RoleUIService;
 import org.apache.commons.lang.StringUtils;
 
@@ -39,7 +39,7 @@ public class RoleUIServiceImpl implements RoleUIService
 	UserDaoImpl userDao;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore nonceStore;
 
 
 	@Override

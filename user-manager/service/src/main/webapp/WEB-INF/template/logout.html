@@ -14,7 +14,7 @@
 
 	<form class="form-horizontal" method="POST" th:action="@{/logout}">
 		<input th:if="${returnTo}" type="hidden" name="returnTo" th:value="${returnTo}"/>
-		<input type="hidden" name="nonce" th:value="${nonceProvider.get().allocate()}" />
+		<input type="hidden" name="nonce" th:value="${csrfTokens.get().allocate()}" />
 
 		<div class="control-group">
 			<div class="controls">

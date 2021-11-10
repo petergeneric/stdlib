@@ -12,7 +12,7 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.LoginUIService;
 import org.apache.commons.lang.StringUtils;
 
@@ -41,7 +41,7 @@ public class LoginUIServiceImpl implements LoginUIService
 	UserAuthenticationService authenticationService;
 
 	@Inject
-	SessionNonceStore nonceStore;
+	CSRFTokenStore tokenStore;
 
 	@Inject(optional = true)
 	@Doc("If enabled, users will be allowed to create their own user accounts (accounts will not be granted any group memberships by default)")
@@ -75,7 +75,7 @@ public class LoginUIServiceImpl implements LoginUIService
 	@Override
 	public Response doLogin(String nonce, String returnTo, String user, String password)
 	{
-		nonceStore.validate(nonce, true);
+		tokenStore.validate(nonce, true);
 
 		if (login.isLoggedIn())
 		{
@@ -152,7 +152,7 @@ public class LoginUIServiceImpl implements LoginUIService
 	@AuthConstraint(role = "authenticated", comment = "Logout action")
 	public Response doLogout(String csrfToken, String returnTo)
 	{
-		nonceStore.validate(csrfToken, true);
+		tokenStore.validate(csrfToken, true);
 
 		// Change the session reconnect key (if one is used)
 		if (login.isLoggedIn())

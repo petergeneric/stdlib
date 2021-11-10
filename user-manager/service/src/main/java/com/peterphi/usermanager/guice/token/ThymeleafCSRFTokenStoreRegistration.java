@@ -1,4 +1,4 @@
-package com.peterphi.usermanager.guice.nonce;
+package com.peterphi.usermanager.guice.token;
 
 import com.google.inject.Inject;
 import com.google.inject.Provider;
@@ -7,10 +7,10 @@ import com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.ThymeleafTemplater;
 
 @EagerSingleton
-public class ThymeleafNonceStoreRegistration implements GuiceLifecycleListener
+public class ThymeleafCSRFTokenStoreRegistration implements GuiceLifecycleListener
 {
 	@Inject
-	Provider<SessionNonceStore> nonceStore;
+	Provider<CSRFTokenStore> tokenStore;
 
 	@Inject
 	ThymeleafTemplater templater;
@@ -19,6 +19,6 @@ public class ThymeleafNonceStoreRegistration implements GuiceLifecycleListener
 	@Override
 	public void postConstruct()
 	{
-		templater.set("nonceProvider", nonceStore);
+		templater.set("csrfTokens", tokenStore);
 	}
 }

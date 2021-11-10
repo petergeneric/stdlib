@@ -15,7 +15,7 @@ import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.AuthenticationFailureException;
 import com.peterphi.usermanager.guice.authentication.ImpersonationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.LowSecuritySessionNonceStore;
+import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
 import com.peterphi.usermanager.service.UserDeleteService;
 import com.peterphi.usermanager.ui.api.UserUIService;
 
@@ -51,7 +51,7 @@ public class UserUIServiceImpl implements UserUIService
 	ImpersonationService impersonationService;
 
 	@Inject
-	LowSecuritySessionNonceStore nonceStore;
+	LowSecurityCSRFTokenStore nonceStore;
 
 	@Inject
 	UserDeleteService deleteService;

@@ -23,7 +23,7 @@ import com.peterphi.usermanager.db.entity.OAuthSessionEntity;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
-import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
+import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
@@ -81,7 +81,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	Templater templater;
 
 	@Inject
-	Provider<SessionNonceStore> nonceStoreProvider;
+	Provider<CSRFTokenStore> tokenStoreProvider;
 
 	@Inject
 	Provider<UserLogin> loginProvider;
@@ -135,11 +135,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			final TemplateCall call = templater.template("connect_to_service");
 
-			SessionNonceStore nonceStore = nonceStoreProvider.get();
+			CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
 			// Provide additional client information
 			call.set("client", client);
-			call.set("nonce", nonceStore.allocate());
+			call.set("token", tokenStore.allocate());
 
 			// Scopes as a list
 			if (StringUtils.isBlank(scope))
@@ -160,18 +160,19 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 
 	@Override
+	@AuthConstraint(id = "oauth2server_auth", role = "authenticated", comment = "Must be logged in to the User Manager")
 	public Response userMadeAuthDecision(final String responseType,
 	                                     final String clientId,
 	                                     final String redirectUri,
 	                                     final String state,
 	                                     final String scope,
-	                                     final String nonce,
+	                                     final String token,
 	                                     final String decision)
 	{
-		final SessionNonceStore nonceStore = nonceStoreProvider.get();
+		final CSRFTokenStore tokenStore = tokenStoreProvider.get();
 
-		// Make sure the nonce is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
-		nonceStore.validate(nonce);
+		// Make sure the token is valid before we do anything. This makes sure we are responding to a real user interacting with our UI
+		tokenStore.validate(token);
 
 		if (StringUtils.equalsIgnoreCase(decision, "allow"))
 		{
@@ -297,10 +298,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			final UserEntity user = userDao.getById(userId);
 
 			final Set<String> roleNames = user
-					                              .getRoles()
-					                              .stream()
-					                              .map(r -> StringUtils.lowerCase(r.getId()))
-					                              .collect(Collectors.toSet());
+					.getRoles()
+					.stream()
+					.map(r -> StringUtils.lowerCase(r.getId()))
+					.collect(Collectors.toSet());
 
 			for (String role : StringUtils.split(requiredRoleName, '|'))
 			{
@@ -324,6 +325,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	private String computeInitiatorInfo()
 	{
 		final HttpServletRequest request = HttpCallContext.get().getRequest();
+
 
 		final String forwardedFor = request.getHeader("X-Forwarded-For");
 
@@ -631,10 +633,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 				log.warn("Error in UserInfo resource", t);
 
 				return Response
-						       .status(401)
-						       .header("WWW-Authenticate",
-						               "error=\"invalid_token\", error_description=\"invalid or expired token\"")
-						       .build();
+						.status(401)
+						.header("WWW-Authenticate",
+						        "error=\"invalid_token\", error_description=\"invalid or expired token\"")
+						.build();
 			}
 		}
 	}
