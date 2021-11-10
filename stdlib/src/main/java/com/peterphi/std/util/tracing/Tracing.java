@@ -2,7 +2,6 @@ package com.peterphi.std.util.tracing;
 
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -73,7 +72,7 @@ public final class Tracing
 	public static void clear()
 	{
 		THREAD_LOCAL.remove();
-		MDC.clear();
+		MDCUtils.clear();
 	}
 
 
@@ -95,7 +94,7 @@ public final class Tracing
 			tracing.ops = 0;
 
 			if (id != null)
-				MDC.put(TracingConstants.MDC_TRACE_ID, id);
+				MDCUtils.put(TracingConstants.MDC_TRACE_ID, id);
 
 			if (tracing.verbose)
 				log("Start trace");
