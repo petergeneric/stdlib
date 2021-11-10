@@ -7,7 +7,7 @@ import com.google.inject.spi.Message;
 import com.google.inject.util.Types;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.ServiceNameHelper;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import org.apache.log4j.Logger;
 
@@ -24,7 +24,7 @@ import java.util.List;
  * <p>
  * If there are no implementations found then it is assumed the interface is a client interface in this context and it is
  * either bound to a service (if an endpoint is found of the form <code>service.<em>name</em>.endpoint</code> (see {@link
- * com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl#getServiceNames(Class)}  for how the
+ * com.peterphi.std.guice.restclient.resteasy.impl.ServiceNameHelper#getServiceNames(Class)}  for how the
  * <em>name</em> is computed)
  */
 class JAXRSAutoRegisterServicesModule extends AbstractModule
@@ -81,7 +81,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 			}
 			else if (implementations.size() == 0)
 			{
-				if (ResteasyProxyClientFactoryImpl.getConfiguredBoundServiceName(config, clazz) != null)
+				if (ServiceNameHelper.getName(config, clazz) != null)
 				{
 					log.debug(
 							"Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: " +
