@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.resteasy.impl;
 
+import com.peterphi.std.guice.common.breaker.Breaker;
 import com.peterphi.std.guice.restclient.exception.ServiceBreakerTripPreventsCallException;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
@@ -44,24 +45,26 @@ class PausableProxy implements InvocationHandler
 
 	private final Object rest;
 	private final AtomicInteger currentlyPausedCount;
-	private boolean paused = false;
 	private final boolean isFastFailServiceClient;
+	private final Breaker breaker;
 
 
 	public PausableProxy(final Object resteasyProxyClient,
 	                     final boolean isFastFailServiceClient,
+	                     final Breaker breaker,
 	                     final AtomicInteger currentlyPausedCount)
 	{
 		this.rest = resteasyProxyClient;
-		this.currentlyPausedCount = currentlyPausedCount;
 		this.isFastFailServiceClient = isFastFailServiceClient;
+		this.breaker = breaker;
+		this.currentlyPausedCount = currentlyPausedCount;
 	}
 
 
 	@Override
 	public Object invoke(final Object proxy, final Method method, final Object[] args) throws Throwable
 	{
-		if (paused && method.getDeclaringClass() != Object.class)
+		if (isPaused() && method.getDeclaringClass() != Object.class)
 		{
 			pause(isFastFailServiceClient);
 		}
@@ -96,7 +99,7 @@ class PausableProxy implements InvocationHandler
 
 			try
 			{
-				while (paused && deadline.isValid())
+				while (isPaused() && deadline.isValid())
 				{
 					try
 					{
@@ -113,11 +116,11 @@ class PausableProxy implements InvocationHandler
 				currentlyPausedCount.decrementAndGet();
 			}
 
-			if (paused)
+			if (isPaused())
 				log.warn("Hit timeout while waiting for service to be unpaused, will now throw exception...");
 		}
 
-		if (paused)
+		if (isPaused())
 			throw new ServiceBreakerTripPreventsCallException(
 					"Unable to make outgoing service call: breaker is still tripped after maximum wait");
 	}
@@ -136,8 +139,8 @@ class PausableProxy implements InvocationHandler
 	}
 
 
-	public void setPaused(final boolean val)
+	private boolean isPaused()
 	{
-		this.paused = val;
+		return breaker != null && breaker.isTripped();
 	}
 }
