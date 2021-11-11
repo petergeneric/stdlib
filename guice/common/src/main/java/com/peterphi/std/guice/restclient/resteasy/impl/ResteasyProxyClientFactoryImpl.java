@@ -7,6 +7,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.apploader.GuiceServiceProperties;
+import com.peterphi.std.guice.common.breaker.Breaker;
 import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.JAXRSProxyClientFactory;
@@ -19,9 +20,10 @@ import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.UriBuilder;
 import java.lang.reflect.Proxy;
 import java.net.URI;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
@@ -119,25 +121,28 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 		return (T) Proxy.newProxyInstance(iface.getClassLoader(), new Class[]{iface}, handler);
 	}
 
+	private final Map<String, Breaker> restBreakers = new ConcurrentHashMap<>();
+
 
 	private <T> PausableProxy createPausableProxy(final T proxy,
 	                                              final boolean fastFail,
 	                                              final String name,
 	                                              final boolean ignoreBreakers)
 	{
-		PausableProxy handler = new PausableProxy(proxy, fastFail, pausedCallsCounter);
-
+		// N.B. should not link Breaker to the PausableProxy, since it will leak PausableProxy if the caller then discards it
+		final Breaker breaker;
 		if (!ignoreBreakers)
 		{
-			List<String> nameList = new ArrayList<>(2);
-			nameList.add("restcall");
-			if (name != null)
-				nameList.add("restcall." + name);
+			final String key = (name != null) ? name : "unnamed";
 
-			breakerService.register(handler :: setPaused, nameList);
+			breaker = restBreakers.computeIfAbsent(key, k -> breakerService.register(null, Arrays.asList("restcall", "restcall." + k)));
+		}
+		else
+		{
+			breaker = null;
 		}
 
-		return handler;
+		return new PausableProxy(proxy, fastFail, breaker, pausedCallsCounter);
 	}
 
 
