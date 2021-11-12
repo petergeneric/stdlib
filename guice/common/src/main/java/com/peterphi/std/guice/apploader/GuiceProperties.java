@@ -153,6 +153,9 @@ public class GuiceProperties
 	@Doc("If true, HTTP request threads will be renamed for the duration they're running (default false)")
 	public static final String HTTP_RENAME_THREADS = "framework.http-request.rename-threads";
 
+	@Doc("If true, OkHttp3 will be used for JAX-RS clients if the class is available in the classpath (default true)")
+	public static final String USE_OKHTTP = "rest.use-okhttp";
+	
 	//
 	// JAX-RS Exception Display
 	//
