@@ -127,7 +127,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 						else if (credentials instanceof UsernamePasswordCredentials passwd)
 						{
 							final String headerVal = "Basic " +
-							                         Base64.encodeBase64((passwd.username() + ":" + passwd.password()).getBytes(
+							                         Base64.encodeBase64String((passwd.username() + ":" + passwd.password()).getBytes(
 									                         StandardCharsets.UTF_8));
 
 							ctx.getHeaders().putIfAbsent("Authorization", Collections.singletonList(headerVal));
