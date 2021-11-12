@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
-	<version>9.7.5.54</version>
+	<version>9.7.5.55-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>application framework parent</name>
