@@ -11,7 +11,7 @@
 	<parent>
 		<groupId>com.peterphi.user-manager</groupId>
 		<artifactId>user-manager-parent</artifactId>
-		<version>13.1.7</version>
+		<version>13.1.8-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
