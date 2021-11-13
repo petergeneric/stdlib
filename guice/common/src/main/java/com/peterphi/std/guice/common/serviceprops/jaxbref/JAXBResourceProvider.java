@@ -4,7 +4,6 @@ import com.google.inject.Provider;
 import com.peterphi.std.guice.common.serviceprops.ConfigRef;
 import com.peterphi.std.threading.Timeout;
 
-import java.lang.ref.SoftReference;
 import java.util.concurrent.TimeUnit;
 
 public class JAXBResourceProvider<T> implements Provider<T>
@@ -14,7 +13,7 @@ public class JAXBResourceProvider<T> implements Provider<T>
 	private final Class<T> clazz;
 	private Timeout cacheValidity = new Timeout(30, TimeUnit.SECONDS);
 
-	private volatile SoftReference<T> cachedValue = new SoftReference<T>(null);
+	private volatile T value;
 	private volatile long cacheExpires = Integer.MIN_VALUE;
 
 
@@ -47,7 +46,7 @@ public class JAXBResourceProvider<T> implements Provider<T>
 	{
 		if (cacheExpires > System.currentTimeMillis())
 		{
-			final T obj = cachedValue.get();
+			final T obj = this.value;
 
 			if (obj != null)
 				return obj;
@@ -58,8 +57,8 @@ public class JAXBResourceProvider<T> implements Provider<T>
 		// If caching is enabled, cache the value
 		if (cacheValidity != null)
 		{
-			cachedValue = new SoftReference<>(obj);
-			cacheExpires = System.currentTimeMillis() + cacheValidity.getMilliseconds();
+			this.value = obj;
+			this.cacheExpires = System.currentTimeMillis() + cacheValidity.getMilliseconds();
 		}
 
 		return obj;
