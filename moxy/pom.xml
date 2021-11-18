@@ -1,0 +1,31 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.peterphi.std</groupId>
+	<artifactId>moxy</artifactId>
+	<packaging>jar</packaging>
+	<version>9.7.5.55-SNAPSHOT</version>
+	<name>moxy as default jaxb</name>
+	<description>Make moxy the default jaxb impl for a JVM</description>
+
+	<parent>
+		<groupId>com.peterphi.std</groupId>
+		<artifactId>stdlib-parent</artifactId>
+		<version>9.7.5.55-SNAPSHOT</version>
+	</parent>
+
+	<dependencies>
+		<dependency>
+			<groupId>org.eclipse.persistence</groupId>
+			<artifactId>org.eclipse.persistence.moxy</artifactId>
+			<version>${moxy.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.json</groupId>
+						<artifactId>javax.json-api</artifactId>
+					</exclusion>
+				</exclusions>
+		</dependency>
+	</dependencies>
+</project>

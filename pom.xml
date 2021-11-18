@@ -43,6 +43,7 @@
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.55</bouncycastle.version>
+		<moxy.version>2.7.8</moxy.version>
 	</properties>
 
 	<scm>
@@ -71,6 +72,7 @@
 		<module>util/carbon-client</module>
 		<module>user-manager</module>
 		<module>azure</module>
+		<module>moxy</module>
 	</modules>
 
 	<dependencyManagement>
@@ -107,7 +109,7 @@
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
 			<artifactId>org.eclipse.persistence.moxy</artifactId>
-			<version>2.7.8</version>
+			<version>${moxy.version}</version>
 		</dependency>
 
 
