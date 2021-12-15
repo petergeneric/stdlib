@@ -6,8 +6,10 @@ import org.joda.time.DateTimeZone;
 import java.io.File;
 import java.lang.reflect.Method;
 import java.net.InetAddress;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URL;
+import java.net.UnknownHostException;
 
 public class StringToTypeConverter
 {
@@ -30,11 +32,11 @@ public class StringToTypeConverter
 		else if (clazz.equals(Timeout.class))
 			return new TimeoutConverter().convert(val);
 		else if (clazz.equals(InetAddress.class))
-			return new InetAddressTypeConverter().convert(val);
+			return parseInetAddress(val);
 		else if (clazz.equals(URI.class))
 			return URI.create(val);
 		else if (clazz.equals(URL.class))
-			return new URLTypeConverter().convert(val);
+			return parseURL(val);
 		else if (clazz.equals(File.class))
 			return new File(val);
 		else if (clazz.equals(DateTimeZone.class))
@@ -42,6 +44,32 @@ public class StringToTypeConverter
 		else
 		{
 			return tryReflection(clazz, val);
+		}
+	}
+
+
+	private static URL parseURL(final String val)
+	{
+		try
+		{
+			return URI.create(val).toURL();
+		}
+		catch (MalformedURLException e)
+		{
+			throw new IllegalArgumentException("Invalid URL: " + val, e);
+		}
+	}
+
+
+	private static InetAddress parseInetAddress(String value)
+	{
+		try
+		{
+			return InetAddress.getByName(value);
+		}
+		catch (UnknownHostException e)
+		{
+			throw new IllegalArgumentException("Cannot parse IP: " + value, e);
 		}
 	}
 
