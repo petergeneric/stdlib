@@ -140,17 +140,19 @@ public abstract class HibernateModule extends AbstractModule
 				}
 				else
 				{
-					// Merge all hibernate property files into a single file
-					PropertyFile file = PropertyFile.readOnlyUnion(files);
+					// Merge all hibernate property files into a single Properties object
+					Properties hibernateProperties = new Properties(32);
+					for (PropertyFile props : files)
+						hibernateProperties.putAll(props.toMap());
 
 					// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
 					GuiceConfig temp = new GuiceConfig();
 
 					temp.setAll(guiceConfig);
-					temp.setAll(file);
+					temp.setAll(hibernateProperties);
 
 					// Now extract the hibernate properties again with any variables
-					properties = temp.toProperties(key -> file.containsKey(key));
+					properties = temp.toProperties(key -> hibernateProperties.containsKey(key));
 				}
 			}
 		}

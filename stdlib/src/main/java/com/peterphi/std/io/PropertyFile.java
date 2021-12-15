@@ -1,7 +1,5 @@
 package com.peterphi.std.io;
 
-import com.peterphi.std.io.properties.IMergeConflictResolver;
-import com.peterphi.std.util.HexHelper;
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.io.IOUtils;
 import org.apache.log4j.Logger;
@@ -20,15 +18,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.net.InetAddress;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.net.URLDecoder;
-import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Base64;
 import java.util.Calendar;
 import java.util.Enumeration;
 import java.util.HashMap;
@@ -85,7 +80,7 @@ public class PropertyFile
 	 * Find a property file
 	 *
 	 * @param classloader
-	 * @param fileName
+	 * @param fileNames
 	 *
 	 * @return
 	 */
@@ -502,86 +497,6 @@ public class PropertyFile
 	// MANIPULATION
 	// ////////////////////////////
 
-
-	/**
-	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
-	 * <code>other</code>
-	 *
-	 * @param other
-	 * 		the other property file
-	 */
-	public void merge(PropertyFile other)
-	{
-		merge(other, null);
-	}
-
-
-	/**
-	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
-	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will
-	 * overwrite the local properties
-	 *
-	 * @param other
-	 * 		the other property file
-	 * @param conflictResolver
-	 */
-	public void merge(PropertyFile other, IMergeConflictResolver conflictResolver)
-	{
-		hook_merge_begin();
-
-		try
-		{
-			for (String varName : other.keySet())
-			{
-				String varVal = other._get(varName, null);
-
-				if (varVal != null)
-				{
-					if (conflictResolver != null && this._contains(varName))
-					{
-						varVal = conflictResolver.resolveConflict(varName, _get(varName, null), varVal);
-					}
-
-					_set(varName, varVal);
-				}
-			}
-		}
-		finally
-		{
-			hook_merge_complete();
-		}
-	}
-
-
-	/**
-	 * Merges another PropertyFile into this PropertyFile, overwriting any conflicting properties with the value from
-	 * <code>other</code>
-	 *
-	 * @param other
-	 */
-	public void merge(Properties other)
-	{
-		merge(other, null);
-	}
-
-
-	/**
-	 * Merges another PropertyFile into this PropertyFile, using an optional merge conflict resolver<br />
-	 * If no merge conflict resolver is specified then the default will be that the properties from <code>other</code> will
-	 * overwrite the local properties
-	 *
-	 * @param other
-	 * 		the other property file
-	 * @param conflictResolver
-	 */
-	public void merge(final Properties other, final IMergeConflictResolver conflictResolver)
-	{
-		PropertyFile otherAsPropFile = new PropertyFile(other);
-
-		merge(otherAsPropFile, conflictResolver);
-	}
-
-
 	/**
 	 * Make this PropertyFile object read-only
 	 */
@@ -609,54 +524,31 @@ public class PropertyFile
 	}
 
 
-	public InetAddress getIP(final String name, final InetAddress defaultValue)
-	{
-		String value = get(name);
-
-		if (value != null)
-		{
-			value = value.trim();
-			if (value.isEmpty())
-				throw new IllegalArgumentException("Missing value for IP address field " +
-				                                   name +
-				                                   ": contents appears to be an empty string (or just whitespace?)");
-			try
-			{
-				return InetAddress.getByName(value);
-			}
-			catch (UnknownHostException e)
-			{
-				throw new RuntimeException("Error parsing IP: " + e.getMessage(), e);
-			}
-		}
-		else
-		{
-			return defaultValue;
-		}
-	}
-
-
 	public int get(final String name, final int defaultValue)
 	{
-		return Integer.parseInt(get(name, Integer.toString(defaultValue)).trim());
+		final String val = get(name, null);
+
+		if (val != null)
+			return Integer.parseInt(val.trim());
+		else
+			return defaultValue;
 	}
 
 
 	public long get(final String name, final long defaultValue)
 	{
-		return Long.parseLong(get(name, Long.toString(defaultValue)).trim());
+		final String val = get(name, null);
+
+		if (val != null)
+			return Long.parseLong(val.trim());
+		else
+			return defaultValue;
 	}
 
 
 	public boolean get(final String name, final boolean defaultValue)
 	{
 		return Boolean.parseBoolean(get(name, Boolean.toString(defaultValue)).trim());
-	}
-
-
-	public int getInteger(final String name, final int defaultValue)
-	{
-		return Integer.parseInt(get(name, Integer.toString(defaultValue)).trim());
 	}
 
 
@@ -674,12 +566,6 @@ public class PropertyFile
 			return false;
 		else
 			throw new IllegalArgumentException("Cannot parse to a boolean value: " + value);
-	}
-
-
-	public long getLong(final String name, final long defaultValue)
-	{
-		return Long.parseLong(get(name, Long.toString(defaultValue)).trim());
 	}
 
 
@@ -703,107 +589,9 @@ public class PropertyFile
 	}
 
 
-	public Class<?> getClass(final String name, final Class<?> defaultValue)
-	{
-		final String className = get(name, null);
-
-		if (className == null)
-		{
-			return defaultValue;
-		}
-		else
-		{
-			try
-			{
-				return Class.forName(className.trim());
-			}
-			catch (ClassNotFoundException e)
-			{
-				throw new IllegalArgumentException("ClassNotFoundException caught: " + className, e);
-			}
-		}
-	}
-
-
-	/**
-	 * Get a value which is Base64 encoded
-	 *
-	 * @param name
-	 *
-	 * @return
-	 */
-	public byte[] getBase64(final String name)
-	{
-		final String encoded = get(name);
-
-		if (encoded == null)
-			return null;
-		else
-			return Base64.getDecoder().decode(encoded.trim());
-	}
-
-
-	/**
-	 * Get a value which is Base64 encoded and has a default value
-	 *
-	 * @param name
-	 * @param defaultValue
-	 *
-	 * @return
-	 */
-	public byte[] getBase64(final String name, final byte[] defaultValue)
-	{
-		byte[] value = getBase64(name);
-
-		if (value != null)
-			return value;
-		else
-			return defaultValue;
-	}
-
-
-	/**
-	 * Get a value which has been encoded in hexidecimal; The encoding may optionally include : delimiters, but no other non-hex
-	 * characters are permitted
-	 *
-	 * @param name
-	 *
-	 * @return
-	 */
-	public byte[] getHex(final String name)
-	{
-		String value = get(name, null);
-
-		if (value == null)
-			return null;
-		else
-		{
-			// Remove any : separators
-			while (value.indexOf(':') != -1)
-				value = value.replace(":", "");
-
-			return HexHelper.fromHex(value.trim());
-		}
-	}
-
-
 	public String set(final String name, final String value)
 	{
 		return _set(name, value);
-	}
-
-
-	public String setBase64(final String name, final byte[] value)
-	{
-		final String encoded = Base64.getEncoder().encodeToString(value);
-
-		return set(name, encoded);
-	}
-
-
-	public String setHex(final String name, final byte[] value)
-	{
-		return set(name, HexHelper.toHex(value));
 	}
 
 
@@ -886,18 +674,6 @@ public class PropertyFile
 	protected void hook_cleared()
 	{
 		dirty = true;
-	}
-
-
-	protected void hook_merge_begin()
-	{
-
-	}
-
-
-	protected void hook_merge_complete()
-	{
-
 	}
 
 
@@ -1112,59 +888,6 @@ public class PropertyFile
 		entries.remove(nvp);
 
 		hook_removed(name);
-	}
-
-
-	/**
-	 * Creates a read-only union of a number of property files<br />
-	 * If any property file is null or the file it points to does not exist then it is ignored
-	 *
-	 * @param filenames
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 * 		if an unexpected error occurs while loading a file
-	 */
-	public static PropertyFile readOnlyUnion(final File... filenames) throws IOException
-	{
-		final PropertyFile props = new PropertyFile();
-
-		for (final File f : filenames)
-		{
-			if (f != null && f.exists())
-			{
-				props.merge(new PropertyFile(f));
-			}
-		}
-
-		props.readOnly = true;
-
-		return props;
-	}
-
-
-	/**
-	 * Construct a new read-only PropertyFile which merges the contents of a number of other PropertyFile objects<br />
-	 * Null PropertyFiles are ignored.
-	 *
-	 * @param files
-	 *
-	 * @return
-	 */
-	public static PropertyFile readOnlyUnion(final PropertyFile... files)
-	{
-		final PropertyFile props = new PropertyFile();
-
-		for (PropertyFile file : files)
-		{
-			if (file != null)
-				props.merge(file);
-		}
-
-		props.makeReadOnly();
-
-		return props;
 	}
 
 
