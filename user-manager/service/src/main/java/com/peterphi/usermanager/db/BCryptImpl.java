@@ -1,4 +1,4 @@
-package com.peterphi.std.crypto;
+package com.peterphi.usermanager.db;
 
 // Copyright (c) 2006 Damien Miller <djm@mindrot.org>
 //

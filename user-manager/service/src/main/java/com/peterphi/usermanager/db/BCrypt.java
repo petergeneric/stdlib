@@ -1,4 +1,4 @@
-package com.peterphi.std.crypto;
+package com.peterphi.usermanager.db;
 
 /**
  * A wrapper for BCrypt
