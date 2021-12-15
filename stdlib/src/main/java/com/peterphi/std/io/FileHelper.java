@@ -1,14 +1,12 @@
 package com.peterphi.std.io;
 
 import com.peterphi.std.system.exec.Exec;
-import com.peterphi.std.system.exec.Execed;
 import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
@@ -16,10 +14,7 @@ import java.io.InputStreamReader;
 import java.io.Reader;
 import java.io.StringReader;
 import java.net.URL;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileLock;
 import java.nio.file.Files;
-import java.util.Set;
 
 /**
  * <p>
@@ -532,7 +527,7 @@ public class FileHelper
 
 	public static void write(File f, StringBuilder sb) throws IOException
 	{
-		write(f, new StringBuilderReader(sb));
+		write(f, sb.toString());
 	}
 
 
@@ -620,323 +615,6 @@ public class FileHelper
 		{
 			reader.close();
 		}
-	}
-
-
-	public static boolean chown(final File f, String owner, String group, boolean recursive) throws IOException
-	{
-		if (!f.exists())
-			throw new FileNotFoundException("Cannot chown a non-existant file!");
-
-		if (owner == null)
-			owner = "";
-		else if (group == null)
-			group = "";
-
-		final String ownerGroupPair;
-		if (owner.isEmpty() && group.isEmpty())
-			throw new IllegalArgumentException("Must specify an owner or a group to change ownership to");
-		else if (group.isEmpty())
-			ownerGroupPair = owner;
-		else
-			ownerGroupPair = owner + "." + group;
-
-		try
-		{
-			final String[] cmd;
-			if (recursive)
-				cmd = new String[]{"chown", "--recursive", ownerGroupPair, f.getPath()};
-			else
-				cmd = new String[]{"chown", ownerGroupPair, f.getPath()};
-
-			Execed call = Exec.rootUtility(cmd);
-
-			int returnCode = call.waitForExit();
-			return returnCode == 0;
-		}
-		catch (Exception e)
-		{
-			log.error("[FileHelper] {chown} Failure: " + e.getMessage(), e);
-			return false;
-		}
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), replacing the permissions using octal
-	 *
-	 * @param f
-	 * @param permissions
-	 * 		<strong>REMEMBER TO SPECIFY THIS VALUE IN OCTAL (ie. with a leading zero) IF YOU ARE USING NUMBERS IDENTICAL TO THE
-	 * 		CHMOD
-	 * 		COMMAND-LINE REPRESENTATION (eg. 755)</strong>
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(final File f, final int permissions)
-	{
-		return chmod(null, f, permissions);
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), replacing the permissions using octal
-	 *
-	 * @param f
-	 * @param permissions
-	 * 		<strong>REMEMBER TO SPECIFY THIS VALUE IN OCTAL (ie. with a leading zero)</strong>
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(final String as, final File f, final int permissions)
-	{
-		if (!f.exists())
-		{
-			log.error("[FileHelper] {chmod} Non-existant file: " + f.getPath());
-			return false;
-		}
-
-		try
-		{
-			Execed call = Exec.utilityAs(as, "chmod", Integer.toOctalString(permissions), f.getPath());
-
-			int returnCode = call.waitForExit();
-			return returnCode == 0;
-		}
-		catch (Exception e)
-		{
-			log.error("[FileHelper] {chmod} Failure: " + e.getMessage(), e);
-			return false;
-		}
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), replacing the permissions on <code>f</code> with
-	 * the permissions on <code>copyOf</code>
-	 *
-	 * @param f
-	 * @param copyOf
-	 * 		the file to use the permissions from
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(File f, File copyOf)
-	{
-		return chmod(null, f, copyOf);
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), replacing the permissions on <code>f</code> with
-	 * the permissions on <code>copyOf</code>
-	 *
-	 * @param f
-	 * @param copyOf
-	 * 		the file to use the permissions from
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(String as, File f, File copyOf)
-	{
-		if (!f.exists())
-		{
-			log.error("[FileHelper] {chmod} Non-existant file: " + f.getPath());
-			return false;
-		}
-
-		if (!copyOf.exists())
-		{
-			log.error("[FileHelper] {chmod} Non-existant file: " + copyOf.getPath());
-			return false;
-		}
-
-		try
-		{
-			Execed call = Exec.utilityAs(as, "chmod", "--reference=" + copyOf.getPath(), f.getPath());
-
-			int returnCode = call.waitForExit();
-
-			return returnCode == 0;
-		}
-		catch (Exception e)
-		{
-			log.error("[LockRecord] {chmod} Failure: " + e.getMessage(), e);
-			return false;
-		}
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), altering the permissions using symbols (ie. chmod
-	 * o+w)
-	 *
-	 * @param f
-	 * @param set
-	 * 		The permissions to set on the file
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(String as, File f, Set<ChmodBit> set)
-	{
-		return chmod(as, f, set, null);
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), altering the permissions using symbols (ie. chmod
-	 * o+w)
-	 *
-	 * @param f
-	 * @param set
-	 * 		The permissions to set on the file
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(File f, Set<ChmodBit> set)
-	{
-		return chmod(null, f, set);
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), altering the permissions using symbols (ie. chmod
-	 * o+w)
-	 *
-	 * @param f
-	 * @param set
-	 * 		The permissions to set on the file
-	 * @param clear
-	 * 		The permissions to modify on the file
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(File f, Set<ChmodBit> set, Set<ChmodBit> clear)
-	{
-		return chmod(null, f, set, clear);
-	}
-
-
-	/**
-	 * Performs a chmod (which assumes this system is Linux/UNIX/Solaris/etc), altering the permissions using symbols (ie. chmod
-	 * o+w)
-	 *
-	 * @param f
-	 * @param set
-	 * 		The permissions to set on the file
-	 * @param clear
-	 * 		The permissions to modify on the file
-	 *
-	 * @return
-	 *
-	 * @throws IOException
-	 */
-	public static boolean chmod(String as, File f, Set<ChmodBit> set, Set<ChmodBit> clear)
-	{
-		if (!f.exists())
-		{
-			log.error("[FileHelper] {chmod} Non-existant file: " + f.getPath());
-			return false;
-		}
-
-		String permissions = ChmodBit.toString(set, clear);
-
-		try
-		{
-			Execed call = Exec.utilityAs(as, "chmod", permissions, f.getPath());
-
-			int returnCode = call.waitForExit();
-
-			return returnCode == 0;
-		}
-		catch (Exception e)
-		{
-			log.error("[LockRecord] {chmod} Failure: " + e.getMessage(), e);
-			return false;
-		}
-	}
-
-
-	public static class LockRecord
-	{
-		protected FileOutputStream fos;
-		protected FileChannel channel;
-		protected FileLock flock;
-
-
-		public void release()
-		{
-			try
-			{
-				if (flock != null && flock.isValid())
-				{
-					flock.release();
-				}
-
-				if (channel != null && channel.isOpen())
-				{
-					channel.close();
-				}
-
-				if (fos != null)
-				{
-					fos.close();
-				}
-			}
-			catch (IOException e)
-			{
-				// ignore
-			}
-		}
-	}
-
-
-	/**
-	 * Obtains an exclusive lock on the specified file. By calling this method, the caller guarantees it will call the release()
-	 * method of the LockRecord
-	 *
-	 * @param f
-	 * 		File The file to lock
-	 *
-	 * @return LockRecord The lock record
-	 */
-	public static LockRecord lockFile(File f)
-	{
-		LockRecord rec = new LockRecord();
-
-		try
-		{
-			rec.fos = new FileOutputStream(f);
-
-			rec.channel = rec.fos.getChannel();
-			rec.flock = rec.channel.lock();
-		}
-		catch (IOException e)
-		{
-			log.error("[FileHelper] {lockFile} Error while locking " + f + ". Error: " + e.getMessage(), e);
-			if (rec != null)
-			{
-				rec.release();
-			}
-
-			return null;
-		}
-
-		return rec;
 	}
 
 
