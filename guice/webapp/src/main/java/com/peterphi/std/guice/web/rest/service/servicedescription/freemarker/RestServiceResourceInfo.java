@@ -266,8 +266,9 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 		sb.append(" \"").append(url).append('"');
 
 
-		// Add Content-Type and binary for POST/PUT
-		if (getRequestEntity() != null && (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT")))
+		// Add Content-Type and binary for POST/PUT/PATCH
+		if (getRequestEntity() != null &&
+		    (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT") || getHttpMethod().equals("PATCH")))
 		{
 			final boolean isXML = isRequestXML();
 
