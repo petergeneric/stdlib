@@ -474,7 +474,7 @@ class GuiceFactory
 
 		try
 		{
-			Class<?> clazz = Class.forName(prop);
+			Class<?> clazz = Class.forName(prop, false, GuiceFactory.class.getClassLoader());
 
 			if (base.isAssignableFrom(clazz))
 				return (Class<? extends T>) clazz; // unchecked cast

@@ -353,7 +353,13 @@ public class ResteasyProxyClientFactoryImpl implements JAXRSProxyClientFactory
 			{
 				try
 				{
-					final Class<? extends BearerGenerator> bearerClass = (Class) Class.forName(bearerTokenClassName);
+					final Class<? extends BearerGenerator> bearerClass = (Class) Class.forName(bearerTokenClassName,
+					                                                                           false,
+					                                                                           getClass().getClassLoader());
+
+					if (!BearerGenerator.class.isAssignableFrom(bearerClass))
+						throw new IllegalArgumentException("Expected class implementing BearerGenerator, but got " +
+						                                   bearerClass.getName());
 
 					bearerSupplier = guice.getInstance(bearerClass);
 				}

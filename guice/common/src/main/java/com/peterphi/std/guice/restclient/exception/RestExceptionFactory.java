@@ -42,7 +42,7 @@ public class RestExceptionFactory
 	{
 		try
 		{
-			Class<?> clazz = Class.forName(failure.exception.className);
+			Class<?> clazz = Class.forName(failure.exception.className, false, getClass().getClassLoader());
 
 			if (RestException.class.isAssignableFrom(clazz))
 			{
