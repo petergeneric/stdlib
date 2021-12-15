@@ -49,12 +49,4 @@ public class GuiceConfigTest
 		assertEquals("getRaw", "a-${var}-b", props.getRaw("name", null));
 		assertEquals("get", "a-123-b", props.get("name", null));
 	}
-
-
-	@Test
-	public void testOgnl()
-	{
-		props.set("name", "a-${ognl:1+1}-b");
-		assertEquals("get", "a-2-b", props.get("name", null));
-	}
 }
