@@ -26,7 +26,9 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 
@@ -141,18 +143,18 @@ public abstract class HibernateModule extends AbstractModule
 				else
 				{
 					// Merge all hibernate property files into a single Properties object
-					Properties hibernateProperties = new Properties(32);
-					for (PropertyFile props : files)
-						hibernateProperties.putAll(props.toMap());
+					Map<String, String> props = new HashMap<>(32);
+					for (PropertyFile file : files)
+						props.putAll(file.toMap());
 
 					// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
 					GuiceConfig temp = new GuiceConfig();
 
 					temp.setAll(guiceConfig);
-					temp.setAll(hibernateProperties);
+					temp.setAll(props);
 
 					// Now extract the hibernate properties again with any variables
-					properties = temp.toProperties(key -> hibernateProperties.containsKey(key));
+					properties = temp.toProperties(key -> props.containsKey(key));
 				}
 			}
 		}
