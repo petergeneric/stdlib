@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
 import java.nio.charset.Charset;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.UUID;
 
@@ -178,15 +179,9 @@ public class WQTypeHelper
 	{
 		final E[] values = clazz.getEnumConstants();
 
-		for (E val : values)
+		if (value.length() != 0 && Character.isDigit(value.charAt(0)))
 		{
-			if (value.equalsIgnoreCase(val.name()))
-				return val;
-		}
-
-		// Fall back on an ordinal value
-		if (value.length() > 0 && Character.isDigit(value.charAt(0)))
-		{
+			// Try ordinal value
 			try
 			{
 				return values[Integer.valueOf(value)];
@@ -196,7 +191,15 @@ public class WQTypeHelper
 				// ignore, return to normal codepath
 			}
 		}
+		else
+		{
+			for (E val : values)
+			{
+				if (value.equalsIgnoreCase(val.name()))
+					return val;
+			}
+		}
 
-		throw new IllegalArgumentException(value + " is not a valid " + clazz.getSimpleName() + ": expected one of " + values);
+		throw new IllegalArgumentException(value + " is not a valid " + clazz.getSimpleName() + ": expected one of " + Arrays.asList(values));
 	}
 }
