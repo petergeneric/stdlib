@@ -144,6 +144,16 @@ public class OgnlEvaluator
 		}
 		catch (Throwable e)
 		{
+			if (e.getCause() != null && e instanceof ognl.MethodFailedException)
+			{
+				final Throwable cause = e.getCause();
+				final String causeMsg = cause.getClass().getSimpleName() +
+				                                     ": " +
+				                                     cause.getMessage();
+
+				throw new RuntimeException("Error evaluating " + expr + " due to method failure: " + causeMsg, e);
+			}
+
 			throw new RuntimeException("Error evaluating " + expr + " - " + e.getMessage(), e);
 		}
 	}
