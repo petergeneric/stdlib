@@ -454,9 +454,8 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				this.fetches = queryExpand;
 
 				// Allow a special values of "-idcollections" and "-collections" to be used (ignored here currently, but usable in serialisers)
-				this.fetches.remove("-idcollections");
-				this.fetches.remove("-collections");
 				this.fetches.remove("none"); // Allow a special value of "none" to be used
+				this.fetches.removeIf(v -> v.charAt(0) == '-');
 
 				// Treat expand=all (coming from older API clients) as if expand was not specified
 				if (this.fetches.size() == 1 && this.fetches.contains("all"))
