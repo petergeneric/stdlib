@@ -319,6 +319,7 @@ public class DOMUtils
 			transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", Integer.toString(DEFAULT_INDENT));
 
 			transformer.transform(input, output);
