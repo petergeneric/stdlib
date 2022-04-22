@@ -7,6 +7,7 @@ import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 
@@ -119,7 +120,7 @@ public class OgnlEvaluator
 
 		try
 		{
-			return expr.getValue(new OgnlContext(null, null, PUBLIC_ACCESS), obj);
+			return expr.getValue(createNewOgnlContext(), obj);
 		}
 		catch (Throwable e)
 		{
@@ -137,10 +138,7 @@ public class OgnlEvaluator
 	{
 		try
 		{
-			return (T) Ognl.getValue(getExpression(root),
-			                         new OgnlContext(null, null, PUBLIC_ACCESS),
-			                         root,
-			                         expected);
+			return (T) Ognl.getValue(getExpression(root), createNewOgnlContext(), root, expected);
 		}
 		catch (Throwable e)
 		{
@@ -184,13 +182,24 @@ public class OgnlEvaluator
 		{
 			log.debug("OGNL Expression used enough times for compile: " + expr);
 
-			return Ognl.compileExpression(new OgnlContext(null, null, PUBLIC_ACCESS), root, expr);
+			final OgnlContext ctx = createNewOgnlContext();
+
+			return Ognl.compileExpression(ctx, root, expr);
 		}
 		catch (Throwable e)
 		{
 			throw new RuntimeException("Error compiling OGNL expression: " + ognl + " with root " + root + ": " + e.getMessage(),
 			                           e);
 		}
+	}
+
+
+	@NotNull
+	private static OgnlContext createNewOgnlContext()
+	{
+		final OgnlContext ctx = new OgnlContext(PUBLIC_ACCESS, null, null, null);
+		ctx.put("StringUtils", new StringUtils());
+		return ctx;
 	}
 
 

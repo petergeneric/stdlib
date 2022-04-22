@@ -56,4 +56,11 @@ public class OgnlFactoryTest
 		final List<String> input = Collections.singletonList("hello world");
 		assertEquals("hello world xyz - 1", OgnlFactory.template("${get(0).toString()} ${'xyz'} - ${1}", input));
 	}
+
+
+	@Test
+	public void testStringUtilss()
+	{
+		assertEquals(" x", OgnlFactory.template("${#StringUtils.leftPad('x', 2)}", new Object()));
+	}
 }
