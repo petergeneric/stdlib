@@ -1,16 +1,14 @@
 package com.peterphi.std.guice.common.ognl;
 
 import org.apache.commons.lang.text.StrLookup;
-import org.apache.commons.lang.text.StrSubstitutor;
 
 import java.util.HashMap;
-import java.util.Map;
 
 public final class OgnlFactory
 {
-	static final OgnlFactory INSTANCE = new OgnlFactory();
+	private static final OgnlFactory INSTANCE = new OgnlFactory();
 
-	Map<Class, OgnlEvaluatorCollection> evaluators = new HashMap<>(4);
+	private final HashMap<Class, OgnlEvaluatorCollection> evaluators = new HashMap<>(4);
 
 
 	private OgnlFactory()
@@ -18,12 +16,17 @@ public final class OgnlFactory
 	}
 
 
+	public static void clear()
+	{
+		INSTANCE.evaluators.clear();
+	}
+
 	/**
 	 * Returns the type of a root object; this is because compiled OGNL is specific to a given root object input type
 	 * @param root
 	 * @return
 	 */
-	private static final Class getRootClass(final Object root)
+	private static Class getRootClass(final Object root)
 	{
 		if (root == null)
 			return Object.class;
@@ -67,7 +70,7 @@ public final class OgnlFactory
 
 
 	/**
-	 * Helper method that uses {@link StrSubstitutor} and evaluates OGNL expressions within <code>${...}</code> blocks
+	 * Helper method that uses {@link StrTemplate} and evaluates OGNL expressions within <code>${...}</code> blocks
 	 *
 	 * @param template
 	 * 		the template text
@@ -78,14 +81,12 @@ public final class OgnlFactory
 	 */
 	public static String template(final String template, final Object root)
 	{
-		StrSubstitutor substitutor = new StrSubstitutor(newOgnlLookup(root));
-
-		return substitutor.replace(template);
+		return StrTemplate.evaluate(template, newOgnlLookup(root));
 	}
 
 
 	/**
-	 * Creates a lookup helper for {@link StrSubstitutor} to allow the evaluation of OGNL blocks within strings.<br />
+	 * Creates a lookup helper for {@link StrTemplate} to allow the evaluation of OGNL blocks within strings.<br />
 	 * Callers should probably use {@link #template(String, Object)} instead.
 	 *
 	 * @param root
