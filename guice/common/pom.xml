@@ -19,7 +19,7 @@
 		<dependency>
 			<groupId>ognl</groupId>
 			<artifactId>ognl</artifactId>
-			<version>3.2.20</version>
+			<version>3.3.2</version>
 			
 			<exclusions>
 				<exclusion>
