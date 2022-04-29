@@ -93,6 +93,8 @@ public interface Dao<T, ID extends Serializable>
 	 */
 	public List<T> getAll();
 
+	T getReference(ID id);
+
 	/**
 	 * Retrieve an item by its primary key
 	 *

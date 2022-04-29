@@ -184,6 +184,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Override
+	public T getReference(ID id)
+	{
+		if (id == null)
+			throw new IllegalArgumentException("Must supply an id to retrieve!");
+
+		return getSession().getReference(clazz, id);
+	}
 
 	@Override
 	@Transactional(readOnly = true)
