@@ -2,11 +2,6 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
-import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.hibernate.Session;
-import org.hibernate.engine.spi.SessionFactoryImplementor;
-
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
@@ -24,6 +19,12 @@ import jakarta.persistence.metamodel.EntityType;
 import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
+import org.apache.commons.lang.StringUtils;
+import org.apache.log4j.Logger;
+import org.hibernate.Session;
+import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.RootGraph;
+
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
@@ -71,7 +72,7 @@ public class QEntity
 	/**
 	 * A JPA2.1 EntityGraph version of defaultExpand
 	 */
-	private EntityGraph defaultExpandGraph;
+	private RootGraph defaultExpandGraph;
 
 
 	/**
@@ -669,11 +670,11 @@ public class QEntity
 	 *
 	 * @return
 	 */
-	public EntityGraph getDefaultGraph(final Session session)
+	public RootGraph getDefaultGraph(final Session session)
 	{
 		if (this.defaultExpandGraph == null)
 		{
-			final EntityGraph<?> graph = session.createEntityGraph(clazz);
+			final RootGraph<?> graph = session.createEntityGraph(clazz);
 
 			populateGraph(graph, getEagerFetch());
 
