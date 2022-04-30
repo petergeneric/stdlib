@@ -2,7 +2,6 @@ package com.peterphi.std.guice.hibernate.usertype;
 
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
-import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 import org.joda.time.DateTime;
 
@@ -11,34 +10,31 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Types;
-import java.util.Comparator;
 
 /**
  * Encodes Joda DateTime values into a BIGINT column where the date is expressed in milliseconds since 1970.
  */
-public class JodaDateTimeUserType implements UserType, UserVersionType, Comparator
+public class JodaDateTimeUserType implements UserVersionType<DateTime>
 {
 	public static JodaDateTimeUserType INSTANCE = new JodaDateTimeUserType();
 
-	private static final int[] SQL_TYPES = {Types.BIGINT};
-
 
 	@Override
-	public int[] sqlTypes()
+	public int getSqlType()
 	{
-		return SQL_TYPES;
+		return Types.BIGINT;
 	}
 
 
 	@Override
-	public Class returnedClass()
+	public Class<DateTime> returnedClass()
 	{
 		return DateTime.class;
 	}
 
 
 	@Override
-	public boolean equals(Object x, Object y) throws HibernateException
+	public boolean equals(DateTime x, DateTime y) throws HibernateException
 	{
 		if (x == y)
 		{
@@ -56,7 +52,7 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public int hashCode(final Object x) throws HibernateException
+	public int hashCode(final DateTime x) throws HibernateException
 	{
 		return x.hashCode();
 	}
@@ -64,11 +60,11 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 	@Override
 	public DateTime nullSafeGet(final ResultSet resultSet,
-	                            final String[] names,
+	                            final int position,
 	                            final SharedSessionContractImplementor session,
 	                            final Object owner) throws HibernateException, SQLException
 	{
-		final long encoded = resultSet.getLong(names[0]);
+		final long encoded = resultSet.getLong(position);
 
 		if (resultSet.wasNull())
 			return null;
@@ -79,9 +75,10 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 	}
 
 
+
 	@Override
 	public void nullSafeSet(final PreparedStatement statement,
-	                        final Object value,
+	                        final DateTime value,
 	                        final int index,
 	                        final SharedSessionContractImplementor session) throws HibernateException, SQLException
 	{
@@ -89,13 +86,9 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 		{
 			statement.setNull(index, Types.BIGINT);
 		}
-		else if (value instanceof Long)
-		{
-			statement.setLong(index, (Long) value);
-		}
 		else
 		{
-			final long millis = ((DateTime) value).getMillis();
+			final long millis = value.getMillis();
 
 			statement.setLong(index, millis);
 		}
@@ -103,9 +96,9 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public DateTime deepCopy(Object value) throws HibernateException
+	public DateTime deepCopy(DateTime value) throws HibernateException
 	{
-		return (DateTime) value; // immutable type
+		return value; // immutable type
 	}
 
 
@@ -117,12 +110,9 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public DateTime disassemble(final Object value) throws HibernateException
+	public DateTime disassemble(final DateTime value) throws HibernateException
 	{
-		if (value == null)
-			return null;
-		else
-			return (DateTime) value;
+		return value;
 	}
 
 
@@ -137,9 +127,9 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public DateTime replace(final Object original, final Object target, final Object owner) throws HibernateException
+	public DateTime replace(final DateTime original, final DateTime target, final Object owner) throws HibernateException
 	{
-		return (DateTime) original;
+		return original;
 	}
 
 
@@ -151,15 +141,15 @@ public class JodaDateTimeUserType implements UserType, UserVersionType, Comparat
 
 
 	@Override
-	public DateTime next(final Object current, final SharedSessionContractImplementor session)
+	public DateTime next(final DateTime current, final SharedSessionContractImplementor session)
 	{
 		return seed(session);
 	}
 
 
 	@Override
-	public int compare(final Object a, final Object b)
+	public int compare(final DateTime a, final DateTime b)
 	{
-		return ((DateTime) a).compareTo((DateTime) b);
+		return a.compareTo(b);
 	}
 }

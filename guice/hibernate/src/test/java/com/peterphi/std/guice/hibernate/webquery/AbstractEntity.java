@@ -3,9 +3,9 @@ package com.peterphi.std.guice.hibernate.webquery;
 
 import org.joda.time.DateTime;
 
-import javax.persistence.Column;
-import javax.persistence.MappedSuperclass;
-import javax.persistence.Version;
+import jakarta.persistence.Column;
+import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.Version;
 
 @MappedSuperclass
 abstract class AbstractEntity<E extends Enum>

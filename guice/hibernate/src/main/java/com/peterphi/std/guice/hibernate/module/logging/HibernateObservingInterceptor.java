@@ -2,8 +2,8 @@ package com.peterphi.std.guice.hibernate.module.logging;
 
 import com.google.inject.Singleton;
 import com.peterphi.std.util.tracing.Tracing;
-import org.hibernate.EmptyInterceptor;
 import org.hibernate.Interceptor;
+import org.hibernate.resource.jdbc.spi.StatementInspector;
 
 import java.util.List;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -13,22 +13,25 @@ import java.util.function.Consumer;
  * Uses hibernate's {@link Interceptor} class behind the scenes to allow observers to hook into events (N.B. but not alter them)
  */
 @Singleton
-public class HibernateObservingInterceptor
+public class HibernateObservingInterceptor implements StatementInspector
 {
-	private HibernateInterceptorImpl instance;
-
-	private ThreadLocal<List<Consumer<String>>> onPrepareStatementWatchers = new ThreadLocal<>();
+	private static ThreadLocal<List<Consumer<String>>> onPrepareStatementWatchers = new ThreadLocal<>();
 
 
-	public HibernateObservingInterceptor()
+	public static void cleanupThreadLocal()
 	{
-		instance = new HibernateInterceptorImpl(this);
+		onPrepareStatementWatchers = null;
 	}
 
 
-	public Interceptor getInterceptor()
+	@Override
+	public String inspect(final String sql)
 	{
-		return instance;
+		// Notify the observers
+		onPrepareStatement(sql);
+
+		// Return unmodified
+		return sql;
 	}
 
 
@@ -62,12 +65,12 @@ public class HibernateObservingInterceptor
 		return startSQLLogger(null);
 	}
 
+
 	/**
 	 * Start a new logger which records SQL Prepared Statements created by Hibernate in this Thread. Must be closed (or treated as
 	 * autoclose)
 	 *
 	 * @param tracingOperationId the tracing operation this sql logger should be associated with
-	 *
 	 * @return
 	 */
 	public HibernateSQLLogger startSQLLogger(final String tracingOperationId)
@@ -89,6 +92,9 @@ public class HibernateObservingInterceptor
 	 */
 	public void addThreadLocalSQLAuditor(Consumer<String> observer)
 	{
+		if (onPrepareStatementWatchers == null)
+			onPrepareStatementWatchers = new ThreadLocal<>();
+
 		List<Consumer<String>> observers = onPrepareStatementWatchers.get();
 
 		if (observers == null)
@@ -108,6 +114,9 @@ public class HibernateObservingInterceptor
 	 */
 	public void removeThreadLocalSQLAuditor(Consumer<String> observer)
 	{
+		if (onPrepareStatementWatchers == null)
+			onPrepareStatementWatchers = new ThreadLocal<>();
+
 		List<Consumer<String>> observers = onPrepareStatementWatchers.get();
 
 		observers.remove(observer);
@@ -123,31 +132,5 @@ public class HibernateObservingInterceptor
 	public void clearThreadLocalObservers()
 	{
 		onPrepareStatementWatchers.remove();
-	}
-
-
-	/**
-	 * The hibernate interceptor; extends EmptyInterceptor because we are only observing
-	 */
-	private static class HibernateInterceptorImpl extends EmptyInterceptor
-	{
-		private final HibernateObservingInterceptor parent;
-
-
-		public HibernateInterceptorImpl(final HibernateObservingInterceptor parent)
-		{
-			this.parent = parent;
-		}
-
-
-		@Override
-		public String onPrepareStatement(String sql)
-		{
-			// Notify the observers
-			parent.onPrepareStatement(sql);
-
-			// Return unmodified
-			return sql;
-		}
 	}
 }

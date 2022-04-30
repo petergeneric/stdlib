@@ -112,7 +112,7 @@ public class EntityCollectionTest
 
 			assertEquals("constraining query should have 2 independent joins to Child",
 			             2,
-			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left join child_entity"));
 		}
 	}
 
@@ -139,9 +139,9 @@ public class EntityCollectionTest
 			assertEquals("Should have 2 result match", 2, resultset.getList().size());
 			assertEquals("Should need 2 SQL statements", 2, resultset.getSql().size());
 
-			assertEquals("constraining query should have 1 join to Child",
+			assertEquals("constraining query should have 1 join to Child in: " + resultset.getSql().get(0),
 			             1,
-			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left join child_entity"));
 		}
 	}
 
@@ -170,7 +170,7 @@ public class EntityCollectionTest
 
 			assertEquals("constraining query should have 1 join to Child",
 			             1,
-			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left outer join child_entity"));
+			             StringUtils.countMatches(resultset.getSql().get(0).toLowerCase(), "left join child_entity"));
 		}
 	}
 
@@ -333,6 +333,17 @@ public class EntityCollectionTest
 	@Transactional
 	public List<Long> load()
 	{
+		// Remove all existing rows
+		for (ParentEntity p : dao.getAll())
+		{
+			dao.delete(p);
+		}
+		for (ChildEntity c : rDao.getAll())
+		{
+			rDao.delete(c);
+		}
+
+
 		List<Long> parentIds = new ArrayList<>();
 
 		{

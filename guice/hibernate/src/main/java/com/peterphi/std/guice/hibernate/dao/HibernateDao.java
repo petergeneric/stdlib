@@ -16,18 +16,18 @@ import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import jakarta.persistence.EntityGraph;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
 import org.apache.commons.lang.StringUtils;
-import org.hibernate.Criteria;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
-import org.hibernate.annotations.QueryHints;
+import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.Query;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -120,13 +120,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
-	@Deprecated
-	protected String idProperty()
-	{
-		return getSessionFactory().getClassMetadata(clazz).getIdentifierPropertyName();
-	}
-
-
 	@Override
 	@Deprecated
 	public List<T> getByIds(final Collection<ID> ids)
@@ -199,8 +192,10 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	{
 		if (id == null)
 			throw new IllegalArgumentException("Must supply an id to retrieve!");
+		
+		final EntityGraph graph = getQEntity().getDefaultGraph(getSession());
 
-		Map<String, Object> hints = Collections.singletonMap(QueryHints.FETCHGRAPH, getQEntity().getDefaultGraph(getSession()));
+		Map<String, Object> hints = Collections.singletonMap(AvailableHints.HINT_SPEC_FETCH_GRAPH, graph);
 
 		return getSession().find(clazz, id, hints);
 	}
@@ -306,21 +301,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 
 	/**
-	 * Create a {@link Criteria} instance for the entity type of this DAO, matching this entity and any subclasses/implementors
-	 *
-	 * @return The criteria instance for manipulation and execution
-	 *
-	 * @deprecated use JPA2 Criteria with {@link #createCriteriaQuery()}, Hibernate has deprecated their old criteria query and it
-	 * will produce runtime warnings
-	 */
-	@Deprecated
-	protected Criteria createCriteria()
-	{
-		return getSession().createCriteria(clazz);
-	}
-
-
-	/**
 	 * Create a JPA2 CriteriaQuery, which should have constraints generated using {@link #getCriteriaBuilder()}
 	 *
 	 * @param <O>
@@ -389,41 +369,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
-	/**
-	 * Execute a Criteria search, returning the results as a checked list
-	 *
-	 * @param criteria
-	 * 		a criteria created by this DAO
-	 *
-	 * @return The list of matched query results, implicitly cast to a List of this DAO type
-	 *
-	 * @throws HibernateException
-	 * 		Indicates a problem either translating the criteria to SQL, executing the SQL or processing the SQL results.
-	 */
-	@SuppressWarnings("unchecked")
-	protected List<T> getList(Criteria criteria)
-	{
-		return criteria.list();
-	}
-
-
-	/**
-	 * Convenience method to return a single instance that matches the query, or null if the query returns no results.
-	 *
-	 * @param criteria
-	 * 		a criteria created by this DAO
-	 *
-	 * @return the single result or <tt>null</tt>
-	 *
-	 * @throws IllegalStateException
-	 * 		if there is more than one matching result
-	 */
-	protected T uniqueResult(Criteria criteria)
-	{
-		return clazz.cast(criteria.uniqueResult());
-	}
-
-
 	protected T uniqueResult(WebQuery query)
 	{
 		final ConstrainedResultSet<T> results = find(query);
@@ -453,23 +398,6 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	protected List<T> getList(WebQuery query)
 	{
 		return find(query).getList();
-	}
-
-	/**
-	 * Execute a Criteria-based search, returning the results as a checked list of primary key types
-	 *
-	 * @param criteria
-	 * 		the criteria (note, its projection must have been set to Projections.id())
-	 *
-	 * @return
-	 *
-	 * @throws HibernateException
-	 * 		Indicates a problem either translating the criteria to SQL, executing the SQL or processing the SQL results.
-	 */
-	@SuppressWarnings("unchecked")
-	protected List<ID> getIdList(Criteria criteria)
-	{
-		return criteria.list();
 	}
 
 

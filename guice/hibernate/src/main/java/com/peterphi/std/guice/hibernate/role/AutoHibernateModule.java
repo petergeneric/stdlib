@@ -8,7 +8,7 @@ import com.peterphi.std.guice.hibernate.module.HibernateModule;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.Configuration;
 
-import javax.persistence.Entity;
+import jakarta.persistence.Entity;
 
 class AutoHibernateModule extends HibernateModule
 {

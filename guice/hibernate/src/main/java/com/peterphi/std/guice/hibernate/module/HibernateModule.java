@@ -82,9 +82,11 @@ public abstract class HibernateModule extends AbstractModule
 		Configuration config = new Configuration();
 
 		// Set up the interceptor
-		config.setInterceptor(interceptor.getInterceptor());
-
+		properties.setProperty("hibernate.session_factory.statement_inspector",
+		                       "com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor");
+		//properties.setProperty("hibernate.xml_mapping_enabled", "false"); // TODO 6.0 we never use xml so this is likely right to set...
 		config.addProperties(properties);
+
 
 		configure(config);
 

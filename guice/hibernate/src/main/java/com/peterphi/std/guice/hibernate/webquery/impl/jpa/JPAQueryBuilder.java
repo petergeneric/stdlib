@@ -13,23 +13,22 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroup;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
+import jakarta.persistence.criteria.CriteriaBuilder;
+import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
+import jakarta.persistence.criteria.Fetch;
+import jakarta.persistence.criteria.JoinType;
+import jakarta.persistence.criteria.Order;
+import jakarta.persistence.criteria.ParameterExpression;
+import jakarta.persistence.criteria.Path;
+import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Root;
+import jakarta.persistence.criteria.Selection;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Expression;
-import javax.persistence.criteria.Fetch;
-import javax.persistence.criteria.JoinType;
-import javax.persistence.criteria.Order;
-import javax.persistence.criteria.ParameterExpression;
-import javax.persistence.criteria.Path;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
-import javax.persistence.criteria.Selection;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -595,9 +594,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		final Query query = session.createQuery(generated);
 
 		if (offset != null)
-			query.getQueryOptions().setFirstRow(offset);
+			query.setFirstResult(offset);
 		if (limit != null)
-			query.getQueryOptions().setMaxRows(limit);
+			query.setMaxResults(limit);
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
@@ -635,9 +634,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		final Query query = session.createQuery(generated);
 
 		if (offset != null)
-			query.getQueryOptions().setFirstRow(offset);
+			query.setFirstResult(offset);
 		if (limit != null)
-			query.getQueryOptions().setMaxRows(limit);
+			query.setMaxResults(limit);
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
@@ -677,9 +676,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		final Query query = session.createQuery(generated);
 
 		if (offset != null)
-			query.getQueryOptions().setFirstRow(offset);
+			query.setFirstResult(offset);
 		if (limit != null)
-			query.getQueryOptions().setMaxRows(limit);
+			query.setMaxResults(limit);
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
@@ -702,11 +701,12 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		final Query<T> query = session.createQuery(generated);
 
 		if (offset != null)
-			query.getQueryOptions().setFirstRow(offset);
+			query.setFirstResult(offset);
 		if (limit != null)
-			query.getQueryOptions().setMaxRows(limit);
+			query.setMaxResults(limit);
 
-		query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
+		// TODO Hibernate 6.0: figure out what (if anything) we need to do to repliace DISTINCT_ROOT_ENTITY in the new order...
+		//query.setResultTransformer(Criteria.DISTINCT_ROOT_ENTITY);
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
