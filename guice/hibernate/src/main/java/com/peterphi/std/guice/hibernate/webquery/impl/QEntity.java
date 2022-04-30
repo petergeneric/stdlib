@@ -6,11 +6,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
+import org.hibernate.graph.RootGraph;
 
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
-import javax.persistence.EntityGraph;
 import javax.persistence.FetchType;
 import javax.persistence.ManyToMany;
 import javax.persistence.ManyToOne;
@@ -71,7 +71,7 @@ public class QEntity
 	/**
 	 * A JPA2.1 EntityGraph version of defaultExpand
 	 */
-	private EntityGraph defaultExpandGraph;
+	private RootGraph defaultExpandGraph;
 
 
 	/**
@@ -669,11 +669,11 @@ public class QEntity
 	 *
 	 * @return
 	 */
-	public EntityGraph getDefaultGraph(final Session session)
+	public RootGraph getDefaultGraph(final Session session)
 	{
 		if (this.defaultExpandGraph == null)
 		{
-			final EntityGraph<?> graph = session.createEntityGraph(clazz);
+			final RootGraph<?> graph = session.createEntityGraph(clazz);
 
 			populateGraph(graph, getEagerFetch());
 
@@ -694,7 +694,7 @@ public class QEntity
 	 * @param graph
 	 * @param fetches
 	 */
-	private void populateGraph(final EntityGraph<?> graph, final Set<String> fetches)
+	private void populateGraph(final RootGraph<?> graph, final Set<String> fetches)
 	{
 		Map<String, Subgraph<?>> created = new HashMap<>();
 

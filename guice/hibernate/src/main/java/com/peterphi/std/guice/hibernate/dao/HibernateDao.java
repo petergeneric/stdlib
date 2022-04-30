@@ -151,36 +151,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public List<T> getListById(final List<ID> ids)
 	{
-		if (ids.isEmpty())
-			return Collections.emptyList();
-		else if (ids.size() == 1)
-			return Collections.singletonList(getById(ids.get(0))); // Optimise getting one entity so it's more cache friendly
-		else
-		{
-			// Build a query so that we can get all entities and their eager fetches in one go
-			// N.B. this is necessary because multifetch doesn't support Entity Graphs
-			final JPAQueryBuilder<T, ID> builder = createQueryBuilder();
-
-			builder.forWebQuery(new WebQuery());
-
-			return builder.selectCustom((cb, criteriaQuery, root, qb) -> {
-				criteriaQuery.select(root);
-
-				final Path idProperty = root.get(root.getModel().getId(root.getModel().getIdType().getJavaType()));
-
-				// Convert the ID list into a list of ID matching Predicates
-				final Predicate[] predicates = new Predicate[ids.size()];
-				int i = 0;
-				for (ID id : ids)
-					predicates[i++] = cb.equal(idProperty, id);
-
-				// OR them together and set them as the conditional
-				criteriaQuery.where(getCriteriaBuilder().or(predicates));
-
-				// Apply all default fetch joins for this entity
-				qb.applyFetches();
-			});
-		}
+		return getSession().byMultipleIds(clazz).with(getQEntity().getDefaultGraph(getSession())).multiLoad(ids);
 	}
 
 
