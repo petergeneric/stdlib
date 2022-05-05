@@ -721,7 +721,7 @@ public class QEntity
 						try
 						{
 							// Relation under root
-							graph.addAttributeNodes(parts[i]);
+							//graph.addAttributeNodes(parts[i]);
 
 							// Only set up a subgraph if this is not a leaf node
 							// This prevents us trying to add a Subgraph for a List of Embeddable
@@ -743,7 +743,7 @@ public class QEntity
 						try
 						{
 							// Relation under parent
-							parent.addAttributeNodes(parts[i]);
+							//parent.addAttributeNodes(parts[i]);
 
 							// Only set up a subgraph if this is not a leaf node
 							// This prevents us trying to add a Subgraph for a List of Embeddable

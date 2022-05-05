@@ -164,7 +164,7 @@ public class DynamicQueryTest
 		// Selecting a list
 		{
 			final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery()
-					                                                        .fetch("id,name,otherObject.name")
+					                                                        .fetch("id,name,otherObject.name,otherObject.entity")
 					                                                        .orderAsc("name")
 					                                                        .orderDesc("deprecated"),
 			                                                        JPASearchStrategy.AUTO,

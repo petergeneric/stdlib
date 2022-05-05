@@ -5,14 +5,14 @@ import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
-import org.apache.log4j.Logger;
-import org.hibernate.cfg.Configuration;
-
 import jakarta.persistence.Entity;
+import org.hibernate.cfg.Configuration;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class AutoHibernateModule extends HibernateModule
 {
-	private static final Logger log = Logger.getLogger(AutoHibernateModule.class);
+	private static final Logger log = LoggerFactory.getLogger(AutoHibernateModule.class);
 
 	private final ClassScannerFactory scannerFactory;
 
@@ -35,8 +35,7 @@ class AutoHibernateModule extends HibernateModule
 
 		for (Class<?> clazz : scanner.getAnnotatedClasses(Entity.class))
 		{
-			if (log.isTraceEnabled())
-				log.trace("Registering @Entity class with hibernate: " + clazz.getName());
+			log.info("Registering @Entity class with hibernate: {}", clazz.getName());
 			
 			config.addAnnotatedClass(clazz);
 		}

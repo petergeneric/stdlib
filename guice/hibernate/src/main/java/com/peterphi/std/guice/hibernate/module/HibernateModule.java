@@ -17,6 +17,7 @@ import com.peterphi.std.guice.hibernate.usertype.JodaLocalDateUserType;
 import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
+import jakarta.persistence.AttributeConverter;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.Session;
@@ -84,7 +85,7 @@ public abstract class HibernateModule extends AbstractModule
 		// Set up the interceptor
 		properties.setProperty("hibernate.session_factory.statement_inspector",
 		                       "com.peterphi.std.guice.hibernate.module.logging.HibernateObservingInterceptor");
-		//properties.setProperty("hibernate.xml_mapping_enabled", "false"); // TODO 6.0 we never use xml so this is likely right to set...
+		properties.setProperty("hibernate.xml_mapping_enabled", "false"); // TODO 6.0 we never use xml so this is likely right to set...
 		config.addProperties(properties);
 
 
@@ -214,6 +215,9 @@ public abstract class HibernateModule extends AbstractModule
 	{
 		String className = type.returnedClass().getName();
 		configuration.registerTypeOverride(type, new String[]{className});
+
+		if (type instanceof AttributeConverter<?, ?>)
+			configuration.addAttributeConverter((AttributeConverter<?, ?>) type);
 	}
 
 

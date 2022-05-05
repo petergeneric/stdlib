@@ -1,7 +1,10 @@
 package com.peterphi.std.guice.hibernate.usertype;
 
+import jakarta.persistence.AttributeConverter;
+import jakarta.persistence.Converter;
 import org.hibernate.HibernateException;
 import org.hibernate.engine.spi.SharedSessionContractImplementor;
+import org.hibernate.usertype.UserType;
 import org.hibernate.usertype.UserVersionType;
 import org.joda.time.DateTime;
 
@@ -14,7 +17,8 @@ import java.sql.Types;
 /**
  * Encodes Joda DateTime values into a BIGINT column where the date is expressed in milliseconds since 1970.
  */
-public class JodaDateTimeUserType implements UserVersionType<DateTime>
+@Converter(autoApply = true)
+public class JodaDateTimeUserType implements UserType<DateTime>, UserVersionType<DateTime>, AttributeConverter<DateTime,Long>
 {
 	public static JodaDateTimeUserType INSTANCE = new JodaDateTimeUserType();
 
@@ -151,5 +155,25 @@ public class JodaDateTimeUserType implements UserVersionType<DateTime>
 	public int compare(final DateTime a, final DateTime b)
 	{
 		return a.compareTo(b);
+	}
+
+
+	@Override
+	public Long convertToDatabaseColumn(final DateTime attribute)
+	{
+		if (attribute != null)
+			return attribute.getMillis();
+		else
+			return null;
+	}
+
+
+	@Override
+	public DateTime convertToEntityAttribute(final Long dbData)
+	{
+		if (dbData != null)
+			return new DateTime(dbData.longValue());
+		else
+			return null;
 	}
 }
