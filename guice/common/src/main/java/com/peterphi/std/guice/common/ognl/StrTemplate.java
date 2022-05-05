@@ -21,6 +21,11 @@ public final class StrTemplate
 
 	public static String evaluate(final String template, final StrLookup lookup)
 	{
+		return evaluate(template, lookup, true);
+	}
+
+	public static String evaluate(final String template, final StrLookup lookup, final boolean recursive)
+	{
 		StringBuilder sb = new StringBuilder(template.length());
 
 		int start = 0; // Position of 1st literal char in this run
@@ -78,8 +83,12 @@ public final class StrTemplate
 
 				final String expr = template.substring(prefixEnd, suffix);
 
-
-				sb.append(lookup.lookup(expr));
+				// Evaluate expression (optionally recursively)
+				final String resolved = lookup.lookup(expr);
+				if (recursive && resolved.contains("${"))
+					sb.append(evaluate(resolved, lookup, recursive));
+				else
+					sb.append(resolved);
 
 				start = suffix + depth; // Set start position to the char after }
 			}

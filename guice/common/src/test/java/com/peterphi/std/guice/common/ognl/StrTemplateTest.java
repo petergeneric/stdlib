@@ -58,6 +58,12 @@ public class StrTemplateTest
 		eval("(x }}}}}}}}}}}}}}}} )", "${{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{{x }}}}}}}}}}}}}}}} }}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}}");
 	}
 
+	@Test
+	public void testRecursiveEvaluation()
+	{
+		eval("( (testing) )", "${{{ ${{testing}} }}}");
+	}
+
 
 	@Test(expected = IllegalArgumentException.class)
 	public void testOpenNoCloseAtAll()
