@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.db.entity.WebAuthnCredentialEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import org.apache.log4j.Logger;
 
@@ -37,7 +38,6 @@ public class InternalUserAuthenticationServiceImpl implements UserAuthentication
 	 * Make sure the roles have been fetched from the database
 	 *
 	 * @param user
-	 *
 	 * @return
 	 */
 	private UserEntity ensureRolesFetched(final UserEntity user)
@@ -54,6 +54,14 @@ public class InternalUserAuthenticationServiceImpl implements UserAuthentication
 	public UserEntity authenticate(String sessionReconnectToken)
 	{
 		return ensureRolesFetched(dao.loginBySessionReconnectKey(sessionReconnectToken));
+	}
+
+
+	@Override
+	@Transactional
+	public UserEntity authenticate(final WebAuthnCredentialEntity credential)
+	{
+		return ensureRolesFetched(dao.loginByWebAuthn(credential));
 	}
 
 

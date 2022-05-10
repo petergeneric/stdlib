@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head>
+	<title>User Manager: Add Authenticator</title>
+	<link th:replace="includes :: htmlhead"/>
+</head>
+<body>
+<span th:replace="includes :: navbar"></span>
+
+<div class="container">
+	<h2>Add Authenticator</h2>
+
+	<script>
+		import * as webauthnJson from "@github/webauthn-json";
+
+		async function doEnroll() {
+			// Make the call that returns the credentialCreateJson above
+			const credentialCreateOptions = await fetch(/* ... */).then(resp => resp.json());
+
+			// Call WebAuthn ceremony using webauthn-json wrapper
+			const publicKeyCredential = await webauthnJson.create(credentialCreateOptions);
+
+			// Return encoded PublicKeyCredential to server
+			fetch(/* ... */, {body: JSON.stringify(publicKeyCredential)});
+
+			// TODO redirect user to complete page
+		}
+	</script>
+
+	<div class="lead">
+		<p>Add authenticator</p>
+
+		<p>...</p>
+	</div>
+
+	<footer th:replace="includes :: footer"></footer>
+</div>
+<div th:replace="includes :: htmlfoot"></div>
+</body>
+</html>

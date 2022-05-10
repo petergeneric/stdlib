@@ -11,6 +11,7 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.BCrypt;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.db.entity.WebAuthnCredentialEntity;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.log4j.Logger;
 import org.joda.time.DateTime;
@@ -26,6 +27,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	@Named("auth.ldap.allow-session-reconnect")
 	@Doc("If true, logins created using LDAP credentials will be allowed to use the Session Reconnect Key system to stay logged in longer without re-authenticating")
 	public boolean allowRemoteAccountsToUseSessionReconnect;
+
 
 	@Transactional
 	public UserEntity login(String email, String password)
@@ -113,7 +115,6 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	 * Creates a BCrypted hash for a password
 	 *
 	 * @param password
-	 *
 	 * @return
 	 */
 	private String hashPassword(String password)
@@ -183,7 +184,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		final WebQuery search = new WebQuery().eq("sessionReconnectKey", key);
 
 		if (!allowRemoteAccountsToUseSessionReconnect)
-			search.eq("local",true);
+			search.eq("local", true);
 
 		final UserEntity account = uniqueResult(search);
 
@@ -198,6 +199,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		return account;
 	}
 
+
 	@Transactional
 	public UserEntity loginByAccessKey(final String key)
 	{
@@ -208,7 +210,6 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 			log.debug("Allowed login by Access Key for user: " + account.getEmail());
 
 		return account;
-
 	}
 
 
@@ -256,5 +257,39 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		{
 			throw new IllegalArgumentException("No such user: " + id);
 		}
+	}
+
+
+	@Transactional
+	public String getOrAssignHandle(final String username)
+	{
+		final UserEntity entity = getUserByEmail(username);
+
+		if (entity == null)
+			return null;
+		else if (entity.getWebauthnUserHandle() == null)
+		{
+			entity.setWebauthnUserHandle(UUID.randomUUID().toString());
+			update(entity);
+		}
+
+		return entity.getWebauthnUserHandle();
+	}
+
+
+	@Transactional(readOnly = true)
+	public UserEntity getByHandle(final String webauthnHandle)
+	{
+		return getByUniqueProperty("webauthnUserHandle", webauthnHandle);
+	}
+
+
+	@Transactional
+	public UserEntity loginByWebAuthn(final WebAuthnCredentialEntity cred)
+	{
+		final UserEntity account = cred.getUser();
+		update(account);
+
+		return account;
 	}
 }

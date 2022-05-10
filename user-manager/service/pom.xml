@@ -21,6 +21,13 @@
 		</dependency>
 
 		<dependency>
+			<groupId>com.yubico</groupId>
+			<artifactId>webauthn-server-core-minimal</artifactId>
+			<version>1.12.3</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-webapp</artifactId>
 			<version>${project.version}</version>

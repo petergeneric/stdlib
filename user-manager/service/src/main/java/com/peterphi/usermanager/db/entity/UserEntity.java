@@ -58,6 +58,8 @@ public class UserEntity
 	 */
 	private String sessionReconnectKey;
 
+	private String webauthnUserHandle;
+
 	private DateTime created = DateTime.now();
 
 	private DateTime lastLogin;
@@ -178,6 +180,19 @@ public class UserEntity
 	public void setSessionReconnectKey(String sessionReconnectKey)
 	{
 		this.sessionReconnectKey = sessionReconnectKey;
+	}
+
+
+	@Column(name = "webauthn_user_handle", nullable = true, length = 100)
+	public String getWebauthnUserHandle()
+	{
+		return webauthnUserHandle;
+	}
+
+
+	public void setWebauthnUserHandle(final String webauthnUserHandle)
+	{
+		this.webauthnUserHandle = webauthnUserHandle;
 	}
 
 

@@ -5,6 +5,7 @@ import com.google.inject.Module;
 import com.peterphi.usermanager.guice.module.UserManagerModule;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
+import com.peterphi.usermanager.guice.module.WebAuthnModule;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ public class UserManagerSetup implements GuiceSetup
 		// Authentication handled by the UserManagerAuthenticationGuiceRole role
 
 		modules.add(new UserManagerModule());
+		modules.add(new WebAuthnModule());
 	}
 
 

@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
+import com.peterphi.usermanager.db.entity.WebAuthnCredentialEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.db.InternalUserAuthenticationServiceImpl;
 import org.apache.log4j.Logger;
@@ -49,6 +50,13 @@ public class LocalAndLDAPAuthenticationService implements UserAuthenticationServ
 			return entity;
 		else
 			return ldap.authenticate(sessionReconnectToken);
+	}
+
+
+	@Override
+	public UserEntity authenticate(final WebAuthnCredentialEntity credential)
+	{
+		return internal.authenticate(credential);
 	}
 
 
