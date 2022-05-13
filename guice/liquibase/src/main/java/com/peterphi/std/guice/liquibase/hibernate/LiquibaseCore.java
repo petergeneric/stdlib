@@ -225,10 +225,16 @@ class LiquibaseCore
 					}
 				}
 
-				connection.setSchema(defaultSchema);
+				if (defaultSchema != null)
+					DatabaseFactory.getInstance().register(new DefaultSchemaPermittingMSSQLDatabase());
+
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
-				database.setDefaultSchemaName(defaultSchema);
+				if (defaultSchema != null)
+				{
+					database.setOutputDefaultSchema(true);
+					database.setDefaultSchemaName(defaultSchema);
+				}
 			}
 
 			Liquibase liquibase = new Liquibase(changeLogFile, resourceAccessor, database);
