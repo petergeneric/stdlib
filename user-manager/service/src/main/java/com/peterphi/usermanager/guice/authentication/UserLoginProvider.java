@@ -6,7 +6,7 @@ import com.peterphi.std.threading.Timeout;
 import com.peterphi.usermanager.db.entity.IDPrefix;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.async.AsynchronousActionService;
-import liquibase.util.StringUtils;
+import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.jboss.resteasy.util.HttpHeaderNames;
 

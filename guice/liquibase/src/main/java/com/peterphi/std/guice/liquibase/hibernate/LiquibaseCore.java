@@ -8,6 +8,7 @@ import liquibase.CatalogAndSchema;
 import liquibase.Contexts;
 import liquibase.LabelExpression;
 import liquibase.Liquibase;
+import liquibase.Scope;
 import liquibase.changelog.ChangeSet;
 import liquibase.configuration.LiquibaseConfiguration;
 import liquibase.database.Database;
@@ -17,7 +18,6 @@ import liquibase.diff.compare.CompareControl;
 import liquibase.diff.output.DiffOutputControl;
 import liquibase.diff.output.changelog.DiffToChangeLog;
 import liquibase.exception.LiquibaseException;
-import liquibase.logging.LogFactory;
 import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.ResourceAccessor;
@@ -49,11 +49,6 @@ class LiquibaseCore
 {
 	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
 
-	static
-	{
-		LogFactory.setInstance(new LiquibaseLog4j());
-	}
-
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
 
@@ -80,7 +75,10 @@ class LiquibaseCore
 			                                                                                         ic,
 			                                                                                         hibernateConfiguration);
 
-			LiquibaseConfiguration.getInstance().init(valueContainer);
+			final LiquibaseConfiguration cfg = Scope.getCurrentScope().getSingleton(LiquibaseConfiguration.class);
+
+			cfg.registerProvider(valueContainer);
+
 
 			Map<String, String> parameters = extractLiquibaseParameters(applicationConfiguration, hibernateConfiguration);
 
@@ -105,8 +103,10 @@ class LiquibaseCore
 				}
 			}
 
-			// Clear liquibase configuration from memory
-			LiquibaseConfiguration.setInstance(null);
+			//Scope.setScopeManager(null);   /// ? something like this
+			//Scope.getCurrentScope().getSingleton(LiquibaseConfiguration.class)
+			// TODO NOCOMMIT Clear liquibase configuration from memory
+			//LiquibaseConfiguration.setInstance(null);
 		}
 	}
 
@@ -181,22 +181,12 @@ class LiquibaseCore
 			// Set up the resource accessor
 			final ResourceAccessor resourceAccessor;
 			{
-				final CompositeResourceAccessor composite;
-				{
-					ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
-					ResourceAccessor threadClFO = new ClassLoaderResourceAccessor(contextClassLoader);
+				ClassLoader contextClassLoader = Thread.currentThread().getContextClassLoader();
+				ResourceAccessor threadClFO = new ClassLoaderResourceAccessor(contextClassLoader);
 
-					ResourceAccessor clFO = new ClassLoaderResourceAccessor();
+				ResourceAccessor clFO = new ClassLoaderResourceAccessor();
 
-					composite = new CompositeResourceAccessor(clFO, threadClFO);
-				}
-
-				// If loading a resource with an absolute path fails, re-try it as a path relative to /
-				// This is for unit tests where /liquibase/changelog.xml needs to be accessed as liquibase/changelog.xml
-				final ResourceAccessor fallback = new RetryAbsoluteAsRelativeResourceAccessor(composite);
-
-				// Wrap the resource accessor in a filter that interprets ./ as the changeLogFile folder
-				resourceAccessor = new RelativePathFilteringResourceAccessor(fallback, changeLogFile);
+				resourceAccessor = new CompositeResourceAccessor(clFO, threadClFO);
 			}
 
 			// Set up the database
@@ -235,6 +225,7 @@ class LiquibaseCore
 					}
 				}
 
+				connection.setSchema(defaultSchema);
 				database = DatabaseFactory.getInstance().findCorrectDatabaseImplementation(new JdbcConnection(connection));
 
 				database.setDefaultSchemaName(defaultSchema);

@@ -1,8 +1,8 @@
 package com.peterphi.std.guice.liquibase.hibernate;
 
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import liquibase.configuration.ConfigurationProperty;
-import liquibase.configuration.ConfigurationValueProvider;
+import liquibase.configuration.AbstractConfigurationValueProvider;
+import liquibase.configuration.ProvidedValue;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 import org.hibernate.cfg.AvailableSettings;
@@ -10,7 +10,7 @@ import org.hibernate.cfg.AvailableSettings;
 import javax.naming.InitialContext;
 import java.util.Properties;
 
-class GuiceApplicationValueContainer implements ConfigurationValueProvider
+class GuiceApplicationValueContainer extends AbstractConfigurationValueProvider
 {
 	private static final Logger log = Logger.getLogger(GuiceApplicationValueContainer.class);
 
@@ -33,20 +33,6 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 		this.applicationConfiguration = applicationConfiguration;
 		this.initialContext = initialContext;
 		this.hibernateConfiguration = hibernateConfiguration;
-	}
-
-
-	@Override
-	public String describeValueLookupLogic(ConfigurationProperty property)
-	{
-		return "JNDI/application/hibernate/system property '" + property.getNamespace() + "." + property.getName() + "'";
-	}
-
-
-	@Override
-	public Object getValue(String namespace, String property)
-	{
-		return getValue(namespace + "." + property);
 	}
 
 
@@ -113,5 +99,23 @@ class GuiceApplicationValueContainer implements ConfigurationValueProvider
 		{
 			return liquibaseValue;
 		}
+	}
+
+
+	@Override
+	public int getPrecedence()
+	{
+		return 500;
+	}
+
+
+	@Override
+	public ProvidedValue getProvidedValue(final String... keys)
+	{
+		final String val = getRawValue(keys[0]);
+		if (val != null)
+			return new ProvidedValue(keys[0], keys[0], val, "", this);
+		else
+			return null;
 	}
 }
