@@ -489,6 +489,11 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	public ConstrainedResultSet<Object[]> project(final WebQuery query)
+	{
+		return find(query, JPASearchStrategy.CUSTOM_PROJECTION, null);
+	}
+
 	/**
 	 * Get a list of IDs matching a WebQuery
 	 *

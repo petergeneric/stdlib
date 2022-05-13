@@ -163,12 +163,10 @@ public class DynamicQueryTest
 
 		// Selecting a list
 		{
-			final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery()
+			final ConstrainedResultSet<Object[]> results = dao.project(new WebQuery()
 					                                                        .fetch("id,name,otherObject.name,otherObject.entity")
 					                                                        .orderAsc("name")
-					                                                        .orderDesc("deprecated"),
-			                                                        JPASearchStrategy.AUTO,
-			                                                        null);
+					                                                        .orderDesc("deprecated"));
 
 			assertEquals("Expecting 2 rows", 2, results.getList().size());
 			assertTrue("Expecting at least 3 columns", results.getList().get(0).length >= 3);
