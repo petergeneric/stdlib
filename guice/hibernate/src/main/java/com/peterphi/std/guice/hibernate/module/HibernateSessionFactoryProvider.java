@@ -5,9 +5,8 @@ import com.google.inject.Provider;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import com.peterphi.std.guice.database.annotation.Transactional;
-import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
@@ -30,6 +29,9 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 	@Named("hibernate.shutdown.sql")
 	@Doc("The SQL to run on the database before a shutdown occurs")
 	private String shutdownSql;
+
+	@Inject
+	TransactionHelper txutils;
 
 
 	@Inject
@@ -57,8 +59,9 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 			{
 				this.sessionFactory = config.buildSessionFactory(serviceRegistry);
 			}
-			catch (Throwable t) {
-				log.warn("Error setting up hibernate session factory",t);
+			catch (Throwable t)
+			{
+				log.warn("Error setting up hibernate session factory", t);
 
 				throw t;
 			}
@@ -76,6 +79,7 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 
 		if (sessionFactory != null)
 		{
+
 			runShutDownSQL();
 			sessionFactory.close();
 			sessionFactory = null;
@@ -87,12 +91,15 @@ class HibernateSessionFactoryProvider implements Provider<SessionFactory>, Stopp
 	}
 
 
-	@Transactional
 	void runShutDownSQL()
 	{
-		if (StringUtils.isNotEmpty(shutdownSql))
+		if (shutdownSql != null)
 		{
-			sessionFactory.getCurrentSession().createNativeQuery(shutdownSql, Void.class).executeUpdate();
+			try (final HibernateTransaction tx = txutils.start())
+			{
+				final Session session = sessionFactory.getCurrentSession();
+				session.createNativeMutationQuery(shutdownSql).executeUpdate();
+			}
 		}
 	}
 }

@@ -28,6 +28,7 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.Query;
 
 import java.io.Serializable;
+import java.nio.ReadOnlyBufferException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -489,6 +490,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	}
 
 
+	@Transactional(readOnly = true)
 	public ConstrainedResultSet<Object[]> project(final WebQuery query)
 	{
 		return find(query, JPASearchStrategy.CUSTOM_PROJECTION, null);
