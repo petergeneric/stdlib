@@ -6,8 +6,14 @@ import liquibase.structure.core.Schema;
 /**
  * Extension to liquibase MSSQLDatabase that bypasses the prohibition on changing the default schema name
  */
-class DefaultSchemaPermittingMSSQLDatabase extends MSSQLDatabase
+public final class DefaultSchemaPermittingMSSQLDatabase extends MSSQLDatabase
 {
+	public DefaultSchemaPermittingMSSQLDatabase()
+	{
+		super();
+	}
+
+
 	@Override
 	public void setDefaultSchemaName(final String schemaName)
 	{
