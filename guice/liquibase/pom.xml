@@ -5,7 +5,7 @@
 
 	<groupId>com.peterphi.std.guice</groupId>
 	<artifactId>stdlib-guice-liquibase</artifactId>
-	<version>13.3.7-SNAPSHOT</version>
+	<version>13.3.9-SNAPSHOT</version>
 	<packaging>jar</packaging>
 
 	<name>stdlib guice liquibase support</name>
@@ -14,7 +14,7 @@
 	<parent>
 		<groupId>com.peterphi.std.guice</groupId>
 		<artifactId>stdlib-guice-parent</artifactId>
-		<version>13.3.7-SNAPSHOT</version>
+		<version>13.3.9-SNAPSHOT</version>
 	</parent>
 
 	<dependencies>
@@ -44,7 +44,7 @@
 		<dependency>
 			<groupId>org.liquibase</groupId>
 			<artifactId>liquibase-core</artifactId>
-			<version>3.5.5</version>
+			<version>4.10.0</version>
 		</dependency>
 
 

@@ -695,7 +695,7 @@ public class QEntity
 	 * @param graph
 	 * @param fetches
 	 */
-	private void populateGraph(final EntityGraph<?> graph, final Set<String> fetches)
+	private void populateGraph(final RootGraph<?> graph, final Set<String> fetches)
 	{
 		Map<String, Subgraph<?>> created = new HashMap<>();
 

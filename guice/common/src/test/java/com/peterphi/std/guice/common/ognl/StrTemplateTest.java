@@ -59,6 +59,35 @@ public class StrTemplateTest
 	}
 
 
+	@Test
+	public void testRecursiveEvaluation()
+	{
+		eval("( (testing) )", "${{{ ${{testing}} }}}");
+	}
+
+
+	@Test
+	public void testRecursiveEvaluationBlockedByLiteralPrefix()
+	{
+		eval("( ${{testing}} )", "${{{:literal: ${{testing}} }}}");
+	}
+
+
+	@Test
+	public void testHtmlEscapedByHtmlPrefix()
+	{
+		eval("(&lt;script&gt;evil&lt;/script&gt; and data leak of (testing) )",
+		     "${{{:html:<script>evil</script> and data leak of ${{testing}} }}}");
+	}
+
+	@Test
+	public void testRecursiveEvaluationBlockedAndHtmlEscapedByHtmlPrefix()
+	{
+		eval("(&lt;script&gt;evil&lt;/script&gt; and data leak of ${{testing}} )",
+		     "${{{:literal:html:<script>evil</script> and data leak of ${{testing}} }}}");
+	}
+
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testOpenNoCloseAtAll()
 	{
