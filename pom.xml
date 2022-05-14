@@ -39,7 +39,7 @@
 		<resteasy.version>4.7.1.Final</resteasy.version>
 		<javassist.version>3.27.0-GA</javassist.version>
 		<jackson.version>2.12.2</jackson.version>
-		<hibernate.version>5.2.18.Final</hibernate.version>
+		<hibernate.version>5.3.6.Final</hibernate.version>
 		<dbunit.version>2.5.1</dbunit.version>
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.55</bouncycastle.version>
