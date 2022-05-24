@@ -90,10 +90,24 @@ public class OgnlEvaluator
 	{
 		if (compiled == null)
 		{
-			compiled = compileExpression(root, this.expr);
-			parsed = null;
+			// N.B. compile could fail due to Java 11+ 'ClassLoader.defineClass' not being accessible & so javassist cannot define the new class
+			boolean compileFailed = false;
+			try
+			{
+				compiled = compileExpression(root, this.expr);
+				parsed = null;
+			}
+			catch (Throwable t)
+			{
+				log.warn("OGNL Compile failed; will continue to use uncompiled expression form.", t);
 
-			if (this.notifyOnCompiled != null)
+				compileFailed = true;
+
+				compiled = parsed;
+				parsed = null;
+			}
+
+			if (this.notifyOnCompiled != null && !compileFailed)
 				this.notifyOnCompiled.accept(this.expr, this);
 		}
 
