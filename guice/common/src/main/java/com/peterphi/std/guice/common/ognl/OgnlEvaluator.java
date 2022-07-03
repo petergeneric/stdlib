@@ -134,7 +134,8 @@ public class OgnlEvaluator
 
 		try
 		{
-			return expr.getValue(createNewOgnlContext(), obj);
+			final OgnlContext ctx = createNewOgnlContext(obj);
+			return expr.getValue(ctx, obj);
 		}
 		catch (Throwable e)
 		{
@@ -152,7 +153,8 @@ public class OgnlEvaluator
 	{
 		try
 		{
-			return (T) Ognl.getValue(getExpression(root), createNewOgnlContext(), root, expected);
+			final OgnlContext ctx = createNewOgnlContext(root);
+			return (T) Ognl.getValue(getExpression(root), ctx, root, expected);
 		}
 		catch (Throwable e)
 		{
@@ -196,7 +198,7 @@ public class OgnlEvaluator
 		{
 			log.debug("OGNL Expression used enough times for compile: " + expr);
 
-			final OgnlContext ctx = createNewOgnlContext();
+			final OgnlContext ctx = createNewOgnlContext(root);
 
 			return Ognl.compileExpression(ctx, root, expr);
 		}
@@ -209,10 +211,11 @@ public class OgnlEvaluator
 
 
 	@NotNull
-	private static OgnlContext createNewOgnlContext()
+	private static OgnlContext createNewOgnlContext(final Object root)
 	{
 		final OgnlContext ctx = new OgnlContext(PUBLIC_ACCESS, null, null, null);
 		ctx.put("StringUtils", new StringUtils());
+		ctx.setRoot(root);
 		return ctx;
 	}
 
