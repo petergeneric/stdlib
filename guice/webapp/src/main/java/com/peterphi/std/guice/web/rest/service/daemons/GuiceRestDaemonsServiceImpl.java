@@ -13,8 +13,8 @@ import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Optional;
 import java.util.function.Function;

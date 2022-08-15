@@ -11,8 +11,8 @@ import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.core.MediaType;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
 import java.util.Enumeration;
 
 /**

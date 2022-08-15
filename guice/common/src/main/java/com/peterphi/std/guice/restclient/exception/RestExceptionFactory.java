@@ -3,7 +3,7 @@ package com.peterphi.std.guice.restclient.exception;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 
-import javax.ws.rs.client.ClientResponseContext;
+import jakarta.ws.rs.client.ClientResponseContext;
 import java.lang.reflect.Constructor;
 
 /**

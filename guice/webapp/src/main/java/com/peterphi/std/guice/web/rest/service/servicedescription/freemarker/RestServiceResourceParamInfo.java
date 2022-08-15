@@ -3,13 +3,13 @@ package com.peterphi.std.guice.web.rest.service.servicedescription.freemarker;
 import com.peterphi.std.annotation.Doc;
 import org.apache.commons.lang.StringUtils;
 
-import javax.ws.rs.CookieParam;
-import javax.ws.rs.DefaultValue;
-import javax.ws.rs.FormParam;
-import javax.ws.rs.HeaderParam;
-import javax.ws.rs.PathParam;
-import javax.ws.rs.QueryParam;
-import javax.ws.rs.core.Context;
+import jakarta.ws.rs.CookieParam;
+import jakarta.ws.rs.DefaultValue;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.HeaderParam;
+import jakarta.ws.rs.PathParam;
+import jakarta.ws.rs.QueryParam;
+import jakarta.ws.rs.core.Context;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -164,8 +164,8 @@ public class RestServiceResourceParamInfo
 		if (hasAnnotation(Context.class))
 			return false;
 
-		// Not if it's a javax.ws.rs type
-		if (clazz.getPackage() != null && clazz.getPackage().getName().startsWith("javax.ws.rs"))
+		// Not if it's a jakarta.ws.rs type
+		if (clazz.getPackage() != null && clazz.getPackage().getName().startsWith("jakarta.ws.rs"))
 			return false;
 
 		// has not been excluded, assume this is the entity

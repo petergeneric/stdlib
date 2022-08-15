@@ -12,8 +12,8 @@ import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.Sch
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 
-import javax.ws.rs.core.HttpHeaders;
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.UriInfo;
 import java.net.URI;
 import java.util.List;
 

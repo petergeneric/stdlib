@@ -3,7 +3,7 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQUriControlField;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;

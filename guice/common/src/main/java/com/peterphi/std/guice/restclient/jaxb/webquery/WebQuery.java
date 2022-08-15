@@ -4,7 +4,7 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.jaxb.webquery.plugin.WebQueryDecodePlugin;
 import org.apache.commons.lang.StringUtils;
 
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriInfo;
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlElementWrapper;

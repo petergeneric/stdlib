@@ -19,8 +19,8 @@ import com.peterphi.usermanager.service.RedirectValidatorService;
 import com.peterphi.usermanager.ui.api.LoginUIService;
 
 import javax.servlet.http.HttpSession;
-import javax.ws.rs.core.NewCookie;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.NewCookie;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
 
 public class LoginUIServiceImpl implements LoginUIService

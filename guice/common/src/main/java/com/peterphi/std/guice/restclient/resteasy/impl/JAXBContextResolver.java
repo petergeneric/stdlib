@@ -5,9 +5,9 @@ import com.google.inject.Singleton;
 import com.peterphi.std.util.jaxb.JAXBSerialiser;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 
-import javax.ws.rs.Produces;
-import javax.ws.rs.ext.ContextResolver;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.ext.ContextResolver;
+import jakarta.ws.rs.ext.Provider;
 import jakarta.xml.bind.JAXBContext;
 
 /**

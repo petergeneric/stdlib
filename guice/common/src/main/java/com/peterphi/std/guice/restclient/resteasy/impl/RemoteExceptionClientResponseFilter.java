@@ -16,11 +16,11 @@ import com.peterphi.std.util.tracing.TracingConstants;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 
-import javax.ws.rs.client.ClientRequestContext;
-import javax.ws.rs.client.ClientResponseContext;
-import javax.ws.rs.client.ClientResponseFilter;
-import javax.ws.rs.client.ResponseProcessingException;
-import javax.ws.rs.ext.Provider;
+import jakarta.ws.rs.client.ClientRequestContext;
+import jakarta.ws.rs.client.ClientResponseContext;
+import jakarta.ws.rs.client.ClientResponseFilter;
+import jakarta.ws.rs.client.ResponseProcessingException;
+import jakarta.ws.rs.ext.Provider;
 import jakarta.xml.bind.JAXBContext;
 import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;

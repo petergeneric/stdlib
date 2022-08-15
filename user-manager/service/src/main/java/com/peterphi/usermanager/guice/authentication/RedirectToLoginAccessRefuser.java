@@ -11,8 +11,8 @@ import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.ws.rs.core.Response;
-import javax.ws.rs.core.UriBuilder;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.core.UriBuilder;
 import java.util.List;
 import java.util.Locale;
 

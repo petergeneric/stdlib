@@ -6,7 +6,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 
-import javax.ws.rs.core.UriInfo;
+import jakarta.ws.rs.core.UriInfo;
 import java.util.List;
 import java.util.Map;
 

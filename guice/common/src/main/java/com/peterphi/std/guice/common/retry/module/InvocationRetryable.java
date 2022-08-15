@@ -7,7 +7,7 @@ import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.ArrayUtils;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.WebApplicationException;
+import jakarta.ws.rs.WebApplicationException;
 
 final class InvocationRetryable implements Retryable<Object>
 {

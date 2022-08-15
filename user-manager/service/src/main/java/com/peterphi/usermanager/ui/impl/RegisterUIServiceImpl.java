@@ -18,7 +18,7 @@ import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.Collections;

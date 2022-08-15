@@ -12,8 +12,8 @@ import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenRespons
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
-import javax.ws.rs.core.CacheControl;
-import javax.ws.rs.core.Response;
+import jakarta.ws.rs.core.CacheControl;
+import jakarta.ws.rs.core.Response;
 import java.net.URI;
 
 public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallbackRestService
