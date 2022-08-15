@@ -8,7 +8,7 @@ import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.ContextResolver;
 import javax.ws.rs.ext.Provider;
-import javax.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBContext;
 
 /**
  * Provides JAX-RS with JAXBContext instances acquired through JAXBSerialiserFactory

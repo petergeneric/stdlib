@@ -38,11 +38,11 @@
 		<metrics.version>4.1.18</metrics.version>
 		<resteasy.version>5.0.3.Final</resteasy.version>
 		<javassist.version>3.29.0-GA</javassist.version>
-		<hibernate.version>6.0.1.Final</hibernate.version>
+		<hibernate.version>6.1.2.Final</hibernate.version>
 		<dbunit.version>2.7.0</dbunit.version>
 		<hsqldb.version>2.6.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
-		<moxy.version>2.7.10</moxy.version>
+		<moxy.version>4.0.0-M3</moxy.version>
 		<mockito.version>2.28.2</mockito.version>
 		<jackson.version>2.12.2</jackson.version>
 	</properties>
@@ -100,11 +100,10 @@
 	</dependencyManagement>
 
 	<dependencies>
-		<!-- Only required for Java 9+ -->
 		<dependency>
-			<groupId>javax.xml.bind</groupId>
-			<artifactId>jaxb-api</artifactId>
-			<version>2.4.0-b180830.0359</version>
+			<groupId>jakarta.xml.bind</groupId>
+			<artifactId>jakarta.xml.bind-api</artifactId>
+			<version>4.0.0</version>
 		</dependency>
 		<dependency>
 			<groupId>org.eclipse.persistence</groupId>
