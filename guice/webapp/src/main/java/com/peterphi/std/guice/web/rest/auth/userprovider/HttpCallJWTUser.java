@@ -100,7 +100,7 @@ class HttpCallJWTUser implements CurrentUser
 					log.fatal("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:" +
 					          data);
 
-					return null;
+					throw new RuntimeException("Rejecting token, not received over secure channel");
 				}
 
 				// Cache without revalidation for the remainder of this HTTP request
