@@ -15,8 +15,8 @@ import org.apache.log4j.Logger;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.joda.time.DateTime;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.IOException;
 import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;

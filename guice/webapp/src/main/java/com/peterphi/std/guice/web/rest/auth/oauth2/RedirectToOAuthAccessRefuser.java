@@ -14,7 +14,7 @@ import com.peterphi.std.util.ListUtility;
 import org.apache.commons.lang.StringUtils;
 import org.jboss.resteasy.util.HttpHeaderNames;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
 import java.util.List;

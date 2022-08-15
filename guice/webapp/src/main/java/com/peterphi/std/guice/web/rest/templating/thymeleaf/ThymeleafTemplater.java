@@ -16,6 +16,7 @@ import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.AbstractContext;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.context.WebContext;
+import org.thymeleaf.web.servlet.JakartaServletWebApplication;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -123,7 +124,9 @@ public class ThymeleafTemplater implements Templater
 
 		if (http != null)
 		{
-			return new WebContext(http.getRequest(), http.getResponse(), http.getServletContext(), http.getRequest().getLocale());
+			return new WebContext(JakartaServletWebApplication
+					                      .buildApplication(http.getServletContext())
+					                      .buildExchange(http.getRequest(), http.getResponse()), http.getRequest().getLocale());
 		}
 		else
 		{

@@ -2,7 +2,7 @@ package com.peterphi.std.guice.web.rest.resteasy;
 
 import org.apache.log4j.Logger;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import java.io.UnsupportedEncodingException;
 
 /**

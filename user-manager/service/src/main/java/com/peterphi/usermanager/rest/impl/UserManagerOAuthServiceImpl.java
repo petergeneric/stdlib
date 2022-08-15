@@ -37,7 +37,7 @@ import org.joda.time.DateTime;
 import org.joda.time.Period;
 import org.jose4j.json.internal.json_simple.JSONObject;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;

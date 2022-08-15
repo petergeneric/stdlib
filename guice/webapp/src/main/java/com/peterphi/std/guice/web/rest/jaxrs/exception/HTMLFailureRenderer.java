@@ -14,7 +14,7 @@ import com.peterphi.std.guice.web.rest.pagewriter.BootstrapRestFailurePageRender
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.lang.StringUtils;
 
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.Response.ResponseBuilder;

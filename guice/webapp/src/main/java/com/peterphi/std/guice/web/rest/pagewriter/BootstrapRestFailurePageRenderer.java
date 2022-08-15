@@ -6,8 +6,8 @@ import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.lang.StringUtils;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import java.util.Arrays;
 import java.util.List;

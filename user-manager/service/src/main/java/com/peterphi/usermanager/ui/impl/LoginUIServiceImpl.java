@@ -18,7 +18,7 @@ import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.service.RedirectValidatorService;
 import com.peterphi.usermanager.ui.api.LoginUIService;
 
-import javax.servlet.http.HttpSession;
+import jakarta.servlet.http.HttpSession;
 import jakarta.ws.rs.core.NewCookie;
 import jakarta.ws.rs.core.Response;
 import java.net.URI;

@@ -15,9 +15,9 @@ import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.log4j.Logger;
 
-import javax.servlet.FilterConfig;
-import javax.servlet.ServletConfig;
-import javax.servlet.ServletContext;
+import jakarta.servlet.FilterConfig;
+import jakarta.servlet.ServletConfig;
+import jakarta.servlet.ServletContext;
 import java.util.Enumeration;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
