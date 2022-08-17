@@ -29,6 +29,12 @@ public class CaseInsensitiveSet extends TreeSet<String>
 	}
 
 
+	public boolean notContains(final String val)
+	{
+		return !contains(val);
+	}
+
+
 	public static CaseInsensitiveSet of(String... values)
 	{
 		return new CaseInsensitiveSet(Set.of(values));
