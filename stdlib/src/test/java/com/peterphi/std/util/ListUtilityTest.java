@@ -22,10 +22,10 @@ public class ListUtilityTest
 	}
 
 
-	@Test(expected = NullPointerException.class)
-	public void testNPEWhenHeadWithNullList()
+	@Test
+	public void testNoNPEWhenHeadWithNullList()
 	{
-		ListUtility.head(null);
+		assertNull(ListUtility.head(null));
 	}
 
 
@@ -70,45 +70,6 @@ public class ListUtilityTest
 
 
 	@Test
-	public void testFlipWithEmptyList()
-	{
-		List<String> list = Arrays.asList();
-
-		List<String> flipped = ListUtility.flip(list);
-		assertNotNull(flipped);
-	}
-
-
-	@Test
-	public void testFlipWithOneItemListIsSame()
-	{
-		List<String> list = Arrays.asList("a");
-
-		List<String> flipped = ListUtility.flip(list);
-		assertEquals(list, flipped);
-	}
-
-
-	@Test
-	public void testFlipWithListReverses()
-	{
-		List<String> list = Arrays.asList("a", "b", "c");
-
-		List<String> flipped = ListUtility.flip(list);
-		assertEquals(Arrays.asList("c", "b", "a"), flipped);
-	}
-
-
-	@Test
-	public void testDoubleFlipIsIdentity()
-	{
-		List<String> list = Arrays.asList("a", "b", "c");
-
-		assertEquals(list, ListUtility.flip(ListUtility.flip(list)));
-	}
-
-
-	@Test
 	public void testListAppliedToListIsCopyWithSameContent()
 	{
 		List<String> list = Arrays.asList("a", "b");
@@ -124,32 +85,5 @@ public class ListUtilityTest
 		List<String> list = Arrays.asList("a", "b");
 
 		assertEquals(list, ListUtility.list((Iterable<String>) list));
-	}
-
-
-	@Test
-	public void testLast()
-	{
-		List<String> list = Arrays.asList("a", "b", "c");
-
-		assertEquals(Arrays.asList("b", "c"), ListUtility.last(list, 2));
-	}
-
-
-	@Test
-	public void testLastWithZeroIsEmpty()
-	{
-		List<String> list = Arrays.asList("a", "b", "c");
-
-		assertEquals(Arrays.asList(), ListUtility.last(list, 0));
-	}
-
-
-	@Test
-	public void testLastWithGreaterThanCount()
-	{
-		List<String> list = Arrays.asList("a", "b", "c");
-
-		assertEquals(list, ListUtility.last(list, 10));
 	}
 }
