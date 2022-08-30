@@ -58,6 +58,14 @@ public class ListUtility
 	}
 
 
+	public static <T> T last(final List<T> src)
+	{
+		if (src == null || src.isEmpty())
+			return null;
+		else
+			return src.get(src.size() - 1);
+	}
+
 	/**
 	 * Return, at most, the last n items from the source list
 	 *
