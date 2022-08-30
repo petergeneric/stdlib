@@ -1,6 +1,6 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
 <html xmlns:th="http://www.thymeleaf.org">
-<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
+<!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
 <head>
 	<title>Service Metrics</title>
 
@@ -25,7 +25,7 @@
 		</tr>
 		</thead>
 		<tbody>
-		<!--@thymesVar id="health" type="com.peterphi.std.guice.metrics.rest.types.HealthDocument"-->
+		<!--/*@thymesVar id="health" type="com.peterphi.std.guice.metrics.rest.types.HealthDocument"*/-->
 		<tr th:each="entry: ${health.results}" th:id="${entry.name}">
 			<td th:text="${entry.name}"></td>
 			<td th:text="${entry.implication}"></td>
