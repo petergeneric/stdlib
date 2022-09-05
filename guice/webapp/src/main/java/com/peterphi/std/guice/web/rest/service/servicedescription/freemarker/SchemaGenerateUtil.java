@@ -101,4 +101,17 @@ public class SchemaGenerateUtil
 			return clazz.toString();
 		}
 	}
+
+
+	public static void print(final Class<?> clazz)
+	{
+		try
+		{
+			System.out.println(new SchemaGenerateUtil().generate(JAXBSerialiser.getInstance(clazz)));
+		}
+		catch (Throwable t)
+		{
+			throw new RuntimeException("Error generating XSD for " + clazz + ": " + t.getMessage(), t);
+		}
+	}
 }
