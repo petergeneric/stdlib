@@ -186,29 +186,36 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 			return null;
 	}
 
-
-	private DateTimeFormatter getDateFormatter()
+	@Override
+	public DateTimeFormatter getDateFormatter()
 	{
-		if (!isAnonymous())
+		if (_dateFormatter != null)
 		{
-			if (_dateFormatter == null)
-			{
-				final UserManagerUser userInfo = getSession().getUserInfo();
-
-				try
-				{
-					_dateFormatter = userInfo.toDateTimeFormatter();
-				}
-				catch (Throwable t)
-				{
-					throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", t);
-				}
-			}
-
 			return _dateFormatter;
 		}
+		else
+		{
+			if (!isAnonymous())
+			{
+				if (_dateFormatter == null)
+				{
+					final UserManagerUser userInfo = getSession().getUserInfo();
 
-		return CurrentUser.DEFAULT_DATE_FORMAT;
+					try
+					{
+						_dateFormatter = userInfo.toDateTimeFormatter();
+					}
+					catch (Throwable t)
+					{
+						throw new IllegalArgumentException("Error trying to parse user dateFormat/timeZone!", t);
+					}
+				}
+
+				return _dateFormatter;
+			}
+
+			return CurrentUser.DEFAULT_DATE_FORMAT;
+		}
 	}
 
 

@@ -235,5 +235,25 @@ public interface CurrentUser
 			return format(new DateTime(date.getTime()));
 	}
 
+	default DateTimeFormatter getDateFormatter()
+	{
+		return CurrentUser.DEFAULT_DATE_FORMAT;
+	}
+
+	/**
+	 * Return the user's timezone
+	 *
+	 * @return e.g. Europe/London
+	 */
+	default String getTimeZone()
+	{
+		final DateTimeZone zone = getDateFormatter().getZone();
+
+		if (zone != null)
+			return zone.getID();
+		else
+			return DEFAULT_TIMEZONE;
+	}
+
 	AccessRefuser getAccessRefuser();
 }
