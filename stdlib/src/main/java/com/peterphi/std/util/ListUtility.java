@@ -4,6 +4,7 @@ import com.peterphi.std.types.HybridIterator;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
@@ -40,6 +41,17 @@ public class ListUtility
 		return list;
 	}
 
+
+	/**
+	 * Returns true if a given collection is null or empty
+	 *
+	 * @param collection optional collection
+	 * @return null || isEmpty
+	 */
+	public boolean empty(final Collection<?> collection)
+	{
+		return (collection == null || collection.isEmpty());
+	}
 
 	public static <T> T last(final List<T> src)
 	{
