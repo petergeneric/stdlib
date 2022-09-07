@@ -16,17 +16,43 @@ public class FreemarkerTemplater
 	private final String templatePrefix;
 	private final String templateSuffix;
 
+
 	@Inject
 	public FreemarkerTemplater(Configuration config)
 	{
 		this(config, "", ".ftl");
 	}
 
+
 	public FreemarkerTemplater(Configuration config, final String templatePrefix, final String templateSuffix)
 	{
 		this.config = config;
 		this.templatePrefix = templatePrefix;
 		this.templateSuffix = templateSuffix;
+	}
+
+
+	public Template buildMemoryTemplate(final String name, final String templateStr)
+	{
+		try
+		{
+			return new Template(name, templateStr, config);
+		}
+		catch (IOException e)
+		{
+			throw new RuntimeException("Error parsing template from input string! " + e.getMessage(), e);
+		}
+	}
+
+
+	public FreemarkerCall template(Template template)
+	{
+		final FreemarkerCall call = new FreemarkerCall(template);
+
+		// Populate shared data
+		call.setAll(data);
+
+		return call;
 	}
 
 
@@ -45,18 +71,15 @@ public class FreemarkerTemplater
 			throw new IllegalArgumentException("Could not load template " + name + ": " + e.getMessage(), e);
 		}
 
-		final FreemarkerCall call = new FreemarkerCall(template);
-
-		// Populate shared data
-		call.setAll(data);
-
-		return call;
+		return template(template);
 	}
+
 
 	public void set(String key, Object value)
 	{
 		data.put(key, value);
 	}
+
 
 	public void setAll(Map<String, Object> data)
 	{
