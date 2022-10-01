@@ -1,19 +1,12 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
-<!--/*@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"*/-->
-<!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
-<!--/*@thymesVar id="message" type="java.lang.String"*/-->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <!--/*@thymesVar id="stack" type="java.lang.StackTraceElement[]"*/-->
 <head>
 	<title>Daemons</title>
-
 	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
-
 <body id="top">
-<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
-
-
+<nav th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></nav>
 <div class="container">
 	<h1><span th:text="${name}"></span> - Stack Trace</h1>
 

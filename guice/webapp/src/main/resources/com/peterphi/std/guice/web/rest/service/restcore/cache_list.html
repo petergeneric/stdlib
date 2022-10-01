@@ -1,5 +1,5 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <!--/*@thymesVar id="breakerService" type="com.peterphi.std.guice.common.breaker.BreakerService"*/-->
 <!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
 <!--/*@thymesVar id="csrfToken" type="java.lang.String"*/-->
@@ -58,7 +58,7 @@
 						      th:action="@{|${coreRestPrefix}/guice/caches/invalidate|}">
 							<input type="hidden" name="csrf_token" th:value="${csrfToken}"/>
 							<input type="hidden" name="name" th:value="${cacheName}"/>
-							<input type="submit" value="Clear"/>
+							<input type="submit" class="btn btn-secondary" value="Clear"/>
 						</form>
 					</th>
 				</tr>

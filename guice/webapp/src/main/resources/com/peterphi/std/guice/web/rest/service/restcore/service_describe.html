@@ -1,7 +1,6 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <!--/*@thymesVar id="service" type="com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.RestServiceInfo"*/-->
-<!--/*@thymesVar id="serviceId" type="java.lang.Integer"*/-->
 <!--/*@thymesVar id="exampleGenerator" type="com.peterphi.std.guice.web.rest.service.servicedescription.ExampleGenerator"*/-->
 <head>
 	<title th:text="${service.interfaceName}"></title>
@@ -10,12 +9,12 @@
 </head>
 
 <body id="top">
-<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
+<nav class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></nav>
 
 <div class="container">
 	<h1 th:text="${service.interfaceName}"></h1>
 
-	<div class="alert" th:if="${service.deprecated}">
+	<div class="alert alert-warning" th:if="${service.deprecated}">
 		<strong>Deprecated</strong><br/>
 		This service is included for legacy use and will be removed in a future release
 	</div>
@@ -45,7 +44,7 @@
 					th:text="${resource.localPath}"/></a>
 		</h3>
 
-		<div class="alert" th:if="${resource.deprecated}">
+		<div class="alert alert-warning" th:if="${resource.deprecated}">
 			<strong>Deprecated</strong><br/>
 			This resource is included for legacy use and will be removed in a future release
 		</div>
