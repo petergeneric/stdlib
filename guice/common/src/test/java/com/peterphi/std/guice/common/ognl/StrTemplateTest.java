@@ -88,6 +88,19 @@ public class StrTemplateTest
 	}
 
 
+	/**
+	 * Test an unusual but important case - emitting content which must be XML-escaped, but which will be inserted into an XML doc which is itself inside a JSON string
+	 */
+	@Test
+	public void testLiteralEvaluationEscapedByXmlInJsonString()
+	{
+		final String expect = """
+				<body>(&lt;hello\\n name=\\"${name}\\" \\/&gt;)</body>""";
+
+		eval(expect, "<body>${{:literal:xmlbody:json:<hello\n name=\"${name}\" />}}</body>");
+	}
+
+
 	@Test(expected = IllegalArgumentException.class)
 	public void testOpenNoCloseAtAll()
 	{

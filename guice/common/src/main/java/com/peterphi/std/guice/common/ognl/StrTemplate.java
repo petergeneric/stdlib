@@ -3,6 +3,7 @@ package com.peterphi.std.guice.common.ognl;
 import com.google.common.html.HtmlEscapers;
 import com.google.common.net.UrlEscapers;
 import com.google.common.xml.XmlEscapers;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.text.StrLookup;
 
 import java.util.function.Function;
@@ -22,29 +23,32 @@ import java.util.function.Function;
  * <p>
  * By default, the result of a template will be recursively evaluated if it contains <code>${</code>. This can be disabled by using {@link #evaluate(String, StrLookup, boolean)} with <code>recursive=false</code>, or by the OGNL template using Evaluation Customisation flags. This involves prefixing the OGNL with one or more of the following:
  * <ul>
- *     <li><strong>:literal:</strong> - this will prevent recursive evaluation of the result of this template</li>
- *     <li><strong>:html:</strong> - this apply HTML escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
- *     <li><strong>:xml:</strong> - this apply HTML escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
- *     <li><strong>:url:path</strong> - this apply URL Path escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
- *     <li><strong>:url:param</strong> - this apply URL Parameter escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:literal:</strong> - prevent recursive evaluation of the result of this template</li>
+ *     <li><strong>:json:</strong> - apply JSON String escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:html:</strong> - apply HTML escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:xml:</strong> - apply XML Attribute escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:xmlbody:</strong> - apply XML Body escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:url:path</strong> - apply URL Path escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
+ *     <li><strong>:url:param</strong> - apply URL Parameter escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
  * </ul>
  * </p>
  * <p>
  *     Example of using an Evaluation Customisation flag:
  *     <ul>
  *         <li><code>${:literal:url:path:someOgnlStatement()}}</code></li>
- *         <li><code><code>${:html:someOgnlStatementWhoseResultWillBeRecursivelyEvaluated()}}</code></code></li>
- *         <li><code>${:literal:html:someOgnlStatementWhoseResultWillNotBeRecursivelyEvaluatedAndThenEscaped()}}</code></li>
+ *         <li><code><code>${:html:someOgnlStatementWhoseResultWillBeRecursivelyEvaluated_AndThenEscaped()}}</code></code></li>
+ *         <li><code>${:literal:html:someOgnlStatementWhoseResultWillNotBeRecursivelyEvaluated_AndThenItWillBeEscaped()}}</code></li>
+ *         <li><code>${:literal:xmlbody:json:someOgnlStatementWhoseResultWillNotBeRecursivelyEvaluated_AndThenItWillBeEscaped()}</code> - Example of emitting escaped XML body content, which will be placed first within a JSON string</li>
  *     </ul>
  * </p>
  */
 public final class StrTemplate
 {
-
-
 	public static final String TEMPLATE_PREFIX_LITERAL = "literal:";
 	public static final String TEMPLATE_PREFIX_HTML = "html:";
 	public static final String TEMPLATE_PREFIX_XML = "xml:";
+	public static final String TEMPLATE_PREFIX_XMLBODY = "xmlbody:";
+	public static final String TEMPLATE_PREFIX_JSON_STR = "json:";
 	public static final String TEMPLATE_PREFIX_URL = "url:";
 
 
@@ -157,57 +161,91 @@ public final class StrTemplate
 	}
 
 
+	/**
+	 * Figure out any escaping / processing directives within the template.
+	 * Escaping rules are sequentially applied - this is usually unnecessary, but a useful case might be ":xmlbody:json:" which specifies that the output should be xml-escaped, and then escaped again for insertion into a JSON string (i.e. a JSON string which contains XML, but where the templated value should only output text)
+	 * @param expr
+	 * @return
+	 */
 	private static TemplateEvalCustomisation getTemplateCustomisation(String expr)
 	{
 		Function<String, String> escaper = null;
 		boolean canRecurse = true;
 		boolean wasMatched = false;
 
+		int directives = 0;
+
 		if (expr.length() > 1 && expr.charAt(0) == ':')
 		{
-			expr = expr.substring(1);
+			// Limit the number of directives that can be combined
+			if (++directives > 5)
+				throw new IllegalArgumentException("Template encountered too many nested directives (" +
+				                                   directives +
+				                                   ")! Working expr: " +
+				                                   expr);
 
-			// Literal prefix: blocks recursive evaluation
-			if (expr.startsWith(TEMPLATE_PREFIX_LITERAL))
+			expr = expr.substring(1); // Remove the leading : character
+			while (expr.length() > 1 && expr.indexOf(':') != -1)
 			{
-				expr = expr.substring(TEMPLATE_PREFIX_LITERAL.length());
-				canRecurse = false;
-				wasMatched = true;
-			}
-
-			// html prefix: escapes HTML control chars so the result is HTML-safe
-			if (expr.startsWith(TEMPLATE_PREFIX_HTML))
-			{
-				expr = expr.substring(TEMPLATE_PREFIX_HTML.length());
-
-				escaper = HtmlEscapers.htmlEscaper() :: escape;
-				wasMatched = true;
-			}
-			else if (expr.startsWith(TEMPLATE_PREFIX_XML))
-			{
-				expr = expr.substring(TEMPLATE_PREFIX_XML.length());
-
-				escaper = XmlEscapers.xmlAttributeEscaper() :: escape;
-				wasMatched = true;
-			}
-			else if (expr.startsWith(TEMPLATE_PREFIX_URL))
-			{
-				wasMatched = true;
-
-				if (expr.startsWith("url:path:"))
+				// Literal prefix: blocks recursive evaluation
+				if (expr.startsWith(TEMPLATE_PREFIX_LITERAL))
 				{
-					expr = expr.substring("url:path:".length());
-					escaper = UrlEscapers.urlPathSegmentEscaper() :: escape;
+					expr = expr.substring(TEMPLATE_PREFIX_LITERAL.length());
+					canRecurse = false;
+					wasMatched = true;
 				}
-				else if (expr.startsWith("url:param:"))
+				// html prefix: escapes HTML control chars so the result is HTML-safe
+				else if (expr.startsWith(TEMPLATE_PREFIX_HTML))
 				{
-					expr = expr.substring("url:param:".length());
+					expr = expr.substring(TEMPLATE_PREFIX_HTML.length());
 
-					escaper = UrlEscapers.urlFormParameterEscaper() :: escape;
+					escaper = andThen(escaper, HtmlEscapers.htmlEscaper() :: escape);
+					wasMatched = true;
+				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_XML))
+				{
+					expr = expr.substring(TEMPLATE_PREFIX_XML.length());
+
+					escaper = andThen(escaper, XmlEscapers.xmlAttributeEscaper() :: escape);
+					wasMatched = true;
+				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_XMLBODY))
+				{
+					expr = expr.substring(TEMPLATE_PREFIX_XMLBODY.length());
+
+					escaper = andThen(escaper, XmlEscapers.xmlContentEscaper() :: escape);
+					wasMatched = true;
+				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_JSON_STR))
+				{
+					expr = expr.substring(TEMPLATE_PREFIX_JSON_STR.length());
+
+					escaper = andThen(escaper, StringEscapeUtils :: escapeJavaScript);
+					wasMatched = true;
+				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_URL))
+				{
+					wasMatched = true;
+
+					if (expr.startsWith("url:path:"))
+					{
+						expr = expr.substring("url:path:".length());
+						escaper =andThen(escaper, UrlEscapers.urlPathSegmentEscaper() :: escape);
+					}
+					else if (expr.startsWith("url:param:"))
+					{
+						expr = expr.substring("url:param:".length());
+
+						escaper = andThen(escaper, UrlEscapers.urlFormParameterEscaper() :: escape);
+					}
+					else
+					{
+						throw new IllegalArgumentException("Unknown template URL prefix: " + expr);
+					}
 				}
 				else
 				{
-					throw new IllegalArgumentException("Unknown template URL prefix: " + expr);
+					break;
 				}
 			}
 		}
@@ -216,6 +254,16 @@ public final class StrTemplate
 			return new TemplateEvalCustomisation(expr, canRecurse, escaper);
 		else
 			return null;
+	}
+
+
+	private static Function<String, String> andThen(final Function<String, String> current,
+	                                                final Function<String, String> escaper)
+	{
+		if (current == null)
+			return escaper;
+		else
+			return current.andThen(escaper);
 	}
 
 
