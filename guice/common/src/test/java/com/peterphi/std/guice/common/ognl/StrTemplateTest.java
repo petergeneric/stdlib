@@ -80,6 +80,7 @@ public class StrTemplateTest
 		     "${{{:html:<script>evil</script> and data leak of ${{testing}} }}}");
 	}
 
+
 	@Test
 	public void testRecursiveEvaluationBlockedAndHtmlEscapedByHtmlPrefix()
 	{
@@ -98,6 +99,21 @@ public class StrTemplateTest
 				<body>(&lt;hello\\n name=\\"${name}\\" \\/&gt;)</body>""";
 
 		eval(expect, "<body>${{:literal:xmlbody:json:<hello\n name=\"${name}\" />}}</body>");
+	}
+
+
+	@Test
+	public void testAlphanumEscape()
+	{
+		eval("stärt aBc_dEf_gh énd", "stärt ${:literal:alphanum:äBc dEf_g-h} énd");
+		eval("stärt aBc_dEf_gh énd".replaceAll("_", ""), "stärt ${:literal:alphanum:tr:_::äBc dEf_g-h} énd");
+	}
+
+
+	@Test
+	public void testTrEscape()
+	{
+		eval("abc (äBBCdEf_g-h) abc", "abc ${:literal:tr:abc:ABC:äBbcdEf_g-h} abc");
 	}
 
 

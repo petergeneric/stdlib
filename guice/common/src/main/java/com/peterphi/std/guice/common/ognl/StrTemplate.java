@@ -7,7 +7,9 @@ import org.apache.commons.lang.StringEscapeUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrLookup;
 
+import java.text.Normalizer;
 import java.util.function.Function;
+import java.util.regex.Pattern;
 
 /**
  * Implements a String Templater that processes strings containing <code>${...}</code> expressions, and replaces them using a StrLookup instance. To allow templates to contain <code>}</code> characters, the template must start and end with a balanced number of curly braces.
@@ -50,7 +52,19 @@ public final class StrTemplate
 	public static final String TEMPLATE_PREFIX_XML = "xml:";
 	public static final String TEMPLATE_PREFIX_XMLBODY = "xmlbody:";
 	public static final String TEMPLATE_PREFIX_JSON_STR = "json:";
+	public static final String TEMPLATE_PREFIX_TRANSLATE = "tr:";
+	public static final String TEMPLATE_PREFIX_ALPHANUM = "alphanum:";
 	public static final String TEMPLATE_PREFIX_URL = "url:";
+
+	private static Pattern NOT_ALPHANUM = Pattern.compile("[^A-Za-z0-9_]+");
+	/**
+	 * Escape function that strips diacritics, replaces space with underscore and then strips any other non-alphanumeric chars
+	 */
+	private static Function<String, String> ALPHANUM_ESCAPER = (str) -> NOT_ALPHANUM
+			                                                                    .matcher(StringUtils.replaceChars(Normalizer.normalize(
+					                                                                    str,
+					                                                                    Normalizer.Form.NFKD), ' ', '_'))
+			                                                                    .replaceAll("");
 
 
 	private StrTemplate()
@@ -72,9 +86,10 @@ public final class StrTemplate
 
 	/**
 	 * Evaluates a string, invoking <code>lookup</code> against any <code>${...}</code> blocks within the given template (and optionally applying escaping/recursion directives within the <code>${...}</code> block)
-	 * @param template a user-specified template, optionally prefixed by <code>directives</code>.
-	 * @param lookup the logic to execute to resolve a template expression
-	 * @param recursive  if true, recursion is on by default (can be disabled by template using :literal: directive)
+	 *
+	 * @param template          a user-specified template, optionally prefixed by <code>directives</code>.
+	 * @param lookup            the logic to execute to resolve a template expression
+	 * @param recursive         if true, recursion is on by default (can be disabled by template using :literal: directive)
 	 * @param defaultDirectives optional default directives; applied after any directives within the template expr itself
 	 * @return The evaluated template
 	 */
@@ -197,7 +212,8 @@ public final class StrTemplate
 	                                               final TemplateEvalCustomisation user,
 	                                               final TemplateEvalCustomisation defaults)
 	{
-		if (StringUtils.trimToNull(defaults.expr()) != null) throw new IllegalArgumentException("Default Directives not fully parsed: dangling " + defaults.expr() + " found!");
+		if (StringUtils.trimToNull(defaults.expr()) != null)
+			throw new IllegalArgumentException("Default Directives not fully parsed: dangling " + defaults.expr() + " found!");
 
 		if (user == null)
 		{
@@ -227,6 +243,7 @@ public final class StrTemplate
 	/**
 	 * Figure out any escaping / processing directives within the template.
 	 * Escaping rules are sequentially applied - this is usually unnecessary, but a useful case might be ":xmlbody:json:" which specifies that the output should be xml-escaped, and then escaped again for insertion into a JSON string (i.e. a JSON string which contains XML, but where the templated value should only output text)
+	 *
 	 * @param expr
 	 * @return
 	 */
@@ -286,6 +303,28 @@ public final class StrTemplate
 					escaper = andThen(escaper, StringEscapeUtils :: escapeJavaScript);
 					wasMatched = true;
 				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_ALPHANUM))
+				{
+					expr = expr.substring(TEMPLATE_PREFIX_ALPHANUM.length());
+
+					escaper = andThen(escaper, ALPHANUM_ESCAPER);
+					wasMatched = true;
+				}
+				else if (expr.startsWith(TEMPLATE_PREFIX_TRANSLATE))
+				{
+					expr = expr.substring(TEMPLATE_PREFIX_TRANSLATE.length());
+
+					// Preserve empty groups
+					final String[] parts = expr.split(":", -3);
+					final String searchChars = parts[0];
+					final String replaceChars = parts[1];
+					expr = parts[2];
+
+					// Find characters to replace
+					escaper = andThen(escaper, str -> StringUtils.replaceChars(str, searchChars, replaceChars));
+
+					wasMatched = true;
+				}
 				else if (expr.startsWith(TEMPLATE_PREFIX_URL))
 				{
 					wasMatched = true;
@@ -293,7 +332,7 @@ public final class StrTemplate
 					if (expr.startsWith("url:path:"))
 					{
 						expr = expr.substring("url:path:".length());
-						escaper =andThen(escaper, UrlEscapers.urlPathSegmentEscaper() :: escape);
+						escaper = andThen(escaper, UrlEscapers.urlPathSegmentEscaper() :: escape);
 					}
 					else if (expr.startsWith("url:param:"))
 					{
