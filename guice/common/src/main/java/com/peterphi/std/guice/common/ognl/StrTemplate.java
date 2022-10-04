@@ -4,6 +4,7 @@ import com.google.common.html.HtmlEscapers;
 import com.google.common.net.UrlEscapers;
 import com.google.common.xml.XmlEscapers;
 import org.apache.commons.lang.StringEscapeUtils;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrLookup;
 
 import java.util.function.Function;
@@ -21,7 +22,7 @@ import java.util.function.Function;
  * For a template to contain <code>}}</code>, it is necessary for the outer template to be expressed as <code>${{{...}}}</code> and so on. A template's value may not start with <code>{</code> or end with <code>}</code>, since this would be treated as part of the prefix or suffix (respectively).
  * </p>
  * <p>
- * By default, the result of a template will be recursively evaluated if it contains <code>${</code>. This can be disabled by using {@link #evaluate(String, StrLookup, boolean)} with <code>recursive=false</code>, or by the OGNL template using Evaluation Customisation flags. This involves prefixing the OGNL with one or more of the following:
+ * By default, the result of a template will be recursively evaluated if it contains <code>${</code>. This can be disabled by using {@link #evaluate(String, StrLookup, boolean, String)} with <code>recursive=false</code>, or by the OGNL template using Evaluation Customisation flags. This involves prefixing the OGNL with one or more of the following:
  * <ul>
  *     <li><strong>:literal:</strong> - prevent recursive evaluation of the result of this template</li>
  *     <li><strong>:json:</strong> - apply JSON String escaping to the result of this template (N.B. if :literal: is not specified first, then escaping will be applied to the result of the fully recursive evaluation</li>
@@ -59,11 +60,28 @@ public final class StrTemplate
 
 	public static String evaluate(final String template, final StrLookup lookup)
 	{
-		return evaluate(template, lookup, true);
+		return evaluate(template, lookup, null);
 	}
 
 
-	public static String evaluate(final String template, final StrLookup lookup, final boolean recursive)
+	public static String evaluate(final String template, final StrLookup lookup, String defaultDirectives)
+	{
+		return evaluate(template, lookup, true, defaultDirectives);
+	}
+
+
+	/**
+	 * Evaluates a string, invoking <code>lookup</code> against any <code>${...}</code> blocks within the given template (and optionally applying escaping/recursion directives within the <code>${...}</code> block)
+	 * @param template a user-specified template, optionally prefixed by <code>directives</code>.
+	 * @param lookup the logic to execute to resolve a template expression
+	 * @param recursive  if true, recursion is on by default (can be disabled by template using :literal: directive)
+	 * @param defaultDirectives optional default directives; applied after any directives within the template expr itself
+	 * @return The evaluated template
+	 */
+	public static String evaluate(final String template,
+	                              final StrLookup lookup,
+	                              final boolean recursive,
+	                              final String defaultDirectives)
 	{
 		StringBuilder sb = new StringBuilder(template.length());
 
@@ -123,22 +141,39 @@ public final class StrTemplate
 				String expr = template.substring(prefixEnd, suffix);
 
 				// Evaluate template prefixes
-				TemplateEvalCustomisation customisation = getTemplateCustomisation(expr);
+				final TemplateEvalCustomisation rules;
+				{
+					final TemplateEvalCustomisation rulesFromExpr = getTemplateCustomisation(expr);
 
-				if (customisation != null && customisation.expr() != null)
-					expr = customisation.expr();
+					if (defaultDirectives != null)
+					{
+						TemplateEvalCustomisation defaultRules = getTemplateCustomisation(defaultDirectives);
+
+						if (defaultRules != null)
+							rules = merge(expr, rulesFromExpr, defaultRules);
+						else
+							rules = rulesFromExpr;
+					}
+					else
+					{
+						rules = rulesFromExpr;
+					}
+				}
+
+				if (rules != null && rules.expr() != null)
+					expr = rules.expr();
 
 				// Evaluate expression (optionally recursively)
 				String resolved = lookup.lookup(expr);
 
 				// Optionally recursively evalutate
-				final boolean canRecurse = recursive && (customisation == null || customisation.canRecurse());
+				final boolean canRecurse = recursive && (rules == null || rules.canRecurse());
 				if (canRecurse && resolved.contains("${"))
-					resolved = evaluate(resolved, lookup, canRecurse);
+					resolved = evaluate(resolved, lookup); // Do not pass on default directives to sub-templates
 
 				// Optionally apply escaping to make output safe
-				if (customisation != null && customisation.escaper != null)
-					resolved = customisation.escaper.apply(resolved);
+				if (rules != null && rules.escaper != null)
+					resolved = rules.escaper.apply(resolved);
 
 				sb.append(resolved);
 
@@ -147,6 +182,34 @@ public final class StrTemplate
 		}
 
 		return sb.toString();
+	}
+
+
+	/**
+	 * Merge two customisations together, returning a more restrictive combination of the two.
+	 *
+	 * @param wholeExpr the input whole expression, used in the event that the user's requested eval rules are blank
+	 * @param user      the user's requested eval rules
+	 * @param defaults  the incoming default eval rules. These can prohibit recursion, and any escaping requested by the default rule will be applied after the user template's requested escapes
+	 * @return
+	 */
+	private static TemplateEvalCustomisation merge(final String wholeExpr,
+	                                               final TemplateEvalCustomisation user,
+	                                               final TemplateEvalCustomisation defaults)
+	{
+		if (StringUtils.trimToNull(defaults.expr()) != null) throw new IllegalArgumentException("Default Directives not fully parsed: dangling " + defaults.expr() + " found!");
+
+		if (user == null)
+		{
+			return new TemplateEvalCustomisation(wholeExpr, defaults.canRecurse(), defaults.escaper());
+		}
+		else
+		{
+			final boolean canRecurse = defaults.canRecurse() && user.canRecurse();
+			final Function<String, String> escaper = andThen(user.escaper(), defaults.escaper());
+
+			return new TemplateEvalCustomisation(user.expr(), canRecurse, escaper);
+		}
 	}
 
 
@@ -262,6 +325,8 @@ public final class StrTemplate
 	{
 		if (current == null)
 			return escaper;
+		else if (escaper == null)
+			return current;
 		else
 			return current.andThen(escaper);
 	}
