@@ -57,6 +57,16 @@ public class OgnlFactoryTest
 		assertEquals("hello world xyz - 1", OgnlFactory.template("${get(0).toString()} ${'xyz'} - ${1}", input));
 	}
 
+	/**
+	 * Test that the template method works as expected
+	 */
+	@Test
+	public void testTemplateWithEscapeDirective()
+	{
+		final List<String> input = Collections.singletonList("hello \"alice <bob /> and ${name}\"");
+		assertEquals("hello \\\"alice &lt;bob \\/&gt; and ${name}\\\" xyz - 1", OgnlFactory.template("${get(0).toString()} ${'xyz'} - ${1}", input, ":literal:xmlbody:json:"));
+	}
+
 
 	@Test
 	public void testStringUtilss()
