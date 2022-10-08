@@ -59,49 +59,9 @@ public class HTMLFailureRenderer extends XMLFailureRenderer implements RestFailu
 
 	@Reconfigurable
 	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JVMINFO)
-	protected boolean jvmInfoEnabled = false;
-
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT)
-	protected boolean jvmInfoEnvironmentVariablesEnabled = false;
-
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_REQUESTINFO)
-	protected boolean requestInfoEnabled = false;
-
-	@Reconfigurable
-	@Inject(optional = true)
 	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_STACKTRACE)
 	protected boolean stackTraceEnabled = true;
 
-	/**
-	 * If true, a "Create Issue" link will be available
-	 */
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ENABLED)
-	protected boolean jiraEnabled = false;
-
-	/**
-	 * If non-zero we will try to create and populate an Issue automatically
-	 */
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_PID)
-	protected int jiraProjectId = 0;
-
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ISSUE_TYPE)
-	protected int jiraIssueType = 1; // default id for "Bug"
-
-	@Reconfigurable
-	@Inject(optional = true)
-	@Named(GuiceProperties.JAXRS_EXCEPTION_HTML_JIRA_ENDPOINT)
-	protected String jiraEndpoint = "https://somecompany.atlassian.net";
 
 	@Inject
 	GuiceConfig config;
@@ -135,31 +95,11 @@ public class HTMLFailureRenderer extends XMLFailureRenderer implements RestFailu
 			}
 		}
 
-		// Optionally enable JIRA integration
-		if (jiraEnabled)
-		{
-			writer.enableJIRA(jiraEndpoint, jiraProjectId, jiraIssueType);
-		}
-
-		if (jvmInfoEnabled)
-		{
-			writer.enableJVMInfo();
-		}
-
-		if (jvmInfoEnvironmentVariablesEnabled)
-		{
-			writer.enableEnvironmentVariables();
-		}
-
 		if (stackTraceEnabled && !shouldStripStackTrace())
 		{
 			writer.enableStackTrace();
 		}
 
-		if (requestInfoEnabled)
-		{
-			writer.enableRequestInfo();
-		}
 
 		StringBuilder sb = new StringBuilder();
 		writer.writeHTML(sb);
