@@ -29,13 +29,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.ref.SoftReference;
 import java.util.ArrayList;
 import java.util.List;
 
 public class DOMUtils
 {
-	private static SoftReference<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY = new SoftReference<>(null);
+	private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
 	private static final int DEFAULT_INDENT = 2;
 
 	private DOMUtils()
@@ -47,7 +46,21 @@ public class DOMUtils
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-		factory.setNamespaceAware(true);
+		try
+		{
+			factory.setNamespaceAware(true);
+
+			// Disable DTDs
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
+
+
+			factory.setXIncludeAware(false);
+			factory.setExpandEntityReferences(false);
+		}
+		catch (ParserConfigurationException e)
+		{
+			throw new RuntimeException("Could not configure XML DocumentBuilderFactory!");
+		}
 
 		return factory;
 	}
@@ -62,16 +75,12 @@ public class DOMUtils
 	{
 		try
 		{
-			DocumentBuilderFactory factory = DOCUMENT_BUILDER_FACTORY.get();
-
-			if (factory == null)
+			if (DOCUMENT_BUILDER_FACTORY == null)
 			{
-				factory = createDocumentBuilderFactory();
-
-				DOCUMENT_BUILDER_FACTORY = new SoftReference<>(factory);
+				DOCUMENT_BUILDER_FACTORY = createDocumentBuilderFactory();
 			}
 
-			return factory.newDocumentBuilder();
+			return DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 		}
 		catch (ParserConfigurationException e)
 		{
