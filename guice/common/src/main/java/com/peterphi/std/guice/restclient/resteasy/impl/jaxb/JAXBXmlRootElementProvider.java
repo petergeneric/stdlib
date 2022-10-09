@@ -24,12 +24,6 @@ import java.lang.reflect.Type;
 @Consumes({"application/xml", "application/*+xml", "text/xml", "text/*+xml"})
 public class JAXBXmlRootElementProvider<T> extends AbstractJAXBProvider<T> implements AsyncBufferedMessageBodyWriter<T>
 {
-	public JAXBXmlRootElementProvider()
-	{
-		this(new JAXBSerialiserFactory(true));
-	}
-
-
 	@Inject
 	public JAXBXmlRootElementProvider(JAXBSerialiserFactory factory)
 	{

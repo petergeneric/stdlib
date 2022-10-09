@@ -23,22 +23,34 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Provider
 @Produces({"application/xml", "application/*+xml", "text/xml", "text/*+xml"})
 @Consumes({"application/xml", "application/*+xml", "text/xml", "text/*+xml"})
 public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements AsyncBufferedMessageBodyWriter<T>
 {
-	private final Map<Class<?>, Adapter> adapters = Collections.synchronizedMap(new HashMap<>());
+	private final ConcurrentHashMap<Class<?>, Adapter> adapters;
 
 
 	@Inject
 	public JAXBXmlTypeProvider(JAXBSerialiserFactory factory)
 	{
 		super(factory);
+
+		this.adapters = new ConcurrentHashMap<>(64);
+	}
+
+
+	/**
+	 * Construct a new JAXBXmlTypeProvider that will share the JAXBSerialiserFactory and Adapter Map of an existing provider
+	 * @param source
+	 */
+	protected JAXBXmlTypeProvider(JAXBXmlTypeProvider source)
+	{
+		super(source.factory);
+
+		this.adapters = source.adapters;
 	}
 
 

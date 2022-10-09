@@ -368,11 +368,16 @@ class GuicedResteasy implements GuiceApplication
 		}
 
 		// Set up JAXB providers
-		providerFactory.registerProviderInstance(new JAXBXmlRootElementProvider<>(serialiserFactory));
-		providerFactory.registerProviderInstance(new JAXBXmlTypeProvider<>(serialiserFactory));
-		providerFactory.registerProviderInstance(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
-		providerFactory.registerProviderInstance(new FastInfosetXmlTypeProvider<>(serialiserFactory));
+		{
+			providerFactory.registerProviderInstance(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+			providerFactory.registerProviderInstance(new JAXBXmlRootElementProvider<>(serialiserFactory));
 
+			// Set up providers for XmlType-annotated and JAXBElement entities
+			// These providers will share the same underlying serialiser map
+			final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+			providerFactory.registerProviderInstance(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+			providerFactory.registerProviderInstance(xmlTypeProvider);
+		}
 
 		// Register the exception mapper
 		{

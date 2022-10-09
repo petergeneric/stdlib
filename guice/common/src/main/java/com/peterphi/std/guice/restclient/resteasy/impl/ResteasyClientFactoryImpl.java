@@ -68,10 +68,17 @@ public class ResteasyClientFactoryImpl implements StoppableService
 			resteasyProviders.add(new FastInfosetPreferringClientRequestFilter());
 
 			// Set up JAXB providers
-			resteasyProviders.add(new JAXBXmlRootElementProvider<>(serialiserFactory));
-			resteasyProviders.add(new JAXBXmlTypeProvider<>(serialiserFactory));
-			resteasyProviders.add(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
-			resteasyProviders.add(new FastInfosetXmlTypeProvider<>(serialiserFactory));
+			{
+				resteasyProviders.add(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+				resteasyProviders.add(new JAXBXmlRootElementProvider<>(serialiserFactory));
+
+				// Set up providers for XmlType-annotated and JAXBElement entities
+				// These providers will share the same underlying serialiser map
+				final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+				resteasyProviders.add(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+				resteasyProviders.add(xmlTypeProvider);
+			}
+
 		}
 
 		if (manager != null)
