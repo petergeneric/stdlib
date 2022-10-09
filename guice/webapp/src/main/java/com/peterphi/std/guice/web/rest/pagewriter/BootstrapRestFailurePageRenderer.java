@@ -52,24 +52,6 @@ public class BootstrapRestFailurePageRenderer extends BootstrapPageWriter
 	@Override
 	protected void writeBodyContent(StringBuilder sb)
 	{
-		sb.append("<div class='navbar navbar-inverse navbar-fixed-top'>\n");
-		sb.append(" <div class='navbar-inner'>\n");
-		sb.append("  <div class='container'>\n");
-		sb.append("   <a class='btn btn-navbar' data-toggle='collapse' data-target='.nav-collapse'>\n");
-		sb.append("    <span class='icon-bar'></span>\n");
-		sb.append("    <span class='icon-bar'></span>\n");
-		sb.append("    <span class='icon-bar'></span>\n");
-		sb.append("   </a>\n");
-		sb.append("   <a class='brand' href='#top'>Exception</a>\n");
-		sb.append("   <div class='nav-collapse collapse'>\n");
-		sb.append("    <ul class='nav'>\n");
-		sb.append("     <li><a shape='rect' href='#exception'>Info</a></li>\n");
-		sb.append("    </ul>\n");
-		sb.append("   </div>\n");
-		sb.append("  </div>\n");
-		sb.append(" </div>\n");
-		sb.append("</div>\n");
-		sb.append("\n");
 		sb.append("<div class='container'>\n");
 
 		appendHeader(sb);
