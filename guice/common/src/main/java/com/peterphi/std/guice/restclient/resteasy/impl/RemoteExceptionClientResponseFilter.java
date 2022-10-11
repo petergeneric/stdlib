@@ -10,15 +10,14 @@ import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementPr
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientResponseContext;
 import javax.ws.rs.client.ClientResponseFilter;
 import javax.ws.rs.client.ResponseProcessingException;
 import javax.ws.rs.ext.Provider;
-import javax.xml.bind.JAXBElement;
-import javax.xml.bind.JAXBException;
 import java.io.IOException;
 import java.io.InputStream;
 
@@ -28,7 +27,7 @@ import java.io.InputStream;
 @Provider
 public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 {
-	private static final Logger log = Logger.getLogger(RemoteExceptionClientResponseFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(RemoteExceptionClientResponseFilter.class);
 
 	@Inject
 	RestExceptionFactory exceptionFactory;
@@ -69,7 +68,7 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 			try
 			{
 				final InputStream is = responseContext.getEntityStream();
-				final RestFailure failure = parseResponse(is);
+				final RestFailure failure = parseResponse(serialiserFactory, is);
 
 				if (Tracing.isVerbose() && failure != null && failure.exception != null)
 				{
@@ -99,16 +98,26 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 	}
 
 
-	private RestFailure parseResponse(InputStream stream) throws IOException, JAXBException
+	static RestFailure parseResponse(final JAXBSerialiserFactory serialiserFactory, InputStream stream) throws IOException
 	{
-		stream.reset();
+		try
+		{
+			stream.reset();
 
-		final JAXBElement<RestFailure> el = (JAXBElement<RestFailure>) (Object) new JAXBXmlRootElementProvider<RestFailure>(
-				serialiserFactory).readFrom(RestFailure.class, null, null, null, null, stream);
+			final JAXBXmlRootElementProvider<RestFailure> provider = new JAXBXmlRootElementProvider<>(serialiserFactory);
 
-//		final JAXBContext ctx = jaxbContextResolver.getContext(RestFailure.class);
-//		final JAXBElement<RestFailure> el = ctx.createUnmarshaller().unmarshal(new StreamSource(stream), RestFailure.class);
+			final RestFailure el = provider.readFrom(RestFailure.class, null, null, null, null, stream);
 
-		return el.getValue();
+			if (el != null)
+				return el;
+			else
+				throw new NullPointerException("Could not read RestFailure XML from response!");
+		}
+		catch (Throwable t)
+		{
+			log.error("Error while parsing rich error response! {}", t.getMessage(), t);
+
+			throw new RuntimeException("Error reading rich error response! " + t.getMessage(), t);
+		}
 	}
 }
