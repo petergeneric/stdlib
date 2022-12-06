@@ -24,7 +24,7 @@ class DefaultHttpRequestCharsetHelper
 
 			// By default, interpret mime parts using the charset UTF-8 if no charset is specified (instead of the default, US-ASCII)
 			request.setAttribute(/*InputPart.DEFAULT_CHARSET_PROPERTY*/
-			                     "resteasy.provider.multipart.inputpart.defaultCharset", "charset=UTF-8");
+			                     "resteasy.provider.multipart.inputpart.defaultCharset", UTF8);
 		}
 
 
