@@ -29,6 +29,12 @@
 			<artifactId>hibernate-core</artifactId>
 			<version>${hibernate.version}</version>
 		</dependency>
+		
+		<dependency>
+			<groupId>org.glassfish.expressly</groupId>
+			<artifactId>expressly</artifactId>
+			<version>5.0.0</version>
+		</dependency>
 
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
