@@ -170,7 +170,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 				}
 				catch (Throwable t)
 				{
-					if (exceptions != null)
+					if (exceptions != null && isRunning())
 						exceptions.mark();
 
 					executeException(t);
@@ -181,7 +181,7 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 
 					Tracing.stop(traceId);
 
-					if (timer != null)
+					if (timer != null && isRunning())
 						timer.stop();
 				}
 			}

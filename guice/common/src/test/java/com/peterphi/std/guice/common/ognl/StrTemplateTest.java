@@ -80,11 +80,40 @@ public class StrTemplateTest
 		     "${{{:html:<script>evil</script> and data leak of ${{testing}} }}}");
 	}
 
+
 	@Test
 	public void testRecursiveEvaluationBlockedAndHtmlEscapedByHtmlPrefix()
 	{
 		eval("(&lt;script&gt;evil&lt;/script&gt; and data leak of ${{testing}} )",
 		     "${{{:literal:html:<script>evil</script> and data leak of ${{testing}} }}}");
+	}
+
+
+	/**
+	 * Test an unusual but important case - emitting content which must be XML-escaped, but which will be inserted into an XML doc which is itself inside a JSON string
+	 */
+	@Test
+	public void testLiteralEvaluationEscapedByXmlInJsonString()
+	{
+		final String expect = """
+				<body>(&lt;hello\\n name=\\"${name}\\" \\/&gt;)</body>""";
+
+		eval(expect, "<body>${{:literal:xmlbody:json:<hello\n name=\"${name}\" />}}</body>");
+	}
+
+
+	@Test
+	public void testAlphanumEscape()
+	{
+		eval("stärt aBc_dEf_gh énd", "stärt ${:literal:alphanum:äBc dEf_g-h} énd");
+		eval("stärt aBc_dEf_gh énd".replaceAll("_", ""), "stärt ${:literal:alphanum:tr:_::äBc dEf_g-h} énd");
+	}
+
+
+	@Test
+	public void testTrEscape()
+	{
+		eval("abc (äBBCdEf_g-h) abc", "abc ${:literal:tr:abc:ABC:äBbcdEf_g-h} abc");
 	}
 
 

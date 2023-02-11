@@ -14,6 +14,6 @@ public class BootstrapStaticResourcesTest
 		byte[] css = BootstrapStaticResources.get().getCSS();
 
 		assertNotNull(css);
-		assertEquals("aeeba13f629709df1d69b154f057c38d", DigestUtils.md5Hex(css));
+		assertEquals("0385e810f95c1f5c2639ee317c526f7f", DigestUtils.md5Hex(css));
 	}
 }

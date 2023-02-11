@@ -1,5 +1,9 @@
 package com.peterphi.usermanager.rest.impl;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
@@ -31,11 +35,9 @@ import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
-import org.eclipse.persistence.exceptions.JSONException;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
-import org.jose4j.json.internal.json_simple.JSONObject;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.CacheControl;
@@ -46,7 +48,6 @@ import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -641,10 +642,13 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		}
 	}
 
-	String createOpenIDConnectUserInfo(OAuthSessionEntity session) {
+
+	String createOpenIDConnectUserInfo(OAuthSessionEntity session)
+	{
 		try
 		{
-			JSONObject obj = new JSONObject();
+			final ObjectMapper mapper = new ObjectMapper();
+			final ObjectNode obj = mapper.createObjectNode();
 
 			final UserEntity user = session.getContext().getUser();
 
@@ -659,17 +663,18 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 			obj.put("zoneinfo", user.getTimeZone());
 			obj.put("datetime_format", user.getDateFormat());
 
-			List<String> roles = user.getRoles().stream().map(r->r.getId()).collect(Collectors.toList());
+			final ArrayNode roles = mapper.createArrayNode();
+			user.getRoles().stream().map(r -> r.getId()).forEach(roles :: add);
 
 			// Different clients use different key names here, so populate many claims with the same data
-			obj.put("groups", roles);
-			obj.put("roles", roles);
-			obj.put("group", roles);
-			obj.put("role", roles);
+			obj.set("groups", roles);
+			obj.set("roles", roles);
+			obj.set("group", roles);
+			obj.set("role", roles);
 
-			return obj.toJSONString();
+			return mapper.writeValueAsString(obj);
 		}
-		catch (JSONException e)
+		catch (JsonProcessingException e)
 		{
 			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
 		}

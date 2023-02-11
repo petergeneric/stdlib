@@ -5,6 +5,11 @@ import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
+import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.codec.binary.Base64;
 import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
@@ -16,7 +21,9 @@ import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.List;
 import java.util.function.Consumer;
 
 /**
@@ -28,43 +35,61 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	private static final Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
 
 	private final HttpClientFactory httpClientFactory;
-	private final ResteasyProviderFactory resteasyProviderFactory;
+	//private final ResteasyProviderFactory resteasyProviderFactory;
 
 	private ResteasyClient client;
 	private ResteasyClient clientH2C;
+
+	private final List<Object> resteasyProviders = new ArrayList<>();
 
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
-	                                 final JAXBContextResolver jaxbContextResolver,
+	                                 final JAXBSerialiserFactory serialiserFactory,
 	                                 final HttpClientFactory httpClientFactory)
 	{
 		this.httpClientFactory = httpClientFactory;
 
-		// Make sure that if we're called multiple times (e.g. because of a guice CreationException failing startup after us) we start fresh
-		if (ResteasyProviderFactory.peekInstance() != null)
-			ResteasyProviderFactory.clearInstanceIfEqual(ResteasyProviderFactory.peekInstance());
+		// Set up the resteasy providers we will register against clients
+		{
+			// Register the joda param converters
+			resteasyProviders.add(new CommonTypesParamConverterProvider());
 
-		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
-		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
+			// Register the exception processor
+			if (remoteExceptionClientResponseFilter != null)
+				resteasyProviders.add(remoteExceptionClientResponseFilter);
 
-		// Register the joda param converters
-		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
+			if (tracingRequestFilter != null)
+				resteasyProviders.add(tracingRequestFilter);
 
-		// Register the exception processor
-		if (remoteExceptionClientResponseFilter != null)
-			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
+			// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
+			resteasyProviders.add(new FastInfosetPreferringClientRequestFilter());
 
-		// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
-		FastInfosetPreferringClientRequestFilter.register();
+			// Set up JAXB providers
+			{
+				resteasyProviders.add(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+				resteasyProviders.add(new JAXBXmlRootElementProvider<>(serialiserFactory));
 
-		if (tracingRequestFilter != null)
-			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
+				// Set up providers for XmlType-annotated and JAXBElement entities
+				// These providers will share the same underlying serialiser map
+				final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+				resteasyProviders.add(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+				resteasyProviders.add(xmlTypeProvider);
+			}
+
+		}
 
 		if (manager != null)
 			manager.register(this);
+	}
+
+
+	private void doProviderFactoryRegistration(ResteasyProviderFactory resteasyProviderFactory)
+	{
+		for (Object provider : resteasyProviders)
+			resteasyProviderFactory.registerProviderInstance(provider);
 	}
 
 
@@ -104,8 +129,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		// Now build a resteasy client
 		ResteasyClientBuilder builder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
 
-		// TODO how to register this?
-		//builder.providerFactory(resteasyProviderFactory);
+		// Set up providers
+		doProviderFactoryRegistration(builder.getProviderFactory());
 
 		if (credentials != null)
 		{

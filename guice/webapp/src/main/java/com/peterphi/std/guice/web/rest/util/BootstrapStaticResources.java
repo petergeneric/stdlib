@@ -21,7 +21,7 @@ public class BootstrapStaticResources
 	 */
 	public byte[] getCSS()
 	{
-		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bootstrap.min.css.gz");
+		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bs.min.css.gz");
 	}
 
 

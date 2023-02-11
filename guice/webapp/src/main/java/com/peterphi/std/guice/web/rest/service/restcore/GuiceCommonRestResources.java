@@ -14,7 +14,7 @@ import jakarta.ws.rs.Produces;
 public interface GuiceCommonRestResources
 {
 	@GET
-	@Path("/bootstrap.css")
+	@Path("/style.css")
 	@Produces("text/css")
 	@Cache(maxAge = 2629740, mustRevalidate = false)
 	byte[] getBootstrapCSS();

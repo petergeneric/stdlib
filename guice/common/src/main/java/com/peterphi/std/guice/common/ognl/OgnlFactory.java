@@ -81,7 +81,21 @@ public final class OgnlFactory
 	 */
 	public static String template(final String template, final Object root)
 	{
-		return StrTemplate.evaluate(template, newOgnlLookup(root));
+		return template(template, root, null);
+	}
+
+
+	/**
+	 * Helper method that uses {@link StrTemplate} and evaluates OGNL expressions within <code>${...}</code> blocks
+	 *
+	 * @param template          the template text
+	 * @param root              the root object for any OGNL invocations
+	 * @param defaultDirectives (optional) the default directives to apply to OGNL expressions (e.g. escaping rules). Example: <code>:literal:json:</code> would prevent recursion and auto-escape any non-JSON-string-safe chars in the output of any <code>${...}</code> blocks.
+	 * @return the fully evaluated result
+	 */
+	public static String template(final String template, final Object root, final String defaultDirectives)
+	{
+		return StrTemplate.evaluate(template, newOgnlLookup(root), defaultDirectives);
 	}
 
 

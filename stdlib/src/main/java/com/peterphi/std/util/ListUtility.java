@@ -9,6 +9,7 @@ import java.util.Collections;
 import java.util.Enumeration;
 import java.util.Iterator;
 import java.util.List;
+import java.util.stream.Stream;
 
 public class ListUtility
 {
@@ -59,6 +60,12 @@ public class ListUtility
 			return null;
 		else
 			return src.get(src.size() - 1);
+	}
+
+
+	public static <T> T last(final Stream<T> stream)
+	{
+		return stream.reduce((prev, cur) -> cur).orElse(null);
 	}
 
 
