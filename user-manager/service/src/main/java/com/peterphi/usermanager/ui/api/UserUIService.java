@@ -74,6 +74,11 @@ public interface UserUIService
 	                        @FormParam("passwordConfirm") final String newPasswordConfirm);
 
 	@POST
+	@Path("/user/{user_id}/reset_password")
+	@Produces(MediaType.TEXT_HTML)
+	Response startPasswordResetFlow(@PathParam("user_id") int userId, @FormParam("token") String token);
+
+	@POST
 	@Path("/user/{user_id}/impersonate")
 	@Produces(MediaType.TEXT_HTML)
 	Response impersonate(@PathParam("user_id") int userId, @FormParam("token") String token);

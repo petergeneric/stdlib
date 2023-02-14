@@ -16,11 +16,15 @@ import com.peterphi.usermanager.guice.authentication.AuthenticationFailureExcept
 import com.peterphi.usermanager.guice.authentication.ImpersonationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.token.LowSecurityCSRFTokenStore;
+import com.peterphi.usermanager.service.PasswordResetService;
 import com.peterphi.usermanager.service.UserDeleteService;
 import com.peterphi.usermanager.ui.api.UserUIService;
+import org.apache.commons.lang.StringUtils;
 
+import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.core.UriInfo;
+
 import java.net.URI;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -56,6 +60,9 @@ public class UserUIServiceImpl implements UserUIService
 	@Inject
 	UserDeleteService deleteService;
 
+	@Inject
+	PasswordResetService passwordResetService;
+
 
 	@Override
 	public String getIndex()
@@ -80,7 +87,7 @@ public class UserUIServiceImpl implements UserUIService
 
 	@Override
 	@Transactional(readOnly = true)
-	@AuthConstraint(role=UserLogin.ROLE_ADMIN)
+	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public String getUsers(UriInfo query)
 	{
 		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));
@@ -130,7 +137,7 @@ public class UserUIServiceImpl implements UserUIService
 
 	private Set<String> getRoles(UserEntity entity)
 	{
-		return entity.getRoles().stream().map(RoleEntity:: getId).collect(Collectors.toSet());
+		return entity.getRoles().stream().map(RoleEntity :: getId).collect(Collectors.toSet());
 	}
 
 
@@ -265,6 +272,21 @@ public class UserUIServiceImpl implements UserUIService
 
 		// Redirect back to the user page
 		return Response.seeOther(URI.create("/user/" + userId)).build();
+	}
+
+
+	@Override
+	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
+	public Response startPasswordResetFlow(final int userId, final String token)
+	{
+		final String resetCode = passwordResetService.start(userId);
+
+		TemplateCall call = templater.template("reset_password_flow_started");
+
+		call.set("code", StringUtils.trimToEmpty(resetCode));
+		call.set("targetUser", accountDao.getById(userId));
+
+		return call.process(Response.status(200).type(MediaType.TEXT_HTML_TYPE));
 	}
 
 

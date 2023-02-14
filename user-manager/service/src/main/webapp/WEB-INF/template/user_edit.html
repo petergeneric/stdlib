@@ -17,6 +17,7 @@
 		<li th:if="${user.isLocal() and (session.login.isAdmin() or (session.login.getId() == user.id))}"><a href="#chpassModal" data-toggle="modal">Change
 			Password</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#deluserModal" data-toggle="modal">Delete User</a></li>
+		<li th:if="${session.login.isAdmin() and user.isLocal()}"><a href="#resetPasswordModal" data-toggle="modal">Reset Password</a></li>
 		<li th:if="${session.login.isAdmin()}"><a href="#impersonateModal" data-toggle="modal">Impersonate</a></li>
 		<li th:if="${session.login.isAdmin() or (session.login.getId() == user.id)}"><a href="#rotateKeyModal" data-toggle="modal"><span th:text="${user.accessKey != null ? 'Rotate' : 'Assign'}">Rotate</span> API Key</a></li>
 	</ul>
@@ -107,6 +108,26 @@
 			<div class="modal-footer">
 				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
 				<input class="btn btn-primary" type="submit" value="Impersonate"/>
+			</div>
+		</form>
+
+		<form id="resetPasswordModal" class="modal hide fade form-horizontal" tabindex="-1" role="dialog"
+		      aria-labelledby="resetPasswordModalLabel" aria-hidden="true" method="POST" autocomplete="off"
+		      th:action="@{'/user/' + ${user.id} + '/reset_password'}">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal" aria-hidden="true">×</button>
+				<h3 id="resetPasswordModalLabel">Reset Password?</h3>
+			</div>
+			<div class="modal-body">
+				<p>Are you sure you want to reset this user's password? A Password Reset Code will be provided, allowing the user to set their password.</p>
+				<p>User: <span th:text="${user.name}"/> &lt;<span th:text="${user.email}"/>&gt;</p>
+				<input type="hidden" name="alter" value="resetPassword"/>
+				<input type="hidden" name="id" th:value="${user.id}"/>
+				<input type="hidden" name="token" th:value="${token}"/>
+			</div>
+			<div class="modal-footer">
+				<button class="btn" data-dismiss="modal" aria-hidden="true">Cancel</button>
+				<input class="btn btn-primary" type="submit" value="Start Password Reset"/>
 			</div>
 		</form>
 
