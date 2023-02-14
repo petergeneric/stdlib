@@ -1,5 +1,6 @@
 package com.peterphi.usermanager.ui.api;
 
+import com.peterphi.std.annotation.Doc;
 import org.jboss.resteasy.annotations.cache.NoCache;
 
 import javax.ws.rs.DefaultValue;
@@ -33,4 +34,18 @@ public interface LoginUIService
 	@Path("/logout")
 	@Produces(MediaType.TEXT_HTML)
 	Response doLogout(@QueryParam("returnTo") @DefaultValue("") String returnTo);
+
+
+	@GET
+	@Path("/reset")
+	@Produces(MediaType.TEXT_HTML)
+	String doPasswordReset(@QueryParam("code") String code);
+
+	@POST
+	@Path("/reset")
+	@Produces(MediaType.TEXT_HTML)
+	Response doPasswordReset(@FormParam("code") String code,
+	                         @FormParam("token") @Doc("CSRF Token") String csrfToken,
+	                         @FormParam("new_password") String newPassword,
+	                         @FormParam("new_password_confirm") String newPasswordConfirm);
 }

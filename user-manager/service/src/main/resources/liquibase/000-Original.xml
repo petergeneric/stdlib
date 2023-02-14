@@ -362,4 +362,29 @@
 		<modifyDataType tableName="user_account" columnName="name" newDataType="NVARCHAR(100)" />
 		<modifyDataType tableName="role_definition" columnName="caption" newDataType="NVARCHAR(1024)" />
 	</changeSet>
+
+
+	<changeSet author="peter@peterphi.com" id="add_pasword_reset_code">
+		<createTable tableName="password_reset_code">
+			<column name="id" type="VARCHAR(250)">
+				<constraints primaryKey="true" primaryKeyName="PK__password_reset_code" />
+			</column>
+
+			<!-- A single user may not have multiple reset codes -->
+			<column name="user_id" type="INT">
+				<constraints unique="true" uniqueConstraintName="UX__password_reset_code__user" />
+			</column>
+
+			<!-- Timestamp at which point the code expires if not used -->
+			<column name="expires_ts" type="BIGINT">
+				<constraints nullable="false" />
+			</column>
+		</createTable>
+
+		<addForeignKeyConstraint baseTableName="password_reset_code" baseColumnNames="user_id"
+		                         constraintName="FK__password_reset_code__user_id"
+		                         deferrable="false"
+		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
+		                         referencedTableName="user_account" referencedColumnNames="id"/>
+	</changeSet>
 </databaseChangeLog>

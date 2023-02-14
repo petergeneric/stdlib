@@ -6,6 +6,7 @@ import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations
 import com.peterphi.usermanager.db.dao.hibernate.OAuthServiceDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthSessionContextDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.OAuthSessionDaoImpl;
+import com.peterphi.usermanager.db.dao.hibernate.PasswordResetCodeDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.RoleDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import org.junit.Test;
@@ -30,6 +31,9 @@ public class CreateDatabaseSchemaTest
 	@Inject
 	OAuthSessionContextDaoImpl contextDao;
 
+	@Inject
+	PasswordResetCodeDaoImpl passwordResetCodeDao;
+
 
 	@Test
 	public void testDb()
@@ -39,5 +43,6 @@ public class CreateDatabaseSchemaTest
 		serviceDao.getAll();
 		sessionDao.getAll();
 		contextDao.getAll();
+		passwordResetCodeDao.getAll();
 	}
 }

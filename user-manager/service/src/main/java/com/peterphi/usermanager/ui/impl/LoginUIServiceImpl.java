@@ -15,16 +15,23 @@ import com.peterphi.usermanager.guice.UMConfig;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.token.CSRFTokenStore;
+import com.peterphi.usermanager.service.PasswordResetService;
 import com.peterphi.usermanager.service.RedirectValidatorService;
 import com.peterphi.usermanager.ui.api.LoginUIService;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpSession;
+import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.NewCookie;
 import javax.ws.rs.core.Response;
 import java.net.URI;
 
 public class LoginUIServiceImpl implements LoginUIService
 {
+	private static final Logger log = LoggerFactory.getLogger(LoginUIServiceImpl.class);
+
 	/**
 	 * Approximately 1 year in seconds
 	 */
@@ -35,6 +42,9 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@Inject
 	UserDaoImpl accountDao;
+
+	@Inject
+	PasswordResetService passwordResetService;
 
 	@Inject
 	UserLogin login;
@@ -59,6 +69,7 @@ public class LoginUIServiceImpl implements LoginUIService
 
 	@Inject
 	RedirectValidatorService redirectValidator;
+
 
 	@Override
 	@AuthConstraint(skip = true, comment = "login page")
@@ -161,14 +172,81 @@ public class LoginUIServiceImpl implements LoginUIService
 			accountDao.changeSessionReconnectKey(login.getId());
 
 		// Invalidate the current session
+		invalidateSession();
+
+		return Response.seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo))).build();
+	}
+
+
+	@Override
+	@AuthConstraint(id = "password-reset", skip = true, comment = "password reset page")
+	public String doPasswordReset(final String code)
+	{
+		if (login.isLoggedIn())
+			throw new IllegalArgumentException("You are already logged in and cannot use the password reset functionality!");
+
+		TemplateCall call = templater.template("reset_password");
+
+		call.set("token", tokenStore.allocate());
+		call.set("code", StringUtils.trimToEmpty(code));
+		call.set("errorText", "");
+
+		return call.process();
+	}
+
+
+	@Override
+	@AuthConstraint(id = "password-reset", skip = true, comment = "password reset page")
+	public Response doPasswordReset(final String code,
+	                                final String csrfToken,
+	                                final String newPassword,
+	                                final String newPasswordConfirm)
+	{
+		log.info("Password Reset attempt starts...");
+
+		tokenStore.validate(csrfToken, false);
+
+		try
+		{
+			if (login.isLoggedIn())
+				throw new IllegalArgumentException("You are already logged in and cannot use the password reset functionality!");
+			if (StringUtils.isBlank(newPassword) || StringUtils.isBlank(newPasswordConfirm))
+				throw new IllegalArgumentException("Must provide a non-blank password!");
+			else if (!StringUtils.equals(newPassword, newPasswordConfirm))
+				throw new IllegalArgumentException("Password boxes do not match. Please try again");
+
+			passwordResetService.reset(code, newPassword);
+
+			invalidateSession();
+
+			return Response.seeOther(URI.create("/login")).build();
+		}
+		catch (Throwable e)
+		{
+			log.error("Password Reset attempt encountered error: " + e.getMessage(), e);
+
+			TemplateCall call = templater.template("reset_password");
+
+			call.set("token", csrfToken);
+			call.set("code", StringUtils.trimToEmpty(code));
+			call.set("errorText", "An error occurred: " + e.getMessage());
+
+			return call.process(Response.status(500).type(MediaType.TEXT_HTML_TYPE));
+		}
+	}
+
+
+	private void invalidateSession()
+	{
+		// Invalidate the current session
 		HttpSession session = HttpCallContext.get().getRequest().getSession(false);
 
 		if (session != null)
 			session.invalidate();
 
+		tokenStore.clear();
+
 		// Clear the login (in case the session isn't correctly invalidated)
 		login.clear();
-
-		return Response.seeOther(URI.create(redirectValidator.rewriteRedirect(returnTo))).build();
 	}
 }

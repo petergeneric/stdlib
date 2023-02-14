@@ -16,6 +16,12 @@ public class CSRFTokenStore
 	private final Set<UUID> tokens = new HashSet<>();
 
 
+	public synchronized void clear()
+	{
+		tokens.clear();
+	}
+
+
 	public synchronized String allocate()
 	{
 		// Make sure we don't go above the maximum number of tokens by simply clearing everything
@@ -45,7 +51,7 @@ public class CSRFTokenStore
 
 	public void validate(String token, final boolean remove)
 	{
-		final boolean existed = validateWithoutException(token,remove);
+		final boolean existed = validateWithoutException(token, remove);
 
 		// Throw
 		if (!existed)
