@@ -13,7 +13,8 @@ import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenRespons
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
 
@@ -34,7 +35,7 @@ import java.util.concurrent.TimeUnit;
 @SessionScoped
 public class OAuth2SessionRef
 {
-	private static final Logger log = Logger.getLogger(OAuth2SessionRef.class);
+	private static final Logger log = LoggerFactory.getLogger(OAuth2SessionRef.class);
 
 	public final UserManagerOAuthService authService;
 	public final String oauthServiceEndpoint;

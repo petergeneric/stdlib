@@ -12,7 +12,8 @@ import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.ThreadRenameCallableWrap;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.inject.Inject;
 import java.io.IOException;
@@ -29,7 +30,7 @@ import java.util.concurrent.TimeUnit;
 @Singleton
 public class AzureVMControlImpl implements StoppableService, AzureVMControl
 {
-	private final static Logger log = Logger.getLogger(AzureVMControlImpl.class);
+	private final static Logger log = LoggerFactory.getLogger(AzureVMControlImpl.class);
 
 	@Inject
 	VirtualMachines virtualMachines;

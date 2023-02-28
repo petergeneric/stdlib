@@ -2,7 +2,8 @@ package com.peterphi.std.crypto.openssl;
 
 import com.peterphi.std.system.exec.Exec;
 import com.peterphi.std.system.exec.Execed;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -10,7 +11,7 @@ import java.util.UUID;
 
 public class OpenSSLPKCS12
 {
-	private static final Logger log = Logger.getLogger(OpenSSLPKCS12.class);
+	private static final Logger log = LoggerFactory.getLogger(OpenSSLPKCS12.class);
 
 	public static final String OPENSSL = "openssl";
 	public static final boolean USE_GENERIC_TEMP_DIRECTORY = false;

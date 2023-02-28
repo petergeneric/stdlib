@@ -7,7 +7,8 @@ import com.google.inject.name.Named;
 import com.peterphi.configuration.service.git.ConfigRepository;
 import com.peterphi.configuration.service.git.RepoHelper;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.eclipse.jgit.api.Git;
 import org.eclipse.jgit.api.InitCommand;
 import org.eclipse.jgit.api.errors.GitAPIException;
@@ -23,7 +24,7 @@ import java.net.URISyntaxException;
 
 public class ConfigGuiceModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(ConfigGuiceModule.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigGuiceModule.class);
 
 
 	@Override

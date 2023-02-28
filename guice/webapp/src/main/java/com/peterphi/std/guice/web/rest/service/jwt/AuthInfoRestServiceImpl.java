@@ -10,7 +10,8 @@ import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jose4j.jwt.JwtClaims;
 import org.jose4j.jwt.MalformedClaimException;
 import org.jose4j.jwt.consumer.InvalidJwtException;
@@ -27,7 +28,7 @@ import java.net.URI;
 @AuthConstraint(id = "framework-jwtgenerate", skip = true)
 public class AuthInfoRestServiceImpl implements AuthInfoRestService
 {
-	private static final Logger log = Logger.getLogger(AuthInfoRestServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthInfoRestServiceImpl.class);
 
 	/**
 	 * The resource prefix

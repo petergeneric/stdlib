@@ -3,11 +3,12 @@ package com.peterphi.std.guice.common.retry.retry;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.peterphi.std.guice.common.retry.retry.backoff.BackoffStrategy;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RetryManager
 {
-	private static final Logger log = Logger.getLogger(RetryManager.class);
+	private static final Logger log = LoggerFactory.getLogger(RetryManager.class);
 
 	private final BackoffStrategy backoff;
 	private final int maxAttempts;

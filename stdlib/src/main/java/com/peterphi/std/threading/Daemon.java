@@ -1,6 +1,7 @@
 package com.peterphi.std.threading;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Vector;
  */
 public abstract class Daemon implements Runnable
 {
-	private static final Logger log = Logger.getLogger(Daemon.class);
+	private static final Logger log = LoggerFactory.getLogger(Daemon.class);
 
 	/**
 	 * The thread this daemon is running in

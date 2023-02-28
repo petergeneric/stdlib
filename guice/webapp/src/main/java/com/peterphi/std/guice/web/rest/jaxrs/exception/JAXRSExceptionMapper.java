@@ -3,7 +3,8 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.spi.ApplicationException;
 
@@ -18,7 +19,7 @@ import javax.ws.rs.ext.Provider;
 @Provider
 public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationException>
 {
-	private static final Logger log = Logger.getLogger(JAXRSExceptionMapper.class);
+	private static final Logger log = LoggerFactory.getLogger(JAXRSExceptionMapper.class);
 
 	@Inject
 	RestFailureMarshaller marshaller;

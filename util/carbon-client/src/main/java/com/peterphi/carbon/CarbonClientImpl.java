@@ -12,7 +12,8 @@ import com.peterphi.carbon.type.immutable.CarbonProfile;
 import com.peterphi.carbon.type.immutable.CarbonReply;
 import com.peterphi.carbon.type.mutable.CarbonProject;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jdom2.Document;
 import org.jdom2.Element;
 import org.jdom2.JDOMException;
@@ -33,7 +34,7 @@ import static com.peterphi.carbon.CarbonConfig.CARBON_PORT;
 @Singleton
 public class CarbonClientImpl implements CarbonClient
 {
-	private static final Logger log = Logger.getLogger(CarbonClientImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(CarbonClientImpl.class);
 
 	private static final int MAX_CONNECT_ATTEMPTS = 3;
 	private Timeout reconnectSleep = new Timeout(1, TimeUnit.SECONDS);

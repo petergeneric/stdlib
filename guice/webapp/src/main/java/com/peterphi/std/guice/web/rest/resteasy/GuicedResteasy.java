@@ -20,8 +20,9 @@ import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.spi.Registry;
@@ -44,7 +45,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 class GuicedResteasy implements GuiceApplication
 {
-	private static final Logger log = Logger.getLogger(GuicedResteasy.class);
+	private static final Logger log = LoggerFactory.getLogger(GuicedResteasy.class);
 
 	private final GuiceRegistry registry;
 	private final AtomicBoolean registered = new AtomicBoolean(false);

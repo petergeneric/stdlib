@@ -2,7 +2,8 @@ package com.peterphi.std.util.jaxb;
 
 import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
@@ -31,7 +32,7 @@ import java.util.Arrays;
  */
 public class JAXBSerialiser
 {
-	private static final Logger log = Logger.getLogger(JAXBSerialiser.class);
+	private static final Logger log = LoggerFactory.getLogger(JAXBSerialiser.class);
 
 	private final JAXBContext context;
 	private Schema schema;

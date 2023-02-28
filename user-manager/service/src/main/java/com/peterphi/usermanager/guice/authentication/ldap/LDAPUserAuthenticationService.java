@@ -12,7 +12,8 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.RoleEntity;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import java.util.HashSet;
@@ -23,7 +24,7 @@ import java.util.stream.Collectors;
 
 public class LDAPUserAuthenticationService implements UserAuthenticationService
 {
-	private static final Logger log = Logger.getLogger(LDAPUserAuthenticationService.class);
+	private static final Logger log = LoggerFactory.getLogger(LDAPUserAuthenticationService.class);
 
 	@Inject
 	UserDaoImpl dao;

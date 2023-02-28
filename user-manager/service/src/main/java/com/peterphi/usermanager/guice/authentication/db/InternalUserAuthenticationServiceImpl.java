@@ -5,13 +5,14 @@ import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.stream.Collectors;
 
 public class InternalUserAuthenticationServiceImpl implements UserAuthenticationService
 {
-	private static final Logger log = Logger.getLogger(InternalUserAuthenticationServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(InternalUserAuthenticationServiceImpl.class);
 
 	@Inject
 	UserDaoImpl dao;

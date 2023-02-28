@@ -1,6 +1,7 @@
 package com.peterphi.std.util.jaxb;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.ref.SoftReference;
 import java.util.Iterator;
@@ -15,7 +16,7 @@ import java.util.function.Supplier;
  */
 public class JAXBSerialiserFactory
 {
-	private static final Logger log = Logger.getLogger(JAXBSerialiserFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(JAXBSerialiserFactory.class);
 
 	private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
 	private final boolean useMoxy;

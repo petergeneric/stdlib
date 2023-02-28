@@ -1,8 +1,9 @@
 package com.peterphi.std.util.tracing;
 
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -12,7 +13,7 @@ import java.util.stream.Collectors;
 
 public final class Tracing
 {
-	private static final Logger log = Logger.getLogger(Tracing.class);
+	private static final Logger log = LoggerFactory.getLogger(Tracing.class);
 
 	private static ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
 

@@ -7,7 +7,8 @@ import com.peterphi.std.system.exec.Exec;
 import com.peterphi.std.system.exec.Execed;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jdom2.Document;
 import org.jdom2.JDOMException;
 import org.jdom2.input.SAXBuilder;
@@ -19,7 +20,7 @@ import java.io.StringReader;
 @Singleton
 public class MediaInfoCommand
 {
-	private static final transient Logger log = Logger.getLogger(MediaInfoCommand.class);
+	private static final transient Logger log = LoggerFactory.getLogger(MediaInfoCommand.class);
 
 	private final File mediainfo;
 

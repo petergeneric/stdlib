@@ -1,6 +1,7 @@
 package com.peterphi.std.net;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.Inet4Address;
 import java.net.Inet6Address;
@@ -26,7 +27,7 @@ import java.util.Vector;
  */
 public class IpHelper
 {
-	private static final Logger log = Logger.getLogger(IpHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(IpHelper.class);
 
 
 	/**

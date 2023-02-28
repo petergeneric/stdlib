@@ -1,7 +1,8 @@
 package com.peterphi.usermanager.guice.nonce;
 
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -10,7 +11,7 @@ import java.util.UUID;
 @SessionScoped
 public class SessionNonceStore
 {
-	private static final Logger log = Logger.getLogger(SessionNonceStore.class);
+	private static final Logger log = LoggerFactory.getLogger(SessionNonceStore.class);
 
 	private static final int MAX_SIZE = 16;
 	private final Set<UUID> nonces = new HashSet<>();

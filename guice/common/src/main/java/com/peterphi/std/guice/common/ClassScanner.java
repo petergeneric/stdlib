@@ -1,7 +1,8 @@
 package com.peterphi.std.guice.common;
 
 import com.google.common.base.Predicate;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xbean.finder.AnnotationFinder;
 
 import java.lang.annotation.Annotation;
@@ -13,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ClassScanner
 {
-	private static final Logger log = Logger.getLogger(ClassScanner.class);
+	private static final Logger log = LoggerFactory.getLogger(ClassScanner.class);
 
 	private final AnnotationFinder finder;
 

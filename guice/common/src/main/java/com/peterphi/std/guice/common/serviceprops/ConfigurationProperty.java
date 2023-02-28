@@ -2,7 +2,8 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ConfigurationProperty
 {
-	private static final Logger log = Logger.getLogger(ConfigurationProperty.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigurationProperty.class);
 
 	private final ConfigurationPropertyRegistry registry;
 	private final GuiceConfig configuration;

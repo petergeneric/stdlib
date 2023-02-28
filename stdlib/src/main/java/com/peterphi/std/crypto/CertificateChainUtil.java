@@ -1,6 +1,7 @@
 package com.peterphi.std.crypto;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.security.auth.x500.X500Principal;
 import java.security.GeneralSecurityException;
@@ -18,7 +19,7 @@ import java.util.List;
  */
 public class CertificateChainUtil
 {
-	private static transient final Logger log = Logger.getLogger(CertificateChainUtil.class);
+	private static transient final Logger log = LoggerFactory.getLogger(CertificateChainUtil.class);
 	public static final boolean ALLOW_LOG_SELF_SIGN_TESTS = false;
 
 

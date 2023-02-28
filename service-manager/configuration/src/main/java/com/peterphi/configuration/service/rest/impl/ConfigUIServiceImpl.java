@@ -15,7 +15,8 @@ import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MultivaluedHashMap;
 import javax.ws.rs.core.MultivaluedMap;
@@ -31,7 +32,7 @@ import java.util.stream.Collectors;
 
 public class ConfigUIServiceImpl implements ConfigUIService
 {
-	private static final Logger log = Logger.getLogger(ConfigUIServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigUIServiceImpl.class);
 	private static final String NONCE_USE = "configui";
 
 	@Inject

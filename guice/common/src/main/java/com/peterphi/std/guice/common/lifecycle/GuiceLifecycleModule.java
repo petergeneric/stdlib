@@ -6,7 +6,8 @@ import com.google.inject.Key;
 import com.google.inject.TypeLiteral;
 import com.google.inject.matcher.AbstractMatcher;
 import com.google.inject.spi.ProvisionListener;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Hooks into guice so that when objects implementing {@link com.peterphi.std.guice.common.lifecycle.GuiceLifecycleListener} are
@@ -14,7 +15,7 @@ import org.apache.log4j.Logger;
  */
 public class GuiceLifecycleModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(GuiceLifecycleModule.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceLifecycleModule.class);
 
 	static class ImplementsGuiceLifecycleBindingListener extends AbstractMatcher<Binding<?>>
 	{

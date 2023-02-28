@@ -8,7 +8,8 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.Properties;
  */
 public class GuiceBuilder
 {
-	private static final Logger log = Logger.getLogger(GuiceBuilder.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceBuilder.class);
 
 	private boolean autoLoadProperties = true;
 	private boolean autoLoadRoles = true;

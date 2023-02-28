@@ -13,7 +13,8 @@ import com.peterphi.std.guice.web.rest.CoreRestServicesModule;
 import com.peterphi.std.guice.web.rest.jaxrs.converter.JAXRSJodaConverterModule;
 import com.peterphi.std.guice.web.rest.scoping.ServletScopingModule;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.FilterConfig;
 import javax.servlet.ServletConfig;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class WebappGuiceRole implements GuiceRole
 {
-	private static final Logger log = Logger.getLogger(WebappGuiceRole.class);
+	private static final Logger log = LoggerFactory.getLogger(WebappGuiceRole.class);
 
 	private final ServletConfig servlet;
 	private final FilterConfig filter;

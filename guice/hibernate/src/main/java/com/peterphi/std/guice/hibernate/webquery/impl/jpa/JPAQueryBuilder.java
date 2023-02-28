@@ -14,7 +14,8 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
@@ -44,7 +45,7 @@ import java.util.stream.Collectors;
 
 public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 {
-	private static final Logger log = Logger.getLogger(JPAQueryBuilder.class);
+	private static final Logger log = LoggerFactory.getLogger(JPAQueryBuilder.class);
 
 	private final Session session;
 	private final CriteriaBuilder criteriaBuilder;

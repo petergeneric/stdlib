@@ -3,7 +3,8 @@ package com.peterphi.std.io;
 import com.peterphi.std.system.exec.Exec;
 import com.peterphi.std.system.exec.Execed;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -39,7 +40,7 @@ import java.util.Set;
  */
 public class FileHelper
 {
-	private static final transient Logger log = Logger.getLogger(FileHelper.class);
+	private static final transient Logger log = LoggerFactory.getLogger(FileHelper.class);
 
 
 	private FileHelper()

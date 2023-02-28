@@ -1,7 +1,8 @@
 package com.peterphi.std.io;
 
 import com.ice.tar.TarArchive;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +30,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ArchiveHelper
 {
-	private static Logger log = Logger.getLogger(ArchiveHelper.class);
+	private static Logger log = LoggerFactory.getLogger(ArchiveHelper.class);
 
 
 	/**

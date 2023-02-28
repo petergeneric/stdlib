@@ -4,14 +4,15 @@ import com.codahale.metrics.MetricRegistry;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.hibernate.module.HibernateModule;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Configuration;
 
 import javax.persistence.Entity;
 
 class AutoHibernateModule extends HibernateModule
 {
-	private static final Logger log = Logger.getLogger(AutoHibernateModule.class);
+	private static final Logger log = LoggerFactory.getLogger(AutoHibernateModule.class);
 
 	private final ClassScannerFactory scannerFactory;
 

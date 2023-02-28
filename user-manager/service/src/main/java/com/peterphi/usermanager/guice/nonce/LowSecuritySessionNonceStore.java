@@ -2,7 +2,8 @@ package com.peterphi.usermanager.guice.nonce;
 
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.types.SimpleId;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
 @SessionScoped
 public class LowSecuritySessionNonceStore
 {
-	private static final Logger log = Logger.getLogger(LowSecuritySessionNonceStore.class);
+	private static final Logger log = LoggerFactory.getLogger(LowSecuritySessionNonceStore.class);
 
 	private Map<String, String> nonces = new HashMap<>();
 

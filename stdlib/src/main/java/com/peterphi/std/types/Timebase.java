@@ -1,6 +1,7 @@
 package com.peterphi.std.types;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
 import java.math.MathContext;
@@ -12,7 +13,7 @@ import java.math.RoundingMode;
  */
 public class Timebase
 {
-	private static final Logger log = Logger.getLogger(Timebase.class);
+	private static final Logger log = LoggerFactory.getLogger(Timebase.class);
 	public static final boolean WARN_ON_PRECISION_LOSS = false;
 
 	public static final Timebase HZ_24 = new Timebase(1, 24);

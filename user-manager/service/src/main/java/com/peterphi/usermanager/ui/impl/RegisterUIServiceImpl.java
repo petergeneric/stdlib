@@ -16,7 +16,8 @@ import com.peterphi.usermanager.guice.authentication.AuthenticationFailureExcept
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.nonce.SessionNonceStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.Response;
 import java.net.URI;
@@ -26,7 +27,7 @@ import java.util.List;
 
 public class RegisterUIServiceImpl implements RegisterUIService
 {
-	private static final Logger log = Logger.getLogger(RegisterUIServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(RegisterUIServiceImpl.class);
 
 	/**
 	 * Approximately 1 year in seconds

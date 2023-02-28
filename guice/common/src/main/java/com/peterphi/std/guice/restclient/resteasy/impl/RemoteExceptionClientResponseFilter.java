@@ -13,7 +13,8 @@ import com.peterphi.std.io.FileHelper;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.plugins.providers.jaxb.JAXBUnmarshalException;
 
 import javax.ws.rs.client.ClientRequestContext;
@@ -35,7 +36,7 @@ import java.io.StringReader;
 @Provider
 public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 {
-	private static final Logger log = Logger.getLogger(RemoteExceptionClientResponseFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(RemoteExceptionClientResponseFilter.class);
 
 	@Inject
 	RestExceptionFactory exceptionFactory;

@@ -10,7 +10,8 @@ import com.peterphi.std.guice.web.rest.auth.oauth2.rest.api.OAuth2ClientCallback
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.CacheControl;
 import javax.ws.rs.core.Response;
@@ -18,7 +19,7 @@ import java.net.URI;
 
 public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallbackRestService
 {
-	private static final Logger log = Logger.getLogger(OAuth2ClientCallbackRestServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(OAuth2ClientCallbackRestServiceImpl.class);
 
 	private static final String NO_CACHE = "no-cache";
 

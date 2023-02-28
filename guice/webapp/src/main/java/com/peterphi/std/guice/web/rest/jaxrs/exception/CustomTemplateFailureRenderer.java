@@ -9,7 +9,8 @@ import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
@@ -21,7 +22,7 @@ import java.util.Enumeration;
 @Singleton
 public class CustomTemplateFailureRenderer implements RestFailureRenderer
 {
-	private static final Logger log = Logger.getLogger(CustomTemplateFailureRenderer.class);
+	private static final Logger log = LoggerFactory.getLogger(CustomTemplateFailureRenderer.class);
 
 	@Inject
 	Templater templater;

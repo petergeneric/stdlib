@@ -11,7 +11,8 @@ import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.joda.time.DateTime;
 
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 class HttpCallJWTUser implements CurrentUser
 {
-	private static final Logger log = Logger.getLogger(HttpCallJWTUser.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpCallJWTUser.class);
 
 
 	/**
@@ -97,7 +98,7 @@ class HttpCallJWTUser implements CurrentUser
 
 				if (requireSecure && !request.isSecure())
 				{
-					log.fatal("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:" +
+					log.error("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:" +
 					          data);
 
 					return null;

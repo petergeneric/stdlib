@@ -11,7 +11,8 @@ import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.LoggerFactory;
 import org.xml.sax.InputSource;
 
@@ -27,7 +28,7 @@ import java.io.StringReader;
  */
 public class LoggingModule extends AbstractModule implements GuiceConfigChangeObserver
 {
-	private static final Logger log = Logger.getLogger(LoggingModule.class);
+	private static final Logger log = LoggerFactory.getLogger(LoggingModule.class);
 
 	public static final String DEFAULT_OUTPUT_PATTERN = "%d{ISO8601} %5p %m%n";
 

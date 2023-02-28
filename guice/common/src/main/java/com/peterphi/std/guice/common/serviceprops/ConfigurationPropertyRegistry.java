@@ -2,7 +2,8 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Injector;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
@@ -20,7 +21,7 @@ import java.util.stream.Collectors;
 
 public class ConfigurationPropertyRegistry
 {
-	private static final Logger log = Logger.getLogger(ConfigurationPropertyRegistry.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigurationPropertyRegistry.class);
 
 	private final SortedMap<String, ConfigurationProperty> properties = new TreeMap<>();
 	private final Map<Class, WeakHashMap<Object, Void>> instances = new HashMap<>();

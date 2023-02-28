@@ -6,7 +6,8 @@ import com.google.inject.Inject;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Doc("Periodically runs health check tests")
 public class HealthCheckWorker extends GuiceRecurringDaemon
 {
-	private static final Logger log = Logger.getLogger(HealthCheckWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(HealthCheckWorker.class);
 
 	private final HealthCheckRegistry registry;
 

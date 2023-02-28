@@ -2,7 +2,8 @@ package com.peterphi.carbon.message;
 
 import com.peterphi.carbon.exception.MalformedCarbonResponseException;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedOutputStream;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.nio.charset.Charset;
  */
 public class CarbonSocketAPI
 {
-	private static final Logger log = Logger.getLogger(CarbonSocketAPI.class);
+	private static final Logger log = LoggerFactory.getLogger(CarbonSocketAPI.class);
 
 	private static final Charset UTF8 = Charset.forName("UTF-8");
 	private static final byte[] MESSAGE_PREFIX = "CarbonAPIXML1".getBytes(UTF8);
