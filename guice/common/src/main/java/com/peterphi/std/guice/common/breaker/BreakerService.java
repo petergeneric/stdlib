@@ -5,7 +5,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
 @Singleton
 public class BreakerService
 {
-	private static final Logger log = Logger.getLogger(BreakerService.class);
+	private static final Logger log = LoggerFactory.getLogger(BreakerService.class);
 
 	/**
 	 * All names we have seen before

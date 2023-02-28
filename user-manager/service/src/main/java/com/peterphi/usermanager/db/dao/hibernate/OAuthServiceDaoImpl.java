@@ -7,7 +7,8 @@ import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.entity.OAuthServiceEntity;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.List;
@@ -16,7 +17,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String>
 {
-	private static final Logger log = Logger.getLogger(OAuthServiceDaoImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(OAuthServiceDaoImpl.class);
 
 
 	public OAuthServiceEntity getByClientIdAndEndpoint(final String id, final String redirectUri)

@@ -1,10 +1,11 @@
 package com.peterphi.std.guice.web.rest.resteasy;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 class GuiceInitThreadWorker implements Runnable
 {
-	private static final Logger log = Logger.getLogger(GuiceInitThreadWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceInitThreadWorker.class);
 
 	private final GuicedResteasy dispatcher;
 

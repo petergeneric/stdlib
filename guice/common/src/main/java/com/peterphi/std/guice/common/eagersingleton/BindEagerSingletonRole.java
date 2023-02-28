@@ -12,7 +12,8 @@ import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Iterator;
 import java.util.List;
@@ -20,7 +21,7 @@ import java.util.concurrent.atomic.AtomicReference;
 
 public class BindEagerSingletonRole implements GuiceRole
 {
-	private static final Logger log = Logger.getLogger(BindEagerSingletonRole.class);
+	private static final Logger log = LoggerFactory.getLogger(BindEagerSingletonRole.class);
 
 
 	@Override

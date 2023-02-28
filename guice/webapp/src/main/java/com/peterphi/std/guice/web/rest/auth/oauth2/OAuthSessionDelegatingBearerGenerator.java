@@ -5,7 +5,8 @@ import com.google.inject.Provider;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.restclient.resteasy.impl.BearerGenerator;
 import com.peterphi.std.guice.web.HttpCallContext;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Bearer Token Generator that automatically generates User Manager Delegation Tokens for outgoing service calls it is assigned to
@@ -21,7 +22,7 @@ import org.apache.log4j.Logger;
  */
 public class OAuthSessionDelegatingBearerGenerator implements BearerGenerator
 {
-	private static final Logger log = Logger.getLogger(OAuthSessionDelegatingBearerGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(OAuthSessionDelegatingBearerGenerator.class);
 
 	private String defaultToken;
 

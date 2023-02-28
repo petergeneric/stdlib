@@ -1,6 +1,7 @@
 package com.peterphi.std.threading;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
@@ -15,7 +16,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  */
 public class SettableFuture<T> implements Future<T>
 {
-	private static transient final Logger log = Logger.getLogger(SettableFuture.class);
+	private static transient final Logger log = LoggerFactory.getLogger(SettableFuture.class);
 
 	private T value = null; // Null until it is assigned
 	private Throwable exception = null;

@@ -10,7 +10,8 @@ import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
 @ServiceName("network-config-reload")
 public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 {
-	private static final Logger log = Logger.getLogger(NetworkConfigReloadDaemon.class);
+	private static final Logger log = LoggerFactory.getLogger(NetworkConfigReloadDaemon.class);
 
 	@Inject
 	ConfigRestService configService;

@@ -1,6 +1,7 @@
 package com.peterphi.std.io;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
@@ -33,7 +34,7 @@ import java.io.Writer;
  */
 public class StreamUtil
 {
-	private final static Logger log = Logger.getLogger(StreamUtil.class);
+	private final static Logger log = LoggerFactory.getLogger(StreamUtil.class);
 	public static final int STREAM_SLEEP_TIME = 5;
 	public static final int CHUNKSIZE = 8192;
 	public static final int MONITOR_UPDATE_INTERVAL = 10;

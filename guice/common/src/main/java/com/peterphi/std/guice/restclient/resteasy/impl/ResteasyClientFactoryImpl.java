@@ -11,7 +11,8 @@ import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfo
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
@@ -32,7 +33,7 @@ import java.util.function.Consumer;
 @Singleton
 public class ResteasyClientFactoryImpl implements StoppableService
 {
-	private static final Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ResteasyClientFactoryImpl.class);
 
 	private final HttpClientFactory httpClientFactory;
 	//private final ResteasyProviderFactory resteasyProviderFactory;

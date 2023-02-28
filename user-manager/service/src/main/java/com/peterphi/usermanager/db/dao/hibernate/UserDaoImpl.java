@@ -12,7 +12,8 @@ import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.BCrypt;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Singleton
 public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 {
-	private static final Logger log = Logger.getLogger(UserDaoImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(UserDaoImpl.class);
 
 	@Inject
 	@Named("auth.ldap.allow-session-reconnect")

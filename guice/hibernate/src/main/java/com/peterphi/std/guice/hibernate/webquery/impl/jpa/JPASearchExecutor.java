@@ -10,7 +10,8 @@ import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.util.tracing.Tracing;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 
 import java.util.Collections;
@@ -21,7 +22,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class JPASearchExecutor
 {
-	private static final Logger log = Logger.getLogger(JPASearchExecutor.class);
+	private static final Logger log = LoggerFactory.getLogger(JPASearchExecutor.class);
 
 	/**
 	 * If true, will treat all WebQuery instances as if they had set computeSize to true<br />

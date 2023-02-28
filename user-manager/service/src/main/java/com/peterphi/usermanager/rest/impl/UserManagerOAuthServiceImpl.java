@@ -34,7 +34,8 @@ import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
-	private static final Logger log = Logger.getLogger(UserManagerOAuthServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(UserManagerOAuthServiceImpl.class);
 
 	private static final String NO_CACHE = "no-cache";
 

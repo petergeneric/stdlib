@@ -9,7 +9,8 @@ import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.resteasy.impl.ServiceNameHelper;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Path;
 import java.util.List;
@@ -29,7 +30,7 @@ import java.util.List;
  */
 class JAXRSAutoRegisterServicesModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(JAXRSAutoRegisterServicesModule.class);
+	private static final Logger log = LoggerFactory.getLogger(JAXRSAutoRegisterServicesModule.class);
 
 	private final GuiceConfig config;
 	private final ClassScannerFactory scannerFactory;

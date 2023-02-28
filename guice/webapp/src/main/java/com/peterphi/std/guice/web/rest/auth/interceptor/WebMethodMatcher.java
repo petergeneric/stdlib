@@ -2,7 +2,8 @@ package com.peterphi.std.guice.web.rest.auth.interceptor;
 
 import com.google.inject.matcher.AbstractMatcher;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
@@ -18,7 +19,7 @@ import java.util.Set;
  */
 public class WebMethodMatcher extends AbstractMatcher<Method>
 {
-	private static final Logger log = Logger.getLogger(WebMethodMatcher.class);
+	private static final Logger log = LoggerFactory.getLogger(WebMethodMatcher.class);
 
 	private final Set<Class<?>> ifaces;
 	private final boolean interceptUnannotated;

@@ -6,14 +6,15 @@ import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jetbrains.annotations.NotNull;
 
 import java.util.function.BiConsumer;
 
 public class OgnlEvaluator
 {
-	private static final Logger log = Logger.getLogger(OgnlEvaluator.class);
+	private static final Logger log = LoggerFactory.getLogger(OgnlEvaluator.class);
 
 	public static final MemberAccess PUBLIC_ACCESS = new OGNLPublicMemberAccess();
 

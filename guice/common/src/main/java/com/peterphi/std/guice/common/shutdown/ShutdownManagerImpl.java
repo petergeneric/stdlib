@@ -2,7 +2,8 @@ package com.peterphi.std.guice.common.shutdown;
 
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Stack;
  */
 class ShutdownManagerImpl implements ShutdownManager
 {
-	private static final Logger log = Logger.getLogger(ShutdownManagerImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ShutdownManagerImpl.class);
 
 	private Stack<StoppableService> services = new Stack<StoppableService>();
 

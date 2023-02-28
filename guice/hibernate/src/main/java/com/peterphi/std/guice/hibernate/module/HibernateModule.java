@@ -18,7 +18,8 @@ import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -34,7 +35,7 @@ import java.util.ServiceLoader;
 
 public abstract class HibernateModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(HibernateModule.class);
+	private static final Logger log = LoggerFactory.getLogger(HibernateModule.class);
 
 	/**
 	 * If hibernate.properties is set to this value, hibernate properties are assumed to be embedded in app config

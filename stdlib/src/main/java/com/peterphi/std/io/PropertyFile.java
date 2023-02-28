@@ -2,7 +2,8 @@ package com.peterphi.std.io;
 
 import com.peterphi.std.util.ListUtility;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -35,7 +36,7 @@ import java.util.Set;
 
 public class PropertyFile
 {
-	private static final transient Logger log = Logger.getLogger(PropertyFile.class);
+	private static final transient Logger log = LoggerFactory.getLogger(PropertyFile.class);
 	private static final String NEWLINE = "\n";
 	private static final String COMMENT_INST = "#-- ";
 	private static final char COMMENT_CHAR = '#';

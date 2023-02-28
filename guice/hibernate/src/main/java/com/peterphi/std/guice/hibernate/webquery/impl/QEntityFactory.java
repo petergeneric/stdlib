@@ -3,7 +3,8 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQSchemas;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.SessionFactory;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 
@@ -19,7 +20,7 @@ import java.util.stream.Collectors;
 @Singleton
 public class QEntityFactory
 {
-	private static final Logger log = Logger.getLogger(QEntityFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(QEntityFactory.class);
 
 	private final Map<Class<?>, QEntity> entities = new HashMap<>();
 	private final SessionFactoryImplementor sessionFactory;

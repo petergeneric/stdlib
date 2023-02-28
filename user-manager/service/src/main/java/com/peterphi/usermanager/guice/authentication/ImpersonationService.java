@@ -8,12 +8,13 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.UMConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ImpersonationService
 {
-	private static final Logger log = Logger.getLogger(ImpersonationService.class);
+	private static final Logger log = LoggerFactory.getLogger(ImpersonationService.class);
 
 	@Inject
 	Provider<UserLogin> userProvider;

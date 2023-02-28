@@ -10,13 +10,14 @@ import com.peterphi.std.guice.common.retry.retry.backoff.ExponentialBackoff;
 import com.peterphi.std.threading.Timeout;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 final class RetryMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(RetryMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(RetryMethodInterceptor.class);
 
 	private final Timer calls;
 	private final Timer attempts;

@@ -1,6 +1,7 @@
 package com.peterphi.std.threading;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.Calendar;
@@ -20,7 +21,7 @@ public final class Deadline implements Comparable<Deadline>, Serializable
 	 */
 	private static final long serialVersionUID = 1L;
 
-	private static transient final Logger log = Logger.getLogger(Deadline.class);
+	private static transient final Logger log = LoggerFactory.getLogger(Deadline.class);
 
 	/**
 	 * A deadline which will never arrive - representing the year <em>292278994</em>, on <em>Sun Aug 17 at 07:12:55 UTC</em>

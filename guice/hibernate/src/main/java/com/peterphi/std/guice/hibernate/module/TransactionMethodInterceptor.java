@@ -28,7 +28,8 @@ import com.peterphi.std.util.tracing.Tracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
@@ -56,7 +57,7 @@ import static com.peterphi.std.guice.database.annotation.Transactional.IGNORE_IS
  */
 class TransactionMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(TransactionMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(TransactionMethodInterceptor.class);
 
 	private final Provider<Session> sessionProvider;
 

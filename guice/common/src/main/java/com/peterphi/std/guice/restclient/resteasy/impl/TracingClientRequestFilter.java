@@ -2,7 +2,8 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -12,7 +13,7 @@ import java.io.IOException;
 @Provider
 public class TracingClientRequestFilter implements ClientRequestFilter
 {
-	private static final Logger log = Logger.getLogger(TracingClientRequestFilter.class);
+	private static final Logger log = LoggerFactory.getLogger(TracingClientRequestFilter.class);
 
 
 	@Override

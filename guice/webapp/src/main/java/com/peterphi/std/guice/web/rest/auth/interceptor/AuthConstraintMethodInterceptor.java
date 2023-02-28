@@ -12,7 +12,8 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -22,7 +23,7 @@ import java.util.List;
  */
 class AuthConstraintMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(AuthConstraintMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(AuthConstraintMethodInterceptor.class);
 
 	private final Provider<AuthConstraintUserInterrogator> interrogatorProvider;
 	private final GuiceConfig config;

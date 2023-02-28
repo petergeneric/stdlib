@@ -3,7 +3,8 @@ package com.peterphi.std.guice.hibernate.webquery.impl;
 import com.peterphi.std.guice.database.annotation.EagerFetch;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
@@ -42,7 +43,7 @@ import java.util.stream.Collectors;
 
 public class QEntity
 {
-	private static final Logger log = Logger.getLogger(QEntity.class);
+	private static final Logger log = LoggerFactory.getLogger(QEntity.class);
 
 	private final Class<?> clazz;
 	private String name;

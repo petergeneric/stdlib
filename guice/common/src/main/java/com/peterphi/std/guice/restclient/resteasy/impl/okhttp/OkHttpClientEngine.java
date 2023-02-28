@@ -25,7 +25,8 @@ import okhttp3.Response;
 import okhttp3.internal.http.HttpMethod;
 import okio.Buffer;
 import okio.BufferedSink;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.internal.ClientInvocation;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
@@ -58,7 +59,7 @@ import java.util.Map;
  */
 public class OkHttpClientEngine implements ClientHttpEngine
 {
-	private static final Logger log = Logger.getLogger(OkHttpClientEngine.class);
+	private static final Logger log = LoggerFactory.getLogger(OkHttpClientEngine.class);
 
 	final OkHttpClient client;
 

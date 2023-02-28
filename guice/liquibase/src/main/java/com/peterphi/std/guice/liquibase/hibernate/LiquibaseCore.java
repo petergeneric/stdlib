@@ -22,7 +22,8 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.AvailableSettings;
 
 import javax.naming.InitialContext;
@@ -47,7 +48,7 @@ import java.util.Properties;
  */
 class LiquibaseCore
 {
-	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
+	private static final Logger log = LoggerFactory.getLogger(LiquibaseCore.class);
 
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;

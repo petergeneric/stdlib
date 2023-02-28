@@ -5,7 +5,8 @@ import com.peterphi.std.types.Timecode;
 import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Element;
 
 import javax.xml.bind.annotation.XmlAnyElement;
@@ -36,7 +37,7 @@ import java.util.Stack;
 
 public class ExampleGenerator
 {
-	private static final Logger log = Logger.getLogger(ExampleGenerator.class);
+	private static final Logger log = LoggerFactory.getLogger(ExampleGenerator.class);
 
 	@Inject
 	JAXBSerialiserFactory jaxb;

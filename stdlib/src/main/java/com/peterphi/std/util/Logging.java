@@ -1,7 +1,8 @@
 package com.peterphi.std.util;
 
 import org.apache.log4j.LogManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.log4j.PropertyConfigurator;
 
 import java.io.File;
@@ -49,7 +50,7 @@ public final class Logging
 	{
 		if (currentLogFile != null && currentLogFile != logFile)
 		{
-			final Logger log = Logger.getLogger(Logging.class);
+			final Logger log = LoggerFactory.getLogger(Logging.class);
 
 			log.warn("[Logging] {setup} Logging is being reconfigured to use: " + logFile.getAbsolutePath());
 		}
