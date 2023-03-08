@@ -46,7 +46,7 @@ public class HibernateObservingInterceptor
 		else if (Tracing.isVerbose())
 		{
 			// Nobody else is watching SQL, so we're responsible for letting the Tracer know about it
-			Tracing.log("sql:prepare", () -> sql);
+			Tracing.log("sql:prepare", sql);
 		}
 	}
 

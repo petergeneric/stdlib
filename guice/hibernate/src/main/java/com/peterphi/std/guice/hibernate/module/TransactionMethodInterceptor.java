@@ -98,7 +98,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		{
 			Timer.Context callTimer = calls.time();
 
-			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
+			final String tracingId = Tracing.newOperationId("TX:begin", invocation.getMethod());
 			Tracing.logOngoing(tracingId, "TX:initialStatus", initialStatus);
 
 			try

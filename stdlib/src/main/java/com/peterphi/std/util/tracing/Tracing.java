@@ -116,7 +116,36 @@ public final class Tracing
 	 */
 	public static String newOperationId()
 	{
-		return log();
+		final Tracing tracing = peek();
+
+		if (tracing != null)
+		{
+			final String operationId = tracing.id + "/" + (++tracing.ops);
+
+			return operationId;
+		}
+		else {
+			return null;
+		}
+	}
+
+	public static String newOperationId(final Object...msg)
+	{
+		final Tracing tracing = peek();
+
+		if (tracing != null)
+		{
+			final String operationId = tracing.id + "/" + (++tracing.ops);
+
+			if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+				logMessage(operationId, msg);
+
+			return operationId;
+		}
+		else
+		{
+			return null;
+		}
 	}
 
 
@@ -166,12 +195,52 @@ public final class Tracing
 	}
 
 
-	public static String log(final String name, final Supplier<String> detail)
+	public static void log(final String msg)
 	{
-		if (detail == null)
-			return log(StringUtils.trim(name));
-		else
-			return log(StringUtils.trim(name), (Object) detail);
+		final Tracing tracing = peek();
+
+		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		{
+			final String eventId = tracing.id + "/" + (++tracing.ops);
+			logMessage(eventId, msg);
+		}
+	}
+
+
+	public static void log(final String msg, final Supplier<String> param1)
+	{
+		final Tracing tracing = peek();
+
+		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		{
+			final String eventId = tracing.id + "/" + (++tracing.ops);
+
+			logMessage(eventId, msg, param1);
+		}
+	}
+
+	public static void log(final String msg, final Object param1)
+	{
+		final Tracing tracing = peek();
+
+		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		{
+			final String eventId = tracing.id + "/" + (++tracing.ops);
+
+			logMessage(eventId, msg, param1);
+		}
+	}
+
+	public static void log(final String msg, final Object param1, final Object param2)
+	{
+		final Tracing tracing = peek();
+
+		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		{
+			final String eventId = tracing.id + "/" + (++tracing.ops);
+
+			logMessage(eventId, msg, param1, param2);
+		}
 	}
 
 	/**
@@ -181,24 +250,14 @@ public final class Tracing
 	 *
 	 * @return an operation identifier (if we're within a tracing block)
 	 */
-	public static String log(final Object... detail)
+	public static void log(final Object... detail)
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null)
+		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
 		{
 			final String eventId = tracing.id + "/" + (++tracing.ops);
-
-			if ((tracing.verbose || log.isTraceEnabled()))
-			{
-				logMessage(eventId, detail);
-			}
-
-			return eventId;
-		}
-		else
-		{
-			return null;
+			logMessage(eventId, detail);
 		}
 	}
 
@@ -207,7 +266,7 @@ public final class Tracing
 	 * Log an additional message about an ongoing operation
 	 *
 	 * @param operationId
-	 * 		the operation id returned by either {@link #log(String, Supplier)} or {@link #newOperationId()}
+	 * 		An operation id returned by {@link #newOperationId()}
 	 * @param name
 	 * @param detail
 	 */
@@ -215,7 +274,10 @@ public final class Tracing
 	{
 		if (operationId != null && isVerbose())
 		{
-			logMessage(operationId, StringUtils.trim(name), detail);
+			if (name != null)
+				logMessage(operationId, name, detail);
+			else
+				logMessage(operationId, detail);
 		}
 	}
 
@@ -266,7 +328,6 @@ public final class Tracing
 		else
 			return null;
 	}
-
 
 	public static boolean isVerbose()
 	{

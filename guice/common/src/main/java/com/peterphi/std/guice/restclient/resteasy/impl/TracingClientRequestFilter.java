@@ -19,7 +19,7 @@ public class TracingClientRequestFilter implements ClientRequestFilter
 	@Override
 	public void filter(final ClientRequestContext requestContext) throws IOException
 	{
-		final String traceId = Tracing.log("HTTP:req", () -> "" + requestContext.getUri());
+		final String traceId = Tracing.newOperationId("HTTP:req", requestContext.getUri());
 
 		if (traceId != null)
 		{

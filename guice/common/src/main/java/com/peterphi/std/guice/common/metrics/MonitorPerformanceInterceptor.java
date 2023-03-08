@@ -23,7 +23,7 @@ class MonitorPerformanceInterceptor implements MethodInterceptor
 	{
 		final MonitorPerformance annotation = invocation.getMethod().getAnnotation(MonitorPerformance.class);
 
-		final String operationId = Tracing.log("method:call", annotation.name());
+		final String operationId = Tracing.newOperationId("method:call", annotation.name());
 
 		final Timer.Context timer = registry.timer("method-timing." + annotation.name()).time();
 		try

@@ -53,7 +53,7 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 			if (operationId != null)
 				Tracing.logOngoing(operationId, "HTTP:resp", code);
 			else
-				operationId = Tracing.log("HTTP:resp:unexpected", code); // can't find outgoing trace id
+				operationId = Tracing.newOperationId("HTTP:resp:unexpected", code); // can't find outgoing trace id
 		}
 		else
 		{

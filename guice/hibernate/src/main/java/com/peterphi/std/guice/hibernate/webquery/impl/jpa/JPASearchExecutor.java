@@ -54,7 +54,7 @@ public class JPASearchExecutor
 	                                        JPASearchStrategy strategy,
 	                                        Function<?, ?> serialiser)
 	{
-		final String traceOperationId = Tracing.log("WebQuery:exec", () -> query.toString());
+		final String traceOperationId = Tracing.newOperationId("WebQuery:exec", query);
 
 		final HibernateSQLLogger statementLog;
 
