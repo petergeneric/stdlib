@@ -58,9 +58,9 @@ public class CustomTemplateFailureRenderer extends XMLFailureRenderer implements
 				}
 				catch (Exception e)
 				{
-					log.trace("Error rendering custom failure for " +
-					          failure.exception.shortName +
-					          ", fall back on general handler", e);
+					log.trace("Error rendering custom failure for {}, fall back on general handler",
+					          failure.exception.shortName,
+					          e);
 				}
 			}
 

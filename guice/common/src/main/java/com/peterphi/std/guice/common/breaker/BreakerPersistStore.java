@@ -93,7 +93,7 @@ public class BreakerPersistStore
 			}
 			catch (Throwable t)
 			{
-				log.warn("Error persisting breaker value to " + file + ": " + t.getMessage(), t);
+				log.warn("Error persisting breaker value to {}: {}", file, t.getMessage(), t);
 			}
 		}
 	}

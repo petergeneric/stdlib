@@ -261,15 +261,14 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 				{
 					if (opportunistic)
 					{
-						log.warn("Cannot find user in LDAP system: " +
-						         entity.getEmail() +
-						         " - but check was opportunistic so won't delete the user.");
+						log.warn("Cannot find user in LDAP system: {} - but check was opportunistic so won't delete the user.",
+						         entity.getEmail());
 					}
 					else
 					{
 						// User has been deleted from LDAP so we shouldn't keep a record for them
 						// However, the user may have services so we don't necessarily want to remove those, so we'll just make the user unable to log in without a reauth
-						log.warn("User no longer known to LDAP system: " + entity.getEmail() + " - deleting User Manager record");
+						log.warn("User no longer known to LDAP system: {} - deleting User Manager record", entity.getEmail());
 
 						entity.setSessionReconnectKey(null);
 						entity.setAccessKey(null);
@@ -281,7 +280,7 @@ public class LDAPUserAuthenticationService implements UserAuthenticationService
 			}
 			catch (Throwable t)
 			{
-				log.error("Error updating LDAP record for " + entity.getEmail(), t);
+				log.error("Error updating LDAP record for {}", entity.getEmail(), t);
 			}
 		}
 	}

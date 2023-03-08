@@ -85,7 +85,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 				if (ServiceNameHelper.getName(config, clazz) != null)
 				{
 					log.debug(
-							"Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: " +
+							"Found JAX-RS interface with no implementation but a service.{name}.endpoint config. Auto-binding a client: {}",
 							clazz);
 
 					TypeLiteral typeLiteral = TypeLiteral.<JAXRSClientProvider<T>>get(Types.newParameterizedType(
@@ -95,7 +95,7 @@ class JAXRSAutoRegisterServicesModule extends AbstractModule
 				}
 				else
 				{
-					log.debug("Found JAX-RS interface with no implementation and no service.{name}.endpoint config. Ignoring: " +
+					log.debug("Found JAX-RS interface with no implementation and no service.{name}.endpoint config. Ignoring: {}",
 					          clazz);
 				}
 			}

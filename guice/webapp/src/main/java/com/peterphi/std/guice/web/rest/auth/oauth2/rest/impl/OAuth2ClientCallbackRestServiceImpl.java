@@ -97,15 +97,11 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 			if (followRedirectAnywayOnOAuthCallbackFailure)
 			{
 				log.error(
-						"Service encountered error processing oauth client callback. Following safe GET redirect anyway. Details on request: code=" +
-						code +
-						", state=" +
-						state +
-						", error=" +
-						error +
-						", errorText=" +
-						errorText +
-						", errorUri=" +
+						"Service encountered error processing oauth client callback. Following safe GET redirect anyway. Details on request: code={}, state={}, error={}, errorText={}, errorUri={}",
+						code,
+						state,
+						error,
+						errorText,
 						errorUri,
 						t);
 

@@ -207,7 +207,7 @@ public class OgnlEvaluator
 
 		try
 		{
-			log.debug("OGNL Expression used enough times for compile: " + expr);
+			log.debug("OGNL Expression used enough times for compile: {}", expr);
 
 			final OgnlContext ctx = createNewOgnlContext(root);
 

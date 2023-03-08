@@ -307,7 +307,7 @@ public final class Deadline implements Comparable<Deadline>, Serializable
 				}
 				catch (Throwable t)
 				{
-					log.info("{resolveFuture} Error auto-cancelling after ExecutionException: " + t.getMessage(), t);
+					log.info("{resolveFuture} Error auto-cancelling after ExecutionException: {}", t.getMessage(), t);
 				}
 
 				throw new RuntimeException(e);

@@ -29,9 +29,9 @@ public class CSRFTokenStore
 		// In normal operation we shouldn't experience this issue
 		if (tokens.size() >= MAX_SIZE)
 		{
-			log.warn("Generated but unused CSRF Tokens for session hit " +
-			         tokens.size() +
-			         ", clearing all tokens for this session before generating a new one");
+			log.warn(
+					"Generated but unused CSRF Tokens for session hit {}, clearing all tokens for this session before generating a new one",
+					tokens.size());
 
 			tokens.clear();
 		}

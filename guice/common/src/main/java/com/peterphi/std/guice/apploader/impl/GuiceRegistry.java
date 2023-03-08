@@ -110,7 +110,7 @@ public class GuiceRegistry
 				}
 				catch (Throwable t)
 				{
-					log.warn("Error shutting down service " + service + ": " + t.getMessage(), t);
+					log.warn("Error shutting down service {}: {}", service, t.getMessage(), t);
 				}
 			}
 
@@ -141,7 +141,7 @@ public class GuiceRegistry
 		}
 		catch (RuntimeException | Error e)
 		{
-			log.warn("Failed to restart: " + e.getMessage(), e);
+			log.warn("Failed to restart: {}", e.getMessage(), e);
 			stop();
 
 			throw e;

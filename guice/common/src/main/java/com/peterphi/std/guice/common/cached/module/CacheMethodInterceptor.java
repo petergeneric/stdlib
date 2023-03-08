@@ -68,7 +68,7 @@ final class CacheMethodInterceptor implements MethodInterceptor
 			if (cacheResult.expires >= System.currentTimeMillis())
 			{
 				if (log.isDebugEnabled())
-					log.debug("Returning cached result for " + key);
+					log.debug("Returning cached result for {}", key);
 
 				//return the previous result
 				hits.mark();

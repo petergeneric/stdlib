@@ -98,7 +98,7 @@ class HttpCallJWTUser implements CurrentUser
 
 				if (requireSecure && !request.isSecure())
 				{
-					log.error("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:" +
+					log.error("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:{}",
 					          data);
 
 					throw new RuntimeException("Rejecting token, not received over secure channel");

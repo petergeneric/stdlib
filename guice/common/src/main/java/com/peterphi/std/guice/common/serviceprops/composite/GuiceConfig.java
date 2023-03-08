@@ -78,11 +78,7 @@ public class GuiceConfig
 				}
 				catch (Throwable t)
 				{
-					log.warn("Property Change Observer " +
-					         observer +
-					         " threw exception when notifying for " +
-					         name +
-					         " (ignoring)", t);
+					log.warn("Property Change Observer {} threw exception when notifying for {} (ignoring)", observer, name, t);
 				}
 			}
 		}

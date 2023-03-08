@@ -63,7 +63,7 @@ public class FileHelper
 		}
 		catch (IOException e)
 		{
-			log.error("[FileHelper] {createTempFile} Error creating temp file: " + e.getMessage(), e);
+			log.error("[FileHelper] {createTempFile} Error creating temp file: {}", e.getMessage(), e);
 			return null;
 		}
 	}
@@ -170,7 +170,7 @@ public class FileHelper
 					finally
 					{
 						if (!f.delete())
-							log.warn("Could not delete file once written: " + f);
+							log.warn("Could not delete file once written: {}", f);
 					}
 				}
 				else
@@ -182,7 +182,7 @@ public class FileHelper
 			}
 			catch (IOException e)
 			{
-				log.warn("{couldWrite} Error while testing: " + e.getMessage(), e);
+				log.warn("{couldWrite} Error while testing: {}", e.getMessage(), e);
 				return false;
 			}
 		}
@@ -202,7 +202,7 @@ public class FileHelper
 			                                dest.getAbsolutePath());
 
 		if (log.isInfoEnabled())
-			log.info("[FileHelper] {copy} Copying " + src + " to " + dest);
+			log.info("[FileHelper] {copy} Copying {} to {}", src, dest);
 
 		if (src.isDirectory())
 		{
@@ -240,7 +240,7 @@ public class FileHelper
 			                                dest.getAbsolutePath());
 
 		if (log.isInfoEnabled())
-			log.info("[FileHelper] {move} Moving " + src + " to " + dest);
+			log.info("[FileHelper] {move} Moving {} to {}", src, dest);
 
 		if (!src.renameTo(dest))
 		{ // Try a fast move (works if the files are on the same partition)
@@ -268,7 +268,7 @@ public class FileHelper
 		}
 		catch (IOException e)
 		{
-			log.error("[FileHelper] {trySymlink} Failure: " + e.getMessage(), e);
+			log.error("[FileHelper] {trySymlink} Failure: {}", e.getMessage(), e);
 
 			return false;
 		}
@@ -307,7 +307,7 @@ public class FileHelper
 		}
 		catch (IOException e)
 		{
-			log.error("[FileHelper] {symlink} Failure: " + e.getMessage(), e);
+			log.error("[FileHelper] {symlink} Failure: {}", e.getMessage(), e);
 			throw e;
 		}
 	}
@@ -346,7 +346,7 @@ public class FileHelper
 		}
 		catch (IOException e)
 		{
-			log.error("{safeMove} Error during move operation: " + e.getMessage(), e);
+			log.error("{safeMove} Error during move operation: {}", e.getMessage(), e);
 			return false;
 		}
 	}
@@ -635,7 +635,7 @@ public class FileHelper
 			boolean success = f.setLastModified(System.currentTimeMillis());
 
 			if (!success)
-				log.warn("[FileHelper] {touch} Failed to update modify time on " + f);
+				log.warn("[FileHelper] {touch} Failed to update modify time on {}", f);
 		}
 	}
 

@@ -54,7 +54,7 @@ class GuiceApplicationValueContainer extends AbstractConfigurationValueProvider
 	private String getRawValue(String key)
 	{
 		if (log.isTraceEnabled())
-			log.trace("getProperty: " + key);
+			log.trace("getProperty: {}", key);
 
 		// Load from the guice environment configuration
 		if (applicationConfiguration.containsKey(key))

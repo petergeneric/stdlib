@@ -97,12 +97,12 @@ public class ArchiveHelper
 		}
 		catch (FileNotFoundException e)
 		{
-			log.error("File not found exception: " + e.getMessage(), e);
+			log.error("File not found exception: {}", e.getMessage(), e);
 			return false;
 		}
 		catch (Exception e)
 		{
-			log.error("Exception while extracting archive: " + e.getMessage(), e);
+			log.error("Exception while extracting archive: {}", e.getMessage(), e);
 			return false;
 		}
 	}
@@ -158,7 +158,7 @@ public class ArchiveHelper
 		finally
 		{
 			if (!tempFile.delete())
-				log.warn("Could not delete temp file " + tempFile);
+				log.warn("Could not delete temp file {}", tempFile);
 		}
 		return true;
 	}

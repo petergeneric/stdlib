@@ -32,7 +32,7 @@ public class MediaInfoCommand
 
 	public MediaInfo inspect(File mediafile) throws IOException
 	{
-		log.debug("Retrieving mediainfo output for " + mediafile.getAbsolutePath());
+		log.debug("Retrieving mediainfo output for {}", mediafile.getAbsolutePath());
 
 		if (!mediafile.exists())
 			throw new IllegalArgumentException("Media file " + mediafile + " does not exist!");

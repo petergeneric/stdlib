@@ -52,9 +52,10 @@ public final class Logging
 		{
 			final Logger log = LoggerFactory.getLogger(Logging.class);
 
-			log.warn("[Logging] {setup} Logging is being reconfigured to use: " + logFile.getAbsolutePath());
+			log.warn("[Logging] {setup} Logging is being reconfigured to use: {}", logFile.getAbsolutePath());
 		}
 
+		// TODO replace me with slf4j equivalent
 		LogManager.resetConfiguration(); // Erase the existing configuration
 		PropertyConfigurator.configureAndWatch(logFile.getAbsolutePath());
 

@@ -59,14 +59,14 @@ public class BindEagerSingletonRole implements GuiceRole
 					// We're in a test environment but inTests isn't true, so we should ignore this annotation
 					if (!annotation.inTests())
 					{
-						log.trace("Ignoring eager singleton with inTests=false: " + clazz);
+						log.trace("Ignoring eager singleton with inTests=false: {}", clazz);
 
 						it.remove();
 						continue;
 					}
 				}
 
-				log.trace("Binding eager singleton: " + clazz);
+				log.trace("Binding eager singleton: {}", clazz);
 			}
 
 			if (!classes.isEmpty())

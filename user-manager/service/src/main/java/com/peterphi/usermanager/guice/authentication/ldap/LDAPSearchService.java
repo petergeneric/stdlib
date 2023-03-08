@@ -213,7 +213,7 @@ public class LDAPSearchService
 	public Map<LDAPUser, LDAPUserRecord> search(LDAPUser authUser, final String password, List<LDAPUser> searchForAll)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Querying LDAP as " + authUser + " for " + searchForAll);
+			log.trace("Querying LDAP as {} for {}", authUser, searchForAll);
 
 		try
 		{
@@ -291,10 +291,10 @@ public class LDAPSearchService
 	{
 		try
 		{
-			log.trace("LDAP Search: base='" + ldapSearchBase + "', filter='" + searchFilter + "'");
+			log.trace("LDAP Search: base='{}', filter='{}'", ldapSearchBase, searchFilter);
 			final NamingEnumeration<SearchResult> answer = ldapContext.search(ldapSearchBase, searchFilter, search);
 
-			log.trace("LDAP Search returned results: " + ((answer == null) ? false : answer.hasMore()));
+			log.trace("LDAP Search returned results: {}", (answer == null) ? false : answer.hasMore());
 
 			return answer;
 		}

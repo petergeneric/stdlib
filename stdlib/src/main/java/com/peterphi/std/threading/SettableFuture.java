@@ -161,7 +161,7 @@ public class SettableFuture<T> implements Future<T>
 				tmpvalue = get(Deadline.MAX_VALUE);
 
 				if (log.isInfoEnabled())
-					log.info("[TransferFuture] {get} returning value " + tmpvalue);
+					log.info("[TransferFuture] {get} returning value {}", tmpvalue);
 
 				return tmpvalue;
 			}

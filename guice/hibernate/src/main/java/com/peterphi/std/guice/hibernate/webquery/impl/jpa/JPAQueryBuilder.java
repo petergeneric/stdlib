@@ -768,11 +768,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 						if (relation.isCollection())
 						{
 							if (log.isTraceEnabled())
-								log.trace("Encountered fetch " +
-								          fetch +
-								          ". This resolves to " +
-								          relation +
-								          " which is a collection");
+								log.trace("Encountered fetch {}. This resolves to {} which is a collection", fetch, relation);
 
 							return true;
 						}
@@ -785,13 +781,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 					}
 					else
 					{
-						log.warn("Encountered relation " +
-						         parts[i] +
-						         " on " +
-						         parent.getName() +
-						         " as part of path " +
-						         fetch +
-						         ". Assuming QEntity simply does not know this relation. Assuming worst case scenario (collection join is involved)");
+						log.warn(
+								"Encountered relation {} on {} as part of path {}. Assuming QEntity simply does not know this relation. Assuming worst case scenario (collection join is involved)",
+								parts[i],
+								parent.getName(),
+								fetch);
 						return true;
 					}
 				}

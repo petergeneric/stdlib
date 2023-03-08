@@ -100,7 +100,7 @@ class GuiceFactory
 			{
 				final GuiceRole role = it.next();
 
-				log.debug("Discovered guice role: " + role);
+				log.debug("Discovered guice role: {}", role);
 
 				roles.add(role);
 			}
@@ -112,7 +112,7 @@ class GuiceFactory
 		// Allow all GuiceRole implementations to add/remove/reorder configuration sources
 		for (GuiceRole role : roles)
 		{
-			log.debug("Adding requested guice role: " + role);
+			log.debug("Adding requested guice role: {}", role);
 			role.adjustConfigurations(configs);
 		}
 
@@ -152,7 +152,7 @@ class GuiceFactory
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
-			log.debug("Applying overrides: " + overrideFile.getFile());
+			log.debug("Applying overrides: {}", overrideFile.getFile());
 			properties.setOverrides(overrideFile.toMap());
 		}
 
@@ -181,7 +181,7 @@ class GuiceFactory
 
 				setup = setupClass.newInstance();
 
-				log.debug("Constructed GuiceSetup: " + setupClass);
+				log.debug("Constructed GuiceSetup: {}", setupClass);
 			}
 			catch (InstantiationException | IllegalAccessException e)
 			{
@@ -190,7 +190,7 @@ class GuiceFactory
 		}
 		else
 		{
-			log.debug("Using static GuiceSetup: " + staticSetup);
+			log.debug("Using static GuiceSetup: {}", staticSetup);
 			setup = staticSetup;
 		}
 
@@ -291,7 +291,7 @@ class GuiceFactory
 					((GuiceModule) module).setConfig(config);
 
 			if (log.isTraceEnabled())
-				log.trace("Creating Injector with modules: " + modules);
+				log.trace("Creating Injector with modules: {}", modules);
 
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
@@ -306,14 +306,12 @@ class GuiceFactory
 				final String contextName = config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
 				if (log.isDebugEnabled())
-					log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
+					log.debug("Injector for {} created in {} ms", contextName, finished - started);
 
 				if (scanner != null && log.isDebugEnabled())
-					log.debug("Class scanner stats: insts=" +
-					          scannerFactory.getMetricNewInstanceCount() +
-					          " cached createTime=" +
-					          scanner.getConstructionTime() +
-					          ", scanTime=" +
+					log.debug("Class scanner stats: insts={} cached createTime={}, scanTime={}",
+					          scannerFactory.getMetricNewInstanceCount(),
+					          scanner.getConstructionTime(),
 					          scanner.getSearchTime());
 			}
 
@@ -447,7 +445,7 @@ class GuiceFactory
 
 	static List<PropertyFile> loadConfig(final ClassLoader loader, String name) throws IOException
 	{
-		log.trace("Search for config files with name: " + name);
+		log.trace("Search for config files with name: {}", name);
 		final List<PropertyFile> configs = new ArrayList<>();
 		final Enumeration<URL> urls = loader.getResources(name);
 
@@ -455,7 +453,7 @@ class GuiceFactory
 		{
 			final URL url = urls.nextElement();
 
-			log.debug("Loading property file: " + url);
+			log.debug("Loading property file: {}", url);
 
 			configs.add(new PropertyFile(url));
 		}

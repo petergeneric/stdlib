@@ -87,7 +87,7 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 		if (!doNotLog)
 		{
 			// Log the failure
-			log.error(failure.id + " " + HttpCallContext.get().getRequestInfo() + " threw exception:", exception);
+			log.error("{} {} threw exception:", failure.id, HttpCallContext.get().getRequestInfo(), exception);
 		}
 
 		// Give the HTML render an opportunity to run

@@ -24,12 +24,7 @@ public class TracingClientRequestFilter implements ClientRequestFilter
 		if (traceId != null)
 		{
 			if (requestContext.getHeaders().containsKey(TracingConstants.HTTP_HEADER_CORRELATION_ID))
-				log.warn("Duplicate call to tracing filter " +
-				         this +
-				         " for " +
-				         requestContext +
-				         " for " +
-				         requestContext.getUri());
+				log.warn("Duplicate call to tracing filter {} for {} for {}", this, requestContext, requestContext.getUri());
 
 			requestContext.getHeaders().putSingle(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
 

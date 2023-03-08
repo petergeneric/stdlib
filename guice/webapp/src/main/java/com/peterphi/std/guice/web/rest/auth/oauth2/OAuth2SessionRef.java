@@ -146,7 +146,7 @@ public class OAuth2SessionRef
 		catch (Throwable e)
 		{
 			if (log.isTraceEnabled())
-				log.trace("isValid encountered exception calling getToken: " + e.getMessage(), e);
+				log.trace("isValid encountered exception calling getToken: {}", e.getMessage(), e);
 			// otherwise ignore
 		}
 
@@ -296,11 +296,10 @@ public class OAuth2SessionRef
 			    UserManagerBearerToken.isUserManagerDelegatedBearer(response.access_token))
 				throw new IllegalArgumentException("Delegated Bearer Token used to make this service call has expired.");
 			else if (log.isDebugEnabled())
-				log.debug("OAuth token has expired for " +
-				          ((cachedInfo != null) ?
-				           cachedInfo.email :
-				           "OAuth session refresh=" + (response != null ? response.refresh_token : null)) +
-				          " and must be refreshed");
+				log.debug("OAuth token has expired for {} and must be refreshed",
+				          (cachedInfo != null) ?
+				          cachedInfo.email :
+				          "OAuth session refresh=" + (response != null ? response.refresh_token : null));
 
 			// Will throw an exception if the token acquisition fails
 			refreshToken();

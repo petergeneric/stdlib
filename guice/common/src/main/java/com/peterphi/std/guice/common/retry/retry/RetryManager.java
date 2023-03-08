@@ -58,15 +58,12 @@ public class RetryManager
 				else
 				{
 					if (log.isTraceEnabled())
-						log.warn("Attempt #" + attempt + " of " + operation + " failed, will retry.", e);
+						log.warn("Attempt #{} of {} failed, will retry.", attempt, operation, e);
 					else
-						log.warn("Attempt #" +
-						         attempt +
-						         " of " +
-						         operation +
-						         " failed with " +
-						         e.getClass().getSimpleName() +
-						         ", will retry.");
+						log.warn("Attempt #{} of {} failed with {}, will retry.",
+						         attempt,
+						         operation,
+						         e.getClass().getSimpleName());
 				}
 			}
 			finally
@@ -110,7 +107,7 @@ public class RetryManager
 	protected <T> T finalAttemptFailed(final Retryable<T> operation, final int attempt, final boolean logError, final Throwable e) throws Exception
 	{
 		if(logError)
-		log.error("Final attempt #" + attempt + " of " + operation + " failed.", e);
+			log.error("Final attempt #{} of {} failed.", attempt, operation, e);
 
 		if (e instanceof Exception)
 			throw (Exception) e;

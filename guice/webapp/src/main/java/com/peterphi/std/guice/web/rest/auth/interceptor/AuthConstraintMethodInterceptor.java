@@ -69,7 +69,7 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 			return invocation.proceed();
 
 		if (log.isTraceEnabled())
-			log.trace("Check authn for: " + invocation.getMethod());
+			log.trace("Check authn for: {}", invocation.getMethod());
 
 		// Skip auth if we're not inside a Servlet call and we are only to enforce auth constraints on service calls
 		if (onlyServletRequest && HttpCallContext.peek() == null)
@@ -143,14 +143,14 @@ class AuthConstraintMethodInterceptor implements MethodInterceptor
 				if (!pass && user.hasRole(role))
 				{
 					if (log.isTraceEnabled())
-						log.trace("Allow method invocation: user " + user + " has role " + role);
+						log.trace("Allow method invocation: user {} has role {}", user, role);
 
 					pass = true;
 				}
 			}
 
 			if (!pass && log.isTraceEnabled())
-				log.trace("Deny method invocation: user " + user + " does not have any of roles " + requireAnyRoles);
+				log.trace("Deny method invocation: user {} does not have any of roles {}", user, requireAnyRoles);
 
 			return pass;
 		}

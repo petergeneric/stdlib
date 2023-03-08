@@ -242,7 +242,7 @@ public class Exec
 
 		if (log.isInfoEnabled())
 		{
-			log.info("ProcessBuilder created for command: " + join(" ", cmd));
+			log.info("ProcessBuilder created for command: {}", join(" ", cmd));
 		}
 
 		return builder;

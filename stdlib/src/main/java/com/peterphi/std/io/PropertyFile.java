@@ -133,7 +133,7 @@ public class PropertyFile
 				throw new IllegalArgumentException("Error finding property files in classpath: " + Arrays.asList(fileNames));
 		}
 		else if (log.isInfoEnabled())
-			log.info("{find} Loading properties from " + resolvedFile);
+			log.info("{find} Loading properties from {}", resolvedFile);
 
 		return openResource(classloader, resolvedResource, resolvedFile);
 	}
@@ -167,7 +167,7 @@ public class PropertyFile
 		try
 		{
 			if (log.isTraceEnabled())
-				log.trace("{find} Resource search results: " + resource);
+				log.trace("{find} Resource search results: {}", resource);
 
 			if (resource.getProtocol().equalsIgnoreCase("file"))
 			{
@@ -739,7 +739,7 @@ public class PropertyFile
 							NameValuePair nvp = new NameValuePair(name, value);
 							if (vars.containsKey(nvp.name))
 							{
-								log.warn("{load} duplicate entry '" + nvp.name + "': overwriting previous value");
+								log.warn("{load} duplicate entry '{}': overwriting previous value", nvp.name);
 							}
 
 							entries.add(nvp);
@@ -747,7 +747,7 @@ public class PropertyFile
 						}
 						else
 						{
-							log.error("Malformed line in property file: " + line);
+							log.error("Malformed line in property file: {}", line);
 						}
 					}
 				}

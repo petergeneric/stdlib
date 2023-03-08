@@ -58,7 +58,7 @@ public abstract class ParamInvokeable<T> extends ParamRunnable<T>
 			}
 			catch (Throwable t)
 			{
-				log.error("[ParamInvokeable] {prepare} : " + t.getMessage(), t);
+				log.error("[ParamInvokeable] {prepare} : {}", t.getMessage(), t);
 			}
 		}
 	}

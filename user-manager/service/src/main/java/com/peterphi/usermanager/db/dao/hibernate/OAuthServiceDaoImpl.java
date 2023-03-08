@@ -23,18 +23,18 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 	public OAuthServiceEntity getByClientIdAndEndpoint(final String id, final String redirectUri)
 	{
 		if (log.isDebugEnabled())
-			log.debug("Search for service by id: " + id);
+			log.debug("Search for service by id: {}", id);
 
 		OAuthServiceEntity entity = getById(id);
 
 		if (entity != null && !entity.isEnabled())
 		{
-			log.warn("getByClientIdAndEndpoint called for disabled service " + id + " with redirectUri " + redirectUri);
+			log.warn("getByClientIdAndEndpoint called for disabled service {} with redirectUri {}", id, redirectUri);
 			return null; // If not enabled return nothing
 		}
 
 		if (entity == null)
-			log.warn("No service with id: " + id);
+			log.warn("No service with id: {}", id);
 
 		return filterByEndpoint(entity, redirectUri);
 	}
@@ -65,7 +65,7 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 					                               .collect(Collectors.toList());
 
 			if (log.isDebugEnabled())
-				log.debug("Check endpoint " + redirectUri + " against " + Arrays.asList(endpoints));
+				log.debug("Check endpoint {} against {}", redirectUri, Arrays.asList(endpoints));
 
 			// Now check if the redirectUri matches any of the registered endpoints
 			// N.B. don't allow arbitrary startsWith (security issue if the redirectUri can be pointed at a resource in the app that redirects elsewhere)
@@ -74,7 +74,7 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 				if (StringUtils.equals(endpoint, redirectUri))
 				{
 					if (log.isDebugEnabled())
-						log.debug("Exact match to endpoint: " + endpoint);
+						log.debug("Exact match to endpoint: {}", endpoint);
 
 					return entity; // exact match
 				}
@@ -86,7 +86,7 @@ public class OAuthServiceDaoImpl extends HibernateDao<OAuthServiceEntity, String
 					if (StringUtils.equals(withCallbackEndpointAdded, redirectUri))
 					{
 						if (log.isDebugEnabled())
-							log.debug("Match to endpoint with added /oauth2/client/cb suffix: " + endpoint);
+							log.debug("Match to endpoint with added /oauth2/client/cb suffix: {}", endpoint);
 
 						return entity;
 					}

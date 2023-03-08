@@ -41,11 +41,11 @@ public class HealthCheckWorker extends GuiceRecurringDaemon
 		{
 			if (entry.getValue().isHealthy())
 			{
-				log.debug(entry.getKey() + ": PASS health check");
+				log.debug("{}: PASS health check", entry.getKey());
 			}
 			else
 			{
-				log.warn(entry.getKey() + ": FAILED health check", entry.getValue().getError());
+				log.warn("{}: FAILED health check", entry.getKey(), entry.getValue().getError());
 			}
 		}
 	}

@@ -74,13 +74,7 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getClasses " +
-				          pkg +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getClasses {} with predicate={} returned in {} ms", pkg, predicate, finished - started);
 		}
 	}
 
@@ -130,13 +124,10 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getAnnotatedClasses " +
-				          annotation +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getAnnotatedClasses {} with predicate={} returned in {} ms",
+				          annotation,
+				          predicate,
+				          finished - started);
 		}
 	}
 
@@ -160,13 +151,10 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getInheritedAnnotatedClasses " +
-				          annotation +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getInheritedAnnotatedClasses {} with predicate={} returned in {} ms",
+				          annotation,
+				          predicate,
+				          finished - started);
 		}
 	}
 
@@ -212,13 +200,7 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getExtendingClasses " +
-				          clazz +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getExtendingClasses {} with predicate={} returned in {} ms", clazz, predicate, finished - started);
 		}
 	}
 

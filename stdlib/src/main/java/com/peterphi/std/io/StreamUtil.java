@@ -287,7 +287,7 @@ public class StreamUtil
 		}
 		catch (IOException e)
 		{
-			log.error("[StreamUtil] {streamCopy} IO Exception: " + e.getMessage(), e);
+			log.error("[StreamUtil] {streamCopy} IO Exception: {}", e.getMessage(), e);
 
 			monitor.failure();
 			throw new IOError(e);

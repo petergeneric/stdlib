@@ -173,12 +173,12 @@ public class TransactionHelper
 				for (File file : files)
 				{
 					if (log.isTraceEnabled())
-						log.trace("Delete file on transaction rollback: " + file);
+						log.trace("Delete file on transaction rollback: {}", file);
 
 					final boolean success = FileUtils.deleteQuietly(file);
 
 					if (!success)
-						log.warn("Failed to delete file on transaction rollback: " + file);
+						log.warn("Failed to delete file on transaction rollback: {}", file);
 				}
 			}
 		});

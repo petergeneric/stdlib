@@ -23,7 +23,7 @@ class GuiceInitThreadWorker implements Runnable
 		}
 		catch (Exception e)
 		{
-			log.error(dispatcher.getWebappPath() + " - eager startup failure; will try again on first call", e);
+			log.error("{} - eager startup failure; will try again on first call", dispatcher.getWebappPath(), e);
 		}
 	}
 }

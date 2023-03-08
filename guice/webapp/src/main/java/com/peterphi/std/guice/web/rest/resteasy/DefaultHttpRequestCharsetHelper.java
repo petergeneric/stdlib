@@ -44,7 +44,7 @@ class DefaultHttpRequestCharsetHelper
 		else
 		{
 			if (log.isTraceEnabled())
-				log.trace("Request already has character encoding: " + request.getCharacterEncoding());
+				log.trace("Request already has character encoding: {}", request.getCharacterEncoding());
 		}
 	}
 }

@@ -109,7 +109,7 @@ class TestEachUtils
 				{
 					t = e;
 					// Failed but we can try the next collection if there is one
-					log.trace("Error fetching " + key + " binding", e);
+					log.trace("Error fetching {} binding", key, e);
 				}
 			}
 

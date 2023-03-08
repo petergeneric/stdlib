@@ -41,7 +41,7 @@ final class InvocationRetryable implements Retryable<Object>
 		try
 		{
 			if (log.isTraceEnabled())
-				log.trace("Invoking " + this.toString() + " for attempt #" + attempt);
+				log.trace("Invoking {} for attempt #{}", this.toString(), attempt);
 
 			return invocation.proceed();
 		}

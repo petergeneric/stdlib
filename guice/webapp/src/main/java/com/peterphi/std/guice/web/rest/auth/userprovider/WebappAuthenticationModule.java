@@ -13,7 +13,7 @@ import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.MDC;
+import org.slf4j.MDC;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;

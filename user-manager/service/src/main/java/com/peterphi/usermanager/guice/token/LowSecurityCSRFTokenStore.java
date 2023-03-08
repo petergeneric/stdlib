@@ -42,11 +42,11 @@ public class LowSecurityCSRFTokenStore
 			if (expected.equals(actual))
 				return; // Tokens match
 			else
-				log.warn("Token validate fail use='" + use + "'. Got '" + actual + "': mismatch");
+				log.warn("Token validate fail use='{}'. Got '{}': mismatch", use, actual);
 		}
 		else
 		{
-			log.warn("Token validate fail use='" + use + "'. Got '" + actual + "': none associated with session");
+			log.warn("Token validate fail use='{}'. Got '{}': none associated with session", use, actual);
 		}
 
 		// Fallback - token must have failed to validate (or not been a known use)

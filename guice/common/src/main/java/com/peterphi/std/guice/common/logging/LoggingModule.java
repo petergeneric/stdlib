@@ -143,7 +143,7 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 					}
 					else
 					{
-						log.warn("Invalid logback configuration file provided, using defaults. Requested config was: " +
+						log.warn("Invalid logback configuration file provided, using defaults. Requested config was: {}",
 						         logbackConfig);
 
 						return null;
@@ -153,7 +153,7 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 		}
 		catch (Exception e)
 		{
-			log.error("Error initialising logback: " + e.getMessage(), e);
+			log.error("Error initialising logback: {}", e.getMessage(), e);
 
 			return null;
 		}
@@ -226,7 +226,7 @@ public class LoggingModule extends AbstractModule implements GuiceConfigChangeOb
 		}
 		else if (log4jProperties != null)
 		{
-			log.debug("Loading log4j configuration from " + log4jProperties);
+			log.debug("Loading log4j configuration from {}", log4jProperties);
 
 			if (log4jProperties.equals("embedded"))
 			{

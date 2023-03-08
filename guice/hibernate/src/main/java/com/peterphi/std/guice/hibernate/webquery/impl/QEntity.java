@@ -224,9 +224,8 @@ public class QEntity
 
 				if (hasEagerFetch && fetchType == FetchType.EAGER)
 					log.warn(
-							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: " +
-							clazz +
-							" " +
+							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: {} {}",
+							clazz,
 							member.toString());
 
 				return (hasEagerFetch || fetchType == FetchType.EAGER);
@@ -356,11 +355,9 @@ public class QEntity
 						nonEntityRelations.put(name, attribute);
 
 						if (log.isDebugEnabled())
-							log.debug("Ignoring BASIC ElementCollection " +
-							          plural.getCollectionType() +
-							          " of " +
-							          plural.getElementType().getJavaType() +
-							          " " +
+							log.debug("Ignoring BASIC ElementCollection {} of {} {}",
+							          plural.getCollectionType(),
+							          plural.getElementType().getJavaType(),
 							          plural.getName());
 					}
 					else
@@ -395,15 +392,11 @@ public class QEntity
 				nonEntityRelations.put(name, attribute);
 
 				if (log.isDebugEnabled())
-					log.debug("Unknown Collection type: " +
-					          attribute.getPersistentAttributeType() +
-					          " " +
-					          attribute +
-					          " with name " +
-					          name +
-					          " within " +
-					          clazz +
-					          " - ignoring");
+					log.debug("Unknown Collection type: {} {} with name {} within {} - ignoring",
+					          attribute.getPersistentAttributeType(),
+					          attribute,
+					          name,
+					          clazz);
 			}
 
 			if (relation != null)

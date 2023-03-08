@@ -42,7 +42,7 @@ public class CarbonSocketAPI
 			// Write the request
 			{
 				if (log.isTraceEnabled())
-					log.trace("Writing request: " + xml);
+					log.trace("Writing request: {}", xml);
 
 				writeMessageWithData(xml, os);
 				os.flush(); // make sure we flush the stream
@@ -59,7 +59,7 @@ public class CarbonSocketAPI
 				response = writer.toString();
 
 				if (log.isTraceEnabled())
-					log.trace("Response: " + response);
+					log.trace("Response: {}", response);
 			}
 
 			// Parse the response

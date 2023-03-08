@@ -223,7 +223,7 @@ public class LoginUIServiceImpl implements LoginUIService
 		}
 		catch (Throwable e)
 		{
-			log.error("Password Reset attempt encountered error: " + e.getMessage(), e);
+			log.error("Password Reset attempt encountered error: {}", e.getMessage(), e);
 
 			TemplateCall call = templater.template("reset_password");
 

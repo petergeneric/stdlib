@@ -36,15 +36,11 @@ public class ImpersonationService
 		final UserLogin currentUser = userProvider.get();
 		final UserEntity newUser = authenticationService.getById(userId);
 
-		log.info("Admin user " +
-		         currentUser.getId() +
-		         " (" +
-		         currentUser.getEmail() +
-		         ") is changing their session to impersonate user " +
-		         newUser.getId() +
-		         " (" +
-		         newUser.getEmail() +
-		         ")");
+		log.info("Admin user {} ({}) is changing their session to impersonate user {} ({})",
+		         currentUser.getId(),
+		         currentUser.getEmail(),
+		         newUser.getId(),
+		         newUser.getEmail());
 
 		currentUser.reload(newUser);
 

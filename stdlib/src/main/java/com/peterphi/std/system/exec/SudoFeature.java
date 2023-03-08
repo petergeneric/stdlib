@@ -167,7 +167,7 @@ class SudoFeature
 			}
 			catch (Throwable t)
 			{
-				log.warn("{runasSupportsNoninteractiveMode} Cannot determine support. Exception: " + t.getMessage(), t);
+				log.warn("{runasSupportsNoninteractiveMode} Cannot determine support. Exception: {}", t.getMessage(), t);
 
 				dashNSupported = false;
 				dashNTested = true;
@@ -259,7 +259,7 @@ class SudoFeature
 				dashDashSupported = false;
 				dashDashTested = true;
 
-				log.warn("{runasSupportsArgumentEndToken} Cannot determine support. Error: " + e.getMessage(), e);
+				log.warn("{runasSupportsArgumentEndToken} Cannot determine support. Error: {}", e.getMessage(), e);
 			}
 		}
 

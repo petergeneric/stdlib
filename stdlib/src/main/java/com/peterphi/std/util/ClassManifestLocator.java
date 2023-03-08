@@ -40,7 +40,7 @@ public class ClassManifestLocator
 			URL url = clazz.getResource(classFileName);
 
 			if (log.isTraceEnabled())
-				log.trace("getResource(" + classFileName + ") = " + url);
+				log.trace("getResource({}) = {}", classFileName, url);
 
 			if (url == null)
 			{
@@ -86,7 +86,7 @@ public class ClassManifestLocator
 				}
 				catch (FileNotFoundException e)
 				{
-					log.warn("Could not find: " + manifestURL, e);
+					log.warn("Could not find: {}", manifestURL, e);
 
 					return null;
 				}
@@ -94,7 +94,7 @@ public class ClassManifestLocator
 		}
 		catch (Throwable t)
 		{
-			log.warn("Error acquiring MANIFEST.MF for " + clazz, t);
+			log.warn("Error acquiring MANIFEST.MF for {}", clazz, t);
 
 			return null;
 		}

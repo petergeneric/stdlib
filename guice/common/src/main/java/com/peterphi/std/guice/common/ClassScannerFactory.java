@@ -109,7 +109,7 @@ public class ClassScannerFactory
 					final URL url = urls.nextElement();
 
 					if (log.isTraceEnabled())
-						log.trace("Found source: " + url);
+						log.trace("Found source: {}", url);
 
 					if (url.getProtocol() != null && (url.getProtocol().equals("zip") || url.getProtocol().equals("jar")))
 						archives.add(new FilteredArchive(new JarArchive(classloader, url), new PrefixFilter(pkg)));

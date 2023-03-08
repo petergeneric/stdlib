@@ -220,15 +220,11 @@ public class Timebase
 			else
 			{
 				if (WARN_ON_PRECISION_LOSS)
-					log.warn("Resample operation lost precision: " +
-					         samples +
-					         " from " +
-					         oldRate +
-					         " to " +
-					         this +
-					         " produced " +
-					         resampled +
-					         " which will be rounded to " +
+					log.warn("Resample operation lost precision: {} from {} to {} produced {} which will be rounded to {}",
+					         samples,
+					         oldRate,
+					         this,
+					         resampled,
 					         rounded);
 			}
 		}

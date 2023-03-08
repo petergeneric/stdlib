@@ -3,7 +3,7 @@ package com.peterphi.std.util.tracing;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.log4j.MDC;
+import org.slf4j.MDC;
 
 import java.util.Arrays;
 import java.util.Objects;

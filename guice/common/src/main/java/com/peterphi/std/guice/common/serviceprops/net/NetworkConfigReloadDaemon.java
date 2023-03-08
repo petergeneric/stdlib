@@ -96,7 +96,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	{
 		try
 		{
-			log.trace("Load config data from " + config.path + " into " + config);
+			log.trace("Load config data from {} into {}", config.path, config);
 			final ConfigPropertyData read = configService.read(config.path, configInstanceId, config.getLastRevision());
 
 			// Abort if the server returns no config - we have the latest revision
@@ -112,7 +112,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 		}
 		catch (Throwable t)
 		{
-			log.warn("Error loading config from path " + config.path, t);
+			log.warn("Error loading config from path {}", config.path, t);
 		}
 	}
 }

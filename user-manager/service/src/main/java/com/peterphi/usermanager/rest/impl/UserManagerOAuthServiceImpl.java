@@ -593,13 +593,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			if (!StringUtils.equals(service.getId(), clientId))
 			{
-				log.warn("Service " +
-				         clientId +
-				         " tried to swap token in context " +
-				         session.getContext().getId() +
-				         " for user info but token was generated for " +
-				         session.getContext().getService().getId() +
-				         " instead! User may be under attack.");
+				log.warn(
+						"Service {} tried to swap token in context {} for user info but token was generated for {} instead! User may be under attack.",
+						clientId,
+						session.getContext().getId(),
+						session.getContext().getService().getId());
 
 				throw new IllegalArgumentException("This token was not generated for client " + clientId + "!");
 			}

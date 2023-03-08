@@ -46,11 +46,9 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			final RetryManager mgr = buildRetryManager(options);
 
 			if (log.isTraceEnabled())
-				log.trace("Attempting retryable invoke of " +
-				          invocation.getMethod().toGenericString() +
-				          " on " +
-				          invocation.getThis() +
-				          " with " +
+				log.trace("Attempting retryable invoke of {} on {} with {}",
+				          invocation.getMethod().toGenericString(),
+				          invocation.getThis(),
 				          Arrays.asList(invocation.getArguments()));
 
 			return mgr.run(new InvocationRetryable(invocation,
@@ -64,13 +62,11 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			totalFailures.mark();
 
 			if (log.isTraceEnabled())
-				log.trace("Retrying invoke of " +
-				          invocation.getMethod().toGenericString() +
-				          " on " +
-				          invocation.getThis() +
-				          " with " +
-				          Arrays.asList(invocation.getArguments()) +
-				          " failed.", t);
+				log.trace("Retrying invoke of {} on {} with {} failed.",
+				          invocation.getMethod().toGenericString(),
+				          invocation.getThis(),
+				          Arrays.asList(invocation.getArguments()),
+				          t);
 
 			throw t;
 		}

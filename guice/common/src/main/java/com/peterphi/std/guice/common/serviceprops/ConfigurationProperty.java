@@ -139,13 +139,7 @@ public class ConfigurationProperty
 
 	public void set(final String value)
 	{
-		log.info("Attempting to change config property " +
-		         name +
-		         " from current \"" +
-		         configuration.get(name) +
-		         "\" to \"" +
-		         value +
-		         "\".");
+		log.info("Attempting to change config property {} from current \"{}\" to \"{}\".", name, configuration.get(name), value);
 		// Validate the new value passes all the binding constraints
 		validate(value);
 
@@ -154,7 +148,7 @@ public class ConfigurationProperty
 
 		if (isReconfigurable())
 		{
-			log.info("All binding sites for property " + name + " are reconfigurable; reinjecting...");
+			log.info("All binding sites for property {} are reconfigurable; reinjecting...", name);
 
 			// Re-inject all the members
 			for (ConfigurationPropertyBindingSite binding : bindings)
@@ -162,9 +156,8 @@ public class ConfigurationProperty
 		}
 		else
 		{
-			log.info("Not all binding sites for property " +
-			         name +
-			         " are reconfigurable. Restart will be required to apply this change.");
+			log.info("Not all binding sites for property {} are reconfigurable. Restart will be required to apply this change.",
+			         name);
 		}
 	}
 

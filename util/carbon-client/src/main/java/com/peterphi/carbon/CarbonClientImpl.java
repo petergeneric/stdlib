@@ -81,13 +81,13 @@ public class CarbonClientImpl implements CarbonClient
 			}
 			else
 			{
-				log.warn("Carbon " + getEndpoint() + " failed health check with no video profiles");
+				log.warn("Carbon {} failed health check with no video profiles", getEndpoint());
 				return false;
 			}
 		}
 		catch (CarbonException e)
 		{
-			log.warn("Carbon " + getEndpoint() + " failed health check with exception", e);
+			log.warn("Carbon {} failed health check with exception", getEndpoint(), e);
 			return false;
 		}
 	}

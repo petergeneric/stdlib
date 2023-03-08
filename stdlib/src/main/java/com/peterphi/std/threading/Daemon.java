@@ -77,7 +77,7 @@ public abstract class Daemon implements Runnable
 	{
 		if (!running)
 		{
-			log.info("[Daemon] {startThread} Starting thread " + name);
+			log.info("[Daemon] {startThread} Starting thread {}", name);
 			this.running = true;
 			thisThread = new Thread(this, name);
 			thisThread.setDaemon(shouldStartAsDaemon()); // Set whether we're a daemon thread (false by default)
@@ -129,7 +129,7 @@ public abstract class Daemon implements Runnable
 		if (isRunning())
 		{
 			if (log.isInfoEnabled())
-				log.info("[Daemon] {stopThread} Requesting termination of thread " + thisThread.getName());
+				log.info("[Daemon] {stopThread} Requesting termination of thread {}", thisThread.getName());
 
 			this.running = false;
 

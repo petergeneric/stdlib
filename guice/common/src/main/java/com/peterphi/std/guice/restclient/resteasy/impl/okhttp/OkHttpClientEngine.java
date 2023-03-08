@@ -116,7 +116,7 @@ public class OkHttpClientEngine implements ClientHttpEngine
 		{
 			if (log.isTraceEnabled())
 			{
-				log.trace("OkHttp Request completed in: " + (System.currentTimeMillis() - start) + " ms");
+				log.trace("OkHttp Request completed in: {} ms", System.currentTimeMillis() - start);
 			}
 		}
 	}

@@ -707,7 +707,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(JAXBContext context)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for context " + context);
+			log.trace("Create serialiser for context {}", context);
 
 		return new JAXBSerialiser(context);
 	}
@@ -726,7 +726,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + Arrays.asList(classes));
+			log.trace("Create serialiser for {}", Arrays.asList(classes));
 
 		return new JAXBSerialiser(classes);
 	}
@@ -745,7 +745,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + contextPath);
+			log.trace("Create serialiser for {}", contextPath);
 
 		return new JAXBSerialiser(contextPath);
 	}
@@ -761,7 +761,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + contextPath);
+			log.trace("Create moxy serialiser for {}", contextPath);
 
 		try
 		{
@@ -786,7 +786,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + Arrays.asList(classes));
+			log.trace("Create moxy serialiser for {}", Arrays.asList(classes));
 
 		try
 		{

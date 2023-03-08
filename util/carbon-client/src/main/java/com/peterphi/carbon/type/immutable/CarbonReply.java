@@ -78,7 +78,7 @@ public class CarbonReply extends XMLWrapper
 				if (job.getAttribute("GUID") != null)
 					guids.add(job.getAttribute("GUID").getValue());
 				else
-					log.warn("Job without GUID attribute: " + job);
+					log.warn("Job without GUID attribute: {}", job);
 			}
 
 			return guids;

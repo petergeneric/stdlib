@@ -26,7 +26,7 @@ import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.apache.log4j.MDC;
+import org.slf4j.MDC;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.spi.Registry;
@@ -270,7 +270,7 @@ class GuicedResteasy implements GuiceApplication
 					ignoredAborts.mark();
 
 					if (log.isTraceEnabled())
-						log.trace("Client aborted during request. Ignoring. Detail: " + ctx.getRequestInfo(), t);
+						log.trace("Client aborted during request. Ignoring. Detail: {}", ctx.getRequestInfo(), t);
 
 					return;
 				}
@@ -281,7 +281,7 @@ class GuicedResteasy implements GuiceApplication
 			}
 		}
 
-		log.warn("Failure during " + ctx.getRequestInfo(), t);
+		log.warn("Failure during {}", ctx.getRequestInfo(), t);
 
 		// If the response is already committed we can't render the exception elegantly
 		if (response.isCommitted())
@@ -357,14 +357,14 @@ class GuicedResteasy implements GuiceApplication
 		// Register the REST provider classes
 		for (Class<?> providerClass : ResteasyProviderRegistry.getClasses())
 		{
-			log.debug("Registering REST providers: " + providerClass.getName());
+			log.debug("Registering REST providers: {}", providerClass.getName());
 			providerFactory.registerProvider(providerClass);
 		}
 
 		// Register the REST provider singletons
 		for (Object provider : ResteasyProviderRegistry.getSingletons())
 		{
-			log.debug("Registering REST provider singleton: " + provider);
+			log.debug("Registering REST provider singleton: {}", provider);
 			providerFactory.registerProviderInstance(provider);
 		}
 
@@ -391,7 +391,7 @@ class GuicedResteasy implements GuiceApplication
 		// Register the REST resources
 		for (RestResource resource : RestResourceRegistry.getResources())
 		{
-			log.debug("Registering REST resource: " + resource.getResourceClass().getName());
+			log.debug("Registering REST resource: {}", resource.getResourceClass().getName());
 
 			resteasyRegistry.addResourceFactory(new ResteasyGuiceResource(injector, resource.getResourceClass()));
 		}

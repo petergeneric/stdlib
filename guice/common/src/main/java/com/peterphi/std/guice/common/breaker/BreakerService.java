@@ -133,7 +133,7 @@ public class BreakerService
 
 		lastChanged.put(name, new TripRecord(note, value));
 
-		log.info("Breaker '" + name + "' changing: " + currentState + "->" + value + ". Note: " + StringUtils.trimToEmpty(note));
+		log.info("Breaker '{}' changing: {}->{}. Note: {}", name, currentState, value, StringUtils.trimToEmpty(note));
 
 		// Re-evaluate all isolator groups
 		for (BreakerGroupImpl group : groups)
@@ -197,7 +197,7 @@ public class BreakerService
 				}
 				catch (Throwable t)
 				{
-					log.warn("Error notifying " + onChange + " of breaker change", t);
+					log.warn("Error notifying {} of breaker change", onChange, t);
 				}
 			}
 		}

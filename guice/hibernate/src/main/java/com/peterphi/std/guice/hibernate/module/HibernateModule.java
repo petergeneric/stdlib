@@ -97,14 +97,14 @@ public abstract class HibernateModule extends AbstractModule
 			final Iterator<HibernateConfigurationValidator> it = services.iterator();
 
 			if (log.isTraceEnabled())
-				log.trace("Evaluate HibernateConfigurationValidators. has at least one=" + it.hasNext());
+				log.trace("Evaluate HibernateConfigurationValidators. has at least one={}", it.hasNext());
 
 			while (it.hasNext())
 			{
 				final HibernateConfigurationValidator validator = it.next();
 
 				if (log.isTraceEnabled())
-					log.trace("Validating hibernate configuration with " + validator);
+					log.trace("Validating hibernate configuration with {}", validator);
 
 				// Have the validator check the hibernate/database configuration
 				validator.validate(config, properties, guiceConfig);

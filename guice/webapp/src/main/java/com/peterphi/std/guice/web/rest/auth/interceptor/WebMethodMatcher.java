@@ -58,11 +58,10 @@ public class WebMethodMatcher extends AbstractMatcher<Method>
 					{
 						if (ifaceMethod.getName().equals(method.getName()))
 						{
-							log.warn("Applying default AuthConstraint to unannotated Web Method: " +
-							         method.getDeclaringClass().getSimpleName() +
-							         "::" +
-							         method.getName() +
-							         ". This may enforce additional security constraints you did not intend!");
+							log.warn(
+									"Applying default AuthConstraint to unannotated Web Method: {}::{}. This may enforce additional security constraints you did not intend!",
+									method.getDeclaringClass().getSimpleName(),
+									method.getName());
 
 							return true;
 						}

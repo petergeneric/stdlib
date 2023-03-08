@@ -190,7 +190,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null)
 		{
-			log.info("Allowed login by session reconnect key for user: " + account.getEmail());
+			log.info("Allowed login by session reconnect key for user: {}", account.getEmail());
 
 			account.setLastLogin(new DateTime());
 			update(account);
@@ -206,7 +206,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		// N.B. for Access Key logins we don't update the last login timestamp
 		if (account != null)
-			log.debug("Allowed login by Access Key for user: " + account.getEmail());
+			log.debug("Allowed login by Access Key for user: {}", account.getEmail());
 
 		return account;
 
