@@ -1,5 +1,6 @@
 package com.peterphi.std.util.tracing;
 
+import com.peterphi.std.types.SimpleId;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,15 +18,15 @@ public final class Tracing
 
 	private static final ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
 
-	public static boolean DEFAULT_VERBOSE = false;
-
-	public String id;
+	public final String id;
 	public int ops = 0;
-	public boolean verbose = DEFAULT_VERBOSE;
+	public final boolean verbose;
 
 
-	private Tracing()
+	private Tracing(final String id, final boolean verbose)
 	{
+		this.id = id;
+		this.verbose = verbose;
 	}
 
 
@@ -35,17 +36,17 @@ public final class Tracing
 	}
 
 
-	public static Tracing get()
+	public static Tracing getOrCreate(final String newTraceId, final boolean verbose)
 	{
-		Tracing tracing = peek();
+		Tracing obj = peek();
 
-		if (tracing == null)
+		if (obj == null)
 		{
-			tracing = new Tracing();
-			THREAD_LOCAL.set(tracing);
+			obj = new Tracing(newTraceId, verbose || log.isTraceEnabled());
+			THREAD_LOCAL.set(obj);
 		}
 
-		return tracing;
+		return obj;
 	}
 
 
@@ -80,21 +81,17 @@ public final class Tracing
 
 	public static void start(final String id)
 	{
-		start(id, DEFAULT_VERBOSE);
+		start(id, false);
 	}
 
 
 	public static void start(final String id, final boolean verbose)
 	{
-		final Tracing tracing = get();
+		final Tracing tracing = getOrCreate(id, verbose);
 
 		// N.B. do not overwrite existing tracing, but do log it
-		if (tracing.id == null)
+		if (tracing.id.equals(id))
 		{
-			tracing.id = id;
-			tracing.verbose = verbose || log.isTraceEnabled();
-			tracing.ops = 0;
-
 			if (id != null)
 				MDC.put(TracingConstants.MDC_TRACE_ID, id);
 
@@ -109,6 +106,12 @@ public final class Tracing
 	}
 
 
+	private String createNewOperationId()
+	{
+		return this.id + "/" + (++this.ops);
+	}
+
+
 	/**
 	 * Allocate an operation ID within a tracing block, returning null if we are not within a tracing block
 	 *
@@ -120,22 +123,22 @@ public final class Tracing
 
 		if (tracing != null)
 		{
-			final String operationId = tracing.id + "/" + (++tracing.ops);
-
-			return operationId;
+			return tracing.createNewOperationId();
 		}
-		else {
+		else
+		{
 			return null;
 		}
 	}
 
-	public static String newOperationId(final Object...msg)
+
+	public static String newOperationId(final Object... msg)
 	{
 		final Tracing tracing = peek();
 
 		if (tracing != null)
 		{
-			final String operationId = tracing.id + "/" + (++tracing.ops);
+			final String operationId = tracing.createNewOperationId();
 
 			if (tracing.verbose)
 				logMessage(operationId, 0, msg);
@@ -152,30 +155,37 @@ public final class Tracing
 	/**
 	 * Wrap a function call in a trace block; designed for use in a parallel stream
 	 *
-	 * @param <T>
-	 * 		the type of the input to the function
-	 * @param <R>
-	 * 		the type of the result of the function
-	 *
+	 * @param <T> the type of the input to the function
+	 * @param <R> the type of the result of the function
 	 * @return
 	 */
 	public static <T, R> Function<T, R> wrap(final Function<T, R> function)
 	{
-		final Tracing tracing = Tracing.get();
+		final Tracing tracing = Tracing.peek();
 
-		final String traceId = tracing.newOperationId();
-		return wrap(traceId, tracing.isVerbose(), function);
+		final String traceId;
+		final boolean verbose;
+		if (tracing != null)
+		{
+			traceId = tracing.createNewOperationId();
+			verbose = tracing.verbose;
+		}
+		else
+		{
+			// Fallback
+			traceId = "wrap/" + SimpleId.alphanumeric(10);
+			verbose = false;
+		}
+
+		return wrap(traceId, verbose, function);
 	}
 
 
 	/**
 	 * Wrap a function call in a trace block; designed for use in a parallel stream
 	 *
-	 * @param <T>
-	 * 		the type of the input to the function
-	 * @param <R>
-	 * 		the type of the result of the function
-	 *
+	 * @param <T> the type of the input to the function
+	 * @param <R> the type of the result of the function
 	 * @return
 	 */
 	public static <T, R> Function<T, R> wrap(final String id, final boolean verbose, final Function<T, R> function)
@@ -197,88 +207,73 @@ public final class Tracing
 
 	public static void log(final String msg)
 	{
-		final Tracing tracing = peek();
+		final Tracing tracing = getIfVerbose();
 
-		if (tracing != null && tracing.verbose)
-		{
+		if (tracing != null)
 			logMessage(tracing.id, ++tracing.ops, msg);
-		}
 	}
 
 
 	public static void log(final String msg, final Supplier<String> param1)
 	{
-		final Tracing tracing = peek();
+		final Tracing tracing = getIfVerbose();
 
-		if (tracing != null && tracing.verbose)
-		{
+		if (tracing != null)
 			logMessage(tracing.id, ++tracing.ops, msg, param1);
-		}
 	}
+
 
 	public static void log(final String msg, final Object param1)
 	{
-		final Tracing tracing = peek();
+		final Tracing tracing = getIfVerbose();
 
-		if (tracing != null && tracing.verbose)
-		{
+		if (tracing != null)
 			logMessage(tracing.id, ++tracing.ops, msg, param1);
-		}
 	}
+
 
 	public static void log(final String msg, final Object param1, final Object param2)
 	{
-		final Tracing tracing = peek();
+		final Tracing tracing = getIfVerbose();
 
-		if (tracing != null && tracing.verbose)
-		{
+		if (tracing != null)
 			logMessage(tracing.id, ++tracing.ops, param1, param2);
-		}
 	}
+
 
 	/**
 	 * If verbose tracing is enabled, log an operation
 	 *
 	 * @param detail an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
-	 *
 	 * @return an operation identifier (if we're within a tracing block)
 	 */
 	public static void log(final Object... detail)
 	{
-		final Tracing tracing = peek();
+		final Tracing tracing = getIfVerbose();
 
-		if (tracing != null && tracing.verbose)
-		{
+		if (tracing != null)
 			logMessage(tracing.id, ++tracing.ops, detail);
-		}
 	}
 
 
 	/**
 	 * Log an additional message about an ongoing operation
 	 *
-	 * @param operationId
-	 * 		An operation id returned by {@link #newOperationId()}
-	 * @param name
+	 * @param operationId An operation id returned by {@link #newOperationId()}
+	 * @param param1
 	 * @param detail
 	 */
-	public static void logOngoing(final String operationId, final String name, final Object... detail)
+	public static void logOngoing(final String operationId, final Object... detail)
 	{
-		if (operationId != null && isVerbose())
-		{
-			if (name != null)
-				logMessage(operationId, 0, name, detail);
-			else
-				logMessage(operationId, 0, detail);
-		}
+		if (operationId != null && getIfVerbose() != null)
+			logMessage(operationId, 0, detail);
 	}
 
 
 	/**
 	 * @param traceParentId the owning trace id
-	 * @param opId the operation id within that trace id
-	 * @param detail
-	 * 		an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
+	 * @param opId          the operation id within that trace id
+	 * @param detail        an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
 	 */
 	private static void logMessage(final String traceParentId, final int opId, final Object... detail)
 	{
@@ -329,6 +324,7 @@ public final class Tracing
 			return null;
 	}
 
+
 	public static boolean isVerbose()
 	{
 		final Tracing tracing = peek();
@@ -337,5 +333,16 @@ public final class Tracing
 			return tracing.verbose;
 		else
 			return false;
+	}
+
+
+	private static Tracing getIfVerbose()
+	{
+		final Tracing tracing = peek();
+
+		if (tracing != null && tracing.verbose)
+			return tracing;
+		else
+			return null;
 	}
 }
