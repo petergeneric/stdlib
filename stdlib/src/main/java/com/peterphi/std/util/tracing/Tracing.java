@@ -15,7 +15,7 @@ public final class Tracing
 {
 	private static final Logger log = LoggerFactory.getLogger(Tracing.class);
 
-	private static ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
+	private static final ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
 
 	public static boolean DEFAULT_VERBOSE = false;
 
@@ -137,8 +137,8 @@ public final class Tracing
 		{
 			final String operationId = tracing.id + "/" + (++tracing.ops);
 
-			if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
-				logMessage(operationId, msg);
+			if (tracing.verbose)
+				logMessage(operationId, 0, msg);
 
 			return operationId;
 		}
@@ -199,10 +199,9 @@ public final class Tracing
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		if (tracing != null && tracing.verbose)
 		{
-			final String eventId = tracing.id + "/" + (++tracing.ops);
-			logMessage(eventId, msg);
+			logMessage(tracing.id, ++tracing.ops, msg);
 		}
 	}
 
@@ -211,11 +210,9 @@ public final class Tracing
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		if (tracing != null && tracing.verbose)
 		{
-			final String eventId = tracing.id + "/" + (++tracing.ops);
-
-			logMessage(eventId, msg, param1);
+			logMessage(tracing.id, ++tracing.ops, msg, param1);
 		}
 	}
 
@@ -223,11 +220,9 @@ public final class Tracing
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		if (tracing != null && tracing.verbose)
 		{
-			final String eventId = tracing.id + "/" + (++tracing.ops);
-
-			logMessage(eventId, msg, param1);
+			logMessage(tracing.id, ++tracing.ops, msg, param1);
 		}
 	}
 
@@ -235,11 +230,9 @@ public final class Tracing
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		if (tracing != null && tracing.verbose)
 		{
-			final String eventId = tracing.id + "/" + (++tracing.ops);
-
-			logMessage(eventId, msg, param1, param2);
+			logMessage(tracing.id, ++tracing.ops, param1, param2);
 		}
 	}
 
@@ -254,10 +247,9 @@ public final class Tracing
 	{
 		final Tracing tracing = peek();
 
-		if (tracing != null && (tracing.verbose || log.isTraceEnabled()))
+		if (tracing != null && tracing.verbose)
 		{
-			final String eventId = tracing.id + "/" + (++tracing.ops);
-			logMessage(eventId, detail);
+			logMessage(tracing.id, ++tracing.ops, detail);
 		}
 	}
 
@@ -275,47 +267,55 @@ public final class Tracing
 		if (operationId != null && isVerbose())
 		{
 			if (name != null)
-				logMessage(operationId, name, detail);
+				logMessage(operationId, 0, name, detail);
 			else
-				logMessage(operationId, detail);
+				logMessage(operationId, 0, detail);
 		}
 	}
 
 
 	/**
-	 * @param operationId
-	 * @param name
+	 * @param traceParentId the owning trace id
+	 * @param opId the operation id within that trace id
 	 * @param detail
 	 * 		an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
 	 */
-	private static void logMessage(final String operationId, final Object... detail)
+	private static void logMessage(final String traceParentId, final int opId, final Object... detail)
 	{
-		if (detail == null)
-			return; // nothing to supply
+		if (detail == null || traceParentId == null)
+			return; // not a valid trace
 
-		// Reduce all inputs to string, special-casing Supplier if present
-		final String detailStr = Arrays.stream(detail).map(o -> {
-			try
-			{
-				if (o instanceof Supplier)
+		// Reduce all inputs to space-delimited string
+		final String detailStr;
+		if (detail.length == 1 && detail[0] instanceof String s)
+		{
+			detailStr = s;
+		}
+		else
+		{
+			detailStr = Arrays.stream(detail).map(o -> {
+				try
 				{
-					return Objects.toString(((Supplier) o).get());
+					if (o instanceof String s)
+						return s;
+					else if (o instanceof Supplier s)
+						return Objects.toString(s.get());
+					else if (o instanceof Object[] arr)
+						return Arrays.toString(arr);
+					else
+						return Objects.toString(o);
 				}
-				else if (o instanceof Object[])
+				catch (Throwable t)
 				{
-					return Arrays.toString((Object[])o);
+					return "<err>";
 				}
-				else {
-					return Objects.toString(o);
-				}
-			}
-			catch (Throwable t)
-			{
-				return "<err>";
-			}
-		}).collect(Collectors.joining(" ", "Trace{" + operationId + "} ", ""));
+			}).collect(Collectors.joining(" "));
+		}
 
-		log.warn(detailStr);
+		if (opId != 0)
+			log.warn("Trace[{}/{}] {}", traceParentId, opId, detailStr);
+		else
+			log.warn("Trace[{}] {}", traceParentId, detailStr);
 	}
 
 
@@ -334,7 +334,7 @@ public final class Tracing
 		final Tracing tracing = peek();
 
 		if (tracing != null)
-			return tracing.verbose || log.isTraceEnabled();
+			return tracing.verbose;
 		else
 			return false;
 	}
