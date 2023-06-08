@@ -7,7 +7,6 @@ import com.peterphi.std.guice.common.auth.AuthScope;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
-import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.util.ListUtility;
@@ -44,15 +43,19 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 			      login.getUsername() +", role=" + login.getRoles();
 		}
 
-		final RestException accessDeniedException = new RestException(403,
-		                                                              "You do not have sufficient privileges to access this resource" +
-		                                                              (constraint != null ? ": " + constraint.comment() : "") +
-		                                                              ". Requires one of: " +
-		                                                              scope.getRoles(constraint) +
-		                                                              ". You are: anonymous=" +
-		                                                              isAnonymous +
-		                                                              ", browser=" +
-		                                                              isBrowser + "" + ext);
+		final CredentialsRestException accessDeniedException = new CredentialsRestException(403,
+		                                                                                    "You do not have sufficient privileges to access this resource" +
+		                                                                                    (constraint != null ?
+		                                                                                     ": " + constraint.comment() :
+		                                                                                     "") +
+		                                                                                    ". Requires one of: " +
+		                                                                                    scope.getRoles(constraint) +
+		                                                                                    ". You are: anonymous=" +
+		                                                                                    isAnonymous +
+		                                                                                    ", browser=" +
+		                                                                                    isBrowser +
+		                                                                                    "" +
+		                                                                                    ext);
 
 
 		// If the user is logged in, deny access with a 403
@@ -71,9 +74,9 @@ public class RedirectToOAuthAccessRefuser implements AccessRefuser
 		else if (!isGETRequest())
 		{
 			// Don't redirect requests other than GET (the browser will retry the POST/PUT/DELETE/etc. against the redirect endpoint!
-			throw new RestException(401,
-			                        "You must log in to access this resource! Could not redirect you to the login provider because you were submitting a form, not requesting a page. Please return to the main page of the application and proceed to log in",
-			                        accessDeniedException);
+			throw new CredentialsRestException(401,
+			                                   "You must log in to access this resource! Could not redirect you to the login provider because you were submitting a form, not requesting a page. Please return to the main page of the application and proceed to log in",
+			                                   accessDeniedException);
 		}
 		else
 		{

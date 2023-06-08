@@ -4,8 +4,8 @@ import com.google.common.base.MoreObjects;
 import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
-import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.auth.oauth2.CredentialsRestException;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
@@ -112,17 +112,17 @@ class HttpCallUser implements CurrentUser
 	@Override
 	public AccessRefuser getAccessRefuser()
 	{
-		return (scope, constraint, user) ->
-		{
+		return (scope, constraint, user) -> {
 			if (user.isAnonymous())
-				return new RestException(401,
-				                         "You must log in to access this resource. Required one of roles: " + scope.getRoles(constraint));
+				return new CredentialsRestException(401,
+				                                    "You must log in to access this resource. Required one of roles: " +
+				                                    scope.getRoles(constraint));
 			else
-				return new RestException(403,
-				                         "Access denied for your Servlet user by rule: " +
-				                         ((constraint != null) ?
-				                          constraint.comment() :
-				                          "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
+				return new CredentialsRestException(403,
+				                                    "Access denied for your Servlet user by rule: " +
+				                                    ((constraint != null) ?
+				                                     constraint.comment() :
+				                                     "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
 		};
 	}
 
