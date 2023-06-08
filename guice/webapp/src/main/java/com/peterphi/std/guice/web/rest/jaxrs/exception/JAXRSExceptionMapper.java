@@ -1,13 +1,15 @@
 package com.peterphi.std.guice.web.rest.jaxrs.exception;
 
 import com.google.inject.Inject;
+import com.google.inject.name.Named;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.auth.oauth2.CredentialsRestException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
 import org.jboss.resteasy.spi.ApplicationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.WebApplicationException;
 import javax.ws.rs.core.Response;
@@ -34,6 +36,9 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 	@Inject
 	private XMLFailureRenderer xmlRenderer;
 
+	@Inject(optional = true)
+	@Named(GuiceProperties.JAXRS_REST_EXCEPTION_CORE_LOGGER_LOGS_TRIMMED_STACKTRACES)
+	private boolean coreLoggerLogsTrimmedTraces = true;
 
 	@Override
 	public Response toResponse(ApplicationException exception)
@@ -87,8 +92,18 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 
 		if (!suppressLog)
 		{
-			// Log the failure
-			log.error("{} {} threw exception:", failure.id, HttpCallContext.get().getRequestInfo(), exception);
+			if (log.isErrorEnabled())
+			{
+				if (coreLoggerLogsTrimmedTraces && failure.exception.stackTrace != null)
+				{
+					// Log the failure
+					log.error("{} {} threw exception:\n{}", failure.id, HttpCallContext.get().getRequestInfo(), new PrerenderedStack(failure));
+				}
+				else {
+					// Fall back on full stack trace
+					log.error("{} {} threw exception:", failure.id, HttpCallContext.get().getRequestInfo(), exception);
+				}
+			}
 		}
 
 		// Give the HTML render an opportunity to run

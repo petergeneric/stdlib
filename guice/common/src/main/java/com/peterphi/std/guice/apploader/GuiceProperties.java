@@ -177,6 +177,10 @@ public class GuiceProperties
 	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
 
+	@Doc("If true, stack traces logged server-side by the default 'threw exception:' fallback logger will log trimmed stack traces from RestFailure structure when available (default true)")
+	public static final String JAXRS_REST_EXCEPTION_CORE_LOGGER_LOGS_TRIMMED_STACKTRACES = "rest.exception.server-side-logs-trimmed-traces";
+
+
 	@Doc("If true, stack traces will be returned in XML mode")
 	public static final String JAXRS_REST_EXCEPTION_STACKTRACE = "rest.exception.stacktrace";
 	@Doc("If true, stack traces will only be returned in XML mode for admin or service users; this is to minimise on wasted bandwidth to clients (or if combined with require-logged-in, only shows stack traces to services/admins)")
