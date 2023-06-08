@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.auth.oauth2.CredentialsRestException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.internal.ClientResponse;
@@ -69,14 +70,14 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 
 		Response response = null;
 
-		boolean doNotLog = false;
+		boolean suppressLog = false;
 		// Try to use the custom renderer (if present)
 		if (renderer != null)
 		{
 			try
 			{
 				response = renderer.render(failure);
-				doNotLog = renderer.shouldSuppressLog(failure);
+				suppressLog = renderer.shouldSuppressLog(failure) || exception instanceof CredentialsRestException;
 			}
 			catch (Exception e)
 			{
@@ -84,7 +85,7 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 			}
 		}
 
-		if (!doNotLog)
+		if (!suppressLog)
 		{
 			// Log the failure
 			log.error("{} {} threw exception:", failure.id, HttpCallContext.get().getRequestInfo(), exception);
