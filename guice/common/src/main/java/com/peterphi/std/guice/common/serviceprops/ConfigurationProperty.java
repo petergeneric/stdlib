@@ -61,7 +61,7 @@ public class ConfigurationProperty
 	public boolean isReconfigurable()
 	{
 		for (ConfigurationPropertyBindingSite binding : bindings)
-			if (!binding.isReconfigurable())
+			if (!binding.isReconfigurable() && !binding.getType().equals(ConfigRef.class))
 				return false;
 
 		return true; // all reconfigurable
@@ -146,7 +146,13 @@ public class ConfigurationProperty
 
 			// Re-inject all the members
 			for (ConfigurationPropertyBindingSite binding : bindings)
-				binding.reinject(registry.getInstances(binding.getOwner()));
+			{
+				// N.B. ConfigRef instances do not need to be reinjected
+				if (!binding.getType().equals(ConfigRef.class))
+				{
+					binding.reinject(registry.getInstances(binding.getOwner()));
+				}
+			}
 		}
 		else
 		{
