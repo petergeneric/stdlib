@@ -117,6 +117,10 @@ public class ConfigurationPropertyBindingSite<T, O>
 
 	public void validate(final String value)
 	{
+		// ConfigRef bindings shouldn't be validated, they are direct portals to config
+		if (getType().equals(ConfigRef.class))
+			return;
+
 		// TODO apply JSR 303 validations
 		try
 		{
