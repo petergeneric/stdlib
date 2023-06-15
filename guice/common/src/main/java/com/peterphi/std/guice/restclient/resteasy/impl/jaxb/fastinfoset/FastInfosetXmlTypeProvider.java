@@ -2,7 +2,6 @@ package com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset;
 
 import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
-import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -21,9 +20,9 @@ import java.lang.reflect.Type;
 public class FastInfosetXmlTypeProvider<T> extends JAXBXmlTypeProvider<T>
 {
 	@Inject
-	public FastInfosetXmlTypeProvider(final JAXBSerialiserFactory factory)
+	public FastInfosetXmlTypeProvider(final JAXBXmlTypeProvider<?> source)
 	{
-		super(factory);
+		super(source);
 	}
 
 

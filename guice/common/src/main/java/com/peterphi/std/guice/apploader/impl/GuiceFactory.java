@@ -20,7 +20,6 @@ import com.peterphi.std.guice.common.shutdown.ShutdownModule;
 import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
-import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
 import com.peterphi.std.io.PropertyFile;
@@ -377,8 +376,8 @@ class GuiceFactory
 		if (configEndpoint != null && !configSkip)
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
-			final JAXBContextResolver jaxb = new JAXBContextResolver(new JAXBSerialiserFactory(useMoxy));
-			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, null, jaxb);
+			final JAXBSerialiserFactory serialiserFactory = new JAXBSerialiserFactory(useMoxy);
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, null, serialiserFactory);
 
 			try
 			{

@@ -11,13 +11,17 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
-import com.peterphi.std.guice.restclient.resteasy.impl.JAXBContextResolver;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
 import com.peterphi.std.guice.serviceregistry.rest.RestResource;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.JAXRSExceptionMapper;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureMarshaller;
 import com.peterphi.std.guice.web.rest.pagewriter.TwitterBootstrapRestFailurePageRenderer;
+import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
 import org.slf4j.Logger;
@@ -62,9 +66,6 @@ class GuicedResteasy implements GuiceApplication
 	private JAXRSExceptionMapper exceptionMapper;
 
 	@Inject
-	private JAXBContextResolver jaxbContextResolver;
-
-	@Inject
 	private Injector injector;
 
 	private Timer httpCalls;
@@ -89,6 +90,10 @@ class GuicedResteasy implements GuiceApplication
 	 */
 	@Inject(optional = true)
 	DefaultHttpRequestCharsetHelper requestCharsetHelper = new DefaultHttpRequestCharsetHelper();
+
+
+	@Inject
+	JAXBSerialiserFactory serialiserFactory;
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -364,8 +369,17 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory.registerProviderInstance(provider);
 		}
 
-		// Register the JAXBContext provider
-		providerFactory.registerProviderInstance(jaxbContextResolver);
+		// Set up JAXB providers
+		{
+			providerFactory.registerProviderInstance(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+			providerFactory.registerProviderInstance(new JAXBXmlRootElementProvider<>(serialiserFactory));
+
+			// Set up providers for XmlType-annotated and JAXBElement entities
+			// These providers will share the same underlying serialiser map
+			final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+			providerFactory.registerProviderInstance(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+			providerFactory.registerProviderInstance(xmlTypeProvider);
+		}
 
 		// Register the exception mapper
 		{

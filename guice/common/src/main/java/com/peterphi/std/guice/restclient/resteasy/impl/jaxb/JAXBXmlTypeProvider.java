@@ -23,22 +23,35 @@ import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.lang.reflect.Type;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Provider
 @Produces({"application/xml", "application/*+xml", "text/xml", "text/*+xml"})
 @Consumes({"application/xml", "application/*+xml", "text/xml", "text/*+xml"})
 public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements MessageBodyWriter<T>
 {
-	private final Map<Class<?>, Adapter> adapters = Collections.synchronizedMap(new HashMap<>());
+	private final ConcurrentHashMap<Class<?>, Adapter> adapters;
 
 
 	@Inject
 	public JAXBXmlTypeProvider(JAXBSerialiserFactory factory)
 	{
 		super(factory);
+
+		this.adapters = new ConcurrentHashMap<>(64);
+	}
+
+
+	/**
+	 * Construct a new JAXBXmlTypeProvider that will share the JAXBSerialiserFactory and Adapter Map of an existing provider
+	 * @param source
+	 */
+	protected JAXBXmlTypeProvider(JAXBXmlTypeProvider source)
+	{
+		super(source.factory);
+
+		this.adapters = source.adapters;
 	}
 
 
@@ -120,7 +133,7 @@ public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements M
 	}
 
 
-	public Adapter createAdapter(final Class<?> clazz)
+	private Adapter createAdapter(final Class<?> clazz)
 	{
 		final Object fac = getObjectFactory(clazz);
 
@@ -173,22 +186,19 @@ public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements M
 	{
 		final Object wrapped = adapter.wrap(obj);
 
-		adapter.serialiser.serialise(wrapped, os);
+		adapter.serialiser().serialise(wrapped, os);
 	}
 
 
-	public static class Adapter
+	protected static final class Adapter
 	{
-		public final JAXBSerialiser serialiser;
-		public final Class<?> clazz;
-		public final Object objectFactory;
-		public final Method createElement;
+		private final JAXBSerialiser serialiser;
+		private final Class<?> clazz;
+		private final Object objectFactory;
+		private final Method createElement;
 
 
-		public Adapter(final JAXBSerialiser serialiser,
-		               final Class<?> clazz,
-		               final Object objectFactory,
-		               final Method createElement)
+		protected Adapter(JAXBSerialiser serialiser, Class<?> clazz, Object objectFactory, Method createElement)
 		{
 			this.serialiser = serialiser;
 			this.clazz = clazz;
@@ -196,11 +206,6 @@ public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements M
 			this.createElement = createElement;
 		}
 
-
-		public JAXBSerialiser serialiser()
-		{
-			return serialiser;
-		}
 
 		public JAXBElement<?> wrap(final Object obj)
 		{
@@ -215,6 +220,71 @@ public class JAXBXmlTypeProvider<T> extends AbstractJAXBProvider<T> implements M
 			{
 				throw new RuntimeException("Unable to serialise " + clazz + " to XML: ObjectFactory.create method failed", e);
 			}
+		}
+
+
+		public JAXBSerialiser serialiser()
+		{
+			return serialiser;
+		}
+
+
+		public Class<?> clazz()
+		{
+			return clazz;
+		}
+
+
+		public Object objectFactory()
+		{
+			return objectFactory;
+		}
+
+
+		public Method createElement()
+		{
+			return createElement;
+		}
+
+
+		@Override
+		public boolean equals(Object obj)
+		{
+			if (obj == this)
+				return true;
+			if (obj == null || obj.getClass() != this.getClass())
+				return false;
+			var that = (Adapter) obj;
+			return Objects.equals(this.serialiser, that.serialiser) &&
+			       Objects.equals(this.clazz, that.clazz) &&
+			       Objects.equals(this.objectFactory, that.objectFactory) &&
+			       Objects.equals(this.createElement, that.createElement);
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			return Objects.hash(serialiser, clazz, objectFactory, createElement);
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return "Adapter[" +
+			       "serialiser=" +
+			       serialiser +
+			       ", " +
+			       "clazz=" +
+			       clazz +
+			       ", " +
+			       "objectFactory=" +
+			       objectFactory +
+			       ", " +
+			       "createElement=" +
+			       createElement +
+			       ']';
 		}
 	}
 }

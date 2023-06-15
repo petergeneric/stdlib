@@ -57,24 +57,7 @@
 		<dependency>
 			<groupId>com.sun.xml.fastinfoset</groupId>
 			<artifactId>FastInfoset</artifactId>
-			<version>2.1.0</version>
-		</dependency>
-
-		<!-- TODO remove me -->
-		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jaxb-provider</artifactId>
-			<version>${resteasy.version}</version>
-			<exclusions>
-				<exclusion>
-					<groupId>com.sun.xml.bind</groupId>
-					<artifactId>jaxb-impl</artifactId>
-				</exclusion>
-				<exclusion>
-					<groupId>com.sun.xml.bind</groupId>
-					<artifactId>jaxb-core</artifactId>
-				</exclusion>
-			</exclusions>
+			<version>1.2.18</version>
 		</dependency>
 
 		<!-- TODO remove me  and replace with jackson2 -->

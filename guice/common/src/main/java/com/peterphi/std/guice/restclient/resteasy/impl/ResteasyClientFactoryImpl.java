@@ -7,7 +7,12 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.http.auth.AuthSchemeProvider;
 import org.apache.http.auth.AuthScope;
 import org.apache.http.auth.Credentials;
@@ -86,14 +91,13 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
-	                                 final JAXBContextResolver jaxbContextResolver)
+	                                 final JAXBSerialiserFactory serialiserFactory)
 	{
 		// Make sure that if we're called multiple times (e.g. because of a guice CreationException failing startup after us) we start fresh
 		if (ResteasyProviderFactory.peekInstance() != null)
 			ResteasyProviderFactory.clearInstanceIfEqual(ResteasyProviderFactory.peekInstance());
 
 		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
-		resteasyProviderFactory.registerProviderInstance(jaxbContextResolver);
 
 		// Register the joda param converters
 		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
@@ -102,11 +106,25 @@ public class ResteasyClientFactoryImpl implements StoppableService
 		if (remoteExceptionClientResponseFilter != null)
 			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
 
-		// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
-		FastInfosetPreferringClientRequestFilter.register();
 
 		if (tracingRequestFilter != null)
 			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
+
+		// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
+		FastInfosetPreferringClientRequestFilter.register();
+
+		// Set up JAXB providers
+		{
+			resteasyProviderFactory.register(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+			resteasyProviderFactory.register(new JAXBXmlRootElementProvider<>(serialiserFactory));
+
+			// Set up providers for XmlType-annotated and JAXBElement entities
+			// These providers will share the same underlying serialiser map
+			final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+			resteasyProviderFactory.register(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+			resteasyProviderFactory.register(xmlTypeProvider);
+		}
+
 
 		// Set up the Connection Manager
 		this.connectionManager = new PoolingHttpClientConnectionManager();
