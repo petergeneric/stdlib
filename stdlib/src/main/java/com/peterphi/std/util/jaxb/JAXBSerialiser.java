@@ -15,6 +15,7 @@ import javax.xml.bind.PropertyException;
 import javax.xml.bind.Unmarshaller;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
+import javax.xml.transform.Source;
 import javax.xml.validation.Schema;
 import java.io.File;
 import java.io.InputStream;
@@ -320,6 +321,26 @@ public class JAXBSerialiser
 	 *
 	 * @return
 	 */
+	public <T> T deserialise(final Class<T> clazz, final Source source)
+	{
+		final Object obj = deserialise(source);
+
+		if (clazz.isInstance(obj))
+			return clazz.cast(obj);
+		else
+			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
+	}
+
+
+
+	/**
+	 * Deserialise an input and cast to a particular type
+	 *
+	 * @param clazz
+	 * @param source
+	 *
+	 * @return
+	 */
 	public <T> T deserialise(final Class<T> clazz, final InputSource source)
 	{
 		final Object obj = deserialise(source);
@@ -388,6 +409,29 @@ public class JAXBSerialiser
 
 
 	public Object deserialise(final InputSource source)
+	{
+		if (source == null)
+			throw new IllegalArgumentException("Null argument passed to deserialise!");
+
+		final Unmarshaller unmarshaller = getUnmarshaller();
+
+		try
+		{
+			final Object obj = unmarshaller.unmarshal(source);
+
+			if (obj == null)
+				throw new RuntimeException("Malformed XML! JAXB returned null");
+			else
+				return obj;
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("deserialisation", e);
+		}
+	}
+
+
+	public Object deserialise(final Source source)
 	{
 		if (source == null)
 			throw new IllegalArgumentException("Null argument passed to deserialise!");
