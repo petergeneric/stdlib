@@ -1,7 +1,11 @@
 package com.peterphi.std.util;
 
+import org.apache.commons.lang.StringUtils;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.w3c.dom.Text;
 import org.xml.sax.InputSource;
 import org.xml.sax.SAXException;
 
@@ -25,11 +29,12 @@ import java.io.Reader;
 import java.io.StringReader;
 import java.io.StringWriter;
 import java.io.Writer;
-import java.lang.ref.SoftReference;
+import java.util.ArrayList;
+import java.util.List;
 
 public class DOMUtils
 {
-	private static SoftReference<DocumentBuilderFactory> DOCUMENT_BUILDER_FACTORY = new SoftReference<>(null);
+	private static DocumentBuilderFactory DOCUMENT_BUILDER_FACTORY;
 	private static final int DEFAULT_INDENT = 2;
 
 	private DOMUtils()
@@ -41,7 +46,21 @@ public class DOMUtils
 	{
 		DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
 
-		factory.setNamespaceAware(true);
+		try
+		{
+			factory.setNamespaceAware(true);
+
+			// Disable DTDs
+			factory.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false);
+
+
+			factory.setXIncludeAware(false);
+			factory.setExpandEntityReferences(false);
+		}
+		catch (ParserConfigurationException e)
+		{
+			throw new RuntimeException("Could not configure XML DocumentBuilderFactory!");
+		}
 
 		return factory;
 	}
@@ -56,16 +75,12 @@ public class DOMUtils
 	{
 		try
 		{
-			DocumentBuilderFactory factory = DOCUMENT_BUILDER_FACTORY.get();
-
-			if (factory == null)
+			if (DOCUMENT_BUILDER_FACTORY == null)
 			{
-				factory = createDocumentBuilderFactory();
-
-				DOCUMENT_BUILDER_FACTORY = new SoftReference<>(factory);
+				DOCUMENT_BUILDER_FACTORY = createDocumentBuilderFactory();
 			}
 
-			return factory.newDocumentBuilder();
+			return DOCUMENT_BUILDER_FACTORY.newDocumentBuilder();
 		}
 		catch (ParserConfigurationException e)
 		{
@@ -224,17 +239,21 @@ public class DOMUtils
 
 
 	/**
-	 * Serialise the provided Node to a pretty-printed String with the default indent settings
+	 * Serialise the provided Node to a pretty-printed String with the default indent settings<br />
+	 * N.B. this method also trims any leading/trailing whitespace from TEXT nodes
 	 *
 	 * @param source the input Node
-	 *
 	 * @return
 	 */
 	public static String pretty(final Node source)
 	{
+		if (source.getNodeType() == Node.DOCUMENT_NODE)
+			trim(((Document) source).getDocumentElement());
+		else if (source.getNodeType() == Node.ELEMENT_NODE)
+			trim((Element) source);
+
 		return pretty(new DOMSource(source));
 	}
-
 
 	/**
 	 * Serialise the provided source to a pretty-printed String with the default indent settings
@@ -252,6 +271,48 @@ public class DOMUtils
 
 
 	/**
+	 * Trim all TEXT Nodes under the provided Element
+	 *
+	 * @param e
+	 * @return
+	 */
+	public static Node trim(final Element e)
+	{
+		final List<Text> toRemove = new ArrayList<>(0);
+		final NodeList children = e.getChildNodes();
+		for (int i = 0; i < children.getLength(); i++)
+		{
+			final Node child = children.item(i);
+
+			if (child.getNodeType() == Node.TEXT_NODE)
+			{
+				final Text t = (Text) child;
+				final String input = t.getTextContent();
+				final String trimmed = StringUtils.trimToNull(input);
+
+				if (trimmed == null)
+				{
+					toRemove.add(t);
+				}
+				else if (input.length() != trimmed.length())
+				{
+					t.setTextContent(trimmed);
+				}
+			}
+			else if (child.getNodeType() == Node.ELEMENT_NODE)
+			{
+				trim((Element) child);
+			}
+		}
+
+		// Remove any empty text nodes
+		for (Text t : toRemove)
+			e.removeChild(t);
+
+		return e;
+	}
+
+	/**
 	 * Serialise the provided source to the provided destination, pretty-printing with the default indent settings
 	 *
 	 * @param input the source
@@ -267,6 +328,7 @@ public class DOMUtils
 			transformer.setOutputProperty(OutputKeys.ENCODING, "utf-8");
 			transformer.setOutputProperty(OutputKeys.OMIT_XML_DECLARATION, "no");
 			transformer.setOutputProperty(OutputKeys.INDENT, "yes");
+			transformer.setOutputProperty(OutputKeys.STANDALONE, "yes");
 			transformer.setOutputProperty("{http://xml.apache.org/xslt}indent-amount", Integer.toString(DEFAULT_INDENT));
 
 			transformer.transform(input, output);
