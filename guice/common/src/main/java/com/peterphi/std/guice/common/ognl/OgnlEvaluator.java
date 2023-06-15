@@ -1,20 +1,26 @@
 package com.peterphi.std.guice.common.ognl;
 
 import com.google.common.base.MoreObjects;
+import ognl.MemberAccess;
 import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.validation.constraints.NotNull;
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 public class OgnlEvaluator
 {
-	private static final Logger log = Logger.getLogger(OgnlEvaluator.class);
+	private static final Logger log = LoggerFactory.getLogger(OgnlEvaluator.class);
+
+	public static final MemberAccess PUBLIC_ACCESS = new OGNLPublicMemberAccess();
 
 	public static boolean ALLOW_COMPILE = true;
-	public static int COMPILE_THRESHOLD = 5000;
+	public static int COMPILE_THRESHOLD = 500;
 
 	private Node parsed = null;
 	private Node compiled = null;
@@ -86,10 +92,24 @@ public class OgnlEvaluator
 	{
 		if (compiled == null)
 		{
-			compiled = compileExpression(root, this.expr);
-			parsed = null;
+			// N.B. compile could fail due to Java 11+ 'ClassLoader.defineClass' not being accessible & so javassist cannot define the new class
+			boolean compileFailed = false;
+			try
+			{
+				compiled = compileExpression(root, this.expr);
+				parsed = null;
+			}
+			catch (Throwable t)
+			{
+				log.warn("OGNL Compile failed; will continue to use uncompiled expression form.", t);
 
-			if (this.notifyOnCompiled != null)
+				compileFailed = true;
+
+				compiled = parsed;
+				parsed = null;
+			}
+
+			if (this.notifyOnCompiled != null && !compileFailed)
 				this.notifyOnCompiled.accept(this.expr, this);
 		}
 
@@ -116,7 +136,8 @@ public class OgnlEvaluator
 
 		try
 		{
-			return expr.getValue(new OgnlContext(), obj);
+			final OgnlContext ctx = createNewOgnlContext(obj);
+			return expr.getValue(ctx, obj);
 		}
 		catch (Throwable e)
 		{
@@ -134,10 +155,32 @@ public class OgnlEvaluator
 	{
 		try
 		{
-			return (T) Ognl.getValue(getExpression(root), root, expected);
+			// Allow Root obj to take over OGNL execution
+			if (expected == String.class && root instanceof OgnlSelfEvaluatingRoot)
+			{
+				final OgnlSelfEvaluatingRoot o = (OgnlSelfEvaluatingRoot)root;
+
+				final Optional<String> val = o.evaluateOGNL(this.expr);
+
+				if (val != null)
+					return (T) val.orElse(null);
+			}
+
+			final OgnlContext ctx = createNewOgnlContext(root);
+			return (T) Ognl.getValue(getExpression(root), ctx, root, expected);
 		}
 		catch (Throwable e)
 		{
+			if (e.getCause() != null && e instanceof ognl.MethodFailedException)
+			{
+				final Throwable cause = e.getCause();
+				final String causeMsg = cause.getClass().getSimpleName() +
+				                                     ": " +
+				                                     cause.getMessage();
+
+				throw new RuntimeException("Error evaluating " + expr + " due to method failure: " + causeMsg, e);
+			}
+
 			throw new RuntimeException("Error evaluating " + expr + " - " + e.getMessage(), e);
 		}
 	}
@@ -166,15 +209,27 @@ public class OgnlEvaluator
 
 		try
 		{
-			log.debug("OGNL Expression used enough times for compile: " + expr);
+			log.debug("OGNL Expression used enough times for compile: {}", expr);
 
-			return Ognl.compileExpression(new OgnlContext(), root, expr);
+			final OgnlContext ctx = createNewOgnlContext(root);
+
+			return Ognl.compileExpression(ctx, root, expr);
 		}
 		catch (Throwable e)
 		{
 			throw new RuntimeException("Error compiling OGNL expression: " + ognl + " with root " + root + ": " + e.getMessage(),
 			                           e);
 		}
+	}
+
+
+	@NotNull
+	private static OgnlContext createNewOgnlContext(final Object root)
+	{
+		final OgnlContext ctx = new OgnlContext(PUBLIC_ACCESS, null, null, null);
+		ctx.put("StringUtils", new StringUtils());
+		ctx.setRoot(root);
+		return ctx;
 	}
 
 

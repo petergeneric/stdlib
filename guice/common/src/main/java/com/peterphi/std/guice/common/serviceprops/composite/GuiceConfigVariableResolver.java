@@ -4,8 +4,6 @@ import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import com.peterphi.std.guice.common.cached.CacheManager;
 import ognl.Node;
-import ognl.Ognl;
-import ognl.OgnlContext;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrLookup;
@@ -13,7 +11,6 @@ import org.apache.commons.lang.text.StrLookup;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.concurrent.ExecutionException;
 
 class GuiceConfigVariableResolver extends StrLookup
 {
@@ -77,46 +74,9 @@ class GuiceConfigVariableResolver extends StrLookup
 					throw new RuntimeException("Error reading File " + file, e);
 				}
 			}
-			else if (StringUtils.startsWith(key, "ognl:"))
-			{
-				final String[] parts = key.split(":", 2);
-
-				return lookupOGNL(parts[1]);
-			}
 		}
 
 		// Fall back to resolving the property
 		return properties.get(key, "");
-	}
-
-
-	private String lookupOGNL(final String part)
-	{
-		final String expression = part;
-
-		// Compile the OGNL expression (or read it from cache)
-		final Node node;
-		try
-		{
-			node = ognlCache.get(expression, () -> Ognl.compileExpression(new OgnlContext(), properties, expression));
-		}
-		catch (ExecutionException e)
-		{
-			throw new RuntimeException("Error compiling OGNL string '" + expression + "'", e);
-		}
-
-		try
-		{
-			final Object obj = node.getValue(new OgnlContext(), properties);
-
-			if (obj == null)
-				return "";
-			else
-				return obj.toString();
-		}
-		catch (Throwable t)
-		{
-			throw new RuntimeException("Error evaluating OGNL expression '" + expression + "'", t);
-		}
 	}
 }
