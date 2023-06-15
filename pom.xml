@@ -43,6 +43,7 @@
 		<hsqldb.version>2.4.0</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>
 		<moxy.version>2.7.3</moxy.version>
+		<mockito.version>1.9.5</mockito.version>
 	</properties>
 
 	<scm>
