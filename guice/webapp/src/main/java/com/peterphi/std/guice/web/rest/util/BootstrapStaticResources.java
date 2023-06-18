@@ -27,13 +27,11 @@ public class BootstrapStaticResources
 
 	public String getJS()
 	{
-		return "window.addEventListener('DOMContentLoaded', () => {" +
-		       "function setTheme() {" +
+		return "function setupTheme() {" +
 		       "document.documentElement.setAttribute('data-bs-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ?'dark':null);" +
 		       "}" +
-		       "setTheme();" +
-		       "window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setTheme);" +
-		       "});";
+		       "setupTheme();" +
+		       "window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setupTheme);";
 	}
 
 	protected static byte[] getResource(final String resourceName)
