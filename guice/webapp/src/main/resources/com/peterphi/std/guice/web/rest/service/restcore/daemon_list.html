@@ -1,18 +1,15 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
-<!--@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"-->
-<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
-<!--@thymesVar id="message" type="java.lang.String"-->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!--/*@thymesVar id="registry" type="com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry"*/-->
+<!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
+<!--/*@thymesVar id="message" type="java.lang.String"*/-->
 <head>
 	<title>Daemons</title>
-
 	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
 
 <body id="top">
-<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
-
-
+<nav class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></nav>
 <div class="container">
 	<h1>Threads</h1>
 
@@ -20,7 +17,7 @@
 		<th:block th:text="${message}"></th:block>
 		<script>
 			setTimeout(function () {
-				var div = document.getElementById("message-div");
+				let div = document.getElementById("message-div");
 
 				div.parentNode.removeChild(div);
 			}, 15000);
@@ -48,8 +45,7 @@
 				<tr th:each="daemon: ${daemons}">
 					<td th:text="${daemon.name}">name</td>
 
-					<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
-
+					<td><span th:replace=" :: checkmark(${daemon.threadRunning})">Y/N</span></td>
 					<td th:text="${daemonDescriber.apply(daemon)}">description</td>
 				</tr>
 				</tbody>
@@ -77,9 +73,9 @@
 				<th:block th:each="daemon: ${daemons}">
 					<tr>
 						<td><strong th:text="${daemon.name}">name</strong></td>
-						<td th:text="${daemon.threadRunning ? '✔' : '✖'}">Yes / No</td>
-						<td th:text="${daemon.breaker.normal ? '✔' : '✖'}">Yes / No</td>
-						<td th:text="${daemon.userCodeRunning ? '✔' : '✖'}">Yes / No</td>
+						<td><span th:replace=" :: checkmark(${daemon.threadRunning})">Y/N</span></td>
+						<td><span th:replace=" :: checkmark(${daemon.breaker.normal})">Y/N</span></td>
+						<td><span th:replace=" :: checkmark(${daemon.userCodeRunning})">Y/N</span></td>
 
 						<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
 						<td th:text="${daemon.lastRan}"></td>
@@ -121,6 +117,12 @@
 			</table>
 		</th:block>
 	</th:bock>
+	<th:block th:if="${false}">
+		<th:block th:fragment="checkmark(val)">
+			<th:block th:if="${val}">&#10004;&#xFE0E;</th:block>
+			<th:block th:unless="${val}">&#x2718;&#xFE0E;</th:block>
+		</th:block>
+	</th:block>
 </div>
 </body>
 </html>

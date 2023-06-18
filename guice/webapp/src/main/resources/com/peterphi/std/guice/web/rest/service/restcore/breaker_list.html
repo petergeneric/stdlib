@@ -1,18 +1,14 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
-<!--@thymesVar id="breakerService" type="com.peterphi.std.guice.common.breaker.BreakerService"-->
-<!--@thymesVar id="coreRestPrefix" type="java.lang.String"-->
-<!--@thymesVar id="message" type="java.lang.String"-->
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<!--/*@thymesVar id="breakerService" type="com.peterphi.std.guice.common.breaker.BreakerService"*/-->
+<!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
+<!--/*@thymesVar id="message" type="java.lang.String"*/-->
 <head>
 	<title>Breakers</title>
-
 	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
-
 <body id="top">
-<div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
-
-
+<nav class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></nav>
 <div class="container">
 	<h1>Threads</h1>
 
@@ -20,7 +16,7 @@
 		<th:block th:text="${message}"></th:block>
 		<script>
 			setTimeout(function () {
-				var div = document.getElementById("message-div");
+				let div = document.getElementById("message-div");
 
 				div.parentNode.removeChild(div);
 			}, 15000);
@@ -49,7 +45,9 @@
 				<tr th:each="breakerName: ${breakerNames}">
 					<th:block th:with="record = ${breakerService.getTripRecord(breakerName)}">
 						<td th:text="${breakerName}">name</td>
-						<td th:text="${record.newValue ? '✖':'✔'}">No / Yes</td>
+						<td th:unless="${record.newValue}">&#10004;&#xFE0E;</td>
+						<td th:if="${record.newValue}">&#x2718;&#xFE0E;</td>
+
 						<td>
 							<form method="POST"
 							      th:action="@{|${coreRestPrefix}/guice/breakers/set-breaker-state|}">

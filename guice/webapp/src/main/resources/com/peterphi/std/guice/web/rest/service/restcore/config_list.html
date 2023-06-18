@@ -1,16 +1,16 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-3.dtd">
-<html xmlns:th="http://www.thymeleaf.org">
+<!doctype html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
 	<title>Service Configuration</title>
 
 	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
 
-<!--@thymesVar id="configRegistry" type="com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry"-->
-<!--@thymesVar id="config" type="com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig"-->
-<!--@thymesVar id="showProperties" type="java.lang.Boolean"-->
-<!--@thymesVar id="showBoundValues" type="java.lang.Boolean"-->
-<!--@thymesVar id="allowReconfigure" type="java.lang.Boolean"-->
+<!--/*@thymesVar id="configRegistry" type="com.peterphi.std.guice.common.serviceprops.ConfigurationPropertyRegistry"*/-->
+<!--/*@thymesVar id="config" type="com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig"*/-->
+<!--/*@thymesVar id="showProperties" type="java.lang.Boolean"*/-->
+<!--/*@thymesVar id="showBoundValues" type="java.lang.Boolean"*/-->
+<!--/*@thymesVar id="allowReconfigure" type="java.lang.Boolean"*/-->
 
 <body id="top">
 <div class="navbar" th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: navbar"></div>
@@ -43,12 +43,12 @@
 			<a th:href="'#' + ${prop.name}" th:id="${prop.name}" th:text="${prop.name}">name</a>
 		</h3>
 
-		<div class="alert" th:if="${prop.deprecated}">
+		<div class="alert alert-warning" th:if="${prop.deprecated}">
 			<strong>Deprecated</strong><br/>
 			This property is included for legacy use and will be removed in a future release.
 		</div>
 
-		<div class="alert" th:unless="${prop.reconfigurable}">
+		<div class="alert alert-warning" th:unless="${prop.reconfigurable}">
 			<strong>No dynamic reconfiguration</strong><br/>
 			This property cannot be dynamically reconfigured; a servlet/guice environment restart will be required to apply the
 			change.
@@ -64,10 +64,10 @@
 			<form th:action="@{|${coreRestPrefix}/guice/config/reconfigure|}" method="POST">
 				<input type="hidden" name="key" th:value="${prop.name}"/>
 
-				<input th:if="${showProperties}" type="text" name="value" th:value="${config.get(prop.name,'')}"/>
-				<input th:unless="${showProperties}" type="text" name="value" th:value=""/>
+				<input th:if="${showProperties and !prop.isSensitive()}" type="text" name="value" th:value="${prop.getLiveValueForUI(config, '')}"/>
+				<input th:unless="${showProperties and !prop.isSensitive()}" type="text" name="value" value=""/>
 
-				<input type="submit" value="Change"/>
+				<input type="submit" class="btn btn-primary" value="Change"/>
 			</form>
 			</p>
 		</th:block>
@@ -75,10 +75,10 @@
 		<h5>Binding Information</h5>
 		<table class="table">
 			<tbody>
-			<tr th:if="${showProperties}">
+			<tr th:if="${showProperties and !prop.isSensitive()}">
 				<th class="span3">Configured Value</th>
 				<td data-content-meaning="liveValue"
-				    th:text="${config.get(prop.name, 'Not configured - using internal default')}">prop value
+				    th:text="${prop.getLiveValueForUI(config, '(not configured or using internal default)')}">prop value
 				</td>
 			</tr>
 			<tr>
@@ -106,7 +106,7 @@
 					</ul>
 				</td>
 			</tr>
-			<th:block th:if="${showBoundValues}">
+			<th:block th:if="${showBoundValues and !prop.sensitive}">
 				<th:block th:with="boundValues = ${prop.boundValues}">
 					<tr th:unless="${boundValues.isEmpty() or prop.bindings.isEmpty()}">
 						<th class="span3">Bound values</th>
@@ -131,7 +131,7 @@
 		property overrides file for this webapp.</p>
 
 	<form method="POST" th:action="@{|${coreRestPrefix}/guice/config/save|}">
-		<input type="submit" value="Save to disk"/>
+		<input type="submit" class="btn btn-primary" value="Save to disk"/>
 	</form>
 </div>
 </body>

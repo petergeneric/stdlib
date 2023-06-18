@@ -18,4 +18,10 @@ public interface GuiceCommonRestResources
 	@Produces("text/css")
 	@Cache(maxAge = 2629740, mustRevalidate = false)
 	byte[] getBootstrapCSS();
+
+	@GET
+	@Path("/main.js")
+	@Produces("text/javascript")
+	@Cache(maxAge = 2629740, mustRevalidate = false)
+	String getMainJS();
 }

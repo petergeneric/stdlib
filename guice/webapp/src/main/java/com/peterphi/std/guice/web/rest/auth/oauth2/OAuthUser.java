@@ -187,7 +187,7 @@ public class OAuthUser implements CurrentUser, GuiceLifecycleListener
 	}
 
 
-	private DateTimeFormatter getDateFormatter()
+	public DateTimeFormatter getDateFormatter()
 	{
 		if (!isAnonymous())
 		{

@@ -16,7 +16,7 @@ import java.util.Set;
 
 public interface CurrentUser
 {
-	String DEFAULT_DATE_FORMAT_STRING = "YYYY-MM-dd HH:mm:ss zzz";
+	String DEFAULT_DATE_FORMAT_STRING = "yyyy-MM-dd HH:mm:ss zzz";
 	String ISO_DATE_FORMAT_STRING = "yyyy-MM-dd'T'HH:mm:ssZ";
 	String DEFAULT_TIMEZONE = "Europe/London";
 
@@ -38,6 +38,11 @@ public interface CurrentUser
 	 * This is important when a service will not talk to a user directly but will talk to services acting on behalf of the user
 	 */
 	String ROLE_SERVICE_CALL = "service-call";
+
+	/**
+	 * Standard name for role conveying administrative privileges
+	 */
+	String ROLE_ADMIN = "admin";
 
 	/**
 	 * Return the type of authentication used
@@ -228,6 +233,26 @@ public interface CurrentUser
 			return format((DateTime) null);
 		else
 			return format(new DateTime(date.getTime()));
+	}
+
+	default DateTimeFormatter getDateFormatter()
+	{
+		return CurrentUser.DEFAULT_DATE_FORMAT;
+	}
+
+	/**
+	 * Return the user's timezone
+	 *
+	 * @return e.g. Europe/London
+	 */
+	default String getTimeZone()
+	{
+		final DateTimeZone zone = getDateFormatter().getZone();
+
+		if (zone != null)
+			return zone.getID();
+		else
+			return DEFAULT_TIMEZONE;
 	}
 
 	AccessRefuser getAccessRefuser();

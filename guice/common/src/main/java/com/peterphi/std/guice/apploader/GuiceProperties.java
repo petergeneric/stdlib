@@ -40,6 +40,12 @@ public class GuiceProperties
 	public static final String INSTANCE_ID = "service.instance-id";
 
 	//
+	// Breakers Properties
+	//
+	@Doc("Optional absolute path to a breaker folder; if specified then breaker trips will be persisted across servlet restarts. Presence of files named (context-name).(breaker-name) means this breaker will be treated as tripped. Only re-read at startup (default not specified)")
+	public static final String BREAKERS_PERSIST_STORE = "framework.breakers.persist.folder";
+
+	//
 	// Configuration Service Properties
 	//
 	@Doc("The path to the network configuration service (default null)")
@@ -146,6 +152,9 @@ public class GuiceProperties
 	@Doc("If true, HTTP request threads will be renamed for the duration they're running (default false)")
 	public static final String HTTP_RENAME_THREADS = "framework.http-request.rename-threads";
 
+	@Doc("If true, OkHttp3 will be used for JAX-RS clients if the class is available in the classpath (default true)")
+	public static final String USE_OKHTTP = "rest.use-okhttp";
+
 	//
 	// JAX-RS Exception Display
 	//
@@ -159,14 +168,25 @@ public class GuiceProperties
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED = "rest.exception.html.enabled.only-for-logged-in";
 	@Doc("If set (and only-for-logged-in is true), pretty HTML pages will only be rendered for users with the provided role (default not specified)")
 	public static final String JAXRS_EXCEPTION_HTML_ONLY_FOR_AUTHENTICATED_ROLE = "rest.exception.html.enabled.only-for-logged-in.role";
-	@Doc("If set, JVM config info will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, JVM config info will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO = "rest.exception.html.feature.jvminfo";
 	@Doc("If set, JVM environment variables will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_JVMINFO_ENVIRONMENT = "rest.exception.html.feature.jvminfo.environment";
-	@Doc("If set, request info (including cookie data) will be returned to the browser (default true). Disable for live systems.")
+	@Doc("If set, request info (including cookie data) will be returned to the browser (default false). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_REQUESTINFO = "rest.exception.html.feature.requestinfo";
 	@Doc("If set, stack traces will be returned to the browser (default true). Disable for live systems.")
 	public static final String JAXRS_EXCEPTION_HTML_STACKTRACE = "rest.exception.html.feature.stacktrace";
+
+	@Doc("If true, stack traces logged server-side by the default 'threw exception:' fallback logger will log trimmed stack traces from RestFailure structure when available (default true)")
+	public static final String JAXRS_REST_EXCEPTION_CORE_LOGGER_LOGS_TRIMMED_STACKTRACES = "rest.exception.server-side-logs-trimmed-traces";
+
+
+	@Doc("If true, stack traces will be returned in XML mode")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE = "rest.exception.stacktrace";
+	@Doc("If true, stack traces will only be returned in XML mode for admin or service users; this is to minimise on wasted bandwidth to clients (or if combined with require-logged-in, only shows stack traces to services/admins)")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_ADMIN_OR_SERVICE_IF_LOGGED_IN = "rest.exception.stacktrace.require-admin-role-if-logged-in";
+	@Doc("If true, stack traces will only be returned in XML mode if the session is authenticated")
+	public static final String JAXRS_REST_EXCEPTION_STACKTRACE_REQUIRE_LOGGED_IN = "rest.exception.stacktrace.require-logged-in";
 
 	// Create JIRA issue from exception
 	@Doc("If enabled set, a Create JIRA Ticket link will be available when an exception occurs (default false)")
@@ -186,6 +206,11 @@ public class GuiceProperties
 	@Doc("If true then hibernate configurations permitting the dropping and recreating of database tables will be allowed (default false)")
 	public static final String HIBERNATE_ALLOW_HBM2DDL_CREATE = "hibernate.allow-hbm2ddl-create";
 
+	@Doc("If true then only read-only transactions will be permitted. Should ensure that " +
+	     HIBERNATE_ALLOW_HBM2DDL_CREATE +
+	     " is at default false and liquibase.action is set to IGNORE (default false)")
+	public static final String HIBERNATE_READ_ONLY = "hibernate.read-only";
+
 	@Doc("If true then when the guice hibernate jar is loaded it'll search for all @Entity annotated classes in the scan.packages packages and register them (default true)")
 	public static final String ROLE_HIBERNATE_AUTO = "role.hibernate.auto";
 
@@ -204,6 +229,9 @@ public class GuiceProperties
 
 	@Doc("If set, will be added as labels to any metrics handed, should be of the form key=\"value\",key2=\"value2\" (default empty)")
 	public static final String METRIC_CUSTOM_LABELS = "metrics.labels";
+
+	@Doc("If true, metrics will include core JVM monitoring. Only one application per JVM should do this so that metrics aren't unnecessarily duplicated (default false)")
+	public static final String METRICS_INCLUDE_JVM = "metrics.monitor-jvm";
 
 	//
 	// Guice DbUnit module
