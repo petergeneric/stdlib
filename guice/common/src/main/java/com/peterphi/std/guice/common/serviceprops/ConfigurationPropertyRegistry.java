@@ -2,8 +2,6 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import com.google.inject.Injector;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.AnnotatedElement;
 import java.util.ArrayList;
@@ -21,13 +19,10 @@ import java.util.stream.Collectors;
 
 public class ConfigurationPropertyRegistry
 {
-	private static final Logger log = LoggerFactory.getLogger(ConfigurationPropertyRegistry.class);
-
 	private final SortedMap<String, ConfigurationProperty> properties = new TreeMap<>();
 	private final Map<Class, WeakHashMap<Object, Void>> instances = new HashMap<>();
 
 	private final GuiceConfig configuration;
-
 
 	public ConfigurationPropertyRegistry(final GuiceConfig configuration)
 	{
@@ -39,9 +34,10 @@ public class ConfigurationPropertyRegistry
 	                     AtomicReference<Injector> injector,
 	                     String name,
 	                     Class<T> type,
-	                     AnnotatedElement element)
+	                     AnnotatedElement element,
+	                     boolean canonical)
 	{
-		register(new ConfigurationPropertyBindingSite<>(this, injector, owner, name, type, element));
+		register(new ConfigurationPropertyBindingSite<>(this, injector, owner, name, type, element, canonical));
 	}
 
 
@@ -89,7 +85,6 @@ public class ConfigurationPropertyRegistry
 			return properties.values().stream().filter(predicate).sorted(sort).collect(Collectors.toList());
 		}
 	}
-
 
 	public List<ConfigurationProperty> getFrameworkProperties()
 	{

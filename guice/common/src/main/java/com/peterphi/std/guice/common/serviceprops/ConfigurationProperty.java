@@ -35,7 +35,10 @@ public class ConfigurationProperty
 
 	public void add(ConfigurationPropertyBindingSite site)
 	{
-		bindings.add(site);
+		if (site.isCanonical())
+			bindings.add(0, site);
+		else
+			bindings.add(site);
 	}
 
 
@@ -44,6 +47,14 @@ public class ConfigurationProperty
 		return name;
 	}
 
+
+	public String getLiveValueForUI(GuiceConfig config, String defaultOrSensitiveResult)
+	{
+		if (isSensitive())
+			return defaultOrSensitiveResult;
+		else
+			return config.get(name, defaultOrSensitiveResult);
+	}
 
 	public boolean isFrameworkProperty()
 	{
@@ -128,13 +139,7 @@ public class ConfigurationProperty
 
 	public void set(final String value)
 	{
-		log.info("Attempting to change config property " +
-		         name +
-		         " from current \"" +
-		         configuration.get(name) +
-		         "\" to \"" +
-		         value +
-		         "\".");
+		log.info("Attempting to change config property {} from current \"{}\" to \"{}\".", name, configuration.get(name), value);
 		// Validate the new value passes all the binding constraints
 		validate(value);
 
@@ -143,7 +148,7 @@ public class ConfigurationProperty
 
 		if (isReconfigurable())
 		{
-			log.info("All binding sites for property " + name + " are reconfigurable; reinjecting...");
+			log.info("All binding sites for property {} are reconfigurable; reinjecting...", name);
 
 			// Re-inject all the members
 			for (ConfigurationPropertyBindingSite binding : bindings)
@@ -157,10 +162,15 @@ public class ConfigurationProperty
 		}
 		else
 		{
-			log.info("Not all binding sites for property " +
-			         name +
-			         " are reconfigurable. Restart will be required to apply this change.");
+			log.info("Not all binding sites for property {} are reconfigurable. Restart will be required to apply this change.",
+			         name);
 		}
+	}
+
+
+	public boolean isSensitive()
+	{
+		return name.contains("password") || name.contains("secret");
 	}
 
 
