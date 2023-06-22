@@ -12,13 +12,15 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 
 @Entity
-class ChildEntity extends AbstractEntity
+class ChildEntity extends AbstractEntity<SomeStateEnum>
 {
 	private Long id;
 
 	private String name;
 
 	private ParentEntity parent;
+
+	private SomeStateEnum state;
 
 
 	@Id
@@ -32,6 +34,20 @@ class ChildEntity extends AbstractEntity
 	public void setId(final Long id)
 	{
 		this.id = id;
+	}
+
+
+	@Override
+	public SomeStateEnum getState()
+	{
+		return this.state;
+	}
+
+
+	@Override
+	public void setState(SomeStateEnum v)
+	{
+		this.state = v;
 	}
 
 

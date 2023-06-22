@@ -33,7 +33,7 @@ public class QEntityFactory
 		this.sessionFactory = (SessionFactoryImplementor) sessionFactory;
 
 		if (log.isDebugEnabled())
-			log.debug("Known entities: " +
+			log.debug("Known entities: {}",
 			          sessionFactory.getMetamodel().getEntities().stream().map(e -> e.getName()).collect(Collectors.toList()));
 
 		// Pre-construct the QEntity instances for all known entities
@@ -68,7 +68,7 @@ public class QEntityFactory
 		if (!entities.containsKey(clazz))
 		{
 			if (log.isDebugEnabled())
-				log.debug("Begin create QEntity " + clazz);
+				log.debug("Begin create QEntity {}", clazz);
 
 			final EntityType<T> metadata = sessionFactory.getMetamodel().entity(clazz);
 
@@ -83,7 +83,7 @@ public class QEntityFactory
 			entity.parse(this, metadata, sessionFactory);
 
 			if (log.isDebugEnabled())
-				log.debug("End create QEntity " + clazz);
+				log.debug("End create QEntity {}", clazz);
 		}
 
 		return entities.get(clazz);
@@ -95,7 +95,7 @@ public class QEntityFactory
 		if (!entities.containsKey(clazz))
 		{
 			if (log.isDebugEnabled())
-				log.debug("Begin create QEntity " + clazz + " from EmbeddableType " + ct);
+				log.debug("Begin create QEntity {} from EmbeddableType {}", clazz, ct);
 
 			QEntity entity = new QEntity(clazz);
 			entities.put(clazz, entity);
@@ -103,7 +103,7 @@ public class QEntityFactory
 			entity.parseEmbeddable(this, sessionFactory, null, ct);
 
 			if (log.isDebugEnabled())
-				log.debug("End create QEntity " + clazz + " from EmbeddableType " + ct);
+				log.debug("End create QEntity {} from EmbeddableType {}", clazz, ct);
 		}
 
 		return entities.get(clazz);

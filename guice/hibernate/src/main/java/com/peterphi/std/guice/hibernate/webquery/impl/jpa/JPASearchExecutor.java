@@ -54,7 +54,8 @@ public class JPASearchExecutor
 	                                        JPASearchStrategy strategy,
 	                                        Function<?, ?> serialiser)
 	{
-		final String traceOperationId = Tracing.log("WebQuery:exec", () -> query.toString());
+		final String traceOperationId = Tracing.newOperationId();
+		Tracing.logOngoing(traceOperationId, "WebQuery:exec", query);
 
 		final HibernateSQLLogger statementLog;
 
@@ -89,6 +90,11 @@ public class JPASearchExecutor
 			if (strategy == JPASearchStrategy.COUNT_ONLY || query.getLimit() == WebQuery.LIMIT_RETURN_ZERO)
 			{
 				// Special limit value of -1 means do not fetch any result data (used when just wanting to compute totals)
+				list = Collections.emptyList();
+			}
+			else if (total != null && total.longValue() == 0)
+			{
+				// Count ran and indicated there were no results, so no need to re-query
 				list = Collections.emptyList();
 			}
 			else
@@ -137,7 +143,7 @@ public class JPASearchExecutor
 						// N.B. if the user has only asked for a single fetch then we won't have a list of arrays
 						// We make sure it's an Array for consistency (user can't rely that asking for a single field will
 						// result in only that field, since the returned array may contain other fields the system needed to fetch in order to generate valid SQL)
-						if (!list.isEmpty() && !list.get(0).getClass().isArray())
+						if (!list.isEmpty() && !hasArray(list))
 						{
 							list = (List<Object[]>) list.stream().map((Object v) -> new Object[]{v}).collect(Collectors.toList());
 						}
@@ -201,5 +207,19 @@ public class JPASearchExecutor
 			if (statementLog != null)
 				statementLog.close();
 		}
+	}
+
+
+	/**
+	 * Tests if a hibernate result list is a list of arrays
+	 *
+	 * @param list
+	 * @return
+	 */
+	private boolean hasArray(final List list)
+	{
+		final Object o = list.get(0);
+
+		return o != null && o.getClass().isArray();
 	}
 }
