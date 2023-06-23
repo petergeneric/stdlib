@@ -20,8 +20,9 @@ public class FastInfosetPreferringClientRequestFilter implements ClientRequestFi
 	{
 		if (!REGISTERED)
 		{
+
 			if (FastInfosetPreferringClientRequestFilter.class.getResource(
-					"/META-INF/maven/org.jboss.resteasy/resteasy-fastinfoset-provider/pom.properties") != null)
+					"/META-INF/maven/com.sun.xml.fastinfoset/FastInfoset/pom.properties") != null)
 			{
 				ResteasyProviderFactory.getInstance().registerProviderInstance(new FastInfosetPreferringClientRequestFilter());
 			}
