@@ -1,18 +1,30 @@
 package com.peterphi.usermanager.rest.iface.oauth2server.types;
 
-import org.codehaus.jettison.json.JSONException;
-import org.codehaus.jettison.json.JSONObject;
-import org.joda.time.DateTime;
 
-import java.io.StringWriter;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+
+import java.io.IOException;
 import java.util.Date;
 
 public class OAuth2TokenResponse
 {
+	@JsonProperty
 	public String access_token;
+	@JsonProperty
 	public String refresh_token;
+	@JsonSerialize(using = JsonDateAsRelativeSecondsSerializer.class)
+	@JsonDeserialize(using = JsonDateAsRelativeSecondsDeserializer.class)
+	@JsonProperty("expires_in")
 	public Date expires;
+	@JsonSerialize(using = JsonDateAsRelativeSecondsSerializer.class)
+	@JsonDeserialize(using = JsonDateAsRelativeSecondsDeserializer.class)
+	@JsonProperty("refresh_in")
 	public Date refresh;
+	@JsonProperty
 	public String error;
 
 
@@ -40,36 +52,16 @@ public class OAuth2TokenResponse
 	{
 		try
 		{
-			final JSONObject obj = new JSONObject(json);
+			final OAuth2TokenResponse obj = new ObjectMapper().readValue(json, OAuth2TokenResponse.class);
 
-			final int expiresIn = obj.has("expires_in") ? obj.getInt("expires_in") : Integer.MIN_VALUE;
+			obj.expires = new Date(obj.expires.getTime() - 60_000);
 
-			// Set expires 1m before expires_in
-			final Date expires;
-			if (expiresIn != Integer.MIN_VALUE)
-				expires = DateTime.now().plusSeconds(expiresIn).minusMinutes(1).toDate();
-			else
-				expires = null;
-
-
-			return new OAuth2TokenResponse(getString(obj, "access_token", null),
-			                               getString(obj, "refresh_token", null),
-			                               expires,
-			                               getString(obj, "error", null));
+			return obj;
 		}
-		catch (JSONException e)
+		catch (IOException e)
 		{
 			throw new RuntimeException("Unable to deserialise OAuth2TokenResponse: " + e.getMessage(), e);
 		}
-	}
-
-
-	private static String getString(JSONObject obj, final String name, final String defaultValue) throws JSONException
-	{
-		if (obj.has(name))
-			return obj.getString(name);
-		else
-			return defaultValue;
 	}
 
 
@@ -77,31 +69,9 @@ public class OAuth2TokenResponse
 	{
 		try
 		{
-			StringWriter sw = new StringWriter();
-
-			JSONObject obj = new JSONObject();
-
-			final long expiresIn;
-
-			if (expires != null)
-				expiresIn = (expires.getTime() - System.currentTimeMillis()) / 1000;
-			else
-				expiresIn = 0;
-
-			if (access_token != null)
-				obj.put("access_token", access_token);
-			if (refresh_token != null)
-				obj.put("refresh_token", refresh_token);
-			if (expiresIn > 0)
-				obj.put("expires_in", expiresIn);
-			if (error != null)
-				obj.put("error", error);
-
-			obj.write(sw);
-
-			return sw.toString();
+			return new ObjectMapper().writeValueAsString(this);
 		}
-		catch (JSONException e)
+		catch (JsonProcessingException e)
 		{
 			throw new RuntimeException("Unable to serialise OAuth2TokenResponse: " + e.getMessage(), e);
 		}

@@ -6,7 +6,6 @@ import com.sun.xml.fastinfoset.dom.DOMDocumentParser;
 import com.sun.xml.fastinfoset.dom.DOMDocumentSerializer;
 import com.sun.xml.fastinfoset.stax.factory.StAXInputFactory;
 import com.sun.xml.fastinfoset.stax.factory.StAXOutputFactory;
-import org.jvnet.fastinfoset.FastInfosetException;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 
@@ -16,7 +15,6 @@ import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 
 public class FastInfosetHelper
 {
@@ -35,11 +33,13 @@ public class FastInfosetHelper
 			// This disables DTDs entirely for that factory
 			xif.setProperty(XMLInputFactory.SUPPORT_DTD, false);
 
-			// N.B. fastinfoset does not support setProperty(XMLConstants.ACCESS_EXTERNAL_DTD,"")
+			// N.B. fastinfoset does not support setProperty(XMLConstants.ACCESS_EXTERNAL_DTD,""));
 
 			XML_OUTPUT_FACTORY = xof;
 			XML_INPUT_FACTORY = xif;
 		}
+
+
 	}
 
 
@@ -76,7 +76,7 @@ public class FastInfosetHelper
 
 			parser.parse(doc, new ByteArrayInputStream(bytes));
 		}
-		catch (FastInfosetException | IOException e)
+		catch (Throwable e)
 		{
 			throw new RuntimeException("Error parsing Fast Infoset XML!", e);
 		}
@@ -99,7 +99,7 @@ public class FastInfosetHelper
 			serialiser.serialize(node);
 			return bos.toByteArray();
 		}
-		catch (IOException e)
+		catch (Throwable e)
 		{
 			throw new RuntimeException("Error encoding Fast Infoset XML!", e);
 		}

@@ -4,7 +4,9 @@ import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.eclipse.persistence.internal.oxm.record.DOMInputSource;
 import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
@@ -296,7 +298,10 @@ public class JAXBSerialiser
 	 */
 	public Object deserialise(String xml)
 	{
-		return deserialise(new InputSource(new StringReader(xml)));
+		if (xml == null)
+			throw new IllegalArgumentException("Must provide non-null XML to deserialise!");
+		else
+			return deserialise(new InputSource(new StringReader(xml)));
 	}
 
 
@@ -309,7 +314,10 @@ public class JAXBSerialiser
 	 */
 	public Object deserialise(final InputStream is)
 	{
-		return deserialise(new InputSource(is));
+		if (is == null)
+			throw new IllegalArgumentException("Must provide non-null InputStream XML to deserialise!");
+		else
+			return deserialise(new InputSource(is));
 	}
 
 
@@ -364,6 +372,24 @@ public class JAXBSerialiser
 	public <T> T deserialise(final Class<T> clazz, final String xml)
 	{
 		final Object obj = deserialise(new InputSource(new StringReader(xml)));
+
+		if (clazz.isInstance(obj))
+			return clazz.cast(obj);
+		else
+			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
+	}
+
+	/**
+	 * Deserialise and cast to a particular type
+	 *
+	 * @param clazz
+	 * @param xml an XML element
+	 *
+	 * @return
+	 */
+	public <T> T deserialise(final Class<T> clazz, final Element xml)
+	{
+		final Object obj = deserialise(new DOMInputSource((xml)));
 
 		if (clazz.isInstance(obj))
 			return clazz.cast(obj);
@@ -600,13 +626,41 @@ public class JAXBSerialiser
 	}
 
 
-	public void serialise(final Object obj, final XMLStreamWriter writer)
+	/**
+	 * Marshals the provided type directly to the provided XMLStreamWriter. This is provided to allow callers to bypass the EclipseLink MOXy mitigation against XmlAnyElements which contain xmlns=""
+	 * @param obj
+	 * @param writer
+	 */
+	public void serialiseWithDirectWriter(final Object obj, final XMLStreamWriter writer)
 	{
 		final Marshaller marshaller = getMarshaller();
 
 		try
 		{
 			marshaller.marshal(obj, writer);
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("serialisation", e);
+		}
+	}
+
+
+	/**
+	 * Marshals the provided type to the given XMLStreamWriter, filtering the XML stream to remove duplicate xmlns="" events if
+	 * present. This is to work around an EclipseLink MOXy issue whereby XmlAnyElements which contain xmlns="" get that namespace
+	 * definition duplicated via STaX
+	 *
+	 * @param obj
+	 * @param writer
+	 */
+	public void serialise(final Object obj, final XMLStreamWriter writer)
+	{
+		final Marshaller marshaller = getMarshaller();
+
+		try
+		{
+			marshaller.marshal(obj, new DuplicateNSFilteringXMLStreamWriter(writer));
 		}
 		catch (JAXBException e)
 		{
@@ -653,7 +707,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(JAXBContext context)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for context " + context);
+			log.trace("Create serialiser for context {}", context);
 
 		return new JAXBSerialiser(context);
 	}
@@ -672,7 +726,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + Arrays.asList(classes));
+			log.trace("Create serialiser for {}", Arrays.asList(classes));
 
 		return new JAXBSerialiser(classes);
 	}
@@ -691,7 +745,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + contextPath);
+			log.trace("Create serialiser for {}", contextPath);
 
 		return new JAXBSerialiser(contextPath);
 	}
@@ -707,7 +761,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + contextPath);
+			log.trace("Create moxy serialiser for {}", contextPath);
 
 		try
 		{
@@ -732,7 +786,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + Arrays.asList(classes));
+			log.trace("Create moxy serialiser for {}", Arrays.asList(classes));
 
 		try
 		{

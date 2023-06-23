@@ -9,7 +9,6 @@ import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
 import javax.ws.rs.ext.Provider;
 import javax.xml.bind.JAXBElement;
-import javax.xml.stream.XMLStreamException;
 import javax.xml.stream.XMLStreamReader;
 import javax.xml.stream.XMLStreamWriter;
 import java.io.IOException;
@@ -56,7 +55,7 @@ public class FastInfosetXmlRootElementProvider<T> extends JAXBXmlRootElementProv
 				writer.close();
 			}
 		}
-		catch (XMLStreamException e)
+		catch (Throwable e)
 		{
 			throw new RuntimeException("Error writing fast infoset while serialising " + obj.getClass() + ": " + e.getMessage(),
 			                           e);
@@ -81,7 +80,7 @@ public class FastInfosetXmlRootElementProvider<T> extends JAXBXmlRootElementProv
 				reader.close();
 			}
 		}
-		catch (XMLStreamException e)
+		catch (Throwable e)
 		{
 			throw new RuntimeException("Error reading fast infoset input while reading " + clazz + ": " + e.getMessage(), e);
 		}
