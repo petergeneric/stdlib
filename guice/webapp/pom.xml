@@ -43,9 +43,19 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.peterphi.thymeleaf</groupId>
+			<groupId>com.peterphi.std</groupId>
 			<artifactId>thymeleaf</artifactId>
-			<version>3.0.12.2</version>
+			<version>${project.version}</version>
+			<exclusions>
+                <exclusion>
+                    <artifactId>ognl</artifactId>
+                    <groupId>ognl</groupId>
+                </exclusion>
+                <exclusion>
+                    <artifactId>javassist</artifactId>
+                    <groupId>javassist</groupId>
+                </exclusion>
+            </exclusions>
 		</dependency>
 
 		<dependency>

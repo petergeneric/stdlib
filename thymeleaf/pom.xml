@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+	~ =============================================================================
+	~
+	~	 Copyright (c) 2011-2018, The THYMELEAF team (http://www.thymeleaf.org)
+	~
+	~	 Licensed under the Apache License, Version 2.0 (the "License");
+	~	 you may not use this file except in compliance with the License.
+	~	 You may obtain a copy of the License at
+	~
+	~			 http://www.apache.org/licenses/LICENSE-2.0
+	~
+	~	 Unless required by applicable law or agreed to in writing, software
+	~	 distributed under the License is distributed on an "AS IS" BASIS,
+	~	 WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+	~	 See the License for the specific language governing permissions and
+	~	 limitations under the License.
+	~
+	~ =============================================================================
+	-->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.peterphi.std</groupId>
+	<artifactId>thymeleaf</artifactId>
+	<packaging>jar</packaging>
+	<version>10.2.7.15-SNAPSHOT</version>
+	<name>thymeleaf</name>
+	<description>Thymeleaf Template Engine</description>
+
+	<parent>
+		<groupId>com.peterphi.std</groupId>
+		<artifactId>stdlib-parent</artifactId>
+		<version>10.2.7.15-SNAPSHOT</version>
+	</parent>
+
+	<licenses>
+		<license>
+			<name>The Apache Software License, Version 2.0</name>
+			<url>http://www.apache.org/licenses/LICENSE-2.0.txt</url>
+			<distribution>repo</distribution>
+		</license>
+	</licenses>
+
+	<organization>
+		<name>The THYMELEAF team</name>
+		<url>http://www.thymeleaf.org</url>
+	</organization>
+
+	<developers>
+		<developer>
+			<id>danielfernandez</id>
+			<name>Daniel Fernandez</name>
+			<email>daniel.fernandez AT 11thlabs DOT org</email>
+			<roles>
+				<role>Project Admin</role>
+				<role>Lead Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>jmiguelsamper</id>
+			<name>Jose Miguel Samper</name>
+			<email>jmiguelsamper AT users DOT sourceforge DOT net</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+		<developer>
+			<id>ultraq</id>
+			<name>Emanuel Rabina</name>
+			<email>emanuelrabina AT gmail DOT com</email>
+			<roles>
+				<role>Developer</role>
+			</roles>
+		</developer>
+	</developers>
+
+
+	<properties>
+		<!-- These are needed for showing the build timestamp correctly at the thymeleaf.properties file -->
+		<timestamp>${maven.build.timestamp}</timestamp>
+		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
+		<servlet-api.version>2.5</servlet-api.version>
+		<attoparser.version>2.0.5.RELEASE</attoparser.version>
+		<unbescape.version>1.1.6.RELEASE</unbescape.version>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>javax.servlet</groupId>
+			<artifactId>servlet-api</artifactId>
+			<version>${servlet-api.version}</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>ognl</groupId>
+			<artifactId>ognl</artifactId>
+			<version>${ognl.version}</version>
+			
+			<exclusions>
+				<exclusion>
+					<groupId>org.javassist</groupId>
+					<artifactId>javassist</artifactId>
+				</exclusion>
+			</exclusions>
+		</dependency>
+
+		<dependency>
+			<groupId>org.attoparser</groupId>
+			<artifactId>attoparser</artifactId>
+			<version>${attoparser.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>org.unbescape</groupId>
+			<artifactId>unbescape</artifactId>
+			<version>${unbescape.version}</version>
+			<scope>compile</scope>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.core</groupId>
+			<artifactId>jackson-databind</artifactId>
+			<version>${jackson.version}</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>com.fasterxml.jackson.datatype</groupId>
+			<artifactId>jackson-datatype-jsr310</artifactId>
+			<version>${jackson.version}</version>
+			<scope>provided</scope>
+			<optional>true</optional>
+		</dependency>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>${slf4j.version}</version>
+			<scope>compile</scope>
+		</dependency>
+	</dependencies>
+</project>

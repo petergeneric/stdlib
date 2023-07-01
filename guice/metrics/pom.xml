@@ -17,10 +17,6 @@
 		<version>10.2.7.15-SNAPSHOT</version>
 	</parent>
 
-	<properties>
-		<jackson.version>2.1.1</jackson.version>
-	</properties>
-
 	<dependencies>
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
