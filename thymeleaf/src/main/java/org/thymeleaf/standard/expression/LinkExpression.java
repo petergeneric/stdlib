@@ -19,6 +19,15 @@
  */
 package org.thymeleaf.standard.expression;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.thymeleaf.TemplateEngine;
+import org.thymeleaf.context.IExpressionContext;
+import org.thymeleaf.context.ITemplateContext;
+import org.thymeleaf.exceptions.TemplateProcessingException;
+import org.thymeleaf.util.StringUtils;
+import org.thymeleaf.util.Validate;
+
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
@@ -28,15 +37,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.thymeleaf.TemplateEngine;
-import org.thymeleaf.context.IExpressionContext;
-import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.exceptions.TemplateProcessingException;
-import org.thymeleaf.util.StringUtils;
-import org.thymeleaf.util.Validate;
 
 
 /**
@@ -70,18 +70,35 @@ public final class LinkExpression extends SimpleExpression {
     
     private final IStandardExpression base;
     private final AssignationSequence parameters;
-    
+
+    // stdlib addition: cache constant expressions
+    private final boolean constant;
+    private final boolean baseconst;
+    private String cache;
 
 
-    
-    
     public LinkExpression(final IStandardExpression base, final AssignationSequence parameters) {
         super();
         Validate.notNull(base, "Base cannot be null");
         this.base = base;
         this.parameters = parameters;
+
+        constant = isConstantExpression(base) && ((parameters == null) || isConstantParameters(parameters));
+        baseconst = !constant && isConstantExpression(base);
     }
-    
+
+    private static boolean isConstantParameters(AssignationSequence seq) {
+        for (Assignation assignation : seq.getAssignations())
+        {
+            if (!isConstantExpression(assignation.getLeft()) || !isConstantExpression(assignation.getRight()))
+                return false;
+        }
+
+        return true;
+    }
+    private static boolean isConstantExpression(IStandardExpression expr) {
+        return expr == null || expr instanceof GenericTokenExpression || expr instanceof TextLiteralExpression || expr instanceof NumberTokenExpression || expr instanceof BooleanTokenExpression;
+    }
     
     
     
@@ -228,6 +245,9 @@ public final class LinkExpression extends SimpleExpression {
 
     static Object executeLinkExpression(final IExpressionContext context, final LinkExpression expression) {
 
+        if (expression.constant && expression.cache != null)
+            return expression.cache;
+
         /*
          *  DEVELOPMENT NOTE: Reasons why Spring's RequestDataValueProcessor#processUrl(...) is not applied here
          *                    instead of at th:href and th:src.
@@ -261,16 +281,24 @@ public final class LinkExpression extends SimpleExpression {
         // The URL base in a link expression will always be executed in RESTRICTED mode, so we will forbid that
         // base URLs come directly from user input (request parameters). Note this restriction does not need to apply
         // to URL parameters.
-        Object base = baseExpression.execute(templateContext, StandardExpressionExecutionContext.RESTRICTED);
+        Object base;
+        if (expression.baseconst && expression.cache != null)
+            base = expression.cache;
+        else {
+            base = baseExpression.execute(templateContext, StandardExpressionExecutionContext.RESTRICTED);
 
-        base = LiteralValue.unwrap(base);
-        if (base != null && !(base instanceof String)) {
-            base = base.toString();
-        }
-        if (base == null || StringUtils.isEmptyOrWhitespace((String) base)) {
-            base = "";
-        } else {
-            base = ((String) base).trim();
+            base = LiteralValue.unwrap(base);
+            if (base != null && !(base instanceof String)) {
+                base = base.toString();
+            }
+            if (base == null || StringUtils.isEmptyOrWhitespace((String) base)) {
+                base = "";
+            } else {
+                base = ((String) base).trim();
+            }
+
+            if (expression.baseconst)
+                expression.cache = (String)base;
         }
 
         /*
@@ -289,8 +317,14 @@ public final class LinkExpression extends SimpleExpression {
          * Call the link builder with the link base and computed parameters
          */
 
-        return templateContext.buildLink((String)base, parameters);
+        final String result = templateContext.buildLink((String) base, parameters);
 
+        if (expression.constant)
+        {
+            expression.cache = result;
+        }
+
+        return result;
     }
 
 
@@ -475,6 +509,4 @@ public final class LinkExpression extends SimpleExpression {
         return parameterValue;
 
     }
-
-
 }
