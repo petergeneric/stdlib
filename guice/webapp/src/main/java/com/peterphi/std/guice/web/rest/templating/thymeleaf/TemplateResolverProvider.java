@@ -15,8 +15,8 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 {
 	@Inject(optional = true)
 	@Named("thymeleaf.cache-ttl")
-	@Doc("The maximum Time-To-Live value on the thymeleaf in-memory template cache (default 1h)")
-	Timeout cacheTTL = new Timeout(1, TimeUnit.HOURS);
+	@Doc("The maximum Time-To-Live value on the thymeleaf in-memory template cache (default 100d)")
+	Timeout cacheTTL = new Timeout(100, TimeUnit.DAYS);
 
 	@Inject(optional = true)
 	@Named("thymeleaf.mode")
