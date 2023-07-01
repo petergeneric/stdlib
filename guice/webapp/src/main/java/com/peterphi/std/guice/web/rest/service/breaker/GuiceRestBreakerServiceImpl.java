@@ -7,6 +7,8 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.breaker.BreakerService;
 import com.peterphi.std.guice.common.breaker.TripRecord;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
+import com.peterphi.std.guice.restclient.annotations.FastFailServiceClient;
+import com.peterphi.std.guice.restclient.annotations.NoClientBreaker;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import org.apache.commons.lang.StringUtils;
@@ -16,6 +18,8 @@ import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 
+@FastFailServiceClient
+@NoClientBreaker
 @AuthConstraint(id = "framework-admin", role = "framework-admin")
 public class GuiceRestBreakerServiceImpl implements GuiceRestBreakerService
 {
@@ -52,7 +56,30 @@ public class GuiceRestBreakerServiceImpl implements GuiceRestBreakerService
 
 
 	@Override
-	public Response trigger(final String name, final boolean value, final String note)
+	public String getOverview()
+	{
+		StringBuilder sb = new StringBuilder();
+
+		boolean first = true;
+
+		for (String name : breakerService.getAllBreakerNames())
+		{
+			if (!first)
+				sb.append('\n');
+			else
+				first = false;
+
+			sb.append(name).append(',');
+			final TripRecord state = breakerService.getTripRecord(name);
+			sb.append(state.newValue);
+		}
+
+		return sb.toString();
+	}
+
+
+	@Override
+	public Response setState(final String name, final boolean value, final String note)
 	{
 		breakerService.set(name, value, StringUtils.trimToNull(note));
 
@@ -79,5 +106,14 @@ public class GuiceRestBreakerServiceImpl implements GuiceRestBreakerService
 			return Response.status(503).type("text/plain").entity("Tripped").build();
 		else
 			return Response.ok("OK", "text/plain").build();
+	}
+
+
+	@Override
+	public String setTripped(final String name, final boolean value, final String note)
+	{
+		setState(name, value, note);
+
+		return "OK";
 	}
 }

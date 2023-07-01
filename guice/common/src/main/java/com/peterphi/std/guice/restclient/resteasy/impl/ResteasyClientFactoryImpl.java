@@ -2,8 +2,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
-import com.google.inject.name.Named;
-import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.NotImplementedException;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
@@ -11,30 +10,26 @@ import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementPr
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
-import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
-import org.apache.http.auth.AuthSchemeProvider;
-import org.apache.http.auth.AuthScope;
-import org.apache.http.auth.Credentials;
-import org.apache.http.client.CredentialsProvider;
-import org.apache.http.client.config.RequestConfig;
-import org.apache.http.config.Registry;
-import org.apache.http.config.RegistryBuilder;
-import org.apache.http.impl.NoConnectionReuseStrategy;
-import org.apache.http.impl.client.BasicCookieStore;
-import org.apache.http.impl.client.BasicCredentialsProvider;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClientBuilder;
-import org.apache.http.impl.conn.PoolingHttpClientConnectionManager;
-import org.apache.http.impl.conn.SystemDefaultRoutePlanner;
+import org.apache.commons.codec.binary.Base64;
+import org.apache.commons.lang.builder.ToStringBuilder;
+import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
-import org.jboss.resteasy.client.jaxrs.engines.ApacheHttpClient4Engine;
+import org.jboss.resteasy.client.jaxrs.internal.LocalResteasyProviderFactory;
+import org.jboss.resteasy.plugins.providers.RegisterBuiltin;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import java.net.ProxySelector;
+import javax.ws.rs.client.ClientRequestContext;
+import javax.ws.rs.client.ClientRequestFilter;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 /**
@@ -43,298 +38,301 @@ import java.util.function.Consumer;
 @Singleton
 public class ResteasyClientFactoryImpl implements StoppableService
 {
-	private final PoolingHttpClientConnectionManager connectionManager;
-	private final ResteasyProviderFactory resteasyProviderFactory;
+	private static final Logger log = LoggerFactory.getLogger(ResteasyClientFactoryImpl.class);
 
-
-	@Inject(optional = true)
-	@Named("jaxrs.connection.timeout")
-	@Doc("The connection timeout for HTTP sockets (default 20s)")
-	Timeout connectionTimeout = new Timeout(20, TimeUnit.SECONDS);
-
-	@Inject(optional = true)
-	@Named("jaxrs.socket.timeout")
-	@Doc("The Socket Timeout for HTTP sockets (default 5m)")
-	Timeout socketTimeout = new Timeout(5, TimeUnit.MINUTES);
-
-
-	@Inject(optional = true)
-	@Named("jaxrs.fast-fail.connection.timeout")
-	@Doc("The connection timeout for HTTP sockets created for Fast Fail clients (default 15s)")
-	Timeout fastFailConnectionTimeout = new Timeout(15, TimeUnit.SECONDS);
-
-	@Inject(optional = true)
-	@Named("jaxrs.fast-fail.socket.timeout")
-	@Doc("The Socket Timeout for HTTP sockets created for Fast Fail clients (default 15s)")
-	Timeout fastFailSocketTimeout = new Timeout(15, TimeUnit.SECONDS);
-
-
-	@Inject(optional = true)
-	@Named("jaxrs.nokeepalive")
-	@Doc("If true, keepalive will be disabled for HTTP connections (default true)")
-	boolean noKeepalive = true;
-
-	@Inject(optional = true)
-	@Named("jaxrs.max-connections-per-route")
-	@Doc("The maximum number of connections per HTTP route (default MAXINT)")
-	int maxConnectionsPerRoute = Integer.MAX_VALUE;
-
-	@Inject(optional = true)
-	@Named("jaxrs.max-total-connections")
-	@Doc("The maximum number of HTTP connections in total across all routes (default MAXINT)")
-	int maxConnectionsTotal = Integer.MAX_VALUE;
+	private final HttpClientFactory httpClientFactory;
+	//private final ResteasyProviderFactory resteasyProviderFactory;
 
 	private ResteasyClient client;
+	private ResteasyClient clientH2C;
+
+	private final List<Object> resteasyProviders = new ArrayList<>();
 
 
 	@Inject
 	public ResteasyClientFactoryImpl(final ShutdownManager manager,
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
-	                                 final JAXBSerialiserFactory serialiserFactory)
+	                                 final JAXBSerialiserFactory serialiserFactory,
+	                                 final HttpClientFactory httpClientFactory)
 	{
-		// Make sure that if we're called multiple times (e.g. because of a guice CreationException failing startup after us) we start fresh
-		if (ResteasyProviderFactory.peekInstance() != null)
-			ResteasyProviderFactory.clearInstanceIfEqual(ResteasyProviderFactory.peekInstance());
+		this.httpClientFactory = httpClientFactory;
 
-		this.resteasyProviderFactory = ResteasyProviderFactory.getInstance();
-
-		// Register the joda param converters
-		resteasyProviderFactory.registerProviderInstance(new CommonTypesParamConverterProvider());
-
-		// Register the exception processor
-		if (remoteExceptionClientResponseFilter != null)
-			resteasyProviderFactory.registerProviderInstance(remoteExceptionClientResponseFilter);
-
-
-		if (tracingRequestFilter != null)
-			resteasyProviderFactory.registerProviderInstance(tracingRequestFilter);
-
-		// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
-		FastInfosetPreferringClientRequestFilter.register();
-
-		// Set up JAXB providers
+		// Set up the resteasy providers we will register against clients
 		{
-			resteasyProviderFactory.register(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
-			resteasyProviderFactory.register(new JAXBXmlRootElementProvider<>(serialiserFactory));
+			// Register the joda param converters
+			resteasyProviders.add(new CommonTypesParamConverterProvider());
 
-			// Set up providers for XmlType-annotated and JAXBElement entities
-			// These providers will share the same underlying serialiser map
-			final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
-			resteasyProviderFactory.register(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
-			resteasyProviderFactory.register(xmlTypeProvider);
+			// Register the exception processor
+			if (remoteExceptionClientResponseFilter != null)
+				resteasyProviders.add(remoteExceptionClientResponseFilter);
+
+			if (tracingRequestFilter != null)
+				resteasyProviders.add(tracingRequestFilter);
+
+			// Register provider that always tries to get fastinfoset rather than application/xml if the fast infoset plugin is available
+			resteasyProviders.add(new FastInfosetPreferringClientRequestFilter());
+
+			// Set up JAXB providers
+			{
+				resteasyProviders.add(new FastInfosetXmlRootElementProvider<>(serialiserFactory));
+				resteasyProviders.add(new JAXBXmlRootElementProvider<>(serialiserFactory));
+
+				// Set up providers for XmlType-annotated and JAXBElement entities
+				// These providers will share the same underlying serialiser map
+				final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
+				resteasyProviders.add(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
+				resteasyProviders.add(xmlTypeProvider);
+			}
+
 		}
-
-
-		// Set up the Connection Manager
-		this.connectionManager = new PoolingHttpClientConnectionManager();
-		connectionManager.setDefaultMaxPerRoute(maxConnectionsPerRoute);
-		connectionManager.setMaxTotal(maxConnectionsTotal);
 
 		if (manager != null)
 			manager.register(this);
 	}
 
 
-	/**
-	 * Build a new Resteasy Client, optionally with authentication credentials
-	 *
-	 * @param fastFail
-	 * 		if true, use fast fail timeouts, otherwise false to use default timeouts
-	 * @param authScope
-	 * 		the auth scope to use - if null then defaults to <code>AuthScope.ANY</code>
-	 * @param credentials
-	 * 		the credentials to use (optional, e.g. {@link org.apache.http.auth.UsernamePasswordCredentials})
-	 * @param customiser
-	 * 		optional HttpClientBuilder customiser.
-	 *
-	 * @return
-	 */
-	public ResteasyClient getOrCreateClient(final boolean fastFail,
-	                                        final AuthScope authScope,
-	                                        final Credentials credentials,
-	                                        final boolean preemptiveAuth,
-	                                        final boolean storeCookies,
-	                                        Consumer<HttpClientBuilder> customiser)
+	private void doProviderFactoryRegistration(ResteasyProviderFactory resteasyProviderFactory)
 	{
-		customiser = createHttpClientCustomiser(fastFail, authScope, credentials, preemptiveAuth, storeCookies, customiser);
-
-
-		return getOrCreateClient(customiser, null);
+		for (Object provider : resteasyProviders)
+			resteasyProviderFactory.registerProviderInstance(provider);
 	}
 
 
-	/**
-	 * N.B. This method signature may change in the future to add new parameters
-	 *
-	 * @param fastFail
-	 * @param authScope
-	 * @param credentials
-	 * @param preemptiveAuth
-	 * @param storeCookies
-	 * @param customiser
-	 *
-	 * @return
-	 */
-	public Consumer<HttpClientBuilder> createHttpClientCustomiser(final boolean fastFail,
-	                                                              final AuthScope authScope,
-	                                                              final Credentials credentials,
-	                                                              final boolean preemptiveAuth,
-	                                                              final boolean storeCookies,
-	                                                              Consumer<HttpClientBuilder> customiser)
+	public ResteasyClient getOrCreateClient(final AuthCredential credentials,
+	                                        final boolean fastFail,
+	                                        final boolean storeCookies,
+	                                        final boolean h2c)
 	{
-		// Customise timeouts if fast fail mode is enabled
-		if (fastFail)
+		final boolean canShare = !fastFail && !storeCookies;
+
+		// If possible, get a shared Http Client
+		ClientHttpEngine shared = null;
+		if (canShare)
+			shared = httpClientFactory.getClient(h2c, fastFail, storeCookies);
+
+		// We will try to share unauthenticated clients
+		// This returns the existing client if present, otherwise sets up a Consumer to capture that client for future reuse
+		Consumer<ResteasyClient> sharedClientSetter = null;
+		if (shared != null && credentials == null)
 		{
-			customiser = concat(customiser, b ->
+			if (h2c && httpClientFactory.willVaryWithH2C())
 			{
-				RequestConfig.Builder requestBuilder = RequestConfig.custom();
+				if (this.clientH2C != null)
+					return this.clientH2C;
+				else
+					sharedClientSetter = (c) -> this.clientH2C = c;
+			}
+			else
+			{
+				if (this.client != null)
+					return this.client;
+				else
+					sharedClientSetter = (c) -> this.client = c;
+			}
+		}
 
-				requestBuilder.setConnectTimeout((int) fastFailConnectionTimeout.getMilliseconds())
-				              .setSocketTimeout((int) fastFailSocketTimeout.getMilliseconds());
+		// Now build a resteasy client
+		ResteasyClientBuilder builder = (ResteasyClientBuilder) ResteasyClientBuilder.newBuilder();
 
-				b.setDefaultRequestConfig(requestBuilder.build());
+		// Set up providers
+		{
+			LocalResteasyProviderFactory providerFactory = new LocalResteasyProviderFactory(new ResteasyProviderFactory());
+			RegisterBuiltin.register(providerFactory);
+
+			doProviderFactoryRegistration(providerFactory);
+
+			builder.providerFactory(providerFactory);
+		}
+
+		if (credentials != null)
+		{
+			builder.register(new ClientRequestFilter()
+			{
+				@Override
+				public void filter(final ClientRequestContext ctx) throws IOException
+				{
+					final var uri = ctx.getUri();
+					if (credentials.scope().test(uri.getScheme(), uri.getHost(), uri.getPort()))
+					{
+						if (credentials instanceof BearerTokenCredentials)
+						{
+							ctx
+									.getHeaders()
+									.putIfAbsent("Authorization",
+									             Collections.singletonList("Bearer " +
+									                                       ((BearerTokenCredentials) credentials)
+											                                       .token()
+											                                       .getToken()));
+						}
+						else if (credentials instanceof UsernamePasswordCredentials)
+						{
+							final UsernamePasswordCredentials passwd = (UsernamePasswordCredentials) credentials;
+							final String headerVal = "Basic " +
+							                         Base64.encodeBase64String((passwd.username() + ":" + passwd.password()).getBytes(
+									                         StandardCharsets.UTF_8));
+
+							ctx.getHeaders().putIfAbsent("Authorization", Collections.singletonList(headerVal));
+						}
+					}
+				}
 			});
 		}
 
-		// If credentials were supplied then we should set them up
-		if (credentials != null)
-		{
-			CredentialsProvider credentialsProvider = new BasicCredentialsProvider();
+		if (storeCookies) // On newer versions of resteasy: builder.enableCookieManagement();
+			throw new NotImplementedException("Cookie Jar not implemented for Resteasy on this branch");
 
-			if (authScope != null)
-				credentialsProvider.setCredentials(authScope, credentials);
-			else
-				credentialsProvider.setCredentials(AuthScope.ANY, credentials);
-
-			// Set up bearer auth scheme provider if we're using bearer credentials
-			if (credentials instanceof BearerCredentials)
-			{
-				customiser = concat(customiser, b ->
-				{
-					Registry<AuthSchemeProvider> authSchemeRegistry = RegistryBuilder.<AuthSchemeProvider>create().register(
-							"Bearer",
-							new BearerAuthSchemeProvider()).build();
-					b.setDefaultAuthSchemeRegistry(authSchemeRegistry);
-				});
-			}
-
-			// Set up the credentials customisation
-			customiser = concat(customiser, b -> b.setDefaultCredentialsProvider(credentialsProvider));
-
-			if (preemptiveAuth && credentials instanceof BearerCredentials)
-				customiser = concat(customiser, b -> b.addInterceptorFirst(new PreemptiveBearerAuthInterceptor()));
-			else
-				customiser = concat(customiser, b -> b.addInterceptorLast(new PreemptiveBasicAuthInterceptor()));
-		}
-
-		// If cookies are enabled then set up a cookie store
-		if (storeCookies)
-			customiser = concat(customiser, b -> b.setDefaultCookieStore(new BasicCookieStore()));
-
-		return customiser;
-	}
-
-
-	private ResteasyClient getOrCreateClient(Consumer<HttpClientBuilder> httpCustomiser,
-	                                         Consumer<ResteasyClientBuilder> resteasyCustomiser)
-	{
-		if (httpCustomiser == null && resteasyCustomiser == null)
-		{
-			// Recursively call self to create a shared client for other non-customised consumers
-			if (client == null)
-				client = getOrCreateClient(Objects:: requireNonNull, Objects:: requireNonNull);
-
-			return client; // use shared client
-		}
+		// Build and apply the HttpEngine
+		if (shared != null)
+			builder.httpEngine(shared); // Use the shared HTTP client
 		else
-		{
-			final CloseableHttpClient http = createHttpClient(httpCustomiser);
+			builder.httpEngine(httpClientFactory.getClient(h2c, fastFail, storeCookies)); // Get an appropriate HttpClient
 
+		var client = builder.build();
 
-			// Now build a resteasy client
-			{
-				ResteasyClientBuilder builder = new ResteasyClientBuilder();
+		if (sharedClientSetter != null)
+			sharedClientSetter.accept(client);
 
-				builder.httpEngine(new ApacheHttpClient4Engine(http)).providerFactory(resteasyProviderFactory);
-
-				if (resteasyCustomiser != null)
-					resteasyCustomiser.accept(builder);
-
-				return builder.build();
-			}
-		}
-	}
-
-
-	/**
-	 * Build an HttpClient
-	 *
-	 * @param customiser
-	 *
-	 * @return
-	 */
-	public CloseableHttpClient createHttpClient(final Consumer<HttpClientBuilder> customiser)
-	{
-		final HttpClientBuilder builder = HttpClientBuilder.create();
-
-		// By default set long call timeouts
-		{
-			RequestConfig.Builder requestBuilder = RequestConfig.custom();
-
-			requestBuilder.setConnectTimeout((int) connectionTimeout.getMilliseconds())
-			              .setSocketTimeout((int) socketTimeout.getMilliseconds());
-
-			builder.setDefaultRequestConfig(requestBuilder.build());
-		}
-
-		// Set the default keepalive setting
-		if (noKeepalive)
-			builder.setConnectionReuseStrategy(new NoConnectionReuseStrategy());
-
-		// By default share the common connection provider
-		builder.setConnectionManager(connectionManager);
-
-		// By default use the JRE default route planner for proxies
-		builder.setRoutePlanner(new SystemDefaultRoutePlanner(ProxySelector.getDefault()));
-
-		// Allow customisation
-		if (customiser != null)
-			customiser.accept(builder);
-
-		return builder.build();
-	}
-
-
-	/**
-	 * Combine two consumers. Consumers may be null, in which case this selects the non-null one. If both are null then will
-	 * return <code>null</code>
-	 *
-	 * @param a
-	 * 		the first consumer (optional)
-	 * @param b
-	 * 		the second consumer (optional)
-	 * @param <T>
-	 *
-	 * @return
-	 */
-	private static <T> Consumer<T> concat(Consumer<T> a, Consumer<T> b)
-	{
-		if (a != null && b != null) // both non-null
-			return a.andThen(b);
-		else if (a != null)
-			return a;
-		else
-			return b;
+		return client;
 	}
 
 
 	@Override
 	public void shutdown()
 	{
-		connectionManager.shutdown();
+		try
+		{
+			if (client != null)
+				client.close();
+		}
+		catch (Throwable t)
+		{
+			log.error("Error shutting down shared ResteasyClient!", t);
+		}
 
-		if (client != null)
-			client.close();
+		try
+		{
+			if (clientH2C != null)
+				clientH2C.close();
+		}
+		catch (Throwable t)
+		{
+			log.error("Error shutting down shared H2C ResteasyClient!", t);
+		}
+	}
+
+
+	public interface AuthCredential
+	{
+		ResteasyClientFactoryImpl.AuthScope scope();
+	}
+
+	public static class AuthScope
+	{
+		public final String scheme;
+		public final String host;
+		public final int port;
+
+
+		public AuthScope(final String scheme, final String host, final int port)
+		{
+			this.scheme = scheme;
+			this.host = host;
+			this.port = port;
+		}
+
+
+		public String scheme() { return scheme;}
+		public String host() { return host;}
+		public int port() { return port;}
+
+		public boolean test(String uriScheme, String uriHost, int uriPort)
+		{
+			if (scheme != null && !scheme.equalsIgnoreCase(uriScheme))
+				return false;
+			else if (port != -1 && uriPort != port)
+				return false;
+			else
+				return host().equalsIgnoreCase(uriHost);
+		}
+
+
+		@Override
+		public boolean equals(final Object o)
+		{
+			if (this == o)
+				return true;
+			if (!(o instanceof AuthScope))
+				return false;
+
+			AuthScope authScope = (AuthScope) o;
+
+			if (port != authScope.port)
+				return false;
+			if (!Objects.equals(scheme, authScope.scheme))
+				return false;
+			return Objects.equals(host, authScope.host);
+		}
+
+
+		@Override
+		public int hashCode()
+		{
+			int result = scheme != null ? scheme.hashCode() : 0;
+			result = 31 * result + (host != null ? host.hashCode() : 0);
+			result = 31 * result + port;
+			return result;
+		}
+
+
+		@Override
+		public String toString()
+		{
+			return new ToStringBuilder(this).append("scheme", scheme).append("host", host).append("port", port).toString();
+		}
+	}
+
+
+	public static class BearerTokenCredentials implements AuthCredential
+	{
+		public final AuthScope scope;
+		public final BearerGenerator token;
+
+
+		public BearerTokenCredentials(final AuthScope scope, final BearerGenerator token)
+		{
+			this.scope = scope;
+			this.token = token;
+		}
+
+
+		public AuthScope scope() { return scope;}
+		public BearerGenerator token(){return token;}
+
+	}
+
+	public static class UsernamePasswordCredentials implements AuthCredential
+	{
+		public final AuthScope scope;
+		public final String username;
+		public final String password;
+		public final boolean preempt;
+
+
+		public UsernamePasswordCredentials(final AuthScope scope,
+		                                   final String username,
+		                                   final String password,
+		                                   final boolean preempt)
+		{
+			this.scope = scope;
+			this.username = username;
+			this.password = password;
+			this.preempt = preempt;
+		}
+
+		public AuthScope scope() { return scope;}
+		public String username() { return username;}
+		public String password() { return password;}
+		public boolean preempt() { return preempt;}
 	}
 }

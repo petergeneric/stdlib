@@ -11,8 +11,8 @@ import com.peterphi.std.guice.apploader.GuiceRole;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
-import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.GuiceModule;
+import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.net.NetworkConfigGuiceRole;
@@ -22,6 +22,7 @@ import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyClientFactoryImpl;
 import com.peterphi.std.guice.restclient.resteasy.impl.ResteasyProxyClientFactoryImpl;
+import com.peterphi.std.guice.restclient.resteasy.impl.urlconn.URLConnectionHTTPClientFactory;
 import com.peterphi.std.io.PropertyFile;
 import com.peterphi.std.types.SimpleId;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
@@ -99,7 +100,7 @@ class GuiceFactory
 			{
 				final GuiceRole role = it.next();
 
-				log.debug("Discovered guice role: " + role);
+				log.debug("Discovered guice role: {}", role);
 
 				roles.add(role);
 			}
@@ -111,7 +112,7 @@ class GuiceFactory
 		// Allow all GuiceRole implementations to add/remove/reorder configuration sources
 		for (GuiceRole role : roles)
 		{
-			log.debug("Adding requested guice role: " + role);
+			log.debug("Adding requested guice role: {}", role);
 			role.adjustConfigurations(configs);
 		}
 
@@ -151,7 +152,7 @@ class GuiceFactory
 		// If there are overrides then rebuild the configuration to reflect it
 		if (overrideFile != null)
 		{
-			log.debug("Applying overrides: " + overrideFile.getFile());
+			log.debug("Applying overrides: {}", overrideFile.getFile());
 			properties.setOverrides(overrideFile.toMap());
 		}
 
@@ -180,7 +181,7 @@ class GuiceFactory
 
 				setup = setupClass.newInstance();
 
-				log.debug("Constructed GuiceSetup: " + setupClass);
+				log.debug("Constructed GuiceSetup: {}", setupClass);
 			}
 			catch (InstantiationException | IllegalAccessException e)
 			{
@@ -189,7 +190,7 @@ class GuiceFactory
 		}
 		else
 		{
-			log.debug("Using static GuiceSetup: " + staticSetup);
+			log.debug("Using static GuiceSetup: {}", staticSetup);
 			setup = staticSetup;
 		}
 
@@ -262,7 +263,9 @@ class GuiceFactory
 		// Set up the shutdown module
 		ShutdownModule shutdown = new ShutdownModule();
 
-		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry();
+		final boolean includeJvmMetrics = config.getBoolean(GuiceProperties.METRICS_INCLUDE_JVM, false);
+
+		final MetricRegistry metricRegistry = CoreMetricsModule.buildRegistry(includeJvmMetrics);
 
 		try
 		{
@@ -288,7 +291,7 @@ class GuiceFactory
 					((GuiceModule) module).setConfig(config);
 
 			if (log.isTraceEnabled())
-				log.trace("Creating Injector with modules: " + modules);
+				log.trace("Creating Injector with modules: {}", modules);
 
 			final Injector injector = Guice.createInjector(stage, modules);
 			injectorRef.set(injector);
@@ -303,14 +306,12 @@ class GuiceFactory
 				final String contextName = config.get(GuiceProperties.SERVLET_CONTEXT_NAME, "(app)");
 
 				if (log.isDebugEnabled())
-					log.debug("Injector for " + contextName + " created in " + (finished - started) + " ms");
+					log.debug("Injector for {} created in {} ms", contextName, finished - started);
 
 				if (scanner != null && log.isDebugEnabled())
-					log.debug("Class scanner stats: insts=" +
-					          scannerFactory.getMetricNewInstanceCount() +
-					          " cached createTime=" +
-					          scanner.getConstructionTime() +
-					          ", scanTime=" +
+					log.debug("Class scanner stats: insts={} cached createTime={}, scanTime={}",
+					          scannerFactory.getMetricNewInstanceCount(),
+					          scanner.getConstructionTime(),
 					          scanner.getSearchTime());
 			}
 
@@ -377,7 +378,11 @@ class GuiceFactory
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBSerialiserFactory serialiserFactory = new JAXBSerialiserFactory(useMoxy);
-			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null, null, null, serialiserFactory);
+			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null,
+			                                                                              null,
+			                                                                              null,
+			                                                                              serialiserFactory,
+			                                                                              new URLConnectionHTTPClientFactory());
 
 			try
 			{
@@ -440,7 +445,7 @@ class GuiceFactory
 
 	static List<PropertyFile> loadConfig(final ClassLoader loader, String name) throws IOException
 	{
-		log.trace("Search for config files with name: " + name);
+		log.trace("Search for config files with name: {}", name);
 		final List<PropertyFile> configs = new ArrayList<>();
 		final Enumeration<URL> urls = loader.getResources(name);
 
@@ -448,7 +453,7 @@ class GuiceFactory
 		{
 			final URL url = urls.nextElement();
 
-			log.debug("Loading property file: " + url);
+			log.debug("Loading property file: {}", url);
 
 			configs.add(new PropertyFile(url));
 		}
@@ -467,7 +472,7 @@ class GuiceFactory
 
 		try
 		{
-			Class<?> clazz = Class.forName(prop);
+			Class<?> clazz = Class.forName(prop, false, GuiceFactory.class.getClassLoader());
 
 			if (base.isAssignableFrom(clazz))
 				return (Class<? extends T>) clazz; // unchecked cast
