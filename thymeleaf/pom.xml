@@ -25,14 +25,14 @@
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>thymeleaf</artifactId>
 	<packaging>jar</packaging>
-	<version>14.4.9-SNAPSHOT</version>
+	<version>14.5.0</version>
 	<name>thymeleaf</name>
 	<description>Thymeleaf Template Engine</description>
 
 	<parent>
 		<groupId>com.peterphi.std</groupId>
 		<artifactId>stdlib-parent</artifactId>
-		<version>14.4.9-SNAPSHOT</version>
+		<version>14.5.0</version>
 	</parent>
 
 	<licenses>
