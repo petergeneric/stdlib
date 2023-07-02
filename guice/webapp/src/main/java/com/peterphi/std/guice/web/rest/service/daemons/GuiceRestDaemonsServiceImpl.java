@@ -2,14 +2,15 @@ package com.peterphi.std.guice.web.rest.service.daemons;
 
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
+import com.google.inject.util.Enhanced;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.daemon.GuiceDaemon;
 import com.peterphi.std.guice.common.daemon.GuiceDaemonRegistry;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
-import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
+import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
 import org.apache.commons.lang.StringUtils;
 import org.joda.time.DateTime;
 
@@ -164,9 +165,10 @@ public class GuiceRestDaemonsServiceImpl implements GuiceRestDaemonsService
 	{
 		Class<?> clazz = daemon.getClass();
 
+
 		// If we get a guice-enhanced class then we should go up one level to get the class name from the user's code
-		if (clazz.getName().contains("$$EnhancerByGuice$$"))
-			clazz = clazz.getSuperclass();
+		if (Enhanced.isEnhanced(clazz))
+			clazz = Enhanced.unenhancedClass(clazz).orElseThrow();
 
 		if (clazz.isAnnotationPresent(Doc.class))
 		{
