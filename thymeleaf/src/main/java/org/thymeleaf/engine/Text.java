@@ -36,7 +36,7 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
 
 
     Text(final CharSequence text) {
-        super(trim(text));
+        super(text);
     }
 
 
