@@ -68,11 +68,6 @@
 			<artifactId>jboss-logging</artifactId>
 			<version>3.3.0.Final</version>
 		</dependency>
-		<dependency>
-			<groupId>org.jboss.resteasy</groupId>
-			<artifactId>resteasy-jackson2-provider</artifactId>
-			<version>${resteasy.version}</version>
-		</dependency>
 
 		<dependency>
 			<groupId>commons-discovery</groupId>

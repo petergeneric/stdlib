@@ -11,6 +11,7 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
+import com.peterphi.std.guice.restclient.resteasy.impl.jackson.Jackson2Provider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
@@ -378,6 +379,11 @@ class GuicedResteasy implements GuiceApplication
 			final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
 			providerFactory.registerProviderInstance(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
 			providerFactory.registerProviderInstance(xmlTypeProvider);
+		}
+
+		// Set up Jackson
+		{
+			providerFactory.registerProviderInstance(new Jackson2Provider());
 		}
 
 		// Register the exception mapper

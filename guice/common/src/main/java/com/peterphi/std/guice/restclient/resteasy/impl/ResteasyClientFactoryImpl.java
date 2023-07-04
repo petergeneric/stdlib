@@ -5,18 +5,19 @@ import com.google.inject.Singleton;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jackson.Jackson2Provider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.codec.binary.Base64;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.client.ClientRequestContext;
 import javax.ws.rs.client.ClientRequestFilter;
@@ -78,6 +79,11 @@ public class ResteasyClientFactoryImpl implements StoppableService
 				final JAXBXmlTypeProvider<Object> xmlTypeProvider = new JAXBXmlTypeProvider<>(serialiserFactory);
 				resteasyProviders.add(new FastInfosetXmlTypeProvider<>(xmlTypeProvider));
 				resteasyProviders.add(xmlTypeProvider);
+			}
+
+			// Setup Jackson provider
+			{
+				resteasyProviders.add(new Jackson2Provider());
 			}
 
 		}
