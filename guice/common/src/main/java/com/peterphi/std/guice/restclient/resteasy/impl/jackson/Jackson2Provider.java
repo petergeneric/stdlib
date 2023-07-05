@@ -1,8 +1,9 @@
 package com.peterphi.std.guice.restclient.resteasy.impl.jackson;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.jaxrs.cfg.Annotations;
 import com.fasterxml.jackson.jaxrs.json.JacksonJsonProvider;
+import com.google.inject.Inject;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import org.jboss.resteasy.core.messagebody.AsyncBufferedMessageBodyWriter;
 
 import javax.ws.rs.Consumes;
@@ -14,15 +15,9 @@ import javax.ws.rs.ext.Provider;
 @Produces({"application/json", "application/*+json", "text/json"})
 public class Jackson2Provider extends JacksonJsonProvider implements AsyncBufferedMessageBodyWriter<Object>
 {
-	public static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-
-	static
+	@Inject
+	public Jackson2Provider(JacksonFactory factory)
 	{
-		OBJECT_MAPPER.findAndRegisterModules();
-	}
-
-	public Jackson2Provider()
-	{
-		super(OBJECT_MAPPER, new Annotations[]{Annotations.JACKSON});
+		super(factory.getObjectMapper(), new Annotations[]{Annotations.JACKSON});
 	}
 }

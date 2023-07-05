@@ -12,6 +12,7 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScanner;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.GuiceModule;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.metrics.CoreMetricsModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
@@ -378,10 +379,12 @@ class GuiceFactory
 		{
 			final boolean useMoxy = config.getBoolean(GuiceProperties.MOXY_ENABLED, true);
 			final JAXBSerialiserFactory serialiserFactory = new JAXBSerialiserFactory(useMoxy);
+			final JacksonFactory jacksonFactory = new JacksonFactory();
 			final ResteasyClientFactoryImpl clientFactory = new ResteasyClientFactoryImpl(null,
 			                                                                              null,
 			                                                                              null,
 			                                                                              serialiserFactory,
+																						  jacksonFactory,
 			                                                                              new URLConnectionHTTPClientFactory());
 
 			try

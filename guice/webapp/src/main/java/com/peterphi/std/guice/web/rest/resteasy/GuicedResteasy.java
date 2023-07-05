@@ -9,6 +9,7 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.restclient.resteasy.impl.jackson.Jackson2Provider;
@@ -94,6 +95,9 @@ class GuicedResteasy implements GuiceApplication
 
 	@Inject
 	JAXBSerialiserFactory serialiserFactory;
+
+	@Inject
+	JacksonFactory jacksonFactory;
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -383,7 +387,7 @@ class GuicedResteasy implements GuiceApplication
 
 		// Set up Jackson
 		{
-			providerFactory.registerProviderInstance(new Jackson2Provider());
+			providerFactory.registerProviderInstance(new Jackson2Provider(jacksonFactory));
 		}
 
 		// Register the exception mapper

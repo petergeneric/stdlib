@@ -2,6 +2,7 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
@@ -50,6 +51,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBSerialiserFactory serialiserFactory,
+	                                 final JacksonFactory jacksonFactory,
 	                                 final HttpClientFactory httpClientFactory)
 	{
 		this.httpClientFactory = httpClientFactory;
@@ -83,9 +85,8 @@ public class ResteasyClientFactoryImpl implements StoppableService
 
 			// Setup Jackson provider
 			{
-				resteasyProviders.add(new Jackson2Provider());
+				resteasyProviders.add(new Jackson2Provider(jacksonFactory));
 			}
-
 		}
 
 		if (manager != null)
