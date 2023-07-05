@@ -4,7 +4,6 @@ import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.eclipse.persistence.internal.oxm.record.DOMInputSource;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
@@ -389,7 +388,15 @@ public class JAXBSerialiser
 	 */
 	public <T> T deserialise(final Class<T> clazz, final Element xml)
 	{
-		final Object obj = deserialise(new DOMInputSource((xml)));
+		final Object obj;
+		try
+		{
+			obj = getUnmarshaller().unmarshal(xml, clazz);
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("deserialisation", e);
+		}
 
 		if (clazz.isInstance(obj))
 			return clazz.cast(obj);
