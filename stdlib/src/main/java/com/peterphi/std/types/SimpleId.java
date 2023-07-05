@@ -1,85 +1,21 @@
 package com.peterphi.std.types;
 
-import java.io.Serializable;
 import java.util.Random;
-import java.util.UUID;
 
 /**
  * A simple, untyped Id field; this is one step above having a String id<br />
  * It is recommended that users extend Id themselves rather than using this type (as a SimpleId adds no discernable information
  * about what the id is for)
  */
-public final class SimpleId extends Id implements Serializable
+public final class SimpleId
 {
-	/**
-	 *
-	 */
-	private static final long serialVersionUID = 1L;
-	// 0-9a-z as a char array
-	private final static char[] digits = {'0',
-	                                      '1',
-	                                      '2',
-	                                      '3',
-	                                      '4',
-	                                      '5',
-	                                      '6',
-	                                      '7',
-	                                      '8',
-	                                      '9',
-	                                      'a',
-	                                      'b',
-	                                      'c',
-	                                      'd',
-	                                      'e',
-	                                      'f',
-	                                      'g',
-	                                      'h',
-	                                      'i',
-	                                      'j',
-	                                      'k',
-	                                      'l',
-	                                      'm',
-	                                      'n',
-	                                      'o',
-	                                      'p',
-	                                      'q',
-	                                      'r',
-	                                      's',
-	                                      't',
-	                                      'u',
-	                                      'v',
-	                                      'w',
-	                                      'x',
-	                                      'y',
-	                                      'z'};
+	// 0-9a-z excluding vowels
+	private final static String digits = "0123456789bcdfghjklmnpqrstvwxyz";
 
 
-	/**
-	 * @param id
-	 */
-	public SimpleId(final String id)
+	private SimpleId()
 	{
-		super(id);
 	}
-
-
-	public SimpleId(final UUID id)
-	{
-		this(id.toString());
-	}
-
-
-	/**
-	 * Return an Id which uses 32 random alphanumeric characters as its value
-	 *
-	 * @return
-	 */
-	public static SimpleId random()
-	{
-		return new SimpleId(alphanumeric(32));
-	}
-
-
 	/**
 	 * Generates a random sequence of alphanumeric characters of length <code>length</code> using a new pseudorandom number
 	 * generator (<code>new Random()</code>)
@@ -89,7 +25,7 @@ public final class SimpleId extends Id implements Serializable
 	 *
 	 * @return a new random alphanumeric String of length <code>length</code>
 	 */
-	public final static String alphanumeric(int length)
+	public static String alphanumeric(int length)
 	{
 		final Random random = new Random();
 
@@ -107,7 +43,7 @@ public final class SimpleId extends Id implements Serializable
 	 *
 	 * @return a String of length <code>length</code>
 	 */
-	public final static String alphanumeric(final String prefix, final int totalLength)
+	public static String alphanumeric(final String prefix, final int totalLength)
 	{
 		if (prefix.length() >= totalLength)
 			throw new IllegalArgumentException("Cannot generate id of length " +
@@ -131,14 +67,14 @@ public final class SimpleId extends Id implements Serializable
 	 *
 	 * @return a new random alphanumeric String of length <code>length</code>
 	 */
-	public final static String alphanumeric(final Random random, final int length)
+	public static String alphanumeric(final Random random, final int length)
 	{
 		final char[] buffer = new char[length];
 
 		for (int i = 0; i < length; i++)
 		{
-			final int rand = random.nextInt(36);
-			buffer[i] = digits[rand];
+			final int rand = random.nextInt(digits.length());
+			buffer[i] = digits.charAt(rand);
 		}
 
 		return new String(buffer);
