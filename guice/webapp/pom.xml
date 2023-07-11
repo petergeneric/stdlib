@@ -43,7 +43,7 @@
 		</dependency>
 
 		<dependency>
-			<groupId>com.peterphi.std</groupId>
+			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf</artifactId>
 			<version>${project.version}</version>
 			<exclusions>

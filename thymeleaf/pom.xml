@@ -22,7 +22,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 
-	<groupId>com.peterphi.std</groupId>
+	<groupId>org.thymeleaf</groupId>
 	<artifactId>thymeleaf</artifactId>
 	<packaging>jar</packaging>
 	<version>14.6.3-SNAPSHOT</version>
