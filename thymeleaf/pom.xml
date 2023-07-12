@@ -82,7 +82,7 @@
 		<timestamp>${maven.build.timestamp}</timestamp>
 		<maven.build.timestamp.format>yyyy-MM-dd'T'HH:mm:ssZ</maven.build.timestamp.format>
 		<servlet-api.version>2.5</servlet-api.version>
-		<attoparser.version>2.0.5.RELEASE</attoparser.version>
+		<attoparser.version>2.0.6.RELEASE</attoparser.version>
 		<unbescape.version>1.1.6.RELEASE</unbescape.version>
 	</properties>
 

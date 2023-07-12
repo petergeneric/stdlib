@@ -19,9 +19,7 @@
  */
 package org.thymeleaf.standard.expression;
 
-import java.util.Collections;
-import java.util.Map;
-
+import ognl.ClassResolver;
 import ognl.OgnlContext;
 import ognl.OgnlException;
 import ognl.OgnlRuntime;
@@ -35,6 +33,11 @@ import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.expression.IExpressionObjects;
 import org.thymeleaf.standard.util.StandardExpressionUtils;
+import org.thymeleaf.util.ExpressionUtils;
+
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -65,6 +68,8 @@ public final class OGNLVariableExpressionEvaluator
                     OGNLContextPropertyAccessor.RESTRICT_REQUEST_PARAMETERS,
                     OGNLContextPropertyAccessor.RESTRICT_REQUEST_PARAMETERS);
 
+    private static ThymeleafACLClassResolver CLASS_RESOLVER = new ThymeleafACLClassResolver();
+    private static OGNLPublicMemberAccess MEMBER_ACCESS = new OGNLPublicMemberAccess();
 
     private final boolean applyOGNLShortcuts;
 
@@ -202,6 +207,12 @@ public final class OGNLVariableExpressionEvaluator
             final StandardExpressionExecutionContext expContext,
             final boolean applyOGNLShortcuts) throws OgnlException {
 
+        if (expContext.getRestrictInstantiationAndStatic()
+                && StandardExpressionUtils.containsOGNLInstantiationOrStaticOrParam(exp)) {
+            throw new TemplateProcessingException(
+                "Instantiation of new objects and access to static classes or parameters is forbidden in this context");
+        }
+
         if (expression instanceof VariableExpression) {
 
             final VariableExpression vexpression = (VariableExpression) expression;
@@ -210,7 +221,7 @@ public final class OGNLVariableExpressionEvaluator
             if (cachedExpression != null && cachedExpression instanceof ComputedOGNLExpression) {
                 return (ComputedOGNLExpression) cachedExpression;
             }
-            cachedExpression = parseComputedOGNLExpression(configuration, exp, expContext, applyOGNLShortcuts);
+            cachedExpression = parseComputedOGNLExpression(configuration, exp, applyOGNLShortcuts);
             if (cachedExpression != null) {
                 vexpression.setCachedExpression(cachedExpression);
             }
@@ -226,7 +237,7 @@ public final class OGNLVariableExpressionEvaluator
             if (cachedExpression != null && cachedExpression instanceof ComputedOGNLExpression) {
                 return (ComputedOGNLExpression) cachedExpression;
             }
-            cachedExpression = parseComputedOGNLExpression(configuration, exp, expContext, applyOGNLShortcuts);
+            cachedExpression = parseComputedOGNLExpression(configuration, exp, applyOGNLShortcuts);
             if (cachedExpression != null) {
                 vexpression.setCachedExpression(cachedExpression);
             }
@@ -234,15 +245,14 @@ public final class OGNLVariableExpressionEvaluator
 
         }
 
-        return parseComputedOGNLExpression(configuration, exp, expContext, applyOGNLShortcuts);
+        return parseComputedOGNLExpression(configuration, exp, applyOGNLShortcuts);
 
     }
 
 
     private static ComputedOGNLExpression parseComputedOGNLExpression(
             final IEngineConfiguration configuration,
-            final String exp, final StandardExpressionExecutionContext expContext,
-            final boolean applyOGNLShortcuts)
+            final String exp, final boolean applyOGNLShortcuts)
             throws OgnlException {
 
         ComputedOGNLExpression parsedExpression =
@@ -251,7 +261,7 @@ public final class OGNLVariableExpressionEvaluator
             return parsedExpression;
         }
         // The result of parsing might be an OGNL expression AST or a ShortcutOGNLExpression (for simple cases)
-        parsedExpression = parseExpression(exp, expContext, applyOGNLShortcuts);
+        parsedExpression = parseExpression(exp, applyOGNLShortcuts);
         ExpressionCache.putIntoCache(configuration, exp, parsedExpression, EXPRESSION_CACHE_TYPE_OGNL);
         return parsedExpression;
 
@@ -288,15 +298,8 @@ public final class OGNLVariableExpressionEvaluator
 
 
     private static ComputedOGNLExpression parseExpression(
-            final String expression, final StandardExpressionExecutionContext expContext,
-            final boolean applyOGNLShortcuts)
+            final String expression, final boolean applyOGNLShortcuts)
             throws OgnlException {
-
-        if (expContext.getRestrictInstantiationAndStatic()
-                && StandardExpressionUtils.containsOGNLInstantiationOrStatic(expression)) {
-            throw new TemplateProcessingException(
-                    "Instantiation of new objects and access to static classes is forbidden in this context");
-        }
 
         final boolean mightNeedExpressionObjects = StandardExpressionUtils.mightNeedExpressionObjects(expression);
 
@@ -322,9 +325,10 @@ public final class OGNLVariableExpressionEvaluator
             return ((OGNLShortcutExpression) parsedExpression).evaluate(configuration, context, root);
         }
 
+
         // We create the OgnlContext here instead of just sending the Map as context because that prevents OGNL from
         // creating the OgnlContext empty and then setting the context Map variables one by one
-        final OgnlContext ognlContext = new OgnlContext(new OGNLPublicMemberAccess(), null, null, context);
+        final OgnlContext ognlContext = new OgnlContext(MEMBER_ACCESS, CLASS_RESOLVER, null, context);
         return ognl.Ognl.getValue(parsedExpression, ognlContext, root);
     }
 
@@ -346,5 +350,60 @@ public final class OGNLVariableExpressionEvaluator
     }
 
 
+    static final class ThymeleafACLClassResolver implements ClassResolver {
 
+        private final ClassResolver classResolver;
+
+        public ThymeleafACLClassResolver() {
+            super();
+            this.classResolver = new ThymeleafDefaultClassResolver();
+        }
+
+        @Override
+        public Class<?> classForName(final String className, final Map context) throws ClassNotFoundException {
+            if (className != null && !ExpressionUtils.isTypeAllowed(className)) {
+                throw new TemplateProcessingException(
+                        String.format(
+                                "Access is forbidden for type '%s' in Thymeleaf expressions. " +
+                                "Blocked classes are: %s.",
+                                className, ExpressionUtils.getBlockedClasses()));
+            }
+            return this.classResolver.classForName(className, context);
+        }
+
+    }
+
+
+    /*
+     * We need to implement this instead of directly using OGNL's DefaultClassResolver because OGNL's
+     * will always try to prepend "java.lang." to classes that it cannot find, which in our case is dangerous.     *
+     * Other than that, the code in this class is the same as "ognl.DefaultClassResolver".
+     */
+    static final class ThymeleafDefaultClassResolver implements ClassResolver {
+
+        private final ConcurrentHashMap<String, Class> classes = new ConcurrentHashMap<String, Class>(101);
+
+        ThymeleafDefaultClassResolver() {
+            super();
+        }
+
+        public Class classForName(final String className, final Map context) throws ClassNotFoundException {
+            Class result = this.classes.get(className);
+            if (result != null) {
+                return result;
+            }
+            try {
+                result = toClassForName(className);
+            } catch (ClassNotFoundException e) {
+                throw e;
+            }
+            this.classes.putIfAbsent(className, result);
+            return result;
+        }
+
+        private Class toClassForName(String className) throws ClassNotFoundException {
+            return Class.forName(className);
+        }
+
+    }
 }
