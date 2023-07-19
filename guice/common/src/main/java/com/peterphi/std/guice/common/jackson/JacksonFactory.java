@@ -2,6 +2,7 @@ package com.peterphi.std.guice.common.jackson;
 
 import com.fasterxml.jackson.databind.Module;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.module.jaxb.JaxbAnnotationModule;
 import jakarta.inject.Singleton;
 
 import java.util.List;
@@ -18,7 +19,26 @@ public class JacksonFactory
 	{
 		this.om = new ObjectMapper();
 
-		this.om.registerModules(modules);
+		registerModules(this.om);
+	}
+
+
+	/**
+	 * Register all Jackson Modules.<br />
+	 * <strong>N.B. will refuse to register {@link JaxbAnnotationModule}, Jackson annotations must be used exclusively for JSON</strong>
+	 *
+	 * @param objectMapper the object mapper to mutate
+	 */
+	public static void registerModules(ObjectMapper objectMapper)
+	{
+		for (Module module : modules)
+		{
+			// Prohibit use of JaxbAnnotationModule
+			if (!(module instanceof JaxbAnnotationModule))
+			{
+				objectMapper.registerModule(module);
+			}
+		}
 	}
 
 
@@ -33,10 +53,10 @@ public class JacksonFactory
 	 *
 	 * @return The newly created ObjectMapper with registered modules.
 	 */
-	public ObjectMapper newObjectMapper()
+	public static ObjectMapper newObjectMapper()
 	{
 		final ObjectMapper newObjectMapper = new ObjectMapper();
-		newObjectMapper.registerModules(modules);
-		return om;
+		registerModules(newObjectMapper);
+		return newObjectMapper;
 	}
 }
