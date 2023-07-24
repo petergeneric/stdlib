@@ -100,9 +100,20 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 
 	static RestFailure parseResponse(final JAXBSerialiserFactory serialiserFactory, InputStream stream) throws IOException
 	{
+		boolean streamResetFailed = false;
 		try
 		{
-			stream.reset();
+			if (stream.markSupported())
+			{
+				try
+				{
+					stream.reset();
+				}
+				catch (IOException t) {
+					// failed to reset to mark
+					streamResetFailed=true;
+				}
+			}
 
 			final JAXBXmlRootElementProvider<RestFailure> provider = new JAXBXmlRootElementProvider<>(serialiserFactory);
 
@@ -115,9 +126,24 @@ public class RemoteExceptionClientResponseFilter implements ClientResponseFilter
 		}
 		catch (Throwable t)
 		{
-			log.error("Error while parsing rich error response! {}", t.getMessage(), t);
+			if (!streamResetFailed)
+			{
+				log.error("Error while parsing rich error response! {}", t.getMessage(), t);
 
-			throw new RuntimeException("Error reading rich error response! " + t.getMessage(), t);
+				throw new RuntimeException("Error reading rich error response! " + t.getMessage(), t);
+			}
+			else
+			{
+				log.error(
+						"Error while parsing rich error response. Also, attempted to invoke .reset prior to reading rich error but no mark set (or mark limit exceeded). Error: {}",
+						t.getMessage(),
+						t);
+
+				throw new RuntimeException(
+						"Error while parsing rich error response. Also, attempted to invoke .reset prior to reading rich error but no mark set (or mark limit exceeded). Error: " +
+						t.getMessage(),
+						t);
+			}
 		}
 	}
 }
