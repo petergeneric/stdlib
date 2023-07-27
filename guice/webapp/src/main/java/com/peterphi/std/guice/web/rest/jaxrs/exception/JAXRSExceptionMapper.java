@@ -3,6 +3,7 @@ package com.peterphi.std.guice.web.rest.jaxrs.exception;
 import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.restclient.exception.RestThrowableConstants;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.auth.oauth2.CredentialsRestException;
@@ -107,7 +108,7 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 		}
 
 		// Give the HTML render an opportunity to run
-		if (response == null)
+		if (response == null && isHtmlAcceptable(HttpCallContext.get()))
 			response = htmlRenderer.render(failure);
 
 		// Use the XML renderer if no other renderer has wanted to build the response
@@ -115,5 +116,16 @@ public class JAXRSExceptionMapper implements ExceptionMapper<ApplicationExceptio
 			return xmlRenderer.render(failure); // Fall back on the XML renderer
 		else
 			return response;
+	}
+
+
+	private boolean isHtmlAcceptable(HttpCallContext ctx)
+	{
+		if (ctx == null)
+			return false;
+		else if (ctx.getRequest() == null)
+			return false;
+		else
+			return RestThrowableConstants.isHtmlAcceptable(ctx.getRequest());
 	}
 }
