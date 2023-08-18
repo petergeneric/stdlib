@@ -123,7 +123,7 @@ public abstract class HibernateModule extends AbstractModule
 		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
 		{
 			// Extract all properties starting with "hibernate." and "liquibase."
-			properties = guiceConfig.toProperties(k -> k.startsWith("hibernate.") || k.startsWith("liquibase."));
+			properties = guiceConfig.toProperties(k -> k.startsWith("hibernate.") || k.startsWith("liquibase.") || k.startsWith("java.naming."));
 		}
 		else
 		{
