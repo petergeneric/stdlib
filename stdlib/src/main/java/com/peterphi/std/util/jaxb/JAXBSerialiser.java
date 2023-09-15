@@ -10,6 +10,7 @@ import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
 import javax.xml.bind.JAXBContext;
+import javax.xml.bind.JAXBElement;
 import javax.xml.bind.JAXBException;
 import javax.xml.bind.Marshaller;
 import javax.xml.bind.PropertyException;
@@ -388,7 +389,7 @@ public class JAXBSerialiser
 	 */
 	public <T> T deserialise(final Class<T> clazz, final Element xml)
 	{
-		final Object obj;
+		final JAXBElement<?> obj;
 		try
 		{
 			obj = getUnmarshaller().unmarshal(xml, clazz);
@@ -398,8 +399,8 @@ public class JAXBSerialiser
 			throw new JAXBRuntimeException("deserialisation", e);
 		}
 
-		if (clazz.isInstance(obj))
-			return clazz.cast(obj);
+		if (clazz.isInstance(obj.getValue()))
+			return clazz.cast(obj.getValue());
 		else
 			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
 	}
