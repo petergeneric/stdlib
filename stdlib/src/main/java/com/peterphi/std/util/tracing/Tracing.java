@@ -7,7 +7,9 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -21,14 +23,33 @@ public final class Tracing
 	public final String id;
 	public int ops = 0;
 	public final boolean verbose;
+	public final boolean localVerboseOnly;
+	private CopyOnWriteArrayList<MonitorTraceEventListener> monitors;
 
 
-	private Tracing(final String id, final boolean verbose)
+	private Tracing(final String id, final boolean verbose, final boolean localVerboseOnly)
 	{
 		this.id = id;
 		this.verbose = verbose;
+		this.localVerboseOnly = verbose && localVerboseOnly;
 	}
 
+
+	/**
+	 * Attach a monitor for all local messages against this trace <strong>if verbose</strong>
+	 *
+	 * @param consumer
+	 */
+	public void monitor(final MonitorTraceEventListener consumer)
+	{
+		if (!verbose)
+			return;
+
+		if (this.monitors == null)
+			this.monitors = new CopyOnWriteArrayList<>(List.of(consumer));
+		else
+			this.monitors.add(consumer);
+	}
 
 	public static Tracing peek()
 	{
@@ -38,11 +59,17 @@ public final class Tracing
 
 	public static Tracing getOrCreate(final String newTraceId, final boolean verbose)
 	{
+		return getOrCreate(newTraceId, verbose, false);
+	}
+
+
+	public static Tracing getOrCreate(final String newTraceId, final boolean verbose, final boolean localVerboseOnly)
+	{
 		Tracing obj = peek();
 
 		if (obj == null)
 		{
-			obj = new Tracing(newTraceId, verbose || log.isTraceEnabled());
+			obj = new Tracing(newTraceId, verbose || log.isTraceEnabled(), localVerboseOnly);
 			THREAD_LOCAL.set(obj);
 		}
 
@@ -106,6 +133,20 @@ public final class Tracing
 	}
 
 
+	/**
+	 * Add a consumer that will be pushed (synchronously) a copy of all local verbose messages associated with the current Tracing session
+	 *
+	 * @param consumer
+	 */
+	public static void addLocalVerboseMonitor(final MonitorTraceEventListener consumer)
+	{
+		final Tracing tracing = getIfVerbose();
+
+		if (tracing != null)
+			tracing.monitor(consumer);
+	}
+
+
 	private String createNewOperationId()
 	{
 		return this.id + "/" + (++this.ops);
@@ -141,7 +182,7 @@ public final class Tracing
 			final String operationId = tracing.createNewOperationId();
 
 			if (tracing.verbose)
-				logMessage(operationId, 0, msg);
+				tracing.logMessage(operationId, 0, msg);
 
 			return operationId;
 		}
@@ -210,7 +251,30 @@ public final class Tracing
 		final Tracing tracing = getIfVerbose();
 
 		if (tracing != null)
-			logMessage(tracing.id, ++tracing.ops, msg);
+			tracing.logFormattedMessage(tracing.id, ++tracing.ops, msg);
+	}
+
+
+	/**
+	 * Log entry to a call-site. This is syntactic sugar for:
+	 * <code>log(site, "(", arg1, ", ", arg2, ", ", &lt;argX&gt;, ")")</code>
+	 *
+	 * @param site the site name
+	 * @param args the list of arguments
+	 */
+	public static void enter(final String site, final Object... args)
+	{
+		final Tracing tracing = getIfVerbose();
+
+		if (tracing != null)
+		{
+			tracing.logFormattedMessage(tracing.id,
+			                            ++tracing.ops,
+			                            site +
+			                            "(" +
+			                            Arrays.asList(args).stream().map(Objects :: toString).collect(Collectors.joining(", ")) +
+			                            ")");
+		}
 	}
 
 
@@ -219,7 +283,7 @@ public final class Tracing
 		final Tracing tracing = getIfVerbose();
 
 		if (tracing != null)
-			logMessage(tracing.id, ++tracing.ops, msg, param1);
+			tracing.logMessage(tracing.id, ++tracing.ops, msg, param1);
 	}
 
 
@@ -228,7 +292,7 @@ public final class Tracing
 		final Tracing tracing = getIfVerbose();
 
 		if (tracing != null)
-			logMessage(tracing.id, ++tracing.ops, msg, param1);
+			tracing.logMessage(tracing.id, ++tracing.ops, msg, param1);
 	}
 
 
@@ -237,7 +301,7 @@ public final class Tracing
 		final Tracing tracing = getIfVerbose();
 
 		if (tracing != null)
-			logMessage(tracing.id, ++tracing.ops, param1, param2);
+			tracing.logMessage(tracing.id, ++tracing.ops, param1, param2);
 	}
 
 
@@ -252,7 +316,7 @@ public final class Tracing
 		final Tracing tracing = getIfVerbose();
 
 		if (tracing != null)
-			logMessage(tracing.id, ++tracing.ops, detail);
+			tracing.logMessage(tracing.id, ++tracing.ops, detail);
 	}
 
 
@@ -265,8 +329,12 @@ public final class Tracing
 	 */
 	public static void logOngoing(final String operationId, final Object... detail)
 	{
-		if (operationId != null && getIfVerbose() != null)
-			logMessage(operationId, 0, detail);
+		if (operationId == null)
+			return;
+		final Tracing trace = getIfVerbose();
+
+		if (trace != null)
+			trace.logMessage(operationId, 0, detail);
 	}
 
 
@@ -275,7 +343,7 @@ public final class Tracing
 	 * @param opId          the operation id within that trace id
 	 * @param detail        an array of items; will be reduced to String and concatenated together; if a Supplier is in the list, it will be invoked
 	 */
-	private static void logMessage(final String traceParentId, final int opId, final Object... detail)
+	private void logMessage(final String traceParentId, final int opId, final Object... detail)
 	{
 		if (detail == null || traceParentId == null)
 			return; // not a valid trace
@@ -291,9 +359,9 @@ public final class Tracing
 			detailStr = Arrays.stream(detail).map(o -> {
 				try
 				{
-					if (o instanceof String s)
-						return s;
-					else if (o instanceof Supplier s)
+					if (o instanceof String || o instanceof Number)
+						return o.toString();
+					else if (o instanceof Supplier<?> s)
 						return Objects.toString(s.get());
 					else if (o instanceof Object[] arr)
 						return Arrays.toString(arr);
@@ -307,10 +375,23 @@ public final class Tracing
 			}).collect(Collectors.joining(" "));
 		}
 
+		logFormattedMessage(traceParentId, opId, detailStr);
+	}
+
+
+	private void logFormattedMessage(final String traceparentId, final int opId, final String message)
+	{
 		if (opId != 0)
-			log.warn("Trace[{}/{}] {}", traceParentId, opId, detailStr);
+			log.warn("Trace[{}/{}] {}", traceparentId, opId, message);
 		else
-			log.warn("Trace[{}] {}", traceParentId, detailStr);
+			log.warn("Trace[{}] {}", traceparentId, message);
+
+		// If this tracing session is being monitored, pass the event to the consumer
+		if (monitors != null)
+		{
+			for (MonitorTraceEventListener monitor : monitors)
+				monitor.event(traceparentId, opId, message);
+		}
 	}
 
 

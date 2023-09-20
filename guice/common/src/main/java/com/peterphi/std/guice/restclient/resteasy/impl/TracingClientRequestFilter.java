@@ -28,7 +28,10 @@ public class TracingClientRequestFilter implements ClientRequestFilter
 
 			requestContext.getHeaders().putSingle(TracingConstants.HTTP_HEADER_CORRELATION_ID, traceId);
 
-			if (Tracing.isVerbose())
+			final Tracing trace = Tracing.peek();
+
+			// Don't propagate the verbose flag across HTTP calls if it's set to local only
+			if (trace != null && trace.verbose && !trace.localVerboseOnly)
 				requestContext.getHeaders().putSingle(TracingConstants.HTTP_HEADER_TRACE_VERBOSE, "true");
 		}
 	}
