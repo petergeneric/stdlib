@@ -1,11 +1,13 @@
 package com.peterphi.std.annotation;
 
+import java.lang.annotation.Documented;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 /**
  * Documentation that can be read at runtime
  */
+@Documented
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Doc
 {
