@@ -92,43 +92,40 @@ public enum WQFunctionType
 	 */
 	public WQFunctionType invert()
 	{
-		switch (this)
+		return switch (this)
 		{
-			case EQ:
-				return NEQ;
-			case NEQ:
-				return EQ;
-			case EQ_REF:
-				return NEQ_REF;
-			case NEQ_REF:
-				return EQ_REF;
-			case GE:
-				return LT;
-			case LT:
-				return GE;
-			case GT:
-				return LE;
-			case LE:
-				return GT;
-			case IS_NULL:
-				return NOT_NULL;
-			case NOT_NULL:
-				return IS_NULL;
-			case IN:
-				return NOT_IN;
-			case NOT_IN:
-				return IN;
-			case CONTAINS:
-				return NOT_CONTAINS;
-			case NOT_CONTAINS:
-				return CONTAINS;
-			case STARTS_WITH:
-				return NOT_STARTS_WITH;
-			case NOT_STARTS_WITH:
-				return STARTS_WITH;
-			default:
-				return null;
-		}
+			case EQ -> NEQ;
+			case NEQ -> EQ;
+
+			case EQ_REF -> NEQ_REF;
+			case NEQ_REF -> EQ_REF;
+
+			case GE -> LT;
+			case GE_REF -> LT_REF;
+
+			case LT -> GE;
+			case LT_REF -> GE_REF;
+
+			case GT -> LE;
+			case GT_REF -> LE_REF;
+
+			case LE -> GT;
+			case LE_REF -> GT_REF;
+
+			case IS_NULL -> NOT_NULL;
+			case NOT_NULL -> IS_NULL;
+
+			case IN -> NOT_IN;
+			case NOT_IN -> IN;
+
+			case CONTAINS -> NOT_CONTAINS;
+			case NOT_CONTAINS -> CONTAINS;
+
+			case STARTS_WITH -> NOT_STARTS_WITH;
+			case NOT_STARTS_WITH -> STARTS_WITH;
+
+			case RANGE -> null;
+		};
 	}
 
 	public static WQFunctionType getByPrefix(String value)
