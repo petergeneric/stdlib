@@ -101,16 +101,16 @@ public enum WQFunctionType
 			case NEQ_REF -> EQ_REF;
 
 			case GE -> LT;
-			case GE_REF -> LT_REF;
-
 			case LT -> GE;
-			case LT_REF -> GE_REF;
-
-			case GT -> LE;
-			case GT_REF -> LE_REF;
 
 			case LE -> GT;
+			case GT -> LE;
+
+			case GE_REF -> LT_REF;
+			case LT_REF -> GE_REF;
+
 			case LE_REF -> GT_REF;
+			case GT_REF -> LE_REF;
 
 			case IS_NULL -> NOT_NULL;
 			case NOT_NULL -> IS_NULL;
@@ -124,6 +124,7 @@ public enum WQFunctionType
 			case STARTS_WITH -> NOT_STARTS_WITH;
 			case NOT_STARTS_WITH -> STARTS_WITH;
 
+			// No single-function equivalent to "outside range", caller will have to provide their own inversion impl
 			case RANGE -> null;
 		};
 	}
