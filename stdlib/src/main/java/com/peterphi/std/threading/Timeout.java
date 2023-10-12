@@ -180,13 +180,15 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	/**
 	 * Create a new Timeout which is equal to this timeout multiplied by some value
 	 *
-	 * @param by
-	 * 		the amount to multiply the current timeout by
-	 *
+	 * @param by the amount to multiply the current timeout by
 	 * @return a new Timeout which is equal to this timeout multiplied by some value
+	 * @throws IllegalArgumentException if the multiplier zero or negative
 	 */
 	public Timeout multiply(final long by)
 	{
+		if (by <= 0)
+			throw new IllegalArgumentException("Cannot multiply timeout by a negative number!");
+
 		return new Timeout(period * by, this.unit);
 	}
 
@@ -195,17 +197,19 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	 * Create a new Timeout which is equal to this timeout multiplied by some value<br />
 	 * The resulting Timeout will be in <em>milliseconds</em> to maximise precision.
 	 *
-	 * @param by
-	 * 		the amount to multiply the current timeout by
-	 *
+	 * @param by the amount to multiply the current timeout by
 	 * @return a new Timeout which is equal to this timeout multiplied by some value (with the unit now set to Milliseconds)
+	 * @throws IllegalArgumentException if the multiplier zero or negative
 	 */
 	public Timeout multiply(final double by)
 	{
-		final double newMillis = getMilliseconds() * by;
-		final long rounded = Math.round(newMillis);
+		if (by <= 0)
+			throw new IllegalArgumentException("Cannot multiply timeout by a negative number!");
 
-		return new Timeout(rounded, TimeUnit.MILLISECONDS);
+		final long oldMillis = getMilliseconds();
+		final long newMillis = Math.round(oldMillis * by);
+
+		return new Timeout(newMillis, TimeUnit.MILLISECONDS);
 	}
 
 
