@@ -218,17 +218,17 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 
 	public String toEnglishString()
 	{
-		return Long.toString(period) + " " + unit.toString().toLowerCase();
+		return period + " " + unit.toString().toLowerCase();
 	}
 
 
 	@Override
 	public int compareTo(final Timeout that)
 	{
-		final Long thisPeriod = new Long(this.period);
-		final long thatPeriod = that.get(this.unit);
-
-		return thisPeriod.compareTo(thatPeriod);
+		if (this.unit == that.unit)
+			return Long.compare(this.period, that.period);
+		else
+			return Long.compare(this.getMilliseconds(), that.getMilliseconds());
 	}
 
 
