@@ -20,41 +20,41 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	/**
 	 * A zero-length timeout
 	 */
-	public static final Timeout ZERO = new Timeout(0, TimeUnit.MILLISECONDS);
+	public static final Timeout ZERO = Timeout.millis(0);
 
 	/**
 	 * 0.25 seconds (250 milliseconds)
 	 */
-	public static final Timeout ONE_QUARTER_SECOND = new Timeout(250, TimeUnit.MILLISECONDS);
+	public static final Timeout ONE_QUARTER_SECOND = Timeout.millis(250);
 	/**
 	 * One second
 	 */
-	public static final Timeout ONE_SECOND = new Timeout(1, TimeUnit.SECONDS);
+	public static final Timeout ONE_SECOND = Timeout.seconds(1);
 	/**
 	 * Ten seconds
 	 */
-	public static final Timeout TEN_SECONDS = new Timeout(10, TimeUnit.SECONDS);
+	public static final Timeout TEN_SECONDS = Timeout.seconds(10);
 	/**
 	 * Thirty seconds
 	 */
-	public static final Timeout THIRTY_SECONDS = new Timeout(30, TimeUnit.SECONDS);
+	public static final Timeout THIRTY_SECONDS = Timeout.seconds(30);
 	/**
 	 * One minute
 	 */
-	public static final Timeout ONE_MINUTE = new Timeout(1, TimeUnit.MINUTES);
+	public static final Timeout ONE_MINUTE = Timeout.minutes(1);
 	/**
 	 * Five minutes
 	 */
-	public static final Timeout FIVE_MINUTES = new Timeout(5, TimeUnit.MINUTES);
+	public static final Timeout FIVE_MINUTES = Timeout.minutes(5);
 	/**
 	 * 30 minutes
 	 */
-	public static final Timeout THIRTY_MINUTES = new Timeout(30, TimeUnit.MINUTES);
+	public static final Timeout THIRTY_MINUTES = Timeout.minutes(30);
 
 	/**
 	 * The maximum possible timeout
 	 */
-	public static final Timeout MAX_VALUE = new Timeout(Long.MAX_VALUE);
+	public static final Timeout MAX_VALUE = Timeout.millis(Long.MAX_VALUE);
 
 	private final long period;
 	private final TimeUnit unit;
@@ -286,7 +286,7 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	 * @throws IllegalArgumentException
 	 * 		if no non-null timeouts are presented
 	 */
-	public static Timeout max(Timeout... timeouts)
+	public static Timeout longest(Timeout... timeouts)
 	{
 		Timeout max = null;
 
@@ -315,7 +315,7 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 	 * @throws IllegalArgumentException
 	 * 		if no non-null timeouts are presented
 	 */
-	public static Timeout min(Timeout... timeouts)
+	public static Timeout shortest(Timeout... timeouts)
 	{
 		Timeout min = null;
 
@@ -353,5 +353,35 @@ public final class Timeout implements Comparable<Timeout>, Serializable
 			return new Timeout(sum);
 		else
 			return Timeout.ZERO;
+	}
+
+
+	public static Timeout days(int days)
+	{
+		return new Timeout(days, TimeUnit.DAYS);
+	}
+
+
+	public static Timeout hours(int hours)
+	{
+		return new Timeout(hours, TimeUnit.HOURS);
+	}
+
+
+	public static Timeout minutes(int minutes)
+	{
+		return new Timeout(minutes, TimeUnit.MINUTES);
+	}
+
+
+	public static Timeout seconds(int seconds)
+	{
+		return new Timeout(seconds, TimeUnit.SECONDS);
+	}
+
+
+	public static Timeout millis(final long millis)
+	{
+		return new Timeout(millis, TimeUnit.MILLISECONDS);
 	}
 }
