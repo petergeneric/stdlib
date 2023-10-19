@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.metrics.worker;
+package com.peterphi.std.guice.metrics.daemon;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;

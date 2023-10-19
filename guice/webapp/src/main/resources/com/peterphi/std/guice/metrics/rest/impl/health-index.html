@@ -2,7 +2,7 @@
 <html lang="en" xmlns:th="http://www.thymeleaf.org">
 <!--/*@thymesVar id="coreRestPrefix" type="java.lang.String"*/-->
 <head>
-	<title>Service Metrics</title>
+	<title>Service Health</title>
 	<link th:replace="/com/peterphi/std/guice/web/rest/service/restcore/service_list.html :: htmlhead"/>
 </head>
 <body id="top">
@@ -25,7 +25,7 @@
 		<!--/*@thymesVar id="health" type="com.peterphi.std.guice.metrics.rest.types.HealthDocument"*/-->
 		<tr th:each="entry: ${health.results}" th:id="${entry.name}">
 			<td th:text="${entry.name}"></td>
-			<td th:text="${entry.implication}"></td>
+			<td th:text="${entry.implication}" title="Implication if unhealthy"></td>
 			<td th:text="${entry.healthy}"></td>
 			<td th:text="${entry.message}"></td>
 		</tr>
