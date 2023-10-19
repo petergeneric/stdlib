@@ -42,7 +42,7 @@ public class LazyValue<T>
 		if (value != null && supplier == null)
 			throw new IllegalArgumentException("Must supply no supplier if providing a non-null value!");
 
-		this.supplier = null;
+		this.supplier = supplier;
 		this.value = value; // may be null
 	}
 
@@ -85,8 +85,8 @@ public class LazyValue<T>
 		if (supplier == null)
 			throw new IllegalStateException("compute called with null supplier");
 
-		value = supplier.get();
-		supplier = null;
+		this.value = supplier.get();
+		this.supplier = null;
 	}
 
 
