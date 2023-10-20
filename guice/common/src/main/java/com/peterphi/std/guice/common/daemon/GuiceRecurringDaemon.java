@@ -16,6 +16,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneId;
 
 public abstract class GuiceRecurringDaemon extends GuiceDaemon
 {
@@ -219,9 +221,15 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 		return isRunning() && getBreaker().isNormal();
 	}
 
-	public Instant getLastRan()
+
+	public OffsetDateTime getLastRan()
 	{
-		return this.lastRan;
+		final Instant lastRan = this.lastRan;
+
+		if (lastRan != null)
+			return OffsetDateTime.ofInstant(Instant.now(), ZoneId.systemDefault());
+		else
+			return null;
 	}
 
 

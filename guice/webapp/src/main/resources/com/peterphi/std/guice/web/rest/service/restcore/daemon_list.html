@@ -78,7 +78,7 @@
 						<td><span th:replace=" :: checkmark(${daemon.userCodeRunning})">Y/N</span></td>
 
 						<td th:text="${daemon.sleepTime.toEnglishString()}"></td>
-						<td th:text="${daemon.lastRan}"></td>
+						<td th:text="${daemon.lastRan != null ? daemon.lastRan.withNano(0) : 'Never'}"></td>
 						<td th:text="${daemon.calls.count}"></td>
 						<td th:text="${daemon.exceptions.count}"></td>
 					</tr>
