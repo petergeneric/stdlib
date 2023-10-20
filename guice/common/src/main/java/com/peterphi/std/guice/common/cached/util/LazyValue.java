@@ -37,9 +37,14 @@ public class LazyValue<T>
 	}
 
 
+	protected LazyValue(@Nullable final T value)
+	{
+		this(null, value);
+	}
+
 	private LazyValue(@Nullable final Supplier<T> supplier, @Nullable T value)
 	{
-		if (value != null && supplier == null)
+		if (value != null && supplier != null)
 			throw new IllegalArgumentException("Must supply no supplier if providing a non-null value!");
 
 		this.supplier = supplier;
@@ -76,7 +81,7 @@ public class LazyValue<T>
 
 	public synchronized boolean isComputed()
 	{
-		return supplier != null;
+		return supplier == null;
 	}
 
 
