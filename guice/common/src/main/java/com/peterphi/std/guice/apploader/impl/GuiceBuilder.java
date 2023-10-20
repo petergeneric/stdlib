@@ -8,10 +8,9 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.ClassScannerFactory;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.io.PropertyFile;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Properties;
@@ -21,7 +20,56 @@ import java.util.Properties;
  */
 public class GuiceBuilder
 {
-	private static final Logger log = LoggerFactory.getLogger(GuiceBuilder.class);
+	/**
+	 * Collection that is allocated when in use that indicates the threads that are undergoing GuiceBuilder.build() methods.<br />
+	 * All access to this structure should be via static synchronized methods. We use WeakReferences to allow Thread to be garbage collected even if a caller forgets to tell us they're out of the startup process.
+	 */
+	private static List<WeakReference<Thread>> THREADS_IN_STARTUP = null;
+
+
+	/**
+	 * Returns true if the current Thread is in the process of building a guice environment. <strong>be very wary of using this method</strong>
+	 *
+	 * @return
+	 */
+	public static synchronized boolean isStartingOnThisThread()
+	{
+		return THREADS_IN_STARTUP != null && THREADS_IN_STARTUP.stream().anyMatch(ref -> ref.get() == Thread.currentThread());
+	}
+
+
+	private static synchronized void setCurrentThreadStartupState(final boolean isInStartup)
+	{
+		if (isInStartup)
+		{
+			// Entering startup state
+
+			// Allocate a collection if not already exists
+			if (THREADS_IN_STARTUP == null)
+				THREADS_IN_STARTUP = new ArrayList<>(1);
+
+			THREADS_IN_STARTUP.add(new WeakReference<>(Thread.currentThread()));
+		}
+		else
+		{
+			// Leaving startup state
+			if (isStartingOnThisThread())
+			{
+				THREADS_IN_STARTUP.removeIf(ref -> ref.get() == Thread.currentThread() || ref.get() == null);
+
+				// Deallocate collection that is no longer required
+				if (THREADS_IN_STARTUP.isEmpty())
+					THREADS_IN_STARTUP = null;
+			}
+			else
+			{
+				throw new IllegalStateException(
+						"Startup State Mismatch! Told that a thread is no longer in startup, but was not aware that thread was in startup!");
+			}
+		}
+	}
+
+
 
 	private boolean autoLoadProperties = true;
 	private boolean autoLoadRoles = true;
@@ -178,14 +226,23 @@ public class GuiceBuilder
 		List<PropertyFile> configs = new ArrayList<>(this.configs);
 		List<GuiceRole> roles = new ArrayList<>(this.roles);
 
-		return GuiceFactory.build(this.registry,
-		                          this.scannerFactory,
-		                          configs,
-		                          roles,
-		                          this.setup,
-		                          this.autoLoadProperties,
-		                          this.autoLoadRoles,
-		                          this.classloader);
+		try
+		{
+			setCurrentThreadStartupState(true);
+
+			return GuiceFactory.build(this.registry,
+			                          this.scannerFactory,
+			                          configs,
+			                          roles,
+			                          this.setup,
+			                          this.autoLoadProperties,
+			                          this.autoLoadRoles,
+			                          this.classloader);
+		}
+		finally
+		{
+			setCurrentThreadStartupState(false);
+		}
 	}
 
 
