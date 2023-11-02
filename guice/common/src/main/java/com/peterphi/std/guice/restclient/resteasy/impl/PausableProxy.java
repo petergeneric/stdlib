@@ -40,8 +40,8 @@ class PausableProxy implements InvocationHandler
 		}
 	}
 
-	private static Timeout MAX_WAIT = new Timeout(2, TimeUnit.HOURS);
-	private static Timeout MAX_WAIT_IF_HTTP_CONTEXT = new Timeout(30, TimeUnit.SECONDS);
+	private static final Timeout MAX_WAIT = new Timeout(2, TimeUnit.HOURS);
+	private static final Timeout MAX_WAIT_IF_HTTP_CONTEXT = new Timeout(30, TimeUnit.SECONDS);
 
 	/**
 	 * Apply an extremely short timeout if a service call is made during startup.
