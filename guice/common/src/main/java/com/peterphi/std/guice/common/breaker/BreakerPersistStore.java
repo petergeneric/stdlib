@@ -45,20 +45,22 @@ public class BreakerPersistStore
 				final File[] files = folder.listFiles(filter);
 
 				List<String> names;
-
 				if (files == null || files.length == 0)
-					names = Collections.emptyList();
-				else
-					names = new ArrayList<>();
-
-				for (File file : files)
 				{
-					final String name = StringUtils.removeStart(file.getName(), prefix);
-
-					names.add(name);
+					names = Collections.emptyList();
 				}
+				else
+				{
+					names = new ArrayList<>(0);
 
-				this.defaultTripped = names;
+					for (File file : files)
+					{
+						final String name = StringUtils.removeStart(file.getName(), prefix);
+
+						names.add(name);
+					}
+				}
+				defaultTripped = names;
 
 				return defaultTripped;
 			}
