@@ -67,8 +67,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final Meter errorRollbacks;
 	private final Meter commitFailures;
 
+	private final boolean logStacktraceOnRetryableException;
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly)
+
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly, final boolean logStacktraceOnRetryableException)
 	{
 		this.sessionProvider = sessionProvider;
 
@@ -77,6 +79,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
 		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
 		this.forceReadOnly = forceReadOnly;
+		this.logStacktraceOnRetryableException = logStacktraceOnRetryableException;
 	}
 
 
@@ -125,10 +128,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						}
 						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
-							if (log.isTraceEnabled())
+							if (logStacktraceOnRetryableException || log.isTraceEnabled())
 								log.warn("@Transactional caught exception {}; retrying...", e.getClass().getSimpleName(), e);
 							else
-								log.warn("@Transactional caught exception {}; retrying...", e.getClass().getSimpleName());
+								log.warn("@Transactional on {} caught exception {}; retrying...", invocation.getMethod().toString(), e.getClass().getSimpleName());
 
 							Tracing.logOngoing(tracingId, "TX:exception:retryable", (Supplier) () -> e.getClass().getSimpleName());
 

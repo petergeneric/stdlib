@@ -42,16 +42,19 @@ public abstract class HibernateModule extends AbstractModule
 	 */
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
 
+	private final MetricRegistry registry;
+	private final boolean forceReadOnly;
+	private final boolean logStacktraceOnRetryableException;
+
 
 	public HibernateModule(final MetricRegistry registry, GuiceConfig config)
 	{
 		this.registry = registry;
-		this.forceReadOnly=config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
+		this.forceReadOnly = config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
+		this.logStacktraceOnRetryableException = config.getBoolean(GuiceProperties.HIBERNATE_LOG_RETRYABLE_TX_ERROR_STACK_TRACES,
+		                                                           false);
 	}
 
-
-	private final MetricRegistry registry;
-	private final boolean forceReadOnly;
 
 	@Override
 	protected void configure()
@@ -62,7 +65,7 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry, forceReadOnly);
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry, forceReadOnly, logStacktraceOnRetryableException);
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
