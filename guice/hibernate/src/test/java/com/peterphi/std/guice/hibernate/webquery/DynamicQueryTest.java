@@ -479,13 +479,21 @@ public class DynamicQueryTest
 			dao.save(obj2);
 		}
 
-		assertEquals("deprecated=true matches 2 rows",
+		assertEquals("deprecated=true matches 2 rows (with dao.find)",
 		             2,
-		             dao.findByUriQuery(new WebQuery().eq("deprecated", true)).getList().size());
+		             dao.find(new WebQuery().eq("deprecated", true)).getList().size());
 
-		assertEquals("deprecated=false matches nothing",
+		// Test the same query with only COUNT
+		assertEquals("deprecated=true matches 2 rows (with dao.count)",
+		             2,
+		             dao.count(new WebQuery().eq("deprecated", true)));
+
+
+		// deprecated=false should match nothing
+		final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().eq("deprecated", false));
+		assertEquals("deprecated=false matches nothing (with dao.find)",
 		             0,
-		             dao.findByUriQuery(new WebQuery().eq("deprecated", false)).getList().size());
+		             resultset.getList().size());
 	}
 
 
@@ -500,7 +508,11 @@ public class DynamicQueryTest
 		obj2.setName("Name2");
 		dao.save(obj2);
 
-		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(dao.findByUriQuery(new WebQuery().orderAsc("id")).getList()));
+		assertEquals("regular find",
+		             getIds(Arrays.asList(obj1, obj2)),
+		             getIds(dao.find(new WebQuery().orderAsc("id")).getList()));
+
+		assertEquals("findIds", getIds(Arrays.asList(obj1, obj2)), dao.findIds(new WebQuery().orderAsc("id")).getList());
 	}
 
 
