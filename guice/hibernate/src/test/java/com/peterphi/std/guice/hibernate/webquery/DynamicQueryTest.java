@@ -574,6 +574,48 @@ public class DynamicQueryTest
 
 
 	@Test
+	public void testCustomProjection()
+	{
+		ParentEntity obj1 = new ParentEntity();
+		obj1.setName("Name1");
+		dao.save(obj1);
+
+		ParentEntity obj2 = new ParentEntity();
+		obj2.setName("Name2");
+		dao.save(obj2);
+
+		final Object[] a = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		final Object[] b = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,name").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		final Object[] c = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,name,id").orderAsc("name").orderDesc("id"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		// will not use distinct
+		final Object[] d = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,deprecated").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		// will use distinct
+		final Object[] e = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,deprecated,deprecated").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+
+		// will use distinct for single col
+		final Object[] f = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("name").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		assertEquals("a", new Object[] {1L, "Name1"}, a);
+		assertEquals("b", new Object[] {1L, "Name1", "Name1"}, b);
+		assertEquals("c (uses distinct, but order reuses existing select)", new Object[] {1L, "Name1", 1L, "Name1",1L}, c);
+		assertEquals("d", new Object[] {1L, false, "Name1"}, d); // shouldn't need to use distinct
+		assertEquals("distinct must add name to select", new Object[] {1L, false, false, "Name1"}, e); // need to use DISTINCT (unfortunately)
+		assertEquals("distinct required but no select modify", new Object[] {"Name1","Name1"}, f);
+	}
+
+
+	@Test
 	public void testConstraintWorksWithComputeSize() throws Exception
 	{
 		assertNotNull(dao.findByUriQuery(new WebQuery().eq("id", "1").computeSize(true)).total);
