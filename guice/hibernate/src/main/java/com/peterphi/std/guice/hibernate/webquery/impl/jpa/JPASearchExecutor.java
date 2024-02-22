@@ -134,10 +134,33 @@ public class JPASearchExecutor
 						break;
 					}
 					case CUSTOM_PROJECTION:
+					case CUSTOM_PROJECTION_NODISTINCT:
 					{
-						// N.B. the returned array will also contain any order by elements
+						if (StringUtils.equals(query.getFetch(), "id"))
+						{
+							list = builder.selectIDs();
+						}
+						else
+						{
+							// N.B. the returned array will also contain any order by elements if distinct=true
+							final String[] fields = StringUtils.split(query.getFetch(), ',');
 
-						list = builder.selectCustomProjection(query.getFetch().split(","));
+							// Generally, CUSTOM_PROJECTION must be DISTINCT for backwards compatibility
+							// However we can guarantee that the PK will be distinct already, so PK+a single other field doesn't need DISTINCT
+							// We try to avoid distinct where possible because it's harder for the DB to implement (and may require pulling back more cols in SELECT to boot)
+							final boolean distinct;
+							{
+								final boolean wantDistinct = (strategy == JPASearchStrategy.CUSTOM_PROJECTION);
+
+								// Loosen DISTINCT requirement if fetching PK+single field (since we know this does not need distinct)
+								if (wantDistinct && fields.length <= 2 && "id".equals(fields[0]))
+									distinct = false;
+								else
+									distinct = wantDistinct;
+							}
+
+							list = builder.selectCustomProjection(distinct, fields);
+						}
 
 						// N.B. if the user has only asked for a single fetch then we won't have a list of arrays
 						// We make sure it's an Array for consistency (user can't rely that asking for a single field will
@@ -172,11 +195,14 @@ public class JPASearchExecutor
 						list = builder.selectIDs();
 
 						// Now re-query to retrieve the entities
-						builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
-						builder.forIDs(query, list);
-
 						if (!list.isEmpty())
+						{
+							builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+							builder.forIDs(query, list);
+
 							list = builder.selectEntity();
+						}
+
 
 						break;
 					}
@@ -215,7 +241,7 @@ public class JPASearchExecutor
 	 * @param list
 	 * @return
 	 */
-	private boolean hasArray(final List list)
+	private boolean hasArray(final List<?> list)
 	{
 		final Object o = list.get(0);
 

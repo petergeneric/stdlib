@@ -602,16 +602,16 @@ public class DynamicQueryTest
 		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
 
 
-		// will use distinct for single col
+		// will use distinct
 		final Object[] f = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("name").orderAsc("name"),
 		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
 
-		assertEquals("a", new Object[] {1L, "Name1"}, a);
-		assertEquals("b", new Object[] {1L, "Name1", "Name1"}, b);
-		assertEquals("c (uses distinct, but order reuses existing select)", new Object[] {1L, "Name1", 1L, "Name1",1L}, c);
-		assertEquals("d", new Object[] {1L, false, "Name1"}, d); // shouldn't need to use distinct
-		assertEquals("distinct must add name to select", new Object[] {1L, false, false, "Name1"}, e); // need to use DISTINCT (unfortunately)
-		assertEquals("distinct required but no select modify", new Object[] {"Name1","Name1"}, f);
+		assertEquals("a", new Object[] {1L}, a);
+		assertEquals("b", new Object[] {1L, "Name1"}, b);
+		assertEquals("c: uses distinct, but order reuses existing select", new Object[] {1L, "Name1", 1L}, c);
+		assertEquals("d", new Object[] {1L, false}, d); // shouldn't need to use distinct
+		assertEquals("e: distinct must add name to select", new Object[] {1L, false, false, "Name1"}, e); // need to use DISTINCT (unfortunately)
+		assertEquals("f: distinct required but no select modify", new Object[] {"Name1"}, f);
 	}
 
 

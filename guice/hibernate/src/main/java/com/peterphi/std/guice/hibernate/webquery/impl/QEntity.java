@@ -9,6 +9,7 @@ import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
 
+import javax.annotation.Nullable;
 import javax.persistence.DiscriminatorValue;
 import javax.persistence.ElementCollection;
 import javax.persistence.Entity;
@@ -151,10 +152,12 @@ public class QEntity
 
 
 		// Figure out the id method/field
-		final String idPropertyName = getIdPropertyName();
+		if (metamodelEntity != null && metamodelEntity.hasSingleIdAttribute())
+		{
+			final String idPropertyName = metamodelEntity.getId(metamodelEntity.getIdType().getJavaType()).getName();
 
-		if (idPropertyName != null)
 			this.idProperty = new PropertyWrapper(clazz, idPropertyName);
+		}
 	}
 
 
@@ -492,10 +495,11 @@ public class QEntity
 	}
 
 
+	@Nullable
 	public String getIdPropertyName()
 	{
-		if (metamodelEntity != null)
-			return metamodelEntity.getId(metamodelEntity.getIdType().getJavaType()).getName();
+		if (this.idProperty != null)
+			return this.idProperty.name;
 		else
 			return null;
 	}

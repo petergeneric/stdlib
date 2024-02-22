@@ -14,11 +14,11 @@ import com.peterphi.std.guice.restclient.jaxb.webquery.WQGroupType;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WQOrder;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.Criteria;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -47,6 +47,8 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 {
 	private static final Logger log = LoggerFactory.getLogger(JPAQueryBuilder.class);
 
+	private record OrderExpr( Order order,  WQOrder src){}
+
 	private final Session session;
 	private final CriteriaBuilder criteriaBuilder;
 
@@ -55,9 +57,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private CriteriaQuery generated;
 
-	private List<Predicate> conditions = new ArrayList<>();
-	private List<Order> orders = new ArrayList<>();
-	private Map<String, JPAJoin> joins = new HashMap<>();
+	private final List<Predicate> conditions = new ArrayList<>();
+	private final List<OrderExpr> orders = new ArrayList<>();
+	private final Map<String, JPAJoin> joins = new HashMap<>();
 
 	private Integer limit;
 	private Integer offset;
@@ -65,7 +67,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	// If specified, overrides the default fetches
 	private Set<String> fetches;
 
-	private Map<ParameterExpression, Object> params = new HashMap<>();
+	private final Map<ParameterExpression, Object> params = new HashMap<>();
 
 
 	public JPAQueryBuilder(final Session session, final QEntity entity)
@@ -525,10 +527,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		return query.getSingleResult();
 	}
 
-
-	public <ID> List<ID> selectIDs()
+	public List<ID> selectIDs()
 	{
-		Query query = createSelectIDs();
+		Query<ID> query = createSelectIDs();
 
 		List<?> results = query.getResultList();
 
@@ -542,16 +543,15 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public List<Object[]> selectCustomProjection(String... fields)
+	public List<Object[]> selectCustomProjection(final boolean distinct, String... fields)
 	{
-		Query query = createSelectCustomProjection(fields);
-
-		List<?> results = query.getResultList();
+		final Query<Object[]> query = createSelectCustomProjection(distinct, fields);
+		final List<Object[]> results = query.getResultList();
 
 		if (results.isEmpty())
 			return Collections.emptyList();
 		else
-			return (List<Object[]>) (List) results;
+			return results;
 	}
 
 
@@ -565,11 +565,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public Query<Long> createSelectCount()
 	{
-		generated.orderBy(Collections.emptyList()); // Order is not meaningful for a count query
+		final Query<Long> query;
+		{
+			final CriteriaQuery<Long> cq = generated;
+			cq.orderBy(List.of()); // Order is not meaningful for a count query
+			cq.select(criteriaBuilder.count(root));
 
-		generated.select(criteriaBuilder.count(root));
-
-		final Query<Long> query = session.createQuery(generated);
+			query = session.createQuery(cq);
+		}
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
@@ -583,7 +586,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public <C> List<C> selectCustom(JPAQueryCustomiser customiser)
 	{
-		Query<C> query = createSelectCustom(customiser);
+		final Query<C> query = createSelectCustom(customiser);
 
 		return query.getResultList();
 	}
@@ -591,9 +594,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public <C> Query<C> createSelectCustom(JPAQueryCustomiser customiser)
 	{
-		customiser.apply(criteriaBuilder, generated, root, this);
+		final Query<C> query;
+		{
+			final CriteriaQuery<C> cq = generated;
 
-		final Query query = session.createQuery(generated);
+			customiser.apply(criteriaBuilder, cq, root, this);
+
+			query = session.createQuery(cq);
+		}
 
 		if (offset != null)
 			query.getQueryOptions().setFirstRow(offset);
@@ -610,30 +618,40 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public Query createSelectCustomProjection(String... fields)
+	public Query<Object[]> createSelectCustomProjection(final boolean distinct, String[] fields)
 	{
-		this.generated.distinct(true);
-
-		generated.orderBy(orders); // Make sure we return the results in the correct order
-
-		List<Selection<?>> selects = new ArrayList<>();
-
-		for (String field : fields)
+		final Query<Object[]> query;
 		{
-			selects.add(getProperty(field));
+			final CriteriaQuery<Object[]> cq = generated;
+
+			cq.orderBy(orders.stream().map(OrderExpr :: order).toList()); // Make sure we return the results in the correct order
+
+			List<Selection<?>> selects = new ArrayList<>(fields.length + orders.size());
+
+			for (String field : fields)
+				selects.add(getProperty(field));
+
+			if (distinct)
+			{
+				cq.distinct(true);
+
+				if (!orders.isEmpty())
+				{
+					final Set<String> fieldSet = new HashSet<>(Arrays.asList(fields));
+
+					// Make sure to select any ORDER BY field that isn't already included in the SELECT
+					for (var order : orders)
+					{
+						if (!fieldSet.contains(order.src().field))
+							selects.add(order.order().getExpression());
+					}
+				}
+			}
+
+			cq.multiselect(selects);
+
+			query = session.createQuery(cq);
 		}
-
-		for (Order order : orders)
-		{
-			selects.add(order.getExpression());
-		}
-
-		if (selects.size() == 1)
-			generated.select(selects.get(0));
-		else
-			generated.multiselect(selects);
-
-		final Query query = session.createQuery(generated);
 
 		if (offset != null)
 			query.getQueryOptions().setFirstRow(offset);
@@ -650,36 +668,25 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public Query createSelectIDs()
+	public Query<ID> createSelectIDs()
 	{
-		generated.orderBy(orders); // Make sure we return the results in the correct order
-
-		List<Selection<?>> selects = new ArrayList<>();
-
-		if (root.getModel().hasSingleIdAttribute())
+		final Query<ID> query;
 		{
-			selects.add(root.get(root.getModel().getId(root.getModel().getIdType().getJavaType())));
-		}
-		else
-			throw new NotImplementedException("Cannot handle ID selection with IdClass!");
+			final CriteriaQuery<ID> cq = generated;
+			cq.orderBy(orders.stream().map(OrderExpr :: order).toList()); // Make sure we return the results in the correct order
 
-		// TODO test if order was by id attribute?
-		for (Order order : orders)
-		{
-			selects.add(order.getExpression());
-		}
+			if (root.getModel().hasSingleIdAttribute())
+			{
+				final var idAttr = root.getModel().getId(root.getModel().getIdType().getJavaType());
+				cq.select(root.get(idAttr));
+			}
+			else
+			{
+				throw new NotImplementedException("Cannot handle ID selection with IdClass!");
+			}
 
-		if (selects.size() == 1)
-		{
-			generated.select(selects.get(0));
+			query = session.createQuery(cq);
 		}
-		else
-		{
-			generated.multiselect(selects);
-			this.generated.distinct(true);
-		}
-
-		final Query query = session.createQuery(generated);
 
 		if (offset != null)
 			query.getQueryOptions().setFirstRow(offset);
@@ -698,13 +705,16 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public Query<T> createSelectEntity()
 	{
-		generated.select(root);
+		final Query<T> query;
+		{
+			generated.select(root);
 
-		applyFetches();
+			applyFetches();
 
-		generated.orderBy(orders); // Make sure we return the results in the correct order
+			generated.orderBy(orders.stream().map(OrderExpr :: order).toList());
 
-		final Query<T> query = session.createQuery(generated);
+			query = session.createQuery(generated);
+		}
 
 		if (offset != null)
 			query.getQueryOptions().setFirstRow(offset);
@@ -862,11 +872,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			final Expression<?> property = getProperty(new WQPath(ordering.field));
 
 			if (ordering.isAsc())
-				this.orders.add(criteriaBuilder.asc(property));
+				this.orders.add(new OrderExpr(criteriaBuilder.asc(property), ordering));
 			else
-				this.orders.add(criteriaBuilder.desc(property));
+				this.orders.add(new OrderExpr(criteriaBuilder.desc(property), ordering));
 		}
 
-		generated.orderBy(this.orders);
+		generated.orderBy(this.orders.stream().map(OrderExpr :: order).toList());
 	}
 }
