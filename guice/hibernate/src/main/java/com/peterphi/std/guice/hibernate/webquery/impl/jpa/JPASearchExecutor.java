@@ -91,7 +91,7 @@ public class JPASearchExecutor
 				// Special limit value of -1 means do not fetch any result data (used when just wanting to compute totals)
 				list = Collections.emptyList();
 			}
-			else if (total != null && total.longValue() == 0)
+			else if (!ALWAYS_COMPUTE_SIZE && total != null && total.longValue() == 0)
 			{
 				// Count ran and indicated there were no results, so no need to re-query
 				list = Collections.emptyList();
