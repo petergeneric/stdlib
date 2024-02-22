@@ -652,8 +652,6 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public Query createSelectIDs()
 	{
-		this.generated.distinct(true);
-
 		generated.orderBy(orders); // Make sure we return the results in the correct order
 
 		List<Selection<?>> selects = new ArrayList<>();
@@ -665,15 +663,21 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		else
 			throw new NotImplementedException("Cannot handle ID selection with IdClass!");
 
+		// TODO test if order was by id attribute?
 		for (Order order : orders)
 		{
 			selects.add(order.getExpression());
 		}
 
 		if (selects.size() == 1)
+		{
 			generated.select(selects.get(0));
+		}
 		else
+		{
 			generated.multiselect(selects);
+			this.generated.distinct(true);
+		}
 
 		final Query query = session.createQuery(generated);
 
