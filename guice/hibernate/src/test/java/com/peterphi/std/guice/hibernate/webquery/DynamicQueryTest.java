@@ -3,7 +3,9 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.hibernate.dao.QueryPrivilegeData;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.PrivatePropertyUseRejected;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -128,6 +130,42 @@ public class DynamicQueryTest
 		childDao.find(new WebQuery().eq("state", 0));
 	}
 
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotProjectPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().fetch("id,somePrivateString"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotSortByPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().orderAsc("somePrivateString"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testNormalPrivilegedCallCannotConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"), JPASearchStrategy.AUTO, null, QueryPrivilegeData.NORMAL);
+	}
+
+	@Test
+	public void testPrivilegedCallCanConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"), JPASearchStrategy.AUTO, null, QueryPrivilegeData.FULL);
+	}
+
+
+
 	/**
 	 * Test that supplying a comma-separated list of values to WebQuery.fetch results in those fields being returned from the db a an <code>Object[]</code>
 	 *
@@ -163,12 +201,10 @@ public class DynamicQueryTest
 
 		// Selecting a list
 		{
-			final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery()
-					                                                        .fetch("id,name,otherObject.name")
-					                                                        .orderAsc("name")
-					                                                        .orderDesc("deprecated"),
-			                                                        JPASearchStrategy.AUTO,
-			                                                        null);
+			final ConstrainedResultSet<Object[]> results = dao.project(new WebQuery()
+					                                                           .fetch("id,name,otherObject.name")
+					                                                           .orderAsc("name")
+					                                                           .orderDesc("deprecated"), false);
 
 			assertEquals("Expecting 2 rows", 2, results.getList().size());
 			assertTrue("Expecting at least 3 columns", results.getList().get(0).length >= 3);
@@ -218,7 +254,7 @@ public class DynamicQueryTest
 			id2 = dao.save(obj);
 		}
 
-		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("otherObject.entity"), JPASearchStrategy.AUTO, null);
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("otherObject.entity"), JPASearchStrategy.AUTO, row->(Object[])row);
 
 		assertEquals("Expecting 2 rows", 2, results.getList().size());
 		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);
@@ -265,7 +301,7 @@ public class DynamicQueryTest
 			id2 = dao.save(obj);
 		}
 
-		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("name"), JPASearchStrategy.AUTO, null);
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("name"), JPASearchStrategy.AUTO, r->(Object[])r);
 
 		assertEquals("Expecting 2 rows", 2, results.getList().size());
 		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);

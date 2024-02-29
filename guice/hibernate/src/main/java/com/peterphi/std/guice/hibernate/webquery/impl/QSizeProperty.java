@@ -10,11 +10,16 @@ public class QSizeProperty extends QProperty
 
 	public QSizeProperty(final QRelation relation)
 	{
-		super(relation.getEntity(), null, relation.getName(), Integer.class, false);
+		super(relation.getEntity(), null, relation.getName(), Integer.class, false, false);
 
 		this.relation = relation;
 	}
 
+
+	public boolean isOmitFromSchemaDoc()
+	{
+		return true; // Consumers must infer this field's existence from an ENTITY property with a collection (since that property has more rich type metadata)
+	}
 
 	public QRelation getRelation()
 	{

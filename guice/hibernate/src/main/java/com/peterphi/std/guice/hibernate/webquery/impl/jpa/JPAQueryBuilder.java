@@ -69,12 +69,22 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private final Map<ParameterExpression, Object> params = new HashMap<>();
 
+	private boolean permitSchemaPrivate = false;
 
-	public JPAQueryBuilder(final Session session, final QEntity entity)
+	public JPAQueryBuilder(final Session session, final QEntity entity, final boolean defaultPermitSchemaPrivate)
 	{
 		this.session = session;
 		this.criteriaBuilder = session.getCriteriaBuilder();
 		this.entity = entity;
+		this.permitSchemaPrivate = defaultPermitSchemaPrivate;
+	}
+
+
+	@Override
+	public JPAQueryBuilder<T, ID> withPrivateSchemaAccess()
+	{
+		this.permitSchemaPrivate = true;
+		return this;
 	}
 
 
@@ -185,7 +195,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	{
 		final JPAJoin join = getOrCreateJoin(path.getTail());
 
-		return join.property(path.getHead().getPath());
+		return join.property(path.getHead().getPath(), permitSchemaPrivate);
 	}
 
 
@@ -225,10 +235,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 		for (WQConstraintLine line : constraints)
 		{
-			if (line instanceof WQConstraint)
-				list.add(parseConstraint((WQConstraint) line));
-			else
-				list.add(parseConstraint((WQGroup) line));
+			if (line instanceof WQConstraint c)
+				list.add(parseConstraint(c));
+			else if (line instanceof WQGroup g)
+				list.add(parseConstraint(g));
+			else throw new IllegalArgumentException("Unknown constraint line type: " + line);
 		}
 
 		return list;

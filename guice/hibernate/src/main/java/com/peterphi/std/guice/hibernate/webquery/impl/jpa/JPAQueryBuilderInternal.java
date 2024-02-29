@@ -11,6 +11,13 @@ import java.util.List;
 public interface JPAQueryBuilderInternal
 {
 	/**
+	 * Enable the use of Schema Private fields in the query being built. Disabled by default.
+	 *
+	 * @return this for chaining
+	 */
+	JPAQueryBuilderInternal withPrivateSchemaAccess();
+
+	/**
 	 * Add new Predicates which will be ANDed together with the top-level constraints specified in the WebQuery
 	 *
 	 * @param predicates

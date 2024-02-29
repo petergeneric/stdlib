@@ -1,13 +1,16 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.database.annotation.EagerFetch;
+import com.peterphi.std.guice.database.annotation.WebQueryPrivate;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.InvalidPropertyException;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.PrivatePropertyUseRejected;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.persistence.DiscriminatorValue;
@@ -29,6 +32,7 @@ import javax.persistence.metamodel.Type;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -294,6 +298,21 @@ public class QEntity
 		final Class<?> clazz;
 		final boolean isCollection;
 		final boolean nullable;
+		final boolean privateField;
+
+		if (attribute.getJavaMember() instanceof Method m)
+		{
+			privateField = m.isAnnotationPresent(WebQueryPrivate.class);
+		}
+		else if (attribute.getJavaMember() instanceof Field f)
+		{
+			privateField = f.isAnnotationPresent(WebQueryPrivate.class);
+		}
+		else
+		{
+			privateField = false;
+		}
+
 
 		// Transparently unwrap collections
 		if (attribute.isCollection())
@@ -308,7 +327,7 @@ public class QEntity
 		{
 			isCollection = false;
 			//type = attribute.getDeclaringType();
-			nullable = (attribute instanceof SingularAttribute) ? ((SingularAttribute) attribute).isOptional() : false;
+			nullable = attribute instanceof SingularAttribute sa && sa.isOptional();
 			clazz = attribute.getJavaType();
 		}
 
@@ -426,7 +445,7 @@ public class QEntity
 				newPrefix = name;
 
 
-			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
+			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable, privateField));
 		}
 	}
 
@@ -535,14 +554,19 @@ public class QEntity
 	}
 
 
-	public QProperty getProperty(String name)
+	public QProperty getProperty(final String name, final boolean permitSchemaPrivatePropertyAccess)
 	{
 		final QProperty property = properties.get(name);
 
 		if (property != null)
-			return property;
+		{
+			if (permitSchemaPrivatePropertyAccess || !property.isSchemaPrivate())
+				return property;
+			else
+				throw new PrivatePropertyUseRejected("WebQuery prohibited from accessing Private property " + name);
+		}
 		else
-			throw new IllegalArgumentException("Unknown property " +
+			throw new InvalidPropertyException("Unknown property " +
 			                                   name +
 			                                   " on " +
 			                                   this.clazz.getSimpleName() +

@@ -52,7 +52,8 @@ public class JPASearchExecutor
 	public <T> ConstrainedResultSet<T> find(final QEntity entity,
 	                                        final WebQuery query,
 	                                        JPASearchStrategy strategy,
-	                                        Function<?, ?> serialiser)
+	                                        Function<?, ?> serialiser,
+	                                        final boolean permitSchemaPrivate)
 	{
 		final String traceOperationId = Tracing.newOperationId("WebQuery:exec", query);
 
@@ -67,14 +68,15 @@ public class JPASearchExecutor
 		{
 
 			// Build a view of the query based on
-			JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+			JPAQueryBuilder builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity, permitSchemaPrivate);
+
 			builder.forWebQuery(query);
 
 			// First, compute the total size if requested
 			final Long total;
 			if (ALWAYS_COMPUTE_SIZE || query.isComputeSize() || strategy == JPASearchStrategy.COUNT_ONLY)
 			{
-				JPAQueryBuilder countBuilder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+				JPAQueryBuilder countBuilder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity, permitSchemaPrivate);
 				countBuilder.forWebQuery(query);
 
 				total = countBuilder.selectCount();
@@ -197,7 +199,7 @@ public class JPASearchExecutor
 						// Now re-query to retrieve the entities
 						if (!list.isEmpty())
 						{
-							builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity);
+							builder = new JPAQueryBuilder(sessionFactory.getCurrentSession(), entity, permitSchemaPrivate);
 							builder.forIDs(query, list);
 
 							list = builder.selectEntity();
