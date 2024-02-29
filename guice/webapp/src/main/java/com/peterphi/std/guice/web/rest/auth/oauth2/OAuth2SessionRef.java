@@ -4,7 +4,6 @@ import com.google.inject.Inject;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.apploader.GuiceProperties;
-import com.peterphi.std.guice.web.rest.jaxrs.exception.LiteralRestResponseException;
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.threading.Timeout;
 import com.peterphi.std.types.SimpleId;
@@ -13,12 +12,11 @@ import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenRespons
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import javax.ws.rs.core.Response;
 import javax.ws.rs.core.UriBuilder;
 import java.net.URI;
 import java.util.Base64;
@@ -245,8 +243,8 @@ public class OAuth2SessionRef
 			// - The user has accessed a service via a non-canonical endpoint and been redirected by the oauth server to the canonical one
 			//   which means the original nonce stored in the session is not available to this session.
 
-			// To get around this, we simply redirect the user to the root of this service so they can start the oauth flow again
-			throw new LiteralRestResponseException(Response.seeOther(URI.create("/")).build());
+			throw new OAuthCallbackCSRFTokenValidationMismatch(
+					"This service could not verify your OAuth login because the browser session you originally started the login from is different from the current browser session. Please navigate back to the homepage of this service and try again.");
 		}
 
 		if (pieces.length >= 2)
