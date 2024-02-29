@@ -582,11 +582,17 @@ public class QEntity
 		obj.name = getName();
 		obj.discriminator = getDiscriminatorValue();
 
-		if (this.descendants.size() > 0)
-			obj.childEntityNames = descendants.stream().map(QEntity:: getName).collect(Collectors.toList());
+		if (!this.descendants.isEmpty())
+			obj.childEntityNames = descendants.stream().map(QEntity:: getName).toList();
 
-		obj.properties = properties.values().stream().map(QProperty:: encode).collect(Collectors.toList());
-		obj.properties.addAll(relations.values().stream().map(QRelation:: encode).collect(Collectors.toList()));
+		obj.properties = properties
+				                 .values()
+				                 .stream()
+				                 .filter(prop -> !(prop instanceof QSizeProperty))
+				                 .map(QProperty :: encode)
+				                 .collect(Collectors.toList());
+
+		obj.properties.addAll(relations.values().stream().map(QRelation :: encode).toList());
 
 		return obj;
 	}
