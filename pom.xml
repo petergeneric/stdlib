@@ -35,7 +35,7 @@
 		<httpclient.version>4.5.14</httpclient.version>
 		<guice.version>6.0.0</guice.version>
 		<metrics.version>4.1.18</metrics.version>
-		<resteasy.version>5.0.7.Final</resteasy.version>
+		<resteasy.version>5.0.9.Final</resteasy.version>
 		<javassist.version>3.29.0-GA</javassist.version>
 		<hibernate.version>5.4.33.Final</hibernate.version>
 		<dbunit.version>2.7.0</dbunit.version>
