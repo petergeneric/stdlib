@@ -9,8 +9,10 @@ import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceApplication;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
+import com.peterphi.std.guice.restclient.resteasy.impl.jackson.Jackson2Provider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
@@ -24,8 +26,9 @@ import com.peterphi.std.guice.web.rest.pagewriter.BootstrapRestFailurePageRender
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.std.util.tracing.TracingConstants;
-import org.apache.log4j.Logger;
-import org.apache.log4j.MDC;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 import org.jboss.resteasy.plugins.server.servlet.ListenerBootstrap;
 import org.jboss.resteasy.plugins.server.servlet.ServletContainerDispatcher;
 import org.jboss.resteasy.spi.Registry;
@@ -48,7 +51,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
  */
 class GuicedResteasy implements GuiceApplication
 {
-	private static final Logger log = Logger.getLogger(GuicedResteasy.class);
+	private static final Logger log = LoggerFactory.getLogger(GuicedResteasy.class);
 
 	private final GuiceRegistry registry;
 	private final AtomicBoolean registered = new AtomicBoolean(false);
@@ -92,6 +95,9 @@ class GuicedResteasy implements GuiceApplication
 
 	@Inject
 	JAXBSerialiserFactory serialiserFactory;
+
+	@Inject
+	JacksonFactory jacksonFactory;
 
 
 	public GuicedResteasy(final GuiceRegistry registry,
@@ -269,7 +275,7 @@ class GuicedResteasy implements GuiceApplication
 					ignoredAborts.mark();
 
 					if (log.isTraceEnabled())
-						log.trace("Client aborted during request. Ignoring. Detail: " + ctx.getRequestInfo(), t);
+						log.trace("Client aborted during request. Ignoring. Detail: {}", ctx.getRequestInfo(), t);
 
 					return;
 				}
@@ -280,7 +286,7 @@ class GuicedResteasy implements GuiceApplication
 			}
 		}
 
-		log.warn("Failure during " + ctx.getRequestInfo(), t);
+		log.warn("Failure during {}", ctx.getRequestInfo(), t);
 
 		// If the response is already committed we can't render the exception elegantly
 		if (response.isCommitted())
@@ -356,14 +362,14 @@ class GuicedResteasy implements GuiceApplication
 		// Register the REST provider classes
 		for (Class<?> providerClass : ResteasyProviderRegistry.getClasses())
 		{
-			log.debug("Registering REST providers: " + providerClass.getName());
+			log.debug("Registering REST providers: {}", providerClass.getName());
 			providerFactory.registerProvider(providerClass);
 		}
 
 		// Register the REST provider singletons
 		for (Object provider : ResteasyProviderRegistry.getSingletons())
 		{
-			log.debug("Registering REST provider singleton: " + provider);
+			log.debug("Registering REST provider singleton: {}", provider);
 			providerFactory.registerProviderInstance(provider);
 		}
 
@@ -379,6 +385,11 @@ class GuicedResteasy implements GuiceApplication
 			providerFactory.registerProviderInstance(xmlTypeProvider);
 		}
 
+		// Set up Jackson
+		{
+			providerFactory.registerProviderInstance(new Jackson2Provider(jacksonFactory));
+		}
+
 		// Register the exception mapper
 		{
 			// Register the ExceptionMapper for ApplicationException
@@ -390,7 +401,7 @@ class GuicedResteasy implements GuiceApplication
 		// Register the REST resources
 		for (RestResource resource : RestResourceRegistry.getResources())
 		{
-			log.debug("Registering REST resource: " + resource.getResourceClass().getName());
+			log.debug("Registering REST resource: {}", resource.getResourceClass().getName());
 
 			resteasyRegistry.addResourceFactory(new ResteasyGuiceResource(injector, resource.getResourceClass()));
 		}

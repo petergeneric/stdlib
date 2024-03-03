@@ -28,7 +28,6 @@ import org.hibernate.jpa.AvailableHints;
 import org.hibernate.query.Query;
 
 import java.io.Serializable;
-import java.nio.ReadOnlyBufferException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -71,6 +70,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Inject
 	public JPASearchExecutor searchExecutor;
 
+	protected QueryPrivilegeData defaultPrivileges = QueryPrivilegeData.NORMAL;
 
 	public HibernateDao()
 	{
@@ -104,7 +104,13 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	public JPAQueryBuilder<T, ID> createQueryBuilder()
 	{
-		return new JPAQueryBuilder<>(getSession(), getQEntity());
+		return createQueryBuilder(false);
+	}
+
+
+	public JPAQueryBuilder<T, ID> createQueryBuilder(final boolean permitSchemaPrivate)
+	{
+		return new JPAQueryBuilder<>(getSession(), getQEntity(), permitSchemaPrivate);
 	}
 
 
@@ -344,9 +350,11 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 
 	protected T uniqueResult(WebQuery query)
 	{
-		final ConstrainedResultSet<T> results = find(query);
+		return find(query).uniqueResult();
+	}
 
-		return results.uniqueResult();
+	protected T uniqueResult(final WebQuery query, final QueryPrivilegeData privileges) {
+		return find(query, JPASearchStrategy.AUTO, privileges).uniqueResult();
 	}
 
 
@@ -437,43 +445,48 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Override
 	public ConstrainedResultSet<ID> findIdsByUriQuery(final WebQuery query)
 	{
-		return (ConstrainedResultSet<ID>) find(query, JPASearchStrategy.ID);
+		return find(query, JPASearchStrategy.ID, null, defaultPrivileges);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<T> findByUriQuery(final WebQuery query)
 	{
-		return find(query);
+		return find(query, JPASearchStrategy.AUTO, null, defaultPrivileges);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<T> find(final WebQuery query)
 	{
-		return find(query, JPASearchStrategy.AUTO);
+		return find(query, JPASearchStrategy.AUTO, null, defaultPrivileges);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<T> find(final WebQuery query, JPASearchStrategy strategy)
 	{
-		return find(query, strategy, null);
+		return find(query, strategy, null, defaultPrivileges);
+	}
+
+	public ConstrainedResultSet<T> find(final WebQuery query, JPASearchStrategy strategy, QueryPrivilegeData privileges)
+	{
+		return find(query, strategy, null, privileges);
 	}
 
 
 	@Override
 	public ConstrainedResultSet<ID> findIds(final WebQuery query)
 	{
-		return find(query, JPASearchStrategy.ID, null);
+		return find(query, JPASearchStrategy.ID, null, defaultPrivileges);
 	}
 
 	@Override
 	public long count(final WebQuery query)
 	{
-		final ConstrainedResultSet<?> resultset = find(query, JPASearchStrategy.COUNT_ONLY, null);
+		final ConstrainedResultSet<?> resultset = find(query, JPASearchStrategy.COUNT_ONLY, null, defaultPrivileges);
 
-		return resultset.getTotal().longValue();
+		return resultset.getTotal();
 	}
 
 
@@ -481,20 +494,58 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional(readOnly = true)
 	public <RT> ConstrainedResultSet<RT> find(final WebQuery query, JPASearchStrategy strategy, Function<?, RT> serialiser)
 	{
+		return find(query, strategy, serialiser, defaultPrivileges);
+	}
+
+
+	/**
+	 * Return the raw Object[] projection. Identical to:
+	 * <code>find(query, strategy, r->(Object[])r);</code>
+	 *
+	 * @param query
+	 * @return
+	 */
+	public ConstrainedResultSet<Object[]> project(final WebQuery query, final boolean distinct)
+	{
+		return find(query,
+		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT : JPASearchStrategy.CUSTOM_PROJECTION,
+		            r -> (Object[]) r);
+	}
+
+
+	/**
+	 * Return the result of converting an Object[] projection. Similar to:
+	 * <code>project(query, distinct).map(serialiser)</code>
+	 *
+	 * @param query
+	 * @param distinct
+	 * @param serialiser
+	 * @param <RT>
+	 * @return
+	 */
+	public <RT> ConstrainedResultSet<RT> project(final WebQuery query,
+	                                             final boolean distinct,
+	                                             final Function<Object[], RT> serialiser)
+	{
+		return find(query,
+		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT : JPASearchStrategy.CUSTOM_PROJECTION,
+		            serialiser);
+	}
+
+	@Transactional(readOnly = true)
+	public <RT> ConstrainedResultSet<RT> find(final WebQuery query,
+	                                          JPASearchStrategy strategy,
+	                                          Function<?, RT> serialiser,
+	                                          final QueryPrivilegeData privilege)
+	{
 		// If necessary, swap the AUTO strategy for ID_THEN_QUERY_ENTITY if this entity is annotated with @LargeTable
 		// TODO replace this annotation with something that allows forcing the strategy on a per-entity basis?
 		if (performSeparateIdQueryForLargeTables && isLargeTable && (strategy == null || strategy == JPASearchStrategy.AUTO))
 			strategy = JPASearchStrategy.ID_THEN_QUERY_ENTITY;
 
-		return searchExecutor.find(getQEntity(), query, strategy, serialiser);
+		return searchExecutor.find(getQEntity(), query, strategy, serialiser, privilege.permitSchemaPrivateAccess());
 	}
 
-
-	@Transactional(readOnly = true)
-	public ConstrainedResultSet<Object[]> project(final WebQuery query)
-	{
-		return find(query, JPASearchStrategy.CUSTOM_PROJECTION, null);
-	}
 
 	/**
 	 * Get a list of IDs matching a WebQuery

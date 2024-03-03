@@ -3,7 +3,8 @@ package com.peterphi.std.guice.common.serviceprops.composite;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.text.StrSubstitutor;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import java.util.function.Predicate;
 
 public class GuiceConfig
 {
-	private static final Logger log = Logger.getLogger(GuiceConfig.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceConfig.class);
 
 	private final Map<String, String> properties = new HashMap<>();
 
@@ -77,11 +78,7 @@ public class GuiceConfig
 				}
 				catch (Throwable t)
 				{
-					log.warn("Property Change Observer " +
-					         observer +
-					         " threw exception when notifying for " +
-					         name +
-					         " (ignoring)", t);
+					log.warn("Property Change Observer {} threw exception when notifying for {} (ignoring)", observer, name, t);
 				}
 			}
 		}

@@ -3,7 +3,8 @@ package com.peterphi.std.guice.apploader.impl;
 import com.google.inject.Injector;
 import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Responsible for creating fresh Injector instances. This is handled by reading <code>service.properties</code> and parsing the

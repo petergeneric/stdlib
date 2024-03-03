@@ -14,7 +14,8 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.restclient.resteasy.impl.HttpClientFactory;
 import com.peterphi.std.guice.restclient.resteasy.impl.okhttp.OkHttpClientFactory;
 import com.peterphi.std.io.PropertyFile;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
@@ -24,7 +25,7 @@ import java.util.concurrent.atomic.AtomicReference;
  */
 public class OkHttpAutoClientRole implements GuiceRole
 {
-	private static final Logger log = Logger.getLogger(OkHttpAutoClientRole.class);
+	private static final Logger log = LoggerFactory.getLogger(OkHttpAutoClientRole.class);
 
 	private static final boolean hasOkHttp = isOkHttpClassAvailable();
 

@@ -2,7 +2,8 @@ package com.peterphi.std.system.exec;
 
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
  */
 class SudoFeature
 {
-	private static transient final Logger log = Logger.getLogger(SudoFeature.class);
+	private static transient final Logger log = LoggerFactory.getLogger(SudoFeature.class);
 
 	// Some old versions of sudo don't support "--" to tell sudo that the user's command starts now
 	private static boolean dashDashTested = false;
@@ -166,7 +167,7 @@ class SudoFeature
 			}
 			catch (Throwable t)
 			{
-				log.warn("{runasSupportsNoninteractiveMode} Cannot determine support. Exception: " + t.getMessage(), t);
+				log.warn("{runasSupportsNoninteractiveMode} Cannot determine support. Exception: {}", t.getMessage(), t);
 
 				dashNSupported = false;
 				dashNTested = true;
@@ -258,7 +259,7 @@ class SudoFeature
 				dashDashSupported = false;
 				dashDashTested = true;
 
-				log.warn("{runasSupportsArgumentEndToken} Cannot determine support. Error: " + e.getMessage(), e);
+				log.warn("{runasSupportsArgumentEndToken} Cannot determine support. Error: {}", e.getMessage(), e);
 			}
 		}
 

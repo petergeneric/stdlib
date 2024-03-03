@@ -10,13 +10,14 @@ import com.peterphi.std.guice.common.retry.retry.backoff.ExponentialBackoff;
 import com.peterphi.std.threading.Timeout;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 
 final class RetryMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(RetryMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(RetryMethodInterceptor.class);
 
 	private final Timer calls;
 	private final Timer attempts;
@@ -45,11 +46,9 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			final RetryManager mgr = buildRetryManager(options);
 
 			if (log.isTraceEnabled())
-				log.trace("Attempting retryable invoke of " +
-				          invocation.getMethod().toGenericString() +
-				          " on " +
-				          invocation.getThis() +
-				          " with " +
+				log.trace("Attempting retryable invoke of {} on {} with {}",
+				          invocation.getMethod().toGenericString(),
+				          invocation.getThis(),
 				          Arrays.asList(invocation.getArguments()));
 
 			return mgr.run(new InvocationRetryable(invocation,
@@ -63,13 +62,11 @@ final class RetryMethodInterceptor implements MethodInterceptor
 			totalFailures.mark();
 
 			if (log.isTraceEnabled())
-				log.trace("Retrying invoke of " +
-				          invocation.getMethod().toGenericString() +
-				          " on " +
-				          invocation.getThis() +
-				          " with " +
-				          Arrays.asList(invocation.getArguments()) +
-				          " failed.", t);
+				log.trace("Retrying invoke of {} on {} with {} failed.",
+				          invocation.getMethod().toGenericString(),
+				          invocation.getThis(),
+				          Arrays.asList(invocation.getArguments()),
+				          t);
 
 			throw t;
 		}

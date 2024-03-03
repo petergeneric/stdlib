@@ -3,7 +3,9 @@ package com.peterphi.std.guice.hibernate.webquery;
 import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
+import com.peterphi.std.guice.hibernate.dao.QueryPrivilegeData;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.PrivatePropertyUseRejected;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchStrategy;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
@@ -128,6 +130,42 @@ public class DynamicQueryTest
 		childDao.find(new WebQuery().eq("state", 0));
 	}
 
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotProjectPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().fetch("id,somePrivateString"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testCannotSortByPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().orderAsc("somePrivateString"));
+	}
+
+
+	@Test(expected = PrivatePropertyUseRejected.class)
+	public void testNormalPrivilegedCallCannotConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"), JPASearchStrategy.AUTO, null, QueryPrivilegeData.NORMAL);
+	}
+
+	@Test
+	public void testPrivilegedCallCanConstrainPrivateAnnotatedField()
+	{
+		dao.find(new WebQuery().eq("somePrivateString", "secret"), JPASearchStrategy.AUTO, null, QueryPrivilegeData.FULL);
+	}
+
+
+
 	/**
 	 * Test that supplying a comma-separated list of values to WebQuery.fetch results in those fields being returned from the db a an <code>Object[]</code>
 	 *
@@ -166,7 +204,7 @@ public class DynamicQueryTest
 			final ConstrainedResultSet<Object[]> results = dao.project(new WebQuery()
 					                                                        .fetch("id,name,otherObject.name,otherObject.entity")
 					                                                        .orderAsc("name")
-					                                                        .orderDesc("deprecated"));
+					                                                        .orderDesc("deprecated"), false);
 
 			assertEquals("Expecting 2 rows", 2, results.getList().size());
 			assertTrue("Expecting at least 3 columns", results.getList().get(0).length >= 3);
@@ -216,7 +254,7 @@ public class DynamicQueryTest
 			id2 = dao.save(obj);
 		}
 
-		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("otherObject.entity"), JPASearchStrategy.AUTO, null);
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("otherObject.entity"), JPASearchStrategy.AUTO, row->(Object[])row);
 
 		assertEquals("Expecting 2 rows", 2, results.getList().size());
 		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);
@@ -263,7 +301,7 @@ public class DynamicQueryTest
 			id2 = dao.save(obj);
 		}
 
-		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("name"), JPASearchStrategy.AUTO, null);
+		final ConstrainedResultSet<Object[]> results = dao.find(new WebQuery().fetch("name"), JPASearchStrategy.AUTO, r->(Object[])r);
 
 		assertEquals("Expecting 2 rows", 2, results.getList().size());
 		assertTrue("Expecting at least 1 column", results.getList().get(0).length >= 1);
@@ -477,13 +515,21 @@ public class DynamicQueryTest
 			dao.save(obj2);
 		}
 
-		assertEquals("deprecated=true matches 2 rows",
+		assertEquals("deprecated=true matches 2 rows (with dao.find)",
 		             2,
-		             dao.findByUriQuery(new WebQuery().eq("deprecated", true)).getList().size());
+		             dao.find(new WebQuery().eq("deprecated", true)).getList().size());
 
-		assertEquals("deprecated=false matches nothing",
+		// Test the same query with only COUNT
+		assertEquals("deprecated=true matches 2 rows (with dao.count)",
+		             2,
+		             dao.count(new WebQuery().eq("deprecated", true)));
+
+
+		// deprecated=false should match nothing
+		final ConstrainedResultSet<ParentEntity> resultset = dao.find(new WebQuery().eq("deprecated", false));
+		assertEquals("deprecated=false matches nothing (with dao.find)",
 		             0,
-		             dao.findByUriQuery(new WebQuery().eq("deprecated", false)).getList().size());
+		             resultset.getList().size());
 	}
 
 
@@ -498,7 +544,11 @@ public class DynamicQueryTest
 		obj2.setName("Name2");
 		dao.save(obj2);
 
-		assertEquals(getIds(Arrays.asList(obj1, obj2)), getIds(dao.findByUriQuery(new WebQuery().orderAsc("id")).getList()));
+		assertEquals("regular find",
+		             getIds(Arrays.asList(obj1, obj2)),
+		             getIds(dao.find(new WebQuery().orderAsc("id")).getList()));
+
+		assertEquals("findIds", getIds(Arrays.asList(obj1, obj2)), dao.findIds(new WebQuery().orderAsc("id")).getList());
 	}
 
 
@@ -556,6 +606,48 @@ public class DynamicQueryTest
 		dao.save(obj2);
 
 		assertEquals(getIds(obj2, obj1), getIds(dao.findByUriQuery(new WebQuery().orderDesc("id")).getList()));
+	}
+
+
+	@Test
+	public void testCustomProjection()
+	{
+		ParentEntity obj1 = new ParentEntity();
+		obj1.setName("Name1");
+		dao.save(obj1);
+
+		ParentEntity obj2 = new ParentEntity();
+		obj2.setName("Name2");
+		dao.save(obj2);
+
+		final Object[] a = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		final Object[] b = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,name").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		final Object[] c = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,name,id").orderAsc("name").orderDesc("id"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		// will not use distinct
+		final Object[] d = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,deprecated").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		// will use distinct
+		final Object[] e = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("id,deprecated,deprecated").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+
+		// will use distinct
+		final Object[] f = (Object[]) (Object) dao.find(new WebQuery().eq("deprecated", false).fetch("name").orderAsc("name"),
+		                                                JPASearchStrategy.CUSTOM_PROJECTION).list.get(0);
+
+		assertEquals("a", new Object[] {1L}, a);
+		assertEquals("b", new Object[] {1L, "Name1"}, b);
+		assertEquals("c: uses distinct, but order reuses existing select", new Object[] {1L, "Name1", 1L}, c);
+		assertEquals("d", new Object[] {1L, false}, d); // shouldn't need to use distinct
+		assertEquals("e: distinct must add name to select", new Object[] {1L, false, false, "Name1"}, e); // need to use DISTINCT (unfortunately)
+		assertEquals("f: distinct required but no select modify", new Object[] {"Name1"}, f);
 	}
 
 

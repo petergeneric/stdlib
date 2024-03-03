@@ -5,7 +5,8 @@ import com.codahale.metrics.MetricRegistry;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.Collection;
@@ -24,7 +25,7 @@ import java.util.function.Consumer;
 @Singleton
 public class BreakerService
 {
-	private static final Logger log = Logger.getLogger(BreakerService.class);
+	private static final Logger log = LoggerFactory.getLogger(BreakerService.class);
 
 	/**
 	 * All names we have seen before
@@ -132,7 +133,7 @@ public class BreakerService
 
 		lastChanged.put(name, new TripRecord(note, value));
 
-		log.info("Breaker '" + name + "' changing: " + currentState + "->" + value + ". Note: " + StringUtils.trimToEmpty(note));
+		log.info("Breaker '{}' changing: {}->{}. Note: {}", name, currentState, value, StringUtils.trimToEmpty(note));
 
 		// Re-evaluate all isolator groups
 		for (BreakerGroupImpl group : groups)
@@ -196,7 +197,7 @@ public class BreakerService
 				}
 				catch (Throwable t)
 				{
-					log.warn("Error notifying " + onChange + " of breaker change", t);
+					log.warn("Error notifying {} of breaker change", onChange, t);
 				}
 			}
 		}

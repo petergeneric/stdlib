@@ -6,7 +6,8 @@ import com.peterphi.std.guice.apploader.GuiceSetup;
 import com.peterphi.std.guice.common.logging.LoggingModule;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -19,7 +20,7 @@ import java.util.Set;
  */
 public class GuiceRegistry
 {
-	private static final Logger log = Logger.getLogger(GuiceRegistry.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceRegistry.class);
 	private final Object monitor = new Object();
 
 	private final GuiceBuilder builder;
@@ -109,7 +110,7 @@ public class GuiceRegistry
 				}
 				catch (Throwable t)
 				{
-					log.warn("Error shutting down service " + service + ": " + t.getMessage(), t);
+					log.warn("Error shutting down service {}: {}", service, t.getMessage(), t);
 				}
 			}
 
@@ -140,7 +141,7 @@ public class GuiceRegistry
 		}
 		catch (RuntimeException | Error e)
 		{
-			log.warn("Failed to restart: " + e.getMessage(), e);
+			log.warn("Failed to restart: {}", e.getMessage(), e);
 			stop();
 
 			throw e;

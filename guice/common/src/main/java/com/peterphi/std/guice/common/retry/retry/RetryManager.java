@@ -3,11 +3,12 @@ package com.peterphi.std.guice.common.retry.retry;
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.Timer;
 import com.peterphi.std.guice.common.retry.retry.backoff.BackoffStrategy;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class RetryManager
 {
-	private static final Logger log = Logger.getLogger(RetryManager.class);
+	private static final Logger log = LoggerFactory.getLogger(RetryManager.class);
 
 	private final BackoffStrategy backoff;
 	private final int maxAttempts;
@@ -57,15 +58,12 @@ public class RetryManager
 				else
 				{
 					if (log.isTraceEnabled())
-						log.warn("Attempt #" + attempt + " of " + operation + " failed, will retry.", e);
+						log.warn("Attempt #{} of {} failed, will retry.", attempt, operation, e);
 					else
-						log.warn("Attempt #" +
-						         attempt +
-						         " of " +
-						         operation +
-						         " failed with " +
-						         e.getClass().getSimpleName() +
-						         ", will retry.");
+						log.warn("Attempt #{} of {} failed with {}, will retry.",
+						         attempt,
+						         operation,
+						         e.getClass().getSimpleName());
 				}
 			}
 			finally
@@ -109,7 +107,7 @@ public class RetryManager
 	protected <T> T finalAttemptFailed(final Retryable<T> operation, final int attempt, final boolean logError, final Throwable e) throws Exception
 	{
 		if(logError)
-		log.error("Final attempt #" + attempt + " of " + operation + " failed.", e);
+			log.error("Final attempt #{} of {} failed.", attempt, operation, e);
 
 		if (e instanceof Exception)
 			throw (Exception) e;

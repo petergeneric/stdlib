@@ -115,6 +115,7 @@ public class QRelation
 		obj.nullable = this.isNullable();
 		obj.type = WQDataType.ENTITY;
 		obj.relation = getEntity().getName();
+		obj.relationCollection = isCollection();
 
 		return obj;
 	}

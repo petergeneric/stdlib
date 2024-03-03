@@ -4,7 +4,8 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.Singleton;
 import org.apache.commons.io.FileUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.BaseSessionEventListener;
 import org.hibernate.HibernateException;
 import org.hibernate.Session;
@@ -22,7 +23,7 @@ import java.util.concurrent.Callable;
 @Singleton
 public class TransactionHelper
 {
-	private static final Logger log = Logger.getLogger(TransactionHelper.class);
+	private static final Logger log = LoggerFactory.getLogger(TransactionHelper.class);
 
 	@Inject
 	Provider<Transaction> transactionProvider;
@@ -172,12 +173,12 @@ public class TransactionHelper
 				for (File file : files)
 				{
 					if (log.isTraceEnabled())
-						log.trace("Delete file on transaction rollback: " + file);
+						log.trace("Delete file on transaction rollback: {}", file);
 
 					final boolean success = FileUtils.deleteQuietly(file);
 
 					if (!success)
-						log.warn("Failed to delete file on transaction rollback: " + file);
+						log.warn("Failed to delete file on transaction rollback: {}", file);
 				}
 			}
 		});

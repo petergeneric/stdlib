@@ -2,20 +2,23 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
+import com.peterphi.std.guice.common.jackson.JacksonFactory;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
 import com.peterphi.std.guice.restclient.converter.CommonTypesParamConverterProvider;
+import com.peterphi.std.guice.restclient.resteasy.impl.jackson.Jackson2Provider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlTypeProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlRootElementProvider;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.fastinfoset.FastInfosetXmlTypeProvider;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
 import org.apache.commons.codec.binary.Base64;
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.client.jaxrs.ClientHttpEngine;
 import org.jboss.resteasy.client.jaxrs.ResteasyClient;
 import org.jboss.resteasy.client.jaxrs.ResteasyClientBuilder;
 import org.jboss.resteasy.spi.ResteasyProviderFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.client.ClientRequestContext;
 import jakarta.ws.rs.client.ClientRequestFilter;
@@ -32,7 +35,7 @@ import java.util.function.Consumer;
 @Singleton
 public class ResteasyClientFactoryImpl implements StoppableService
 {
-	private static final Logger log = Logger.getLogger(ResteasyClientFactoryImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ResteasyClientFactoryImpl.class);
 
 	private final HttpClientFactory httpClientFactory;
 	//private final ResteasyProviderFactory resteasyProviderFactory;
@@ -48,6 +51,7 @@ public class ResteasyClientFactoryImpl implements StoppableService
 	                                 final TracingClientRequestFilter tracingRequestFilter,
 	                                 final RemoteExceptionClientResponseFilter remoteExceptionClientResponseFilter,
 	                                 final JAXBSerialiserFactory serialiserFactory,
+	                                 final JacksonFactory jacksonFactory,
 	                                 final HttpClientFactory httpClientFactory)
 	{
 		this.httpClientFactory = httpClientFactory;
@@ -79,6 +83,10 @@ public class ResteasyClientFactoryImpl implements StoppableService
 				resteasyProviders.add(xmlTypeProvider);
 			}
 
+			// Setup Jackson provider
+			{
+				resteasyProviders.add(new Jackson2Provider(jacksonFactory));
+			}
 		}
 
 		if (manager != null)

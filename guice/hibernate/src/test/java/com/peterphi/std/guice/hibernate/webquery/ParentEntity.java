@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery;
 
 import com.peterphi.std.guice.database.annotation.EagerFetch;
+import com.peterphi.std.guice.database.annotation.WebQueryPrivate;
 
 import jakarta.persistence.CollectionTable;
 import jakarta.persistence.Column;
@@ -16,6 +17,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.UUID;
 
 @Entity
 public class ParentEntity
@@ -29,6 +31,10 @@ public class ParentEntity
 
 	@Column(name = "deprecated")
 	private boolean deprecated = false;
+
+	@WebQueryPrivate
+	@Column(name = "secret_col")
+	private String somePrivateString = UUID.randomUUID().toString();
 
 	@Column(name = "someBytes")
 	@Lob
@@ -80,6 +86,18 @@ public class ParentEntity
 	void setDeprecated(final boolean deprecated)
 	{
 		this.deprecated = deprecated;
+	}
+
+
+	public String getSomePrivateString()
+	{
+		return somePrivateString;
+	}
+
+
+	public void setSomePrivateString(final String somePrivateString)
+	{
+		this.somePrivateString = somePrivateString;
 	}
 
 

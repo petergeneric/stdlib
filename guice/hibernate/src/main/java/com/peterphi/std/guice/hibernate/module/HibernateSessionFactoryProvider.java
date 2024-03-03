@@ -5,7 +5,10 @@ import com.google.inject.Provider;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import org.apache.log4j.Logger;
+import com.peterphi.std.guice.database.annotation.Transactional;
+import org.apache.commons.lang.StringUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
@@ -18,7 +21,7 @@ import javax.inject.Named;
  */
 class HibernateSessionFactoryProvider implements Provider<SessionFactory>, StoppableService
 {
-	private static final Logger log = Logger.getLogger(HibernateSessionFactoryProvider.class);
+	private static final Logger log = LoggerFactory.getLogger(HibernateSessionFactoryProvider.class);
 
 	private final Provider<ServiceRegistry> serviceRegistryProvider;
 	private final Configuration config;

@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.hibernate.webquery.impl.jpa.jpafunctions;
 
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntity;
+import com.peterphi.std.guice.hibernate.webquery.impl.QProperty;
 import com.peterphi.std.guice.hibernate.webquery.impl.QRelation;
 import org.apache.commons.lang.StringUtils;
 
@@ -63,7 +64,7 @@ public class JPAJoin
 	}
 
 
-	public Expression<?> property(final String name)
+	public Expression<?> property(final String name, boolean permitSchemaPrivate)
 	{
 		if (name.indexOf(':') == -1)
 		{
@@ -73,7 +74,7 @@ public class JPAJoin
 				return root;
 			else
 			{
-				entity.getProperty(name); // Validate that such a property exists in our metamodel
+				final QProperty prop = entity.getProperty(name, permitSchemaPrivate);// Validate that such a property exists in our metamodel and is accessible
 
 				return root.get(name);
 			}
@@ -88,7 +89,7 @@ public class JPAJoin
 
 			if (StringUtils.equals(parts[1], "size"))
 			{
-				entity.getProperty(name); // throws an exception if the property provided is not a relation (i.e. a collection)
+				entity.getProperty(name, false); // throws an exception if the property provided is not a relation (i.e. a collection)
 
 				return builder.size((Expression) root.get(parts[0]));
 			}

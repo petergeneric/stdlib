@@ -54,19 +54,15 @@ public class MetricsRestServiceImpl implements MetricsRestService
 
 	private String _metricLabels;
 
-	@Inject
-	MetricSerialiser serialiser;
-
-
 	@Override
 	public MetricsDocument getMetrics()
 	{
 		MetricsDocument doc = new MetricsDocument();
 
-		doc.counters = serialiser.serialiseCounters(registry.getCounters());
-		doc.gauges = serialiser.serialiseGauges(registry.getGauges());
-		doc.histograms = serialiser.serialiseHistograms(registry.getHistograms());
-		doc.meters = serialiser.serialiseMeters(registry.getMeters());
+		doc.counters = MetricSerialiser.serialiseCounters(registry.getCounters());
+		doc.gauges = MetricSerialiser.serialiseGauges(registry.getGauges());
+		doc.histograms = MetricSerialiser.serialiseHistograms(registry.getHistograms());
+		doc.meters = MetricSerialiser.serialiseMeters(registry.getMeters());
 
 		return doc;
 	}

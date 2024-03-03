@@ -2,7 +2,8 @@ package com.peterphi.std.util;
 
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.io.IOUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.FileNotFoundException;
 import java.io.InputStream;
@@ -14,7 +15,7 @@ import java.util.jar.Manifest;
  */
 public class ClassManifestLocator
 {
-	private static final Logger log = Logger.getLogger(ClassManifestLocator.class);
+	private static final Logger log = LoggerFactory.getLogger(ClassManifestLocator.class);
 
 
 	/**
@@ -39,7 +40,7 @@ public class ClassManifestLocator
 			URL url = clazz.getResource(classFileName);
 
 			if (log.isTraceEnabled())
-				log.trace("getResource(" + classFileName + ") = " + url);
+				log.trace("getResource({}) = {}", classFileName, url);
 
 			if (url == null)
 			{
@@ -85,7 +86,7 @@ public class ClassManifestLocator
 				}
 				catch (FileNotFoundException e)
 				{
-					log.warn("Could not find: " + manifestURL, e);
+					log.warn("Could not find: {}", manifestURL, e);
 
 					return null;
 				}
@@ -93,7 +94,7 @@ public class ClassManifestLocator
 		}
 		catch (Throwable t)
 		{
-			log.warn("Error acquiring MANIFEST.MF for " + clazz, t);
+			log.warn("Error acquiring MANIFEST.MF for {}", clazz, t);
 
 			return null;
 		}

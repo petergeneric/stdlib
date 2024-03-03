@@ -1,6 +1,7 @@
 package com.peterphi.std.guice.common;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xbean.finder.AnnotationFinder;
 import org.apache.xbean.finder.archive.Archive;
 import org.apache.xbean.finder.archive.CompositeArchive;
@@ -25,7 +26,7 @@ import java.util.List;
  */
 public class ClassScannerFactory
 {
-	private static final Logger log = Logger.getLogger(ClassScannerFactory.class);
+	private static final Logger log = LoggerFactory.getLogger(ClassScannerFactory.class);
 
 	private WeakReference<ClassScanner> cached = null;
 
@@ -108,7 +109,7 @@ public class ClassScannerFactory
 					final URL url = urls.nextElement();
 
 					if (log.isTraceEnabled())
-						log.trace("Found source: " + url);
+						log.trace("Found source: {}", url);
 
 					if (url.getProtocol() != null && (url.getProtocol().equals("zip") || url.getProtocol().equals("jar")))
 						archives.add(new FilteredArchive(new JarArchive(classloader, url), new PrefixFilter(pkg)));

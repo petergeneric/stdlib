@@ -9,13 +9,13 @@ notest=false
 MAVEN_PARALLELISM=4
 
 ifneq ($(notest), false)
-	MVN=mvn3 -T$(MAVEN_PARALLELISM) -DskipTests
+	MVN=mvn -T$(MAVEN_PARALLELISM) -DskipTests
 else
-	MVN=mvn3 -T$(MAVEN_PARALLELISM)
+	MVN=mvn -T$(MAVEN_PARALLELISM)
 endif
 
 ifeq ($(env), azure)
-	MVN=mvn3 -T$(MAVEN_PARALLELISM) -P azure
+	MVN=mvn -T$(MAVEN_PARALLELISM) -P azure
 endif
 
 RSYNC=rsync --progress -vzr
@@ -78,5 +78,5 @@ clean:
 	$(MVN) clean
 
 release:
-	env MVN=mvn3 ./release.sh
+	env MVN=mvn ./release.sh
 

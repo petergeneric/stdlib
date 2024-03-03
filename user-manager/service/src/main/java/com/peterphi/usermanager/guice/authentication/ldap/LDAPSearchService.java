@@ -7,7 +7,8 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.annotation.Nullable;
 import javax.naming.Context;
@@ -28,7 +29,7 @@ import java.util.Map;
 @Singleton
 public class LDAPSearchService
 {
-	private static final Logger log = Logger.getLogger(LDAPSearchService.class);
+	private static final Logger log = LoggerFactory.getLogger(LDAPSearchService.class);
 
 	@Inject
 	@Named("ldap.domain")
@@ -212,7 +213,7 @@ public class LDAPSearchService
 	public Map<LDAPUser, LDAPUserRecord> search(LDAPUser authUser, final String password, List<LDAPUser> searchForAll)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Querying LDAP as " + authUser + " for " + searchForAll);
+			log.trace("Querying LDAP as {} for {}", authUser, searchForAll);
 
 		try
 		{
@@ -290,10 +291,10 @@ public class LDAPSearchService
 	{
 		try
 		{
-			log.trace("LDAP Search: base='" + ldapSearchBase + "', filter='" + searchFilter + "'");
+			log.trace("LDAP Search: base='{}', filter='{}'", ldapSearchBase, searchFilter);
 			final NamingEnumeration<SearchResult> answer = ldapContext.search(ldapSearchBase, searchFilter, search);
 
-			log.trace("LDAP Search returned results: " + ((answer == null) ? false : answer.hasMore()));
+			log.trace("LDAP Search returned results: {}", (answer == null) ? false : answer.hasMore());
 
 			return answer;
 		}

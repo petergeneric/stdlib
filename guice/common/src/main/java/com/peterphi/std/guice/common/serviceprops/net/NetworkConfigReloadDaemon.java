@@ -10,7 +10,8 @@ import com.peterphi.std.guice.config.rest.iface.ConfigRestService;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyData;
 import com.peterphi.std.guice.config.rest.types.ConfigPropertyValue;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -19,7 +20,7 @@ import java.util.List;
 @ServiceName("network-config-reload")
 public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 {
-	private static final Logger log = Logger.getLogger(NetworkConfigReloadDaemon.class);
+	private static final Logger log = LoggerFactory.getLogger(NetworkConfigReloadDaemon.class);
 
 	@Inject
 	ConfigRestService configService;
@@ -95,7 +96,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 	{
 		try
 		{
-			log.trace("Load config data from " + config.path + " into " + config);
+			log.trace("Load config data from {} into {}", config.path, config);
 			final ConfigPropertyData read = configService.read(config.path, configInstanceId, config.getLastRevision());
 
 			// Abort if the server returns no config - we have the latest revision
@@ -111,7 +112,7 @@ public class NetworkConfigReloadDaemon extends GuiceRecurringDaemon
 		}
 		catch (Throwable t)
 		{
-			log.warn("Error loading config from path " + config.path, t);
+			log.warn("Error loading config from path {}", config.path, t);
 		}
 	}
 }

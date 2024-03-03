@@ -107,6 +107,7 @@ public class ThymeleafTemplater implements Templater
 
 		// Expose the service configuration
 		ctx.setVariable("config", configuration);
+		ctx.setVariable("consts", configuration);
 		ctx.setVariables(data);
 
 		return new ThymeleafCall(engine, ctx, name, calls, failures);

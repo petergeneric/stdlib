@@ -19,7 +19,14 @@ public class WQEntityProperty
 	public String relation;
 
 	@XmlAttribute
+	public Boolean relationCollection;
+
+
+	@XmlAttribute
 	public boolean nullable;
+
+	@XmlAttribute
+	public String enumType;
 
 	/**
 	 * If datatype is enum, the permitted values for this enum

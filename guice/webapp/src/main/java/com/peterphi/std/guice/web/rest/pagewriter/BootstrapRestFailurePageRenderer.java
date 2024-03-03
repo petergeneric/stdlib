@@ -126,6 +126,7 @@ public class BootstrapRestFailurePageRenderer extends BootstrapPageWriter
 	}
 
 
+
 	private void appendStacktraceLine(StringBuilder sb, String line)
 	{
 		// Only consider lines starting in whitespace (stack trace elements looking like " at com.company.x(MyClass.java:123)"
@@ -139,7 +140,7 @@ public class BootstrapRestFailurePageRenderer extends BootstrapPageWriter
 					sb.append("\t<b>");
 					sb.append(escape(line.substring(1)));
 					sb.append("</b>");
-					sb.append("\n");
+					sb.append("<br />");
 					return;
 				}
 			}
@@ -148,12 +149,12 @@ public class BootstrapRestFailurePageRenderer extends BootstrapPageWriter
 			sb.append("\t<span class='muted'>");
 			sb.append(escape(line.substring(1)));
 			sb.append("</span>");
-			sb.append("\n");
+			sb.append("<br />");
 		}
 		else
 		{
 			// Line does not start with whitespace, do not highlight or mute
-			sb.append(escape(line)).append("\n");
+			sb.append(escape(line)).append("<br />");
 		}
 	}
 

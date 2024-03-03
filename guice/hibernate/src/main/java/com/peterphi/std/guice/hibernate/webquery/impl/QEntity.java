@@ -1,11 +1,13 @@
 package com.peterphi.std.guice.hibernate.webquery.impl;
 
 import com.peterphi.std.guice.database.annotation.EagerFetch;
+import com.peterphi.std.guice.database.annotation.WebQueryPrivate;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.InvalidPropertyException;
+import com.peterphi.std.guice.hibernate.webquery.impl.exception.PrivatePropertyUseRejected;
 import com.peterphi.std.guice.restclient.jaxb.webqueryschema.WQEntitySchema;
 import jakarta.persistence.DiscriminatorValue;
 import jakarta.persistence.ElementCollection;
 import jakarta.persistence.Entity;
-import jakarta.persistence.EntityGraph;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.ManyToMany;
 import jakarta.persistence.ManyToOne;
@@ -20,14 +22,17 @@ import jakarta.persistence.metamodel.PluralAttribute;
 import jakarta.persistence.metamodel.SingularAttribute;
 import jakarta.persistence.metamodel.Type;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.engine.spi.SessionFactoryImplementor;
 import org.hibernate.graph.RootGraph;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import javax.annotation.Nullable;
 import java.lang.reflect.AnnotatedElement;
 import java.lang.reflect.Field;
 import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -43,7 +48,7 @@ import java.util.stream.Collectors;
 
 public class QEntity
 {
-	private static final Logger log = Logger.getLogger(QEntity.class);
+	private static final Logger log = LoggerFactory.getLogger(QEntity.class);
 
 	private final Class<?> clazz;
 	private String name;
@@ -151,10 +156,12 @@ public class QEntity
 
 
 		// Figure out the id method/field
-		final String idPropertyName = getIdPropertyName();
+		if (metamodelEntity != null && metamodelEntity.hasSingleIdAttribute())
+		{
+			final String idPropertyName = metamodelEntity.getId(metamodelEntity.getIdType().getJavaType()).getName();
 
-		if (idPropertyName != null)
 			this.idProperty = new PropertyWrapper(clazz, idPropertyName);
+		}
 	}
 
 
@@ -224,9 +231,8 @@ public class QEntity
 
 				if (hasEagerFetch && fetchType == FetchType.EAGER)
 					log.warn(
-							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: " +
-							clazz +
-							" " +
+							"ENTITY HAS @EagerFetch but also JPA fetch=EAGER annotation - will not be able to instruct Hibernate to suppress fetching this relation: {} {}",
+							clazz,
 							member.toString());
 
 				return (hasEagerFetch || fetchType == FetchType.EAGER);
@@ -292,6 +298,21 @@ public class QEntity
 		final Class<?> clazz;
 		final boolean isCollection;
 		final boolean nullable;
+		final boolean privateField;
+
+		if (attribute.getJavaMember() instanceof Method m)
+		{
+			privateField = m.isAnnotationPresent(WebQueryPrivate.class);
+		}
+		else if (attribute.getJavaMember() instanceof Field f)
+		{
+			privateField = f.isAnnotationPresent(WebQueryPrivate.class);
+		}
+		else
+		{
+			privateField = false;
+		}
+
 
 		// Transparently unwrap collections
 		if (attribute.isCollection())
@@ -306,7 +327,7 @@ public class QEntity
 		{
 			isCollection = false;
 			//type = attribute.getDeclaringType();
-			nullable = (attribute instanceof SingularAttribute) ? ((SingularAttribute) attribute).isOptional() : false;
+			nullable = attribute instanceof SingularAttribute sa && sa.isOptional();
 			clazz = attribute.getJavaType();
 		}
 
@@ -356,11 +377,9 @@ public class QEntity
 						nonEntityRelations.put(name, attribute);
 
 						if (log.isDebugEnabled())
-							log.debug("Ignoring BASIC ElementCollection " +
-							          plural.getCollectionType() +
-							          " of " +
-							          plural.getElementType().getJavaType() +
-							          " " +
+							log.debug("Ignoring BASIC ElementCollection {} of {} {}",
+							          plural.getCollectionType(),
+							          plural.getElementType().getJavaType(),
 							          plural.getName());
 					}
 					else
@@ -395,15 +414,11 @@ public class QEntity
 				nonEntityRelations.put(name, attribute);
 
 				if (log.isDebugEnabled())
-					log.debug("Unknown Collection type: " +
-					          attribute.getPersistentAttributeType() +
-					          " " +
-					          attribute +
-					          " with name " +
-					          name +
-					          " within " +
-					          clazz +
-					          " - ignoring");
+					log.debug("Unknown Collection type: {} {} with name {} within {} - ignoring",
+					          attribute.getPersistentAttributeType(),
+					          attribute,
+					          name,
+					          clazz);
 			}
 
 			if (relation != null)
@@ -430,7 +445,7 @@ public class QEntity
 				newPrefix = name;
 
 
-			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable));
+			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable, privateField));
 		}
 	}
 
@@ -499,10 +514,11 @@ public class QEntity
 	}
 
 
+	@Nullable
 	public String getIdPropertyName()
 	{
-		if (metamodelEntity != null)
-			return metamodelEntity.getId(metamodelEntity.getIdType().getJavaType()).getName();
+		if (this.idProperty != null)
+			return this.idProperty.name;
 		else
 			return null;
 	}
@@ -538,14 +554,19 @@ public class QEntity
 	}
 
 
-	public QProperty getProperty(String name)
+	public QProperty getProperty(final String name, final boolean permitSchemaPrivatePropertyAccess)
 	{
 		final QProperty property = properties.get(name);
 
 		if (property != null)
-			return property;
+		{
+			if (permitSchemaPrivatePropertyAccess || !property.isSchemaPrivate())
+				return property;
+			else
+				throw new PrivatePropertyUseRejected("WebQuery prohibited from accessing Private property " + name);
+		}
 		else
-			throw new IllegalArgumentException("Unknown property " +
+			throw new InvalidPropertyException("Unknown property " +
 			                                   name +
 			                                   " on " +
 			                                   this.clazz.getSimpleName() +
@@ -583,11 +604,17 @@ public class QEntity
 		obj.name = getName();
 		obj.discriminator = getDiscriminatorValue();
 
-		if (this.descendants.size() > 0)
-			obj.childEntityNames = descendants.stream().map(QEntity:: getName).collect(Collectors.toList());
+		if (!this.descendants.isEmpty())
+			obj.childEntityNames = descendants.stream().map(QEntity:: getName).toList();
 
-		obj.properties = properties.values().stream().map(QProperty:: encode).collect(Collectors.toList());
-		obj.properties.addAll(relations.values().stream().map(QRelation:: encode).collect(Collectors.toList()));
+		obj.properties = properties
+				                 .values()
+				                 .stream()
+				                 .filter(prop -> !(prop instanceof QSizeProperty))
+				                 .map(QProperty :: encode)
+				                 .collect(Collectors.toList());
+
+		obj.properties.addAll(relations.values().stream().map(QRelation :: encode).toList());
 
 		return obj;
 	}

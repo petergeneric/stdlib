@@ -2,14 +2,15 @@ package com.peterphi.std.util.jaxb;
 
 import com.peterphi.std.util.DOMUtils;
 import com.peterphi.std.util.jaxb.exception.JAXBRuntimeException;
-import org.apache.log4j.Logger;
-import org.eclipse.persistence.internal.oxm.record.DOMInputSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.xml.sax.InputSource;
 
 import jakarta.xml.bind.JAXBContext;
+import jakarta.xml.bind.JAXBElement;
 import jakarta.xml.bind.JAXBException;
 import jakarta.xml.bind.Marshaller;
 import jakarta.xml.bind.PropertyException;
@@ -34,7 +35,7 @@ import java.util.Arrays;
  */
 public class JAXBSerialiser
 {
-	private static final Logger log = Logger.getLogger(JAXBSerialiser.class);
+	private static final Logger log = LoggerFactory.getLogger(JAXBSerialiser.class);
 
 	private final JAXBContext context;
 	private Schema schema;
@@ -388,10 +389,18 @@ public class JAXBSerialiser
 	 */
 	public <T> T deserialise(final Class<T> clazz, final Element xml)
 	{
-		final Object obj = deserialise(new DOMInputSource((xml)));
+		final JAXBElement<?> obj;
+		try
+		{
+			obj = getUnmarshaller().unmarshal(xml, clazz);
+		}
+		catch (JAXBException e)
+		{
+			throw new JAXBRuntimeException("deserialisation", e);
+		}
 
-		if (clazz.isInstance(obj))
-			return clazz.cast(obj);
+		if (clazz.isInstance(obj.getValue()))
+			return clazz.cast(obj.getValue());
 		else
 			throw new JAXBRuntimeException("XML deserialised to " + obj.getClass() + ", could not cast to the expected " + clazz);
 	}
@@ -706,7 +715,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(JAXBContext context)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for context " + context);
+			log.trace("Create serialiser for context {}", context);
 
 		return new JAXBSerialiser(context);
 	}
@@ -725,7 +734,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + Arrays.asList(classes));
+			log.trace("Create serialiser for {}", Arrays.asList(classes));
 
 		return new JAXBSerialiser(classes);
 	}
@@ -744,7 +753,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getInstance(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create serialiser for " + contextPath);
+			log.trace("Create serialiser for {}", contextPath);
 
 		return new JAXBSerialiser(contextPath);
 	}
@@ -760,7 +769,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(String contextPath)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + contextPath);
+			log.trace("Create moxy serialiser for {}", contextPath);
 
 		try
 		{
@@ -785,7 +794,7 @@ public class JAXBSerialiser
 	public static JAXBSerialiser getMoxy(Class<?>... classes)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Create moxy serialiser for " + Arrays.asList(classes));
+			log.trace("Create moxy serialiser for {}", Arrays.asList(classes));
 
 		try
 		{

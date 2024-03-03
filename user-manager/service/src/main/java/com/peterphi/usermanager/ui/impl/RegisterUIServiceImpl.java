@@ -16,7 +16,8 @@ import com.peterphi.usermanager.guice.authentication.AuthenticationFailureExcept
 import com.peterphi.usermanager.guice.authentication.UserLogin;
 import com.peterphi.usermanager.guice.token.CSRFTokenStore;
 import com.peterphi.usermanager.ui.api.RegisterUIService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.core.Response;
 import java.net.URI;
@@ -26,7 +27,7 @@ import java.util.List;
 
 public class RegisterUIServiceImpl implements RegisterUIService
 {
-	private static final Logger log = Logger.getLogger(RegisterUIServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(RegisterUIServiceImpl.class);
 
 	/**
 	 * Approximately 1 year in seconds
@@ -101,23 +102,17 @@ public class RegisterUIServiceImpl implements RegisterUIService
 
 		if (accountDao.getAll().size() == 0)
 		{
-			log.warn("User with e-mail " +
-			         email +
-			         " will be the first user in the system and so will be granted the role " +
-			         UserLogin.ROLE_ADMIN);
+			log.warn("User with e-mail {} will be the first user in the system and so will be granted the role " +
+			         UserLogin.ROLE_ADMIN, email);
 
 			roles = Arrays.asList(UserLogin.ROLE_ADMIN);
 		}
 
-		log.info("Creating user " +
-		         name +
-		         " with e-mail " +
-		         email +
-		         ". Created by " +
-		         login.getName() +
-		         " (" +
-		         login.getId() +
-		         ") with roles " +
+		log.info("Creating user {} with e-mail {}. Created by {} ({}) with roles {}",
+		         name,
+		         email,
+		         login.getName(),
+		         login.getId(),
 		         roles);
 
 		// Create a user
@@ -137,7 +132,7 @@ public class RegisterUIServiceImpl implements RegisterUIService
 			roleDao.update(roleEntity);
 		}
 
-		log.info("Created user " + newUser + " with e-mail " + email);
+		log.info("Created user {} with e-mail {}", newUser, email);
 
 		if (login.isLoggedIn())
 			return Response.seeOther(URI.create("/users")).build();

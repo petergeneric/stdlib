@@ -22,7 +22,8 @@ import liquibase.resource.ClassLoaderResourceAccessor;
 import liquibase.resource.CompositeResourceAccessor;
 import liquibase.resource.ResourceAccessor;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.AvailableSettings;
 
 import javax.naming.InitialContext;
@@ -47,7 +48,7 @@ import java.util.Properties;
  */
 class LiquibaseCore
 {
-	private static final Logger log = Logger.getLogger(LiquibaseCore.class);
+	private static final Logger log = LoggerFactory.getLogger(LiquibaseCore.class);
 
 	private static final String HIBERNATE_IS_READONLY = "hibernate.connection.readOnly";
 	private static final String HIBERNATE_SCHEMA_MANAGEMENT = AvailableSettings.HBM2DDL_AUTO;
@@ -64,7 +65,7 @@ class LiquibaseCore
 		}
 
 		if (log.isDebugEnabled())
-			log.debug("Execute called: " + action);
+			log.debug("Execute called: {}", action);
 
 		InitialContext ic = null;
 		try
@@ -144,9 +145,7 @@ class LiquibaseCore
 		// N.B. liquibase may create a databasechangeloglock / databasechangelog table if one does not already exist
 		if (action.isWriteAction() && StringUtils.equalsIgnoreCase("true", config.getValue(HIBERNATE_IS_READONLY)))
 		{
-			log.info("Changing liquibase action from " +
-			         action +
-			         " to ASSERT_UPDATED because hibernate is set to read only mode");
+			log.info("Changing liquibase action from {} to ASSERT_UPDATED because hibernate is set to read only mode", action);
 			action = LiquibaseAction.ASSERT_UPDATED;
 		}
 
@@ -194,7 +193,7 @@ class LiquibaseCore
 				if (StringUtils.isNotEmpty(dataSourceName))
 				{
 					if (log.isDebugEnabled())
-						log.debug("Look up datasource for liquibase: " + dataSourceName);
+						log.debug("Look up datasource for liquibase: {}", dataSourceName);
 
 					final DataSource dataSource = (DataSource) jndi.lookup(dataSourceName);
 
@@ -203,7 +202,7 @@ class LiquibaseCore
 				else
 				{
 					if (log.isDebugEnabled())
-						log.debug("Create JDBC Connection directly: " + jdbcUrl);
+						log.debug("Create JDBC Connection directly: {}", jdbcUrl);
 
 					// N.B. do we need to call Class.forName on the JDBC Driver URL?
 					// JDBC drivers should expose themselves using the service provider interface nowadays so this shouldn't be necessary
@@ -246,7 +245,7 @@ class LiquibaseCore
 			}
 
 			if (log.isDebugEnabled())
-				log.debug("Execute liquibase action: " + action);
+				log.debug("Execute liquibase action: {}", action);
 
 			switch (action)
 			{
@@ -255,7 +254,7 @@ class LiquibaseCore
 					List<ChangeSet> unrun = liquibase.listUnrunChangeSets(new Contexts(contexts), new LabelExpression(labels));
 
 					if (log.isDebugEnabled())
-						log.debug("Pending changesets: " + unrun);
+						log.debug("Pending changesets: {}", unrun);
 
 					// If any need to be run, fail
 					if (unrun.size() > 0)

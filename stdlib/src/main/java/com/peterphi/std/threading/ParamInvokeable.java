@@ -1,6 +1,7 @@
 package com.peterphi.std.threading;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * A special ParamRunnable which runs synchronously once prepare() is called
@@ -9,7 +10,7 @@ import org.apache.log4j.Logger;
  */
 public abstract class ParamInvokeable<T> extends ParamRunnable<T>
 {
-	private static transient final Logger log = Logger.getLogger(ParamInvokeable.class);
+	private static transient final Logger log = LoggerFactory.getLogger(ParamInvokeable.class);
 
 	private boolean run = false;
 
@@ -57,7 +58,7 @@ public abstract class ParamInvokeable<T> extends ParamRunnable<T>
 			}
 			catch (Throwable t)
 			{
-				log.error("[ParamInvokeable] {prepare} : " + t.getMessage(), t);
+				log.error("[ParamInvokeable] {prepare} : {}", t.getMessage(), t);
 			}
 		}
 	}

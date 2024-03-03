@@ -11,4 +11,12 @@ public class GuiceCommonRestResourcesImpl implements GuiceCommonRestResources
 	{
 		return BootstrapStaticResources.get().getCSS();
 	}
+
+
+	@Override
+	@AuthConstraint(skip = true)
+	public String getMainJS()
+	{
+		return BootstrapStaticResources.get().getJS();
+	}
 }

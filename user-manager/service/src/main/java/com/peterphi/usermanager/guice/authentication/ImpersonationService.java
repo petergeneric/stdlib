@@ -8,12 +8,13 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.serviceprops.annotations.Reconfigurable;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.UMConfig;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 @Singleton
 public class ImpersonationService
 {
-	private static final Logger log = Logger.getLogger(ImpersonationService.class);
+	private static final Logger log = LoggerFactory.getLogger(ImpersonationService.class);
 
 	@Inject
 	Provider<UserLogin> userProvider;
@@ -35,15 +36,11 @@ public class ImpersonationService
 		final UserLogin currentUser = userProvider.get();
 		final UserEntity newUser = authenticationService.getById(userId);
 
-		log.info("Admin user " +
-		         currentUser.getId() +
-		         " (" +
-		         currentUser.getEmail() +
-		         ") is changing their session to impersonate user " +
-		         newUser.getId() +
-		         " (" +
-		         newUser.getEmail() +
-		         ")");
+		log.info("Admin user {} ({}) is changing their session to impersonate user {} ({})",
+		         currentUser.getId(),
+		         currentUser.getEmail(),
+		         newUser.getId(),
+		         newUser.getEmail());
 
 		currentUser.reload(newUser);
 

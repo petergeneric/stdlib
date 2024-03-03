@@ -5,7 +5,8 @@ import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.web.rest.service.servicedescription.ExampleGenerator;
 import com.peterphi.std.util.DOMUtils;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.HttpMethod;
@@ -26,7 +27,7 @@ import java.util.stream.Stream;
  */
 public class RestServiceResourceInfo implements Comparable<RestServiceResourceInfo>
 {
-	private static final Logger log = Logger.getLogger(RestServiceResourceInfo.class);
+	private static final Logger log = LoggerFactory.getLogger(RestServiceResourceInfo.class);
 
 	private final RestServiceInfo service;
 	private final Method method;

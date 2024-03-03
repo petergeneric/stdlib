@@ -34,7 +34,8 @@ import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
@@ -53,7 +54,7 @@ import java.util.stream.Collectors;
 
 public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 {
-	private static final Logger log = Logger.getLogger(UserManagerOAuthServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(UserManagerOAuthServiceImpl.class);
 
 	private static final String NO_CACHE = "no-cache";
 
@@ -592,13 +593,11 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 
 			if (!StringUtils.equals(service.getId(), clientId))
 			{
-				log.warn("Service " +
-				         clientId +
-				         " tried to swap token in context " +
-				         session.getContext().getId() +
-				         " for user info but token was generated for " +
-				         session.getContext().getService().getId() +
-				         " instead! User may be under attack.");
+				log.warn(
+						"Service {} tried to swap token in context {} for user info but token was generated for {} instead! User may be under attack.",
+						clientId,
+						session.getContext().getId(),
+						session.getContext().getService().getId());
 
 				throw new IllegalArgumentException("This token was not generated for client " + clientId + "!");
 			}

@@ -9,7 +9,8 @@ import com.google.inject.util.Types;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestEach;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.Test;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.TestClass;
@@ -29,7 +30,7 @@ import java.util.Map;
  */
 class TestEachUtils
 {
-	private static final Logger log = Logger.getLogger(TestEachUtils.class);
+	private static final Logger log = LoggerFactory.getLogger(TestEachUtils.class);
 
 
 	public static int getCollectionSizeForParam(final Method method,
@@ -108,7 +109,7 @@ class TestEachUtils
 				{
 					t = e;
 					// Failed but we can try the next collection if there is one
-					log.trace("Error fetching " + key + " binding", e);
+					log.trace("Error fetching {} binding", key, e);
 				}
 			}
 

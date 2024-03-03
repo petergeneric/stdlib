@@ -21,6 +21,7 @@ public class BootstrapPageWriter
 		sb.append("<title>").append(escape(getTitle())).append("</title>");
 		sb.append("<meta charset='utf-8'/>");
 		writeBootstrapCSS(sb);
+		writeMainJS(sb);
 		writeCustomHeadContent(sb);
 		sb.append("</head>");
 		sb.append("<body id='top'>");
@@ -59,5 +60,13 @@ public class BootstrapPageWriter
 		sb.append("<style>\n");
 		BootstrapStaticResources.get().appendCSS(sb);
 		sb.append("\n</style>");
+	}
+
+
+	protected void writeMainJS(StringBuilder sb)
+	{
+		sb.append("<script>\n");
+		sb.append(BootstrapStaticResources.get().getJS());
+		sb.append("\n</script>");
 	}
 }

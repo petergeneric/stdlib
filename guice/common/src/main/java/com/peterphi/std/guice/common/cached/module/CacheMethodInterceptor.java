@@ -9,11 +9,12 @@ import com.peterphi.std.guice.common.metrics.GuiceMetricNames;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 final class CacheMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(CacheMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(CacheMethodInterceptor.class);
 
 	/**
 	 * Use a guava cache with soft values (so the GC can reclaim the space if necessary)
@@ -67,7 +68,7 @@ final class CacheMethodInterceptor implements MethodInterceptor
 			if (cacheResult.expires >= System.currentTimeMillis())
 			{
 				if (log.isDebugEnabled())
-					log.debug("Returning cached result for " + key);
+					log.debug("Returning cached result for {}", key);
 
 				//return the previous result
 				hits.mark();

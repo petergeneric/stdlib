@@ -2,7 +2,8 @@ package com.peterphi.std.guice.common.shutdown;
 
 import com.peterphi.std.guice.common.shutdown.iface.ShutdownManager;
 import com.peterphi.std.guice.common.shutdown.iface.StoppableService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Stack;
  */
 class ShutdownManagerImpl implements ShutdownManager
 {
-	private static final Logger log = Logger.getLogger(ShutdownManagerImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ShutdownManagerImpl.class);
 
 	private Stack<StoppableService> services = new Stack<StoppableService>();
 
@@ -28,7 +29,7 @@ class ShutdownManagerImpl implements ShutdownManager
 		if (stopped)
 			throw new IllegalArgumentException("Cannot register for shutdown: manager already stopped");
 
-		log.debug("Register for shutdown: " + service);
+		log.debug("Register for shutdown: {}", service);
 
 		services.push(service);
 	}
@@ -47,7 +48,7 @@ class ShutdownManagerImpl implements ShutdownManager
 		{
 			int failures = 0; // count the number of services that failed to shutdown
 
-			log.info("Shutting down " + services.size() + " service(s)");
+			log.info("Shutting down {} service(s)", services.size());
 
 			// First, notify all services about the impending shutdown
 			// We can't iterate across the stack in the right order without doing so destructively, so we create a copy as a list
@@ -64,7 +65,7 @@ class ShutdownManagerImpl implements ShutdownManager
 					catch (Throwable t)
 					{
 						failures++;
-						log.warn("Pre-Shutdown failed for " + service + ":" + t.getMessage(), t);
+						log.warn("Pre-Shutdown failed for {}:{}", service, t.getMessage(), t);
 					}
 				}
 			}
@@ -76,14 +77,14 @@ class ShutdownManagerImpl implements ShutdownManager
 
 				try
 				{
-					log.debug("Requesting shutdown of " + service);
+					log.debug("Requesting shutdown of {}", service);
 
 					service.shutdown();
 				}
 				catch (Throwable t)
 				{
 					failures++;
-					log.warn("Shutdown failed for " + service + ": " + t.getMessage(), t);
+					log.warn("Shutdown failed for {}: {}", service, t.getMessage(), t);
 				}
 			}
 
@@ -93,7 +94,7 @@ class ShutdownManagerImpl implements ShutdownManager
 			}
 			else
 			{
-				log.warn("Shutdown completed, " + failures + " service(s) threw an exception during shutdown");
+				log.warn("Shutdown completed, {} service(s) threw an exception during shutdown", failures);
 			}
 
 			stopped = true;

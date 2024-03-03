@@ -2,7 +2,8 @@ package com.peterphi.usermanager.guice.token;
 
 import com.peterphi.std.guice.web.rest.scoping.SessionScoped;
 import com.peterphi.std.types.SimpleId;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,7 +11,7 @@ import java.util.Map;
 @SessionScoped
 public class LowSecurityCSRFTokenStore
 {
-	private static final Logger log = Logger.getLogger(LowSecurityCSRFTokenStore.class);
+	private static final Logger log = LoggerFactory.getLogger(LowSecurityCSRFTokenStore.class);
 
 	private Map<String, String> tokens = new HashMap<>();
 
@@ -41,11 +42,11 @@ public class LowSecurityCSRFTokenStore
 			if (expected.equals(actual))
 				return; // Tokens match
 			else
-				log.warn("Token validate fail use='" + use + "'. Got '" + actual + "': mismatch");
+				log.warn("Token validate fail use='{}'. Got '{}': mismatch", use, actual);
 		}
 		else
 		{
-			log.warn("Token validate fail use='" + use + "'. Got '" + actual + "': none associated with session");
+			log.warn("Token validate fail use='{}'. Got '{}': none associated with session", use, actual);
 		}
 
 		// Fallback - token must have failed to validate (or not been a known use)

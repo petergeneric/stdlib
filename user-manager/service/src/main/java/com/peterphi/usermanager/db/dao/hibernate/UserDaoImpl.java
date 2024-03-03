@@ -12,7 +12,8 @@ import com.peterphi.std.types.SimpleId;
 import com.peterphi.usermanager.db.BCrypt;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.joda.time.DateTime;
 
 import java.util.UUID;
@@ -20,7 +21,7 @@ import java.util.UUID;
 @Singleton
 public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 {
-	private static final Logger log = Logger.getLogger(UserDaoImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(UserDaoImpl.class);
 
 	@Inject
 	@Named("auth.ldap.allow-session-reconnect")
@@ -189,7 +190,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null)
 		{
-			log.info("Allowed login by session reconnect key for user: " + account.getEmail());
+			log.info("Allowed login by session reconnect key for user: {}", account.getEmail());
 
 			account.setLastLogin(new DateTime());
 			update(account);
@@ -205,7 +206,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		// N.B. for Access Key logins we don't update the last login timestamp
 		if (account != null)
-			log.debug("Allowed login by Access Key for user: " + account.getEmail());
+			log.debug("Allowed login by Access Key for user: {}", account.getEmail());
 
 		return account;
 

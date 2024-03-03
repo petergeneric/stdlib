@@ -7,13 +7,14 @@ import com.peterphi.std.guice.apploader.GuiceConstants;
 import com.peterphi.std.guice.common.auth.iface.AccessRefuser;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.cached.CacheManager;
-import com.peterphi.std.guice.restclient.exception.RestException;
 import com.peterphi.std.guice.web.HttpCallContext;
+import com.peterphi.std.guice.web.rest.auth.oauth2.CredentialsRestException;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.jboss.resteasy.util.HttpHeaderNames;
 import org.joda.time.DateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
@@ -30,7 +31,7 @@ import java.util.concurrent.TimeUnit;
 
 class HttpCallJWTUser implements CurrentUser
 {
-	private static final Logger log = Logger.getLogger(HttpCallJWTUser.class);
+	private static final Logger log = LoggerFactory.getLogger(HttpCallJWTUser.class);
 
 
 	/**
@@ -97,7 +98,7 @@ class HttpCallJWTUser implements CurrentUser
 
 				if (requireSecure && !request.isSecure())
 				{
-					log.fatal("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:" +
+					log.error("JWT received over insecure channel (but secure channel mandated)! Token is probably compromised:{}",
 					          data);
 
 					throw new RuntimeException("Rejecting token, not received over secure channel");
@@ -322,17 +323,17 @@ class HttpCallJWTUser implements CurrentUser
 	@Override
 	public AccessRefuser getAccessRefuser()
 	{
-		return (scope, constraint, user) ->
-		{
+		return (scope, constraint, user) -> {
 			if (user.isAnonymous())
-				return new RestException(401,
-				                         "You must log in to access this resource. Required one of roles: " + scope.getRoles(constraint));
+				return new CredentialsRestException(401,
+				                                    "You must log in to access this resource. Required one of roles: " +
+				                                    scope.getRoles(constraint));
 			else
-				return new RestException(403,
-				                         "Access denied for your JWT by rule: " +
-				                         ((constraint != null) ?
-				                          constraint.comment() :
-				                          "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
+				return new CredentialsRestException(403,
+				                                    "Access denied for your JWT by rule: " +
+				                                    ((constraint != null) ?
+				                                     constraint.comment() :
+				                                     "(default)" + ". Required one of roles: " + scope.getRoles(constraint)));
 		};
 	}
 

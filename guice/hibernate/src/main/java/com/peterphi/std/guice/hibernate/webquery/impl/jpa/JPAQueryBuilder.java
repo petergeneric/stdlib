@@ -25,9 +25,10 @@ import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
 import java.util.ArrayList;
@@ -43,7 +44,9 @@ import java.util.stream.Collectors;
 
 public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 {
-	private static final Logger log = Logger.getLogger(JPAQueryBuilder.class);
+	private static final Logger log = LoggerFactory.getLogger(JPAQueryBuilder.class);
+
+	private record OrderExpr( Order order,  WQOrder src){}
 
 	private final Session session;
 	private final CriteriaBuilder criteriaBuilder;
@@ -53,9 +56,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private CriteriaQuery generated;
 
-	private List<Predicate> conditions = new ArrayList<>();
-	private List<Order> orders = new ArrayList<>();
-	private Map<String, JPAJoin> joins = new HashMap<>();
+	private final List<Predicate> conditions = new ArrayList<>();
+	private final List<OrderExpr> orders = new ArrayList<>();
+	private final Map<String, JPAJoin> joins = new HashMap<>();
 
 	private Integer limit;
 	private Integer offset;
@@ -63,14 +66,24 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	// If specified, overrides the default fetches
 	private Set<String> fetches;
 
-	private Map<ParameterExpression, Object> params = new HashMap<>();
+	private final Map<ParameterExpression, Object> params = new HashMap<>();
 
+	private boolean permitSchemaPrivate = false;
 
-	public JPAQueryBuilder(final Session session, final QEntity entity)
+	public JPAQueryBuilder(final Session session, final QEntity entity, final boolean defaultPermitSchemaPrivate)
 	{
 		this.session = session;
 		this.criteriaBuilder = session.getCriteriaBuilder();
 		this.entity = entity;
+		this.permitSchemaPrivate = defaultPermitSchemaPrivate;
+	}
+
+
+	@Override
+	public JPAQueryBuilder<T, ID> withPrivateSchemaAccess()
+	{
+		this.permitSchemaPrivate = true;
+		return this;
 	}
 
 
@@ -181,7 +194,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	{
 		final JPAJoin join = getOrCreateJoin(path.getTail());
 
-		return join.property(path.getHead().getPath());
+		return join.property(path.getHead().getPath(), permitSchemaPrivate);
 	}
 
 
@@ -221,10 +234,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 		for (WQConstraintLine line : constraints)
 		{
-			if (line instanceof WQConstraint)
-				list.add(parseConstraint((WQConstraint) line));
-			else
-				list.add(parseConstraint((WQGroup) line));
+			if (line instanceof WQConstraint c)
+				list.add(parseConstraint(c));
+			else if (line instanceof WQGroup g)
+				list.add(parseConstraint(g));
+			else throw new IllegalArgumentException("Unknown constraint line type: " + line);
 		}
 
 		return list;
@@ -523,10 +537,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		return query.getSingleResult();
 	}
 
-
-	public <ID> List<ID> selectIDs()
+	public List<ID> selectIDs()
 	{
-		Query query = createSelectIDs();
+		Query<ID> query = createSelectIDs();
 
 		List<?> results = query.getResultList();
 
@@ -540,16 +553,15 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public List<Object[]> selectCustomProjection(String... fields)
+	public List<Object[]> selectCustomProjection(final boolean distinct, String... fields)
 	{
-		Query query = createSelectCustomProjection(fields);
-
-		List<?> results = query.getResultList();
+		final Query<Object[]> query = createSelectCustomProjection(distinct, fields);
+		final List<Object[]> results = query.getResultList();
 
 		if (results.isEmpty())
 			return Collections.emptyList();
 		else
-			return (List<Object[]>) (List) results;
+			return results;
 	}
 
 
@@ -563,11 +575,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public Query<Long> createSelectCount()
 	{
-		generated.orderBy(Collections.emptyList()); // Order is not meaningful for a count query
+		final Query<Long> query;
+		{
+			final CriteriaQuery<Long> cq = generated;
+			cq.orderBy(List.of()); // Order is not meaningful for a count query
+			cq.select(criteriaBuilder.count(root));
 
-		generated.select(criteriaBuilder.count(root));
-
-		final Query<Long> query = session.createQuery(generated);
+			query = session.createQuery(cq);
+		}
 
 		// Set all the parameters
 		for (Map.Entry<ParameterExpression, Object> entry : this.params.entrySet())
@@ -581,7 +596,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public <C> List<C> selectCustom(JPAQueryCustomiser customiser)
 	{
-		Query<C> query = createSelectCustom(customiser);
+		final Query<C> query = createSelectCustom(customiser);
 
 		return query.getResultList();
 	}
@@ -589,9 +604,14 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public <C> Query<C> createSelectCustom(JPAQueryCustomiser customiser)
 	{
-		customiser.apply(criteriaBuilder, generated, root, this);
+		final Query<C> query;
+		{
+			final CriteriaQuery<C> cq = generated;
 
-		final Query query = session.createQuery(generated);
+			customiser.apply(criteriaBuilder, cq, root, this);
+
+			query = session.createQuery(cq);
+		}
 
 		if (offset != null)
 			query.setFirstResult(offset);
@@ -608,30 +628,40 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public Query createSelectCustomProjection(String... fields)
+	public Query<Object[]> createSelectCustomProjection(final boolean distinct, String[] fields)
 	{
-		this.generated.distinct(true);
-
-		generated.orderBy(orders); // Make sure we return the results in the correct order
-
-		List<Selection<?>> selects = new ArrayList<>();
-
-		for (String field : fields)
+		final Query<Object[]> query;
 		{
-			selects.add(getProperty(field));
+			final CriteriaQuery<Object[]> cq = generated;
+
+			cq.orderBy(orders.stream().map(OrderExpr :: order).toList()); // Make sure we return the results in the correct order
+
+			List<Selection<?>> selects = new ArrayList<>(fields.length + orders.size());
+
+			for (String field : fields)
+				selects.add(getProperty(field));
+
+			if (distinct)
+			{
+				cq.distinct(true);
+
+				if (!orders.isEmpty())
+				{
+					final Set<String> fieldSet = new HashSet<>(Arrays.asList(fields));
+
+					// Make sure to select any ORDER BY field that isn't already included in the SELECT
+					for (var order : orders)
+					{
+						if (!fieldSet.contains(order.src().field))
+							selects.add(order.order().getExpression());
+					}
+				}
+			}
+
+			cq.multiselect(selects);
+
+			query = session.createQuery(cq);
 		}
-
-		for (Order order : orders)
-		{
-			selects.add(order.getExpression());
-		}
-
-		if (selects.size() == 1)
-			generated.select(selects.get(0));
-		else
-			generated.multiselect(selects);
-
-		final Query query = session.createQuery(generated);
 
 		if (offset != null)
 			query.setFirstResult(offset);
@@ -648,32 +678,25 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
-	public Query createSelectIDs()
+	public Query<ID> createSelectIDs()
 	{
-		this.generated.distinct(true);
-
-		generated.orderBy(orders); // Make sure we return the results in the correct order
-
-		List<Selection<?>> selects = new ArrayList<>();
-
-		if (root.getModel().hasSingleIdAttribute())
+		final Query<ID> query;
 		{
-			selects.add(root.get(root.getModel().getId(root.getModel().getIdType().getJavaType())));
+			final CriteriaQuery<ID> cq = generated;
+			cq.orderBy(orders.stream().map(OrderExpr :: order).toList()); // Make sure we return the results in the correct order
+
+			if (root.getModel().hasSingleIdAttribute())
+			{
+				final var idAttr = root.getModel().getId(root.getModel().getIdType().getJavaType());
+				cq.select(root.get(idAttr));
+			}
+			else
+			{
+				throw new NotImplementedException("Cannot handle ID selection with IdClass!");
+			}
+
+			query = session.createQuery(cq);
 		}
-		else
-			throw new NotImplementedException("Cannot handle ID selection with IdClass!");
-
-		for (Order order : orders)
-		{
-			selects.add(order.getExpression());
-		}
-
-		if (selects.size() == 1)
-			generated.select(selects.get(0));
-		else
-			generated.multiselect(selects);
-
-		final Query query = session.createQuery(generated);
 
 		if (offset != null)
 			query.setFirstResult(offset);
@@ -692,13 +715,16 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	public Query<T> createSelectEntity()
 	{
-		generated.select(root);
+		final Query<T> query;
+		{
+			generated.select(root);
 
-		applyFetches();
+			applyFetches();
 
-		generated.orderBy(orders); // Make sure we return the results in the correct order
+			generated.orderBy(orders.stream().map(OrderExpr :: order).toList());
 
-		final Query<T> query = session.createQuery(generated);
+			query = session.createQuery(generated);
+		}
 
 		if (offset != null)
 			query.setFirstResult(offset);
@@ -767,11 +793,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 						if (relation.isCollection())
 						{
 							if (log.isTraceEnabled())
-								log.trace("Encountered fetch " +
-								          fetch +
-								          ". This resolves to " +
-								          relation +
-								          " which is a collection");
+								log.trace("Encountered fetch {}. This resolves to {} which is a collection", fetch, relation);
 
 							return true;
 						}
@@ -784,13 +806,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 					}
 					else
 					{
-						log.warn("Encountered relation " +
-						         parts[i] +
-						         " on " +
-						         parent.getName() +
-						         " as part of path " +
-						         fetch +
-						         ". Assuming QEntity simply does not know this relation. Assuming worst case scenario (collection join is involved)");
+						log.warn(
+								"Encountered relation {} on {} as part of path {}. Assuming QEntity simply does not know this relation. Assuming worst case scenario (collection join is involved)",
+								parts[i],
+								parent.getName(),
+								fetch);
 						return true;
 					}
 				}
@@ -863,11 +883,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			final Expression<?> property = getProperty(new WQPath(ordering.field));
 
 			if (ordering.isAsc())
-				this.orders.add(criteriaBuilder.asc(property));
+				this.orders.add(new OrderExpr(criteriaBuilder.asc(property), ordering));
 			else
-				this.orders.add(criteriaBuilder.desc(property));
+				this.orders.add(new OrderExpr(criteriaBuilder.desc(property), ordering));
 		}
 
-		generated.orderBy(this.orders);
+		generated.orderBy(this.orders.stream().map(OrderExpr :: order).toList());
 	}
 }

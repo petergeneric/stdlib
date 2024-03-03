@@ -28,7 +28,8 @@ import com.peterphi.std.util.tracing.Tracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
@@ -56,7 +57,7 @@ import static com.peterphi.std.guice.database.annotation.Transactional.IGNORE_IS
  */
 class TransactionMethodInterceptor implements MethodInterceptor
 {
-	private static final Logger log = Logger.getLogger(TransactionMethodInterceptor.class);
+	private static final Logger log = LoggerFactory.getLogger(TransactionMethodInterceptor.class);
 
 	private final Provider<Session> sessionProvider;
 
@@ -66,8 +67,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final Meter errorRollbacks;
 	private final Meter commitFailures;
 
+	private final boolean logStacktraceOnRetryableException;
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly)
+
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly, final boolean logStacktraceOnRetryableException)
 	{
 		this.sessionProvider = sessionProvider;
 
@@ -76,6 +79,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
 		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
 		this.forceReadOnly = forceReadOnly;
+		this.logStacktraceOnRetryableException = logStacktraceOnRetryableException;
 	}
 
 
@@ -89,7 +93,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		{
 			// allow silent joining of enclosing transactional methods (NOTE: this ignores the current method's txn-al settings)
 			if (log.isTraceEnabled())
-				log.trace("Joining existing transaction to call " + invocation.getMethod().toGenericString());
+				log.trace("Joining existing transaction to call {}", invocation.getMethod().toGenericString());
 
 			return invocation.proceed();
 		}
@@ -97,7 +101,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		{
 			Timer.Context callTimer = calls.time();
 
-			final String tracingId = Tracing.log("TX:begin", () -> invocation.getMethod().toGenericString());
+			final String tracingId = Tracing.newOperationId("TX:begin", invocation.getMethod());
 			Tracing.logOngoing(tracingId, "TX:initialStatus", initialStatus);
 
 			try
@@ -124,10 +128,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						}
 						catch (LockAcquisitionException | StaleStateException | GenericJDBCException | OptimisticLockException e)
 						{
-							if (log.isTraceEnabled())
-								log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...", e);
+							if (logStacktraceOnRetryableException || log.isTraceEnabled())
+								log.warn("@Transactional caught exception {}; retrying...", e.getClass().getSimpleName(), e);
 							else
-								log.warn("@Transactional caught exception " + e.getClass().getSimpleName() + "; retrying...");
+								log.warn("@Transactional on {} caught exception {}; retrying...", invocation.getMethod().toString(), e.getClass().getSimpleName());
 
 							Tracing.logOngoing(tracingId, "TX:exception:retryable", (Supplier) () -> e.getClass().getSimpleName());
 
@@ -149,13 +153,12 @@ class TransactionMethodInterceptor implements MethodInterceptor
 							if (e.getCause() != null && (isSqlServerSnapshotConflictError(e) || isDeadlockError(e)))
 							{
 								if (log.isTraceEnabled())
-									log.warn("@Transactional caught exception PersistenceException wrapping " +
-									         e.getCause().getClass().getSimpleName() +
-									         "; retrying...", e);
+									log.warn("@Transactional caught exception PersistenceException wrapping {}; retrying...",
+									         e.getCause().getClass().getSimpleName(),
+									         e);
 								else
-									log.warn("@Transactional caught exception PersistenceException wrapping " +
-									         e.getCause().getClass().getSimpleName() +
-									         "; retrying...");
+									log.warn("@Transactional caught exception PersistenceException wrapping {}; retrying...",
+									         e.getCause().getClass().getSimpleName());
 
 								Tracing.logOngoing(tracingId,
 								                   "TX:exception:retryable:wrapped",
@@ -282,7 +285,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 					// But we should notify them that a rollback error did occur
 					if (!readOnly)
 					{
-						log.warn("TX encountered error and then failed during rollback! Original Error: " + e.getMessage(), e);
+						log.warn("TX encountered error and then failed during rollback! Original Error: {}", e.getMessage(), e);
 						log.warn("TX encountered error and then failed during rollback! Rollback Error: ", txre);
 
 						throw new TransactionException(
@@ -294,8 +297,9 @@ class TransactionMethodInterceptor implements MethodInterceptor
 					}
 					else
 					{
-						log.warn("Read-Only TX encountered error and then failed during rollback! Original Error: " +
-						         e.getMessage(), e);
+						log.warn("Read-Only TX encountered error and then failed during rollback! Original Error: {}",
+						         e.getMessage(),
+						         e);
 						log.warn("Read-Only TX encountered error and then failed during rollback! Rollback Error: ", txre);
 					}
 				}
@@ -323,8 +327,10 @@ class TransactionMethodInterceptor implements MethodInterceptor
 			{
 				if (readOnly)
 				{
-					log.warn("Read-Only TX encountered error during rollback! Will not share this with user (since actual read-only TX method completed normally). Error is: " +
-					         e.getMessage(), e);
+					log.warn(
+							"Read-Only TX encountered error during rollback! Will not share this with user (since actual read-only TX method completed normally). Error is: {}",
+							e.getMessage(),
+							e);
 				}
 				else
 				{
@@ -591,7 +597,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final void complete(Transaction tx, boolean readOnly)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Complete " + tx);
+			log.trace("Complete {}", tx);
 
 		if (!readOnly)
 			tx.commit();
@@ -603,7 +609,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final void rollback(Transaction tx)
 	{
 		if (log.isTraceEnabled())
-			log.trace("Rollback " + tx);
+			log.trace("Rollback {}", tx);
 
 		tx.rollback();
 	}
@@ -612,7 +618,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final void rollback(Transaction tx, Exception e)
 	{
 		if (log.isDebugEnabled())
-			log.debug(e.getClass().getSimpleName() + " causes rollback");
+			log.debug("{} causes rollback", e.getClass().getSimpleName());
 
 		rollback(tx);
 	}

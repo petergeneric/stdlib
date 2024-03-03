@@ -10,6 +10,8 @@ import com.peterphi.std.guice.restclient.jaxb.ExceptionInfo;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import org.jboss.resteasy.spi.ApplicationException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.PrintWriter;
 import java.io.StringWriter;
@@ -23,6 +25,8 @@ import java.util.UUID;
 @Singleton
 public class RestFailureMarshaller
 {
+	private static final Logger log = LoggerFactory.getLogger(RestFailureMarshaller.class);
+
 	/**
 	 * If true, stack traces will be included in the returned exception objects, if false they will be hidden
 	 */
@@ -31,6 +35,18 @@ public class RestFailureMarshaller
 	@Named("rest.exception.showStackTraces")
 	@Doc("If enabled, include stack trace info in the XML exception detail sent back to non-browser clients (default true)")
 	private boolean stackTraces = true;
+
+	@Reconfigurable
+	@Inject(optional = true)
+	@Named("rest.exception.showStackTraces.trim.catalina-lines")
+	@Doc("If enabled, any stack traces will exclude 'at org.apache.catalina.' lines (default true)")
+	private boolean trimCatalinaTraceLines = true;
+
+	@Reconfigurable
+	@Inject(optional = true)
+	@Named("rest.exception.showStackTraces.trim.resteasy-methodinvoker-lines")
+	@Doc("If enabled, any stack traces will exclude 'at org.jboss.resteasy.core.MethodInjectorImpl.invoke' lines (default true)")
+	private boolean tryTrimToResteasyCall = true;
 
 
 	/**
@@ -108,6 +124,19 @@ public class RestFailureMarshaller
 			pw.close();
 
 			info.stackTrace = sw.toString();
+
+			// Try to trim unnecessary frames from the stack trace
+			if (tryTrimToResteasyCall || trimCatalinaTraceLines)
+			{
+				try
+				{
+					trimStackTrace(info);
+				}
+				catch (Throwable t)
+				{
+					log.warn("Error trimming stack trace! Ignoring. {}", t.getMessage(), t);
+				}
+			}
 		}
 
 		// Recursively fill in the cause
@@ -115,6 +144,33 @@ public class RestFailureMarshaller
 			info.causedBy = renderThrowable(e.getCause());
 
 		return info;
+	}
+
+
+	protected void trimStackTrace(final ExceptionInfo info)
+	{
+		boolean trimmed = false;
+
+		if (!trimmed && tryTrimToResteasyCall)
+		{
+			final int index = info.stackTrace.lastIndexOf("\tat org.jboss.resteasy.core.MethodInjectorImpl.invoke");
+
+			if (index > 0)
+			{
+				info.stackTrace = info.stackTrace.substring(0, index);
+				trimmed = true;
+			}
+		}
+
+		if (!trimmed && trimCatalinaTraceLines)
+		{
+			final int lastIndex = info.stackTrace.indexOf("\tat org.apache.catalina.core.");
+			if (lastIndex > 0)
+			{
+				info.stackTrace = info.stackTrace.substring(0, lastIndex);
+				trimmed = true;
+			}
+		}
 	}
 
 

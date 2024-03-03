@@ -11,6 +11,8 @@ import com.peterphi.std.guice.common.serviceprops.jaxbref.JAXBResourceProvider;
 import com.peterphi.std.guice.common.stringparsing.TimeoutConverter;
 import com.peterphi.std.threading.Timeout;
 
+import java.util.function.Consumer;
+
 /**
  * Helper class for modules
  */
@@ -38,10 +40,26 @@ public abstract class GuiceModule extends AbstractModule
 	 */
 	protected <T> JAXBResourceProvider<T> bindConfigFile(final Class<T> type, final String propertyName)
 	{
-		final JAXBResourceProvider provider = new JAXBResourceProvider(super.getProvider(JAXBResourceFactory.class),
-		                                                               getProvider(Key.get(ConfigRef.class,
-		                                                                                   Names.named(propertyName))),
-		                                                               type);
+		return bindConfigFile(type, propertyName, null);
+	}
+
+
+	/**
+	 * Adds a new binding for the given JAXB <code>type</code> to a config source <code>propertyName</code>. This binding
+	 * registers a {@link JAXBResourceProvider} that can auto-reload if the underlying file changes
+	 *
+	 * @param type         the config type
+	 * @param propertyName the GuiceConfig property to read from for the config
+	 * @param onLoad       A Consumer to invoke any time the resource is reloaded (i.e. every time it changes)
+	 * @param <T>          type of the config file
+	 */
+	protected <T> JAXBResourceProvider<T> bindConfigFile(final Class<T> type, final String propertyName, Consumer<T> onLoad)
+	{
+		final JAXBResourceProvider<T> provider = new JAXBResourceProvider<T>(super.getProvider(JAXBResourceFactory.class),
+		                                                                     getProvider(Key.get(ConfigRef.class,
+		                                                                                         Names.named(propertyName))),
+		                                                                     type,
+		                                                                     onLoad);
 
 		// Optionally allow the cache validity to be configured
 		if (config != null)

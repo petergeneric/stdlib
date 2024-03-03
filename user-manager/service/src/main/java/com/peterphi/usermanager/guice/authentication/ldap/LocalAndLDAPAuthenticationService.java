@@ -6,11 +6,12 @@ import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
 import com.peterphi.usermanager.guice.authentication.db.InternalUserAuthenticationServiceImpl;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public class LocalAndLDAPAuthenticationService implements UserAuthenticationService
 {
-	private static final Logger log = Logger.getLogger(LocalAndLDAPAuthenticationService.class);
+	private static final Logger log = LoggerFactory.getLogger(LocalAndLDAPAuthenticationService.class);
 
 	@Inject
 	UserDaoImpl dao;

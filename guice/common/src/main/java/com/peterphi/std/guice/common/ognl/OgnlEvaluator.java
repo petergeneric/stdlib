@@ -6,14 +6,16 @@ import ognl.Node;
 import ognl.Ognl;
 import ognl.OgnlContext;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
 import org.jetbrains.annotations.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.util.Optional;
 import java.util.function.BiConsumer;
 
 public class OgnlEvaluator
 {
-	private static final Logger log = Logger.getLogger(OgnlEvaluator.class);
+	private static final Logger log = LoggerFactory.getLogger(OgnlEvaluator.class);
 
 	public static final MemberAccess PUBLIC_ACCESS = new OGNLPublicMemberAccess();
 
@@ -153,6 +155,15 @@ public class OgnlEvaluator
 	{
 		try
 		{
+			// Allow Root obj to take over OGNL execution
+			if (expected == String.class && root instanceof OgnlSelfEvaluatingRoot o)
+			{
+				final Optional<String> val = o.evaluateOGNL(this.expr);
+
+				if (val != null)
+					return (T) val.orElse(null);
+			}
+
 			final OgnlContext ctx = createNewOgnlContext(root);
 			return (T) Ognl.getValue(getExpression(root), ctx, root, expected);
 		}
@@ -196,7 +207,7 @@ public class OgnlEvaluator
 
 		try
 		{
-			log.debug("OGNL Expression used enough times for compile: " + expr);
+			log.debug("OGNL Expression used enough times for compile: {}", expr);
 
 			final OgnlContext ctx = createNewOgnlContext(root);
 

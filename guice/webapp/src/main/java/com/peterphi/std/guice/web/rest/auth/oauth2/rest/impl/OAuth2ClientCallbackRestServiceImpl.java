@@ -5,12 +5,15 @@ import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
+import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.auth.oauth2.OAuth2SessionRef;
 import com.peterphi.std.guice.web.rest.auth.oauth2.rest.api.OAuth2ClientCallbackRestService;
+import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.usermanager.rest.iface.oauth2server.UserManagerOAuthService;
 import com.peterphi.usermanager.rest.iface.oauth2server.types.OAuth2TokenResponse;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.core.CacheControl;
 import jakarta.ws.rs.core.Response;
@@ -18,9 +21,13 @@ import java.net.URI;
 
 public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallbackRestService
 {
-	private static final Logger log = Logger.getLogger(OAuth2ClientCallbackRestServiceImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(OAuth2ClientCallbackRestServiceImpl.class);
 
 	private static final String NO_CACHE = "no-cache";
+
+	// If transparent
+	private static long LAST_TRANSPARENT_REDIRECT = System.currentTimeMillis();
+	private static final long MAX_TRANSPARENT_REDIRECT_RATE = 30 * 1000;
 
 	@Inject
 	UserManagerOAuthService remote;
@@ -38,9 +45,9 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 	@Inject
 	Provider<OAuth2SessionRef> sessionRefProvider;
 
-	@Inject(optional=true)
+	@Inject(optional = true)
 	@Named("service.oauth2.follow-redirect-on-oauth-callback-failure")
-	@Doc("If true, instead of displaying an error on an oauth callback error, just redirect the user back to the redirect URI to go through the oauth cycle again. Safe as long as client application ensures that no state changes as part of a bare GET request. (default true)")
+	@Doc("If true, instead of displaying an error on an oauth callback error, just redirect the user back to the homepage to go through the oauth cycle again. Subject to global rate limit of default 30s (default true)")
 	public boolean followRedirectAnywayOnOAuthCallbackFailure = true;
 
 
@@ -93,18 +100,32 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 		}
 		catch (Throwable t)
 		{
-			if (followRedirectAnywayOnOAuthCallbackFailure)
+			log.warn("Encountered throwable during OAuth2 validate/redirect. Tracing Local service ID: {}", clientId, t);
+
+			if (followRedirectAnywayOnOAuthCallbackFailure && recordOAuthFailureAndTestIfTransparentRedirectPermitted())
 			{
+				final String src;
+				final HttpCallContext ctx = HttpCallContext.peek();
+				if (ctx != null)
+				{
+					src = ctx.getRequest().getRemoteAddr() +
+					      " of " +
+					      ctx.getRequest().getRequestURI() +
+					      " req sid " +
+					      ctx.getRequest().getRequestedSessionId();
+				}
+				else
+				{
+					src = "unknown, trace: " + Tracing.getTraceId();
+				}
+
 				log.error(
-						"Service encountered error processing oauth client callback. Following safe GET redirect anyway. Details on request: code=" +
-						code +
-						", state=" +
-						state +
-						", error=" +
-						error +
-						", errorText=" +
-						errorText +
-						", errorUri=" +
+						"Service encountered error processing oauth client callback from client ({}). Redirecting user to site root. Details on request: code={}, state={}, error={}, errorText={}, errorUri={}",
+						src,
+						code,
+						state,
+						error,
+						errorText,
 						errorUri,
 						t);
 
@@ -118,9 +139,38 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 	}
 
 
+	/**
+	 * Records that we want to trigger a Transparent Redirect on OAuth2 Failure, and are seeking approval.<br />
+	 * This will only be permitted if the last event of this type happened long enough ago.
+	 *
+	 * @return true if the attempt is permitted
+	 */
+	private boolean recordOAuthFailureAndTestIfTransparentRedirectPermitted()
+	{
+		final long now = System.currentTimeMillis();
+		final long cutoff = now - MAX_TRANSPARENT_REDIRECT_RATE;
+
+		if (LAST_TRANSPARENT_REDIRECT < cutoff)
+		{
+			// Last redirect happened a while ago, so permit the redirect to proceed
+			LAST_TRANSPARENT_REDIRECT = now;
+			return true;
+		}
+		else
+		{
+			LAST_TRANSPARENT_REDIRECT = now;
+
+			log.warn(
+					"Encountered error processing oauth client callback in quick succession, temporarily refusing to transparently redirect in case a client is in a redirect loop");
+
+			return false;
+		}
+	}
+
+
 	private Response doRedirect(final OAuth2SessionRef sessionRef, final String state)
 	{
-		URI redirectTo;
+		URI redirectTo = null;
 
 		if (sessionRef != null)
 		{
@@ -128,19 +178,7 @@ public class OAuth2ClientCallbackRestServiceImpl implements OAuth2ClientCallback
 			// This ensures that we always warn the user if the nonce value does not match
 			redirectTo = sessionRef.getRedirectToFromState(state);
 		}
-		else
-		{
-			if (!followRedirectAnywayOnOAuthCallbackFailure)
-				throw new IllegalArgumentException(
-						"Error: code incorrectly routed to codepath which ignores checking nonce value on anti-CSRF 'state' field from oauth callback! Rejecting attempt");
 
-			// N.B. only safe to do this without checking nonce because we only redirect to GET requests, and no GET requests may change state
-			redirectTo = OAuth2SessionRef.getRedirectToFromStateIgnoringNonce(state);
-		}
-
-		if (redirectTo == null)
-			redirectTo = URI.create("/");
-
-		return Response.seeOther(redirectTo).cacheControl(CacheControl.valueOf(NO_CACHE)).build();
+		return Response.seeOther(redirectTo == null ? URI.create("/") : redirectTo).cacheControl(CacheControl.valueOf(NO_CACHE)).build();
 	}
 }

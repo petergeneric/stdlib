@@ -4,7 +4,8 @@ import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import liquibase.configuration.AbstractConfigurationValueProvider;
 import liquibase.configuration.ProvidedValue;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.AvailableSettings;
 
 import javax.naming.InitialContext;
@@ -12,7 +13,7 @@ import java.util.Properties;
 
 class GuiceApplicationValueContainer extends AbstractConfigurationValueProvider
 {
-	private static final Logger log = Logger.getLogger(GuiceApplicationValueContainer.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceApplicationValueContainer.class);
 
 	private static final String LIQUIBASE_SCHEMA_DEFAULT = "liquibase.schema.default";
 	private static final String HIBERNATE_SCHEMA_DEFAULT = AvailableSettings.DEFAULT_SCHEMA;
@@ -53,7 +54,7 @@ class GuiceApplicationValueContainer extends AbstractConfigurationValueProvider
 	private String getRawValue(String key)
 	{
 		if (log.isTraceEnabled())
-			log.trace("getProperty: " + key);
+			log.trace("getProperty: {}", key);
 
 		// Load from the guice environment configuration
 		if (applicationConfiguration.containsKey(key))

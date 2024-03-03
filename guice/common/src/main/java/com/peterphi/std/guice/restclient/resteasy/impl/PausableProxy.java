@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.restclient.resteasy.impl;
 
+import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.breaker.Breaker;
 import com.peterphi.std.guice.restclient.exception.ServiceBreakerTripPreventsCallException;
 import com.peterphi.std.threading.Deadline;
@@ -39,8 +40,15 @@ class PausableProxy implements InvocationHandler
 		}
 	}
 
-	private static Timeout MAX_WAIT = new Timeout(2, TimeUnit.HOURS);
-	private static Timeout MAX_WAIT_IF_HTTP_CONTEXT = new Timeout(30, TimeUnit.SECONDS);
+	private static final Timeout MAX_WAIT = new Timeout(2, TimeUnit.HOURS);
+	private static final Timeout MAX_WAIT_IF_HTTP_CONTEXT = new Timeout(30, TimeUnit.SECONDS);
+
+	/**
+	 * Apply an extremely short timeout if a service call is made during startup.
+	 * This is because we must not block guice environment construction: there's no way to reset breakers during startup
+	 * If running in e.g. tomcat, there is no way to cause us to unload!
+	 */
+	private static final Timeout MAX_WAIT_IF_IN_STARTUP = Timeout.millis(500);
 
 
 	private final Object rest;
@@ -93,7 +101,7 @@ class PausableProxy implements InvocationHandler
 	{
 		if (!fastFail)
 		{
-			final Deadline deadline = isHttpCall() ? MAX_WAIT_IF_HTTP_CONTEXT.start() : MAX_WAIT.start();
+			final Deadline deadline = getTimeoutForThread().start();
 
 			currentlyPausedCount.incrementAndGet();
 
@@ -117,14 +125,26 @@ class PausableProxy implements InvocationHandler
 			}
 
 			if (isPaused())
-				log.warn("Hit timeout while waiting for service to be unpaused, will now throw exception...");
+				throw new ServiceBreakerTripPreventsCallException(
+						"Unable to make outgoing service call: breaker is still tripped after maximum wait");
 		}
-
-		if (isPaused())
+		else
+		{
 			throw new ServiceBreakerTripPreventsCallException(
-					"Unable to make outgoing service call: breaker is still tripped after maximum wait");
+					"Unable to make outgoing service call: breaker is tripped, service client marked as fast-fail");
+		}
 	}
 
+
+	private static Timeout getTimeoutForThread()
+	{
+		if (GuiceBuilder.isStartingOnThisThread())
+			return MAX_WAIT_IF_IN_STARTUP;
+		else if (isHttpCall())
+			return MAX_WAIT_IF_HTTP_CONTEXT;
+		else
+			return MAX_WAIT;
+	}
 
 	private static boolean isHttpCall()
 	{

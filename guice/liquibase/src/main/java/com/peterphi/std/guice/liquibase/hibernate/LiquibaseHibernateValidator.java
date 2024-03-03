@@ -4,7 +4,8 @@ import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.hibernate.module.ext.HibernateConfigurationValidator;
 import com.peterphi.std.guice.liquibase.LiquibaseAction;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.cfg.Configuration;
 
 import java.util.Properties;
@@ -16,7 +17,7 @@ import java.util.Properties;
  */
 public class LiquibaseHibernateValidator implements HibernateConfigurationValidator
 {
-	private static final Logger log = Logger.getLogger(LiquibaseHibernateValidator.class);
+	private static final Logger log = LoggerFactory.getLogger(LiquibaseHibernateValidator.class);
 
 
 	@Override

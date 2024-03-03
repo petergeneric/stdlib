@@ -1,6 +1,7 @@
 package com.peterphi.std.system.exec;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.IOException;
@@ -17,7 +18,7 @@ import java.util.function.Consumer;
  */
 public class Exec
 {
-	private static transient final Logger log = Logger.getLogger(Exec.class);
+	private static transient final Logger log = LoggerFactory.getLogger(Exec.class);
 
 	/**
 	 * Fake value we use to represent the superuser (instead of hard-coding "root" as the superuser)
@@ -241,7 +242,7 @@ public class Exec
 
 		if (log.isInfoEnabled())
 		{
-			log.info("ProcessBuilder created for command: " + join(" ", cmd));
+			log.info("ProcessBuilder created for command: {}", join(" ", cmd));
 		}
 
 		return builder;

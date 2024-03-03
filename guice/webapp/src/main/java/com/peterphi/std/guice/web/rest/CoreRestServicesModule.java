@@ -5,6 +5,9 @@ import com.google.inject.Provides;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
 import com.peterphi.std.guice.apploader.GuiceProperties;
+import com.peterphi.std.guice.metrics.daemon.HealthCheckWorker;
+import com.peterphi.std.guice.metrics.rest.api.HealthRestService;
+import com.peterphi.std.guice.metrics.rest.impl.HealthRestServiceImpl;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
 import com.peterphi.std.guice.serviceregistry.rest.RestResourceRegistry;
 import com.peterphi.std.guice.web.rest.service.GuiceCoreServicesRegistry;
@@ -37,9 +40,12 @@ public class CoreRestServicesModule extends AbstractModule
 
 		bind(GuiceCoreServicesRegistry.class).asEagerSingleton();
 		bind(LocalEndpointDiscovery.class).to(ServletEndpointDiscoveryImpl.class);
+		bind(HealthCheckWorker.class).asEagerSingleton();
 
 		bind(GuiceRestCoreService.class).to(GuiceRestCoreServiceImpl.class).asEagerSingleton();
+		bind(HealthRestService.class).to(HealthRestServiceImpl.class);
 
+		RestResourceRegistry.register(HealthRestService.class);
 		RestResourceRegistry.register(GuiceRestCoreService.class);
 		RestResourceRegistry.register(GuiceCommonRestResources.class);
 		RestResourceRegistry.register(RestServiceList.class);

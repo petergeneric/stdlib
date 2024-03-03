@@ -11,9 +11,9 @@ public class QProperty
 	protected final String name;
 	protected final Class<?> clazz;
 	protected final boolean nullable;
+	protected final boolean schemaPrivate;
 
-
-	public QProperty(final QEntity entity, final String prefix, final String name, final Class<?> clazz, final boolean nullable)
+	public QProperty(final QEntity entity, final String prefix, final String name, final Class<?> clazz, final boolean nullable, final boolean schemaPrivate)
 	{
 		this.entity = entity;
 
@@ -24,8 +24,30 @@ public class QProperty
 
 		this.clazz = clazz;
 		this.nullable = nullable;
+		this.schemaPrivate= schemaPrivate;
 	}
 
+
+	/**
+	 * Returns whether this property should be considered part of a private schema. The intention here is to prohibit non-local (or at least non-privileged) queries from using this property.<br />
+	 *
+	 * @return
+	 */
+	public boolean isSchemaPrivate()
+	{
+		return this.schemaPrivate;
+	}
+
+
+	/**
+	 * Returns whether this property should be omitted from generated search schemas. This is different from {@link #isSchemaPrivate()} in that it is not intended for use as a way to access control particular fields
+	 *
+	 * @return
+	 */
+	public boolean isOmitFromSchemaDoc()
+	{
+		return this.isSchemaPrivate();
+	}
 
 	public QEntity getEntity()
 	{
@@ -63,6 +85,7 @@ public class QProperty
 		if (obj.type == WQDataType.ENUM)
 		{
 			obj.enumValues = new ArrayList<>();
+			obj.enumType = clazz.getSimpleName();
 
 			for (Object val : clazz.getEnumConstants())
 			{

@@ -2,7 +2,8 @@ package com.peterphi.std.guice.common.serviceprops;
 
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.Collection;
@@ -14,7 +15,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 
 public class ConfigurationProperty
 {
-	private static final Logger log = Logger.getLogger(ConfigurationProperty.class);
+	private static final Logger log = LoggerFactory.getLogger(ConfigurationProperty.class);
 
 	private final ConfigurationPropertyRegistry registry;
 	private final GuiceConfig configuration;
@@ -72,7 +73,7 @@ public class ConfigurationProperty
 	public boolean isReconfigurable()
 	{
 		for (ConfigurationPropertyBindingSite binding : bindings)
-			if (!binding.isReconfigurable())
+			if (!binding.isReconfigurable() && !binding.getType().equals(ConfigRef.class))
 				return false;
 
 		return true; // all reconfigurable
@@ -138,13 +139,7 @@ public class ConfigurationProperty
 
 	public void set(final String value)
 	{
-		log.info("Attempting to change config property " +
-		         name +
-		         " from current \"" +
-		         configuration.get(name) +
-		         "\" to \"" +
-		         value +
-		         "\".");
+		log.info("Attempting to change config property {} from current \"{}\" to \"{}\".", name, configuration.get(name), value);
 		// Validate the new value passes all the binding constraints
 		validate(value);
 
@@ -153,17 +148,22 @@ public class ConfigurationProperty
 
 		if (isReconfigurable())
 		{
-			log.info("All binding sites for property " + name + " are reconfigurable; reinjecting...");
+			log.info("All binding sites for property {} are reconfigurable; reinjecting...", name);
 
 			// Re-inject all the members
 			for (ConfigurationPropertyBindingSite binding : bindings)
-				binding.reinject(registry.getInstances(binding.getOwner()));
+			{
+				// N.B. ConfigRef instances do not need to be reinjected
+				if (!binding.getType().equals(ConfigRef.class))
+				{
+					binding.reinject(registry.getInstances(binding.getOwner()));
+				}
+			}
 		}
 		else
 		{
-			log.info("Not all binding sites for property " +
-			         name +
-			         " are reconfigurable. Restart will be required to apply this change.");
+			log.info("Not all binding sites for property {} are reconfigurable. Restart will be required to apply this change.",
+			         name);
 		}
 	}
 

@@ -5,13 +5,14 @@ import com.peterphi.std.guice.common.retry.retry.Retryable;
 import com.peterphi.std.guice.restclient.exception.RestException;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.ArrayUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.WebApplicationException;
 
 final class InvocationRetryable implements Retryable<Object>
 {
-	private static final Logger log = Logger.getLogger(InvocationRetryable.class);
+	private static final Logger log = LoggerFactory.getLogger(InvocationRetryable.class);
 
 	final MethodInvocation invocation;
 	final Class<? extends Throwable>[] alwaysRetry;
@@ -40,7 +41,7 @@ final class InvocationRetryable implements Retryable<Object>
 		try
 		{
 			if (log.isTraceEnabled())
-				log.trace("Invoking " + this.toString() + " for attempt #" + attempt);
+				log.trace("Invoking {} for attempt #{}", this.toString(), attempt);
 
 			return invocation.proceed();
 		}

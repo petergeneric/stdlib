@@ -35,7 +35,8 @@ class AutoHibernateModule extends HibernateModule
 
 		for (Class<?> clazz : scanner.getAnnotatedClasses(Entity.class))
 		{
-			log.info("Registering @Entity class with hibernate: {}", clazz.getName());
+			if (log.isTraceEnabled())
+				log.trace("Registering @Entity class with hibernate: {}", clazz.getName());
 			
 			config.addAnnotatedClass(clazz);
 		}

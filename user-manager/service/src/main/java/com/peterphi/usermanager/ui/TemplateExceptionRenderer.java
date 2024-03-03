@@ -1,15 +1,15 @@
 package com.peterphi.usermanager.ui;
 
-import com.peterphi.usermanager.guice.authentication.UserLoginProvider;
 import com.google.inject.Inject;
 import com.google.inject.Singleton;
 import com.google.inject.name.Named;
+import com.peterphi.std.guice.restclient.exception.RestThrowableConstants;
 import com.peterphi.std.guice.restclient.jaxb.RestFailure;
 import com.peterphi.std.guice.web.HttpCallContext;
 import com.peterphi.std.guice.web.rest.jaxrs.exception.RestFailureRenderer;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.Templater;
-import com.peterphi.std.util.ListUtility;
+import com.peterphi.usermanager.guice.authentication.UserLoginProvider;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.ws.rs.core.MediaType;
@@ -60,15 +60,6 @@ public class TemplateExceptionRenderer implements RestFailureRenderer
 
 	private boolean shouldRenderHtmlForRequest(HttpServletRequest request)
 	{
-		@SuppressWarnings("unchecked")
-		final List<String> accepts = ListUtility.list(ListUtility.iterate(request.getHeaders("Accept")));
-
-		for (String accept : accepts)
-		{
-			if (accept.toLowerCase(Locale.UK).startsWith("text/html"))
-				return true;
-		}
-
-		return false;
+		return RestThrowableConstants.isHtmlAcceptable(request);
 	}
 }

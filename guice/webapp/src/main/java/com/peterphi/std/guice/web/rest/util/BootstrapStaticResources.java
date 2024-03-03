@@ -21,9 +21,18 @@ public class BootstrapStaticResources
 	 */
 	public byte[] getCSS()
 	{
-		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bs.min.css.gz");
+		return getResource("com/peterphi/std/guice/web/rest/pagewriter/bs.css.gz");
 	}
 
+
+	public String getJS()
+	{
+		return "function setupTheme() {" +
+		       "document.documentElement.setAttribute('data-bs-theme', window.matchMedia('(prefers-color-scheme: dark)').matches ?'dark':null);" +
+		       "}" +
+		       "setupTheme();" +
+		       "window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', setupTheme);";
+	}
 
 	protected static byte[] getResource(final String resourceName)
 	{

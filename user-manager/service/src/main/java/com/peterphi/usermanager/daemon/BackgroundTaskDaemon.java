@@ -6,7 +6,8 @@ import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.guice.common.eagersingleton.annotations.EagerSingleton;
 import com.peterphi.std.threading.Timeout;
 import com.peterphi.usermanager.guice.authentication.UserAuthenticationService;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.concurrent.TimeUnit;
 
@@ -14,7 +15,7 @@ import java.util.concurrent.TimeUnit;
 @Doc("Runs background maintenance tasks on the database")
 public class BackgroundTaskDaemon extends GuiceRecurringDaemon
 {
-	private static final Logger log = Logger.getLogger(BackgroundTaskDaemon.class);
+	private static final Logger log = LoggerFactory.getLogger(BackgroundTaskDaemon.class);
 
 	@Inject
 	UserAuthenticationService authenticationService;

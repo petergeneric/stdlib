@@ -1,7 +1,8 @@
 package com.peterphi.std.guice.common;
 
 import com.google.common.base.Predicate;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.apache.xbean.finder.AnnotationFinder;
 
 import java.lang.annotation.Annotation;
@@ -13,7 +14,7 @@ import java.util.concurrent.atomic.AtomicLong;
 
 public class ClassScanner
 {
-	private static final Logger log = Logger.getLogger(ClassScanner.class);
+	private static final Logger log = LoggerFactory.getLogger(ClassScanner.class);
 
 	private final AnnotationFinder finder;
 
@@ -73,13 +74,7 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getClasses " +
-				          pkg +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getClasses {} with predicate={} returned in {} ms", pkg, predicate, finished - started);
 		}
 	}
 
@@ -129,13 +124,10 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getAnnotatedClasses " +
-				          annotation +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getAnnotatedClasses {} with predicate={} returned in {} ms",
+				          annotation,
+				          predicate,
+				          finished - started);
 		}
 	}
 
@@ -159,13 +151,10 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getInheritedAnnotatedClasses " +
-				          annotation +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getInheritedAnnotatedClasses {} with predicate={} returned in {} ms",
+				          annotation,
+				          predicate,
+				          finished - started);
 		}
 	}
 
@@ -211,13 +200,7 @@ public class ClassScanner
 			searchTime.addAndGet(finished - started);
 
 			if (log.isTraceEnabled())
-				log.trace("getExtendingClasses " +
-				          clazz +
-				          " with predicate=" +
-				          predicate +
-				          " returned in " +
-				          (finished - started) +
-				          " ms");
+				log.trace("getExtendingClasses {} with predicate={} returned in {} ms", clazz, predicate, finished - started);
 		}
 	}
 

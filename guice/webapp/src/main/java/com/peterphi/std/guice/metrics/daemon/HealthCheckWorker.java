@@ -1,4 +1,4 @@
-package com.peterphi.std.guice.metrics.worker;
+package com.peterphi.std.guice.metrics.daemon;
 
 import com.codahale.metrics.health.HealthCheck;
 import com.codahale.metrics.health.HealthCheckRegistry;
@@ -6,7 +6,8 @@ import com.google.inject.Inject;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.common.daemon.GuiceRecurringDaemon;
 import com.peterphi.std.threading.Timeout;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
@@ -17,7 +18,7 @@ import java.util.concurrent.TimeUnit;
 @Doc("Periodically runs health check tests")
 public class HealthCheckWorker extends GuiceRecurringDaemon
 {
-	private static final Logger log = Logger.getLogger(HealthCheckWorker.class);
+	private static final Logger log = LoggerFactory.getLogger(HealthCheckWorker.class);
 
 	private final HealthCheckRegistry registry;
 
@@ -40,11 +41,11 @@ public class HealthCheckWorker extends GuiceRecurringDaemon
 		{
 			if (entry.getValue().isHealthy())
 			{
-				log.debug(entry.getKey() + ": PASS health check");
+				log.debug("{}: PASS health check", entry.getKey());
 			}
 			else
 			{
-				log.warn(entry.getKey() + ": FAILED health check", entry.getValue().getError());
+				log.warn("{}: FAILED health check", entry.getKey(), entry.getValue().getError());
 			}
 		}
 	}

@@ -1,7 +1,8 @@
 package com.peterphi.std.io;
 
 import com.ice.tar.TarArchive;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -29,7 +30,7 @@ import java.util.zip.ZipOutputStream;
  */
 public class ArchiveHelper
 {
-	private static Logger log = Logger.getLogger(ArchiveHelper.class);
+	private static Logger log = LoggerFactory.getLogger(ArchiveHelper.class);
 
 
 	/**
@@ -96,12 +97,12 @@ public class ArchiveHelper
 		}
 		catch (FileNotFoundException e)
 		{
-			log.error("File not found exception: " + e.getMessage(), e);
+			log.error("File not found exception: {}", e.getMessage(), e);
 			return false;
 		}
 		catch (Exception e)
 		{
-			log.error("Exception while extracting archive: " + e.getMessage(), e);
+			log.error("Exception while extracting archive: {}", e.getMessage(), e);
 			return false;
 		}
 	}
@@ -157,7 +158,7 @@ public class ArchiveHelper
 		finally
 		{
 			if (!tempFile.delete())
-				log.warn("Could not delete temp file " + tempFile);
+				log.warn("Could not delete temp file {}", tempFile);
 		}
 		return true;
 	}

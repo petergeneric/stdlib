@@ -9,7 +9,8 @@ import com.google.inject.internal.ErrorsException;
 import com.peterphi.std.guice.apploader.impl.GuiceRegistry;
 import com.peterphi.std.guice.common.stringparsing.StringToTypeConverter;
 import com.peterphi.std.guice.testing.com.peterphi.std.guice.testing.annotations.TestEach;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.junit.runners.model.FrameworkMethod;
 import org.junit.runners.model.Statement;
 
@@ -24,7 +25,7 @@ import java.util.List;
  */
 class GuiceAwareInvokeStatement extends Statement
 {
-	private static final Logger log = Logger.getLogger(GuiceAwareInvokeStatement.class);
+	private static final Logger log = LoggerFactory.getLogger(GuiceAwareInvokeStatement.class);
 
 	private final GuiceRegistry registry;
 	private final FrameworkMethod method;

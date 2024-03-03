@@ -5,14 +5,15 @@ import com.google.inject.Singleton;
 import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.serviceregistry.LocalEndpointDiscovery;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.URI;
 
 @Singleton
 public class ServletEndpointDiscoveryImpl implements LocalEndpointDiscovery
 {
-	private static final Logger log = Logger.getLogger(ServletEndpointDiscoveryImpl.class);
+	private static final Logger log = LoggerFactory.getLogger(ServletEndpointDiscoveryImpl.class);
 
 	private final GuiceConfig config;
 

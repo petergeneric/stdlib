@@ -6,8 +6,7 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 
 /**
- * Annotation for static no-argument method to provide a configuration source. The method may return either a {@link
- * org.apache.commons.configuration.Configuration}, a {@link java.util.Properties} or a {@link com.peterphi.std.io.PropertyFile}
+ * Annotation for static no-argument method to provide a configuration source. The method may return either a {@link java.util.Properties} or a {@link com.peterphi.std.io.PropertyFile}
  */
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)

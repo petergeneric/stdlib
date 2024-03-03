@@ -1,6 +1,7 @@
 package com.peterphi.std.threading;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.Vector;
  */
 public abstract class Daemon implements Runnable
 {
-	private static final Logger log = Logger.getLogger(Daemon.class);
+	private static final Logger log = LoggerFactory.getLogger(Daemon.class);
 
 	/**
 	 * The thread this daemon is running in
@@ -76,7 +77,7 @@ public abstract class Daemon implements Runnable
 	{
 		if (!running)
 		{
-			log.info("[Daemon] {startThread} Starting thread " + name);
+			log.info("[Daemon] {startThread} Starting thread {}", name);
 			this.running = true;
 			thisThread = new Thread(this, name);
 			thisThread.setDaemon(shouldStartAsDaemon()); // Set whether we're a daemon thread (false by default)
@@ -128,7 +129,7 @@ public abstract class Daemon implements Runnable
 		if (isRunning())
 		{
 			if (log.isInfoEnabled())
-				log.info("[Daemon] {stopThread} Requesting termination of thread " + thisThread.getName());
+				log.info("[Daemon] {stopThread} Requesting termination of thread {}", thisThread.getName());
 
 			this.running = false;
 
