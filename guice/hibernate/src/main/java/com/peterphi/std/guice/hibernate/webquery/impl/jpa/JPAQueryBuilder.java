@@ -41,7 +41,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.stream.Collectors;
 
 public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 {
@@ -259,15 +258,9 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			case EQ:
 				return criteriaBuilder.equal(property, parse(property, line.value));
 			case NOT_IN:
-				return criteriaBuilder.not(property.in(param(line.valuelist
-						                                             .stream()
-						                                             .map(val -> parseValue(property, val))
-						                                             .collect(Collectors.toList()))));
+				return criteriaBuilder.not(property.in(param(parseValueList(property, line.valuelist))));
 			case IN:
-				return property.in(param(line.valuelist
-						                         .stream()
-						                         .map(val -> parseValue(property, val))
-						                         .collect(Collectors.toList())));
+				return property.in(param(parseValueList(property, line.valuelist)));
 			case NEQ:
 				return criteriaBuilder.notEqual(property, parse(property, line.value));
 			case CONTAINS:
@@ -312,6 +305,22 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 	}
 
 
+	private List<?> parseValueList(final Expression property, final List<String> values)
+	{
+		if (property.getJavaType() == String.class)
+		{
+			return values;
+		}
+		else
+		{
+			final List<Object> out = new ArrayList<>(values.size());
+			for (String value : values)
+				out.add(parseValue(property, value));
+
+			return out;
+		}
+	}
+
 	private Object parseValue(final Expression property, final String value)
 	{
 		final Class clazz = property.getJavaType();
@@ -330,8 +339,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			final List<Object> ids = group.constraints
 					                         .stream()
 					                         .map(l -> parseValue(property, ((WQConstraint) l).value))
-					                         .collect(Collectors.toList());
-
+					                         .toList();
 
 			final Predicate expr = property.in(param(ids));
 
@@ -538,6 +546,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		return query.getSingleResult();
 	}
 
+
 	public List<ID> selectIDs()
 	{
 		Query<ID> query = createSelectIDs();
@@ -548,7 +557,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			return Collections.emptyList();
 		else if (results.get(0).getClass().isArray())
 			// N.B. we explicitly do not remove duplicates because the only case of duplicates appearing should be if ordering by a collection
-			return results.stream().map(r -> Array.get(r, 0)).map(id -> (ID) id).collect(Collectors.toList());
+			return (List<ID>) results.stream().map(r -> Array.get(r, 0)).toList();
 		else
 			return (List<ID>) results;
 	}
