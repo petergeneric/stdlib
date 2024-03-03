@@ -24,13 +24,18 @@ import jakarta.persistence.criteria.Path;
 import jakarta.persistence.criteria.Predicate;
 import jakarta.persistence.criteria.Root;
 import jakarta.persistence.criteria.Selection;
+import jakarta.persistence.metamodel.Attribute;
 import org.apache.commons.lang.StringUtils;
 import org.hibernate.Session;
 import org.hibernate.query.Query;
+import org.hibernate.query.sqm.tree.domain.SqmPath;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.lang.reflect.Array;
+import java.lang.reflect.Field;
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -313,8 +318,38 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 
 	private Object parseValue(final Expression property, final String value)
 	{
-		final Class clazz = property.getJavaType();
-		return WQTypeHelper.parse(clazz, value);
+		final Class<?> clazz = property.getJavaType();
+
+		if (clazz == Enum.class)
+		{
+			// Hibernate has unhelpfully given us the base Enum type. Need to translate this to an actual Java enum class
+			// To do this we need to peek inside the Expression
+			if (property instanceof SqmPath<?> p && p.getModel() instanceof Attribute a)
+			{
+				final Member member = a.getJavaMember();
+
+				if (member instanceof Method m)
+				{
+					return WQTypeHelper.parse(m.getReturnType(), value);
+				}
+				else if (member instanceof Field f)
+				{
+					return WQTypeHelper.parse(f.getType(), value);
+				}
+				else
+				{
+					throw new IllegalArgumentException("Unsupported member type for enum: " + member.getClass());
+				}
+			}
+			else
+			{
+				throw new IllegalArgumentException("Unknown enum property class: " + property.getClass());
+			}
+		}
+		else
+		{
+			return WQTypeHelper.parse(clazz, value);
+		}
 	}
 
 

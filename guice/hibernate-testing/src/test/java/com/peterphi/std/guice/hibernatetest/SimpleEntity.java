@@ -3,11 +3,11 @@ package com.peterphi.std.guice.hibernatetest;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.JoinTable;
 import jakarta.persistence.ManyToMany;
+
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Set;
@@ -22,15 +22,14 @@ class SimpleEntity
 
 	@ManyToMany(cascade = CascadeType.ALL)
 	@JoinTable(name = "simple_entity_join_table",
-	           joinColumns = @JoinColumn(name = "simple_id", referencedColumnName = "id", nullable = false, updatable = false),
+	           joinColumns = @JoinColumn(name = "simple_id", referencedColumnName = "id", nullable = false),
 	           inverseJoinColumns = @JoinColumn(name = "group_id",
 	                                            referencedColumnName = "id",
-	                                            nullable = false,
-	                                            updatable = false))
+	                                            nullable = false))
 	private Set<GroupEntity> events = new HashSet<>();
 
 
-	SimpleEntity()
+	public SimpleEntity()
 	{
 	}
 

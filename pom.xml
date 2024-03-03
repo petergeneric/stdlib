@@ -37,7 +37,7 @@
 		<metrics.version>4.1.18</metrics.version>
 		<resteasy.version>6.2.2.Final</resteasy.version>
 		<javassist.version>3.29.2-GA</javassist.version>
-		<hibernate.version>6.2.0.CR2</hibernate.version>
+		<hibernate.version>6.4.4.Final</hibernate.version>
 		<dbunit.version>2.7.0</dbunit.version>
 		<hsqldb.version>2.7.1</hsqldb.version>
 		<bouncycastle.version>1.60</bouncycastle.version>

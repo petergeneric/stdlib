@@ -328,7 +328,27 @@ public class QEntity
 			isCollection = false;
 			//type = attribute.getDeclaringType();
 			nullable = attribute instanceof SingularAttribute sa && sa.isOptional();
-			clazz = attribute.getJavaType();
+
+			final Class<?> baseJavaType = attribute.getJavaType();
+
+			if (baseJavaType == Enum.class) {
+				// Hibernate has unhelpfully told us this is an enum without giving us the underlying type
+				// We need to inspect the Member to figure out the actual Java type
+				if (attribute.getJavaMember() instanceof Method m)
+				{
+					clazz = m.getReturnType();
+				}
+				else if (attribute.getJavaMember() instanceof Field f)
+				{
+					clazz = f.getType();
+				}
+				else {
+					throw new IllegalArgumentException("Unsupported member type: " + attribute.getJavaMember().getClass());
+				}
+			}
+			else {
+				clazz = baseJavaType;
+			}
 		}
 
 		// TODO is it also meaningful to add the parent composite type as a field too?
@@ -443,7 +463,6 @@ public class QEntity
 				newPrefix = prefix + ":" + name;
 			else
 				newPrefix = name;
-
 
 			properties.put(newPrefix, new QProperty(this, prefix, name, clazz, nullable, privateField));
 		}
