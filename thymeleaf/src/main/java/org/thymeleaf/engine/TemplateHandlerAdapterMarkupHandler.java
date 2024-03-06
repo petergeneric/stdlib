@@ -19,14 +19,14 @@
  */
 package org.thymeleaf.engine;
 
-import java.util.ArrayList;
-import java.util.List;
-
 import org.attoparser.AbstractMarkupHandler;
 import org.attoparser.ParseException;
 import org.thymeleaf.model.AttributeValueQuotes;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.util.Validate;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -35,7 +35,7 @@ import org.thymeleaf.util.Validate;
  * 
  */
 public final class TemplateHandlerAdapterMarkupHandler extends AbstractMarkupHandler {
-
+    public static boolean EMIT_COMMENTS = false;
 
     private final String templateName;
     private final ITemplateHandler templateHandler;
@@ -197,6 +197,9 @@ public final class TemplateHandlerAdapterMarkupHandler extends AbstractMarkupHan
             final int outerOffset, final int outerLen,
             final int line, final int col)
             throws ParseException {
+
+        if (!EMIT_COMMENTS)
+            return;
 
         final String prefix = new String(buffer, outerOffset, (contentOffset - outerOffset));
         final String content = new String(buffer, contentOffset, contentLen);
