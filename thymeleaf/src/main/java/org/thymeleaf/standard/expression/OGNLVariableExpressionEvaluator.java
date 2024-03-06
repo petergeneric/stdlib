@@ -19,13 +19,6 @@
  */
 package org.thymeleaf.standard.expression;
 
-import java.lang.reflect.Member;
-import java.lang.reflect.Method;
-import java.lang.reflect.Modifier;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-
 import ognl.AbstractMemberAccess;
 import ognl.ClassResolver;
 import ognl.MemberAccess;
@@ -42,6 +35,13 @@ import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.standard.util.StandardExpressionUtils;
 import org.thymeleaf.util.ExpressionUtils;
+
+import java.lang.reflect.Member;
+import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
+import java.util.Collections;
+import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * <p>
@@ -72,6 +72,7 @@ public final class OGNLVariableExpressionEvaluator
                     OGNLContextPropertyAccessor.RESTRICT_REQUEST_PARAMETERS,
                     OGNLContextPropertyAccessor.RESTRICT_REQUEST_PARAMETERS);
 
+    // TODO should we replace with OGNLPublicMemberAccess for back-compat with earlier vendored stdlib Thymeleaf?
     private static MemberAccess MEMBER_ACCESS = new ThymeleafACLMemberAccess();
     private static ThymeleafACLClassResolver CLASS_RESOLVER = new ThymeleafACLClassResolver();
 
