@@ -47,17 +47,7 @@
 			<groupId>org.thymeleaf</groupId>
 			<artifactId>thymeleaf</artifactId>
 			<!-- N.B. jakarta likely needs  or newer -->
-			<version>3.1.2.RELEASE</version>
-			<exclusions>
-				<exclusion>
-					<artifactId>ognl</artifactId>
-					<groupId>ognl</groupId>
-				</exclusion>
-				<exclusion>
-					<artifactId>javassist</artifactId>
-					<groupId>javassist</groupId>
-				</exclusion>
-			</exclusions>
+			<version>${project.version}</version>
 		</dependency>
 
 		<!-- This dependency is required for template file code completion within intellij idea, but must be commented out again prior to commit/release

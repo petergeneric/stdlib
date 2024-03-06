@@ -72,7 +72,7 @@
 		<module>guice</module>
 		<module>user-manager</module>
 		<module>moxy</module>
-		<!-- <module>thymeleaf</module> -->
+		<module>thymeleaf</module>
 	</modules>
 
 	<dependencyManagement>
