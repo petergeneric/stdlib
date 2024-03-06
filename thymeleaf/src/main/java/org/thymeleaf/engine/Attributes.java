@@ -19,17 +19,18 @@
  */
 package org.thymeleaf.engine;
 
-import java.io.IOException;
-import java.io.Writer;
-import java.util.Collections;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 import org.thymeleaf.exceptions.TemplateProcessingException;
 import org.thymeleaf.model.AttributeValueQuotes;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.util.FastStringWriter;
 import org.thymeleaf.util.Validate;
+
+import java.io.IOException;
+import java.io.Writer;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  *
@@ -47,16 +48,30 @@ final class Attributes {
 
 
     final Attribute[] attributes; // might be null if there are no attributes
-    final String[] innerWhiteSpaces; // might be null if there are no attributes and no whitespaces
+    final String[] innerWhiteSpaces; // always set to strip attribute whitespace, it's pointless to emit from a template
 
     private volatile int associatedProcessorCount = -1;
 
 
 
-    Attributes(final Attribute[] attributes, final String[] innerWhiteSpaces) {
+    Attributes(final Attribute[] attributes, final String[] innerWhiteSpaces)
+    {
         super();
         this.attributes = attributes;
-        this.innerWhiteSpaces = innerWhiteSpaces;
+
+        if (innerWhiteSpaces == null || innerWhiteSpaces.length == 0)
+        {
+            this.innerWhiteSpaces = innerWhiteSpaces;
+        }
+        else if (innerWhiteSpaces.length == 1)
+        {
+            this.innerWhiteSpaces = DEFAULT_WHITE_SPACE_ARRAY;
+        }
+        else
+        {
+            this.innerWhiteSpaces = new String[innerWhiteSpaces.length];
+            Arrays.fill(this.innerWhiteSpaces, DEFAULT_WHITE_SPACE);
+        }
     }
 
 
