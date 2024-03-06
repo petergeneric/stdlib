@@ -54,17 +54,21 @@ final class Attributes {
 
 
 
-    Attributes(final Attribute[] attributes, final String[] innerWhiteSpaces) {
+    Attributes(final Attribute[] attributes, final String[] innerWhiteSpaces)
+    {
         super();
         this.attributes = attributes;
 
-        if (innerWhiteSpaces == null || innerWhiteSpaces.length == 0) {
+        if (innerWhiteSpaces == null || innerWhiteSpaces.length == 0)
+        {
             this.innerWhiteSpaces = innerWhiteSpaces;
         }
-        else if (innerWhiteSpaces.length == 1) {
+        else if (innerWhiteSpaces.length == 1)
+        {
             this.innerWhiteSpaces = DEFAULT_WHITE_SPACE_ARRAY;
         }
-        else {
+        else
+        {
             this.innerWhiteSpaces = new String[innerWhiteSpaces.length];
             Arrays.fill(this.innerWhiteSpaces, DEFAULT_WHITE_SPACE);
         }

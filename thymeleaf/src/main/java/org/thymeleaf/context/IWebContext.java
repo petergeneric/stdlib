@@ -19,10 +19,7 @@
  */
 package org.thymeleaf.context;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import org.thymeleaf.web.IWebExchange;
 
 /**
  * <p>
@@ -30,56 +27,27 @@ import javax.servlet.http.HttpSession;
  *   processing in web environments.
  * </p>
  * <p>
- *   Objects implementing this interface add to the usual {@link IContext} data the Servlet-API-related
+ *   Objects implementing this interface add to the usual {@link IContext} data the web related
  *   artifacts needed to perform web-oriented functions such as URL rewriting or request/session access.
  * </p>
  * <p>
- *   Note a class with this name existed since 1.0, but it was completely reimplemented
- *   in Thymeleaf 3.0
+ *   Note this interface was modified in a backwards-incompatible way in Thymeleaf 3.1.0.
  * </p>
  *
  * @author Daniel Fern&aacute;ndez
  *
- * @since 3.0.0
+ * @since 3.1.0
  *
  */
 public interface IWebContext extends IContext {
 
-    /**
-     * <p>
-     *   Returns the {@link HttpServletRequest} object associated with the template execution.
-     * </p>
-     *
-     * @return the request object.
-     */
-    public HttpServletRequest getRequest();
-
-    /**
-     * <p>
-     *   Returns the {@link HttpServletResponse} object associated with the template execution.
-     * </p>
-     *
-     * @return the response object.
-     */
-    public HttpServletResponse getResponse();
-
-    /**
-     * <p>
-     *   Returns the {@link HttpSession} object associated with the template execution, or null if
-     *   there is no session.
-     * </p>
-     *
-     * @return the session object. Might be null if no session has been created.
-     */
-    public HttpSession getSession();
-
-    /**
-     * <p>
-     *   Returns the {@link ServletContext} object associated with the template execution.
-     * </p>
-     *
-     * @return the servlet context object.
-     */
-    public ServletContext getServletContext();
+	/**
+	 * <p>
+	 *   Returns the {@link IWebExchange} object associated with the template execution.
+	 * </p>
+	 *
+	 * @return the web exchange object.
+	 */
+	public IWebExchange getExchange();
 
 }

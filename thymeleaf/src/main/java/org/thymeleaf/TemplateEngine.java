@@ -35,7 +35,9 @@ import org.thymeleaf.cache.ICacheManager;
 import org.thymeleaf.cache.StandardCacheManager;
 import org.thymeleaf.context.IContext;
 import org.thymeleaf.context.IEngineContextFactory;
+import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.context.StandardEngineContextFactory;
+import org.thymeleaf.context.WebContext;
 import org.thymeleaf.dialect.IDialect;
 import org.thymeleaf.engine.TemplateManager;
 import org.thymeleaf.exceptions.TemplateEngineException;
@@ -63,7 +65,7 @@ import org.thymeleaf.util.Validate;
  *   This is the only implementation of {@link ITemplateEngine} provided out of the box by Thymeleaf.
  * </p>
  *
- * <h3>Creating an instance of {@code TemplateEngine}</h3>
+ * <strong>Creating an instance of {@code TemplateEngine}</strong>
  * <p>
  *   An instance of this class can be created at any time by calling its constructor:
  * </p>
@@ -76,7 +78,7 @@ import org.thymeleaf.util.Validate;
  *   dialect/configuration) and use it to process multiple templates.
  * </p>
  * 
- * <h3>Configuring the {@code TemplateEngine}</h3>
+ * <strong>Configuring the {@code TemplateEngine}</strong>
  * <p>
  *   Once created, an instance of {@code TemplateEngine} has to be typically configured a
  *   mechanism for <em>resolving templates</em> (i.e. obtaining and reading them):
@@ -131,8 +133,8 @@ import org.thymeleaf.util.Validate;
  *  caches will be used.
  * </p>
  * 
- * <h3>Template Execution</h3>
- * <h4>1. Creating a context</h4>
+ * <strong>Template Execution</strong>
+ * <em>1. Creating a context</em>
  * <p>
  *   All template executions require a <i>context</i>. A context is an object that
  *   implements the {@link IContext} interface, and that contains at least the following
@@ -149,12 +151,13 @@ import org.thymeleaf.util.Validate;
  * <ul>
  *   <li>{@link org.thymeleaf.context.Context}, a standard implementation containing only
  *       the required data.</li>
- *   <li>{@link org.thymeleaf.context.WebContext}, a web-specific implementation 
- *       extending the {@link org.thymeleaf.context.IWebContext} subinterface, offering
- *       access to request, session and servletcontext (application) attributes in special
+ *   <li>{@link WebContext}, a web-specific implementation
+ *       extending the {@link IWebContext} subinterface, offering
+ *       access to web based attributes (request, session, application) in special
  *       expression objects. Using an implementation of
- *       {@link org.thymeleaf.context.IWebContext} is required when using Thymeleaf for 
- *       generating HTML interfaces in web applications based on the Servlet API.</li>
+ *       {@link IWebContext} is required when using Thymeleaf for
+ *       generating HTML interfaces in web applications based on web container APIs
+ *       (e.g. servlet API).</li>
  * </ul>
  * <p>
  *   Creating a {@link org.thymeleaf.context.Context} instance is very simple:
@@ -171,19 +174,21 @@ import org.thymeleaf.util.Validate;
  *   ctx.setVariable("allItems", items);
  * </code>
  * <p>
- *   A {@link org.thymeleaf.context.WebContext} would also need 
- *   {@link javax.servlet.http.HttpServletRequest}, {@link javax.servlet.http.HttpServletResponse} and
- *   {@link javax.servlet.ServletContext} objects as constructor arguments: 
+ *   A {@link WebContext} would also need an implementation of
+ *   {@link org.thymeleaf.web.IWebExchange} as constructor arguments. This web exchange
+ *   object should have been created for the specific web container technology being used
+ *   (e.g. servlet API):
  * </p>
  * <code>
- *   final WebContext ctx = new WebContext(request, response, servletContext);<br>
+ *   final IWebExchange webExchange = ...;<br>
+ *   final WebContext ctx = new WebContext(webExchange);<br>
  *   ctx.setVariable("allItems", items);
  * </code>
  * <p>
  *   See the documentation for these specific implementations for more details.
  * </p>
  * 
- * <h4>2. Template Processing</h4>
+ * <em>2. Template Processing</em>
  * <p>
  *   In order to execute templates, the different {@code process(...)} methods should
  *   be used. Those are mostly divided into two blocks: those that return the template processing

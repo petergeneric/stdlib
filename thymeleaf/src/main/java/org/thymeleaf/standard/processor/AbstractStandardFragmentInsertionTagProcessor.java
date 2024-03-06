@@ -19,10 +19,10 @@
  */
 package org.thymeleaf.standard.processor;
 
-import java.io.Writer;
-import java.util.Map;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.IEngineConfiguration;
+import org.thymeleaf.TemplateEngine;
 import org.thymeleaf.context.IEngineContext;
 import org.thymeleaf.context.ITemplateContext;
 import org.thymeleaf.engine.AttributeName;
@@ -48,7 +48,11 @@ import org.thymeleaf.standard.expression.StandardExpressions;
 import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.util.EscapedAttributeUtils;
 import org.thymeleaf.util.FastStringWriter;
+import org.thymeleaf.util.LoggingUtils;
 import org.thymeleaf.util.StringUtils;
+
+import java.io.Writer;
+import java.util.Map;
 
 /**
  *
@@ -59,6 +63,9 @@ import org.thymeleaf.util.StringUtils;
  */
 public abstract class AbstractStandardFragmentInsertionTagProcessor extends AbstractAttributeTagProcessor {
 
+    public static boolean WARN_ON_DEPRECATIONS = false;
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStandardFragmentInsertionTagProcessor.class);
 
     private static final String FRAGMENT_ATTR_NAME = "fragment";
 
@@ -107,7 +114,9 @@ public abstract class AbstractStandardFragmentInsertionTagProcessor extends Abst
         /*
          * PARSE AND PROCESS THE FRAGMENT
          */
-        final Object fragmentObj = computeFragment(context, attributeValue);
+        final Object fragmentObj = computeFragment(
+                context, attributeValue, tag.getTemplateName(),
+                tag.getAttribute(attributeName).getLine(), tag.getAttribute(attributeName).getCol());
         if (fragmentObj == null) {
 
             // If the Fragment result is null, this is an error. Note a NULL result is not the same as the
@@ -339,7 +348,9 @@ public abstract class AbstractStandardFragmentInsertionTagProcessor extends Abst
     /*
      * This can return a Fragment, NoOpToken (if nothing should be done) or null
      */
-    private static Object computeFragment(final ITemplateContext context, final String input) {
+    private static Object computeFragment(
+            final ITemplateContext context, final String input,
+            final String templateName, final int attributeLine, final int attributeCol) {
 
         final IStandardExpressionParser expressionParser = StandardExpressions.getExpressionParser(context.getConfiguration());
 
@@ -370,6 +381,17 @@ public abstract class AbstractStandardFragmentInsertionTagProcessor extends Abst
                         return NoOpToken.VALUE;
                     }
                 }
+            }
+
+            if (WARN_ON_DEPRECATIONS && LOGGER.isWarnEnabled()) {
+                LOGGER.warn(
+                        "[THYMELEAF][{}][{}] Deprecated unwrapped fragment expression \"{}\" found in template {}, " +
+                        "line {}, col {}. Please use the complete syntax of fragment expressions instead (\"{}\"). The " +
+                        "old, unwrapped syntax for fragment expressions will be removed in future versions of Thymeleaf.",
+                        new Object[]{
+                                TemplateEngine.threadIndex(), LoggingUtils.loggifyTemplateName(context.getTemplateData().getTemplate()),
+                                trimmedInput, templateName, Integer.valueOf(attributeLine), Integer.valueOf(attributeCol),
+                                "~{" + trimmedInput +"}"});
             }
 
             // Given this is a simple (originally unwrapped) fragment expression, we will consider the non-existence

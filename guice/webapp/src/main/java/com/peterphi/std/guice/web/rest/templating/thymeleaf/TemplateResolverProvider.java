@@ -6,7 +6,8 @@ import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.threading.Timeout;
 import org.thymeleaf.templateresolver.ITemplateResolver;
-import org.thymeleaf.templateresolver.ServletContextTemplateResolver;
+import org.thymeleaf.templateresolver.WebApplicationTemplateResolver;
+import org.thymeleaf.web.servlet.JavaxServletWebApplication;
 
 import javax.servlet.ServletContext;
 import java.util.concurrent.TimeUnit;
@@ -29,7 +30,8 @@ public class TemplateResolverProvider implements Provider<ITemplateResolver>
 	@Override
 	public ITemplateResolver get()
 	{
-		ServletContextTemplateResolver resolver = new ServletContextTemplateResolver(ctx);
+		WebApplicationTemplateResolver resolver = new WebApplicationTemplateResolver(JavaxServletWebApplication
+				                                                                             .buildApplication(ctx));
 
 		resolver.setTemplateMode(templateMode);
 

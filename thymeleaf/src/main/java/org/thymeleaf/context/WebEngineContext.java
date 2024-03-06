@@ -25,19 +25,11 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Enumeration;
-import java.util.HashSet;
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
-
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
 
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.engine.TemplateData;
@@ -45,10 +37,14 @@ import org.thymeleaf.inline.IInliner;
 import org.thymeleaf.inline.NoOpInliner;
 import org.thymeleaf.model.IProcessableElementTag;
 import org.thymeleaf.util.Validate;
+import org.thymeleaf.web.IWebApplication;
+import org.thymeleaf.web.IWebExchange;
+import org.thymeleaf.web.IWebRequest;
+import org.thymeleaf.web.IWebSession;
 
 /**
  * <p>
- *   Basic <b>web</b> implementation of the {@link IEngineContext} interface, based on the Servlet API.
+ *   Basic <b>web</b> implementation of the {@link IEngineContext} interface, with added web-oriented capabilities.
  * </p>
  * <p>
  *   This is the context implementation that will be used by default for web processing. Note that <b>this is an
@@ -58,19 +54,22 @@ import org.thymeleaf.util.Validate;
  * <p>
  *   This class is NOT thread-safe. Thread-safety is not a requirement for context implementations.
  * </p>
+ * <p>
+ *   Note this class was modified in a backwards-incompatible way in Thymeleaf 3.1.0.
+ * </p>
  *
  * @author Daniel Fern&aacute;ndez
  *
- * @since 3.0.0
+ * @since 3.1.0
  *
  */
 public class WebEngineContext extends AbstractEngineContext implements IEngineContext, IWebContext {
 
     /*
      * ---------------------------------------------------------------------------
-     * THIS MAP FORWARDS ALL OPERATIONS TO THE UNDERLYING REQUEST, EXCEPT
+     * THIS MAP FORWARDS ALL OPERATIONS TO THE UNDERLYING WEB SUPPORT, EXCEPT
      * FOR THE param (request parameters), session (session attributes) AND
-     * application (servlet context attributes) VARIABLES.
+     * application (servletcontext-equivalent attributes) VARIABLES.
      *
      * NOTE that, even if attributes are leveled so that above level 0 they are
      * considered local and thus disappear after lowering the level, attributes
@@ -87,15 +86,12 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
     private static final String SESSION_VARIABLE_NAME = "session";
     private static final String APPLICATION_VARIABLE_NAME = "application";
 
-    private final HttpServletRequest request;
-    private final HttpServletResponse response;
-    private final HttpSession session;
-    private final ServletContext servletContext;
+    private final IWebExchange webExchange;
 
-    private final RequestAttributesVariablesMap requestAttributesVariablesMap;
-    private final Map<String,Object> requestParametersVariablesMap;
-    private final Map<String,Object> sessionAttributesVariablesMap;
-    private final Map<String,Object> applicationAttributesVariablesMap;
+    private final ExchangeAttributeMap exchangeAttributeMap;
+    private final RequestParameterMap requestParameterMap;
+    private final SessionAttributeMap sessionAttributeMap;
+    private final ApplicationAttributeMap applicationAttributeMap;
 
 
 
@@ -115,9 +111,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
      * @param configuration the configuration instance being used.
      * @param templateData the template data for the template to be processed.
      * @param templateResolutionAttributes the template resolution attributes.
-     * @param request the servlet request object.
-     * @param response the servlet response object.
-     * @param servletContext the servlet context object.
+     * @param webExchange the web exchange object.
      * @param locale the locale.
      * @param variables the context variables, probably coming from another {@link IContext} implementation.
      */
@@ -125,80 +119,60 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
             final IEngineConfiguration configuration,
             final TemplateData templateData,
             final Map<String,Object> templateResolutionAttributes,
-            final HttpServletRequest request, final HttpServletResponse response,
-            final ServletContext servletContext,
+            final IWebExchange webExchange,
             final Locale locale,
             final Map<String, Object> variables) {
 
         super(configuration, templateResolutionAttributes, locale);
 
-        Validate.notNull(request, "Request cannot be null in web variables map");
-        Validate.notNull(response, "Response cannot be null in web variables map");
-        Validate.notNull(servletContext, "Servlet Context cannot be null in web variables map");
+        Validate.notNull(webExchange, "Web exchange cannot be null in web context");
 
-        this.request = request;
-        this.response = response;
-        this.session = request.getSession(false);
-        this.servletContext = servletContext;
+        this.webExchange = webExchange;
 
-        this.requestAttributesVariablesMap =
-                new RequestAttributesVariablesMap(configuration, templateData, templateResolutionAttributes, this.request, locale, variables);
-        this.requestParametersVariablesMap = new RequestParametersMap(this.request);
-        this.applicationAttributesVariablesMap = new ServletContextAttributesMap(this.servletContext);
-        this.sessionAttributesVariablesMap = new SessionAttributesMap(this.session);
+        this.exchangeAttributeMap =
+                new ExchangeAttributeMap(configuration, templateData, templateResolutionAttributes, this.webExchange, locale, variables);
+        this.requestParameterMap = new RequestParameterMap(this.webExchange);
+        this.applicationAttributeMap = new ApplicationAttributeMap(this.webExchange);
+        this.sessionAttributeMap = new SessionAttributeMap(this.webExchange);
 
     }
 
 
-    public HttpServletRequest getRequest() {
-        return this.request;
-    }
-
-
-    public HttpServletResponse getResponse() {
-        return this.response;
-    }
-
-
-    public HttpSession getSession() {
-        return this.session;
-    }
-
-
-    public ServletContext getServletContext() {
-        return this.servletContext;
+    @Override
+    public IWebExchange getExchange() {
+        return this.webExchange;
     }
 
 
     public boolean containsVariable(final String name) {
         if (SESSION_VARIABLE_NAME.equals(name)) {
-            return this.sessionAttributesVariablesMap != null;
+            return this.sessionAttributeMap != null;
         }
         if (PARAM_VARIABLE_NAME.equals(name)) {
             return true;
         }
-        return APPLICATION_VARIABLE_NAME.equals(name) || this.requestAttributesVariablesMap.containsVariable(name);
+        return APPLICATION_VARIABLE_NAME.equals(name) || this.exchangeAttributeMap.containsVariable(name);
     }
 
 
     public Object getVariable(final String key) {
         if (SESSION_VARIABLE_NAME.equals(key)) {
-            return this.sessionAttributesVariablesMap;
+            return this.sessionAttributeMap;
         }
         if (PARAM_VARIABLE_NAME.equals(key)) {
-            return this.requestParametersVariablesMap;
+            return this.requestParameterMap;
         }
         if (APPLICATION_VARIABLE_NAME.equals(key)) {
-            return this.applicationAttributesVariablesMap;
+            return this.applicationAttributeMap;
         }
-        return this.requestAttributesVariablesMap.getVariable(key);
+        return this.exchangeAttributeMap.getVariable(key);
     }
 
 
     public Set<String> getVariableNames() {
         // Note this set will NOT include 'param', 'session' or 'application', as they are considered special
         // ways to access attributes/parameters in these Servlet API structures
-        return this.requestAttributesVariablesMap.getVariableNames();
+        return this.exchangeAttributeMap.getVariableNames();
     }
 
 
@@ -209,7 +183,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
             throw new IllegalArgumentException(
                     "Cannot set variable called '" + name + "' into web variables map: such name is a reserved word");
         }
-        this.requestAttributesVariablesMap.setVariable(name, value);
+        this.exchangeAttributeMap.setVariable(name, value);
     }
 
 
@@ -226,7 +200,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                         "Cannot set variable called '" + name + "' into web variables map: such name is a reserved word");
             }
         }
-        this.requestAttributesVariablesMap.setVariables(variables);
+        this.exchangeAttributeMap.setVariables(variables);
     }
 
 
@@ -237,98 +211,98 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
             throw new IllegalArgumentException(
                     "Cannot remove variable called '" + name + "' in web variables map: such name is a reserved word");
         }
-        this.requestAttributesVariablesMap.removeVariable(name);
+        this.exchangeAttributeMap.removeVariable(name);
     }
 
 
     public boolean isVariableLocal(final String name) {
-        return this.requestAttributesVariablesMap.isVariableLocal(name);
+        return this.exchangeAttributeMap.isVariableLocal(name);
     }
 
 
     public boolean hasSelectionTarget() {
-        return this.requestAttributesVariablesMap.hasSelectionTarget();
+        return this.exchangeAttributeMap.hasSelectionTarget();
     }
 
 
     public Object getSelectionTarget() {
-        return this.requestAttributesVariablesMap.getSelectionTarget();
+        return this.exchangeAttributeMap.getSelectionTarget();
     }
 
 
     public void setSelectionTarget(final Object selectionTarget) {
-        this.requestAttributesVariablesMap.setSelectionTarget(selectionTarget);
+        this.exchangeAttributeMap.setSelectionTarget(selectionTarget);
     }
 
 
 
 
     public IInliner getInliner() {
-        return this.requestAttributesVariablesMap.getInliner();
+        return this.exchangeAttributeMap.getInliner();
     }
 
     public void setInliner(final IInliner inliner) {
-        this.requestAttributesVariablesMap.setInliner(inliner);
+        this.exchangeAttributeMap.setInliner(inliner);
     }
 
 
 
 
     public TemplateData getTemplateData() {
-        return this.requestAttributesVariablesMap.getTemplateData();
+        return this.exchangeAttributeMap.getTemplateData();
     }
 
     public void setTemplateData(final TemplateData templateData) {
-        this.requestAttributesVariablesMap.setTemplateData(templateData);
+        this.exchangeAttributeMap.setTemplateData(templateData);
     }
 
 
     public List<TemplateData> getTemplateStack() {
-        return this.requestAttributesVariablesMap.getTemplateStack();
+        return this.exchangeAttributeMap.getTemplateStack();
     }
 
 
 
 
     public void setElementTag(final IProcessableElementTag elementTag) {
-        this.requestAttributesVariablesMap.setElementTag(elementTag);
+        this.exchangeAttributeMap.setElementTag(elementTag);
     }
 
 
 
 
     public List<IProcessableElementTag> getElementStack() {
-        return this.requestAttributesVariablesMap.getElementStack();
+        return this.exchangeAttributeMap.getElementStack();
     }
 
 
     public List<IProcessableElementTag> getElementStackAbove(final int contextLevel) {
-        return this.requestAttributesVariablesMap.getElementStackAbove(contextLevel);
+        return this.exchangeAttributeMap.getElementStackAbove(contextLevel);
     }
 
 
 
 
     public int level() {
-        return this.requestAttributesVariablesMap.level();
+        return this.exchangeAttributeMap.level();
     }
 
 
     public void increaseLevel() {
-        this.requestAttributesVariablesMap.increaseLevel();
+        this.exchangeAttributeMap.increaseLevel();
     }
 
 
     public void decreaseLevel() {
-        this.requestAttributesVariablesMap.decreaseLevel();
+        this.exchangeAttributeMap.decreaseLevel();
     }
 
 
 
 
     public String getStringRepresentationByLevel() {
-        // Request parameters, session and servlet context can be safely ignored here
-        return this.requestAttributesVariablesMap.getStringRepresentationByLevel();
+        // Request parameters, session and application attributes can be safely ignored here
+        return this.exchangeAttributeMap.getStringRepresentationByLevel();
     }
 
 
@@ -336,8 +310,8 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
     @Override
     public String toString() {
-        // Request parameters, session and servlet context can be safely ignored here
-        return this.requestAttributesVariablesMap.toString();
+        // Request parameters, session and application attributes can be safely ignored here
+        return this.exchangeAttributeMap.toString();
     }
 
 
@@ -356,44 +330,45 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
 
-    private static final class SessionAttributesMap extends NoOpMapImpl {
+    private static final class SessionAttributeMap extends NoOpMapImpl {
 
-        private final HttpSession session;
+        // At build time, we store the exchange and not the application so that we give the web structures
+        // the opportunity to be computed lazily at runtime (e.g. for lazy/reactive resolution).
+        private final IWebExchange webExchange;
 
-        SessionAttributesMap(final HttpSession session) {
+        SessionAttributeMap(final IWebExchange webExchange) {
             super();
-            this.session = session;
+            this.webExchange = webExchange;
+        }
+
+        private IWebSession getSession() {
+            return this.webExchange.getSession();
         }
 
 
         @Override
         public int size() {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return 0;
             }
-            int size = 0;
-            final Enumeration<String> attributeNames = this.session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                attributeNames.nextElement();
-                size++;
-            }
-            return size;
+            return webSession.getAttributeCount();
         }
 
         @Override
         public boolean isEmpty() {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return true;
             }
-            final Enumeration<String> attributeNames = this.session.getAttributeNames();
-            return !attributeNames.hasMoreElements();
+            return webSession.getAttributeCount() == 0;
         }
 
         @Override
         public boolean containsKey(final Object key) {
             // Even if not completely correct to return 'true' for entries that might not exist, this is needed
             // in order to avoid Spring's MapAccessor throwing an exception when trying to access an element
-            // that doesn't exist -- in the case of request parameters, session and servletContext attributes most
+            // that doesn't exist -- in the case of request parameters, session and application attributes most
             // developers would expect null to be returned in such case, and that's what this 'true' will cause.
             return true;
         }
@@ -407,51 +382,38 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
         @Override
         public Object get(final Object key) {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return null;
             }
-            return resolveLazy(this.session.getAttribute(key != null? key.toString() : null));
+            return resolveLazy(webSession.getAttributeValue(key != null? key.toString() : null));
         }
 
         @Override
         public Set<String> keySet() {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return Collections.emptySet();
             }
-            final Set<String> keySet = new LinkedHashSet<String>(5);
-            final Enumeration<String> attributeNames = this.session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                keySet.add(attributeNames.nextElement());
-            }
-            return keySet;
+            return webSession.getAllAttributeNames();
         }
 
         @Override
         public Collection<Object> values() {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return Collections.emptySet();
             }
-            final List<Object> values = new ArrayList<Object>(5);
-            final Enumeration<String> attributeNames = this.session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                values.add(this.session.getAttribute(attributeNames.nextElement()));
-            }
-            return values;
+            return webSession.getAttributeMap().values();
         }
 
         @Override
         public Set<Entry<String,Object>> entrySet() {
-            if (this.session == null) {
+            final IWebSession webSession = getSession();
+            if (webSession == null) {
                 return Collections.emptySet();
             }
-            final Set<Entry<String,Object>> entrySet = new LinkedHashSet<Entry<String, Object>>(5);
-            final Enumeration<String> attributeNames = this.session.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                final String key = attributeNames.nextElement();
-                final Object value = this.session.getAttribute(key);
-                entrySet.add(new MapEntry(key, value));
-            }
-            return entrySet;
+            return webSession.getAttributeMap().entrySet();
         }
 
     }
@@ -459,38 +421,41 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
 
-    private static final class ServletContextAttributesMap extends NoOpMapImpl {
+    private static final class ApplicationAttributeMap extends NoOpMapImpl {
 
-        private final ServletContext servletContext;
+        // At build time, we store the exchange and not the application so that we give the web structures
+        // the opportunity to be computed lazily at runtime (e.g. for lazy/reactive resolution).
+        private final IWebExchange webExchange;
+        private IWebApplication webApplication;
 
-        ServletContextAttributesMap(final ServletContext servletContext) {
+        ApplicationAttributeMap(final IWebExchange webExchange) {
             super();
-            this.servletContext = servletContext;
+            this.webExchange = webExchange;
+        }
+
+        private IWebApplication getApplication() {
+            if (this.webApplication == null) {
+                this.webApplication = this.webExchange.getApplication();
+            }
+            return this.webApplication;
         }
 
 
         @Override
         public int size() {
-            int size = 0;
-            final Enumeration<String> attributeNames = this.servletContext.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                attributeNames.nextElement();
-                size++;
-            }
-            return size;
+            return getApplication().getAttributeCount();
         }
 
         @Override
         public boolean isEmpty() {
-            final Enumeration<String> attributeNames = this.servletContext.getAttributeNames();
-            return !attributeNames.hasMoreElements();
+            return getApplication().getAttributeCount() == 0;
         }
 
         @Override
         public boolean containsKey(final Object key) {
             // Even if not completely correct to return 'true' for entries that might not exist, this is needed
             // in order to avoid Spring's MapAccessor throwing an exception when trying to access an element
-            // that doesn't exist -- in the case of request parameters, session and servletContext attributes most
+            // that doesn't exist -- in the case of request parameters, session and application attributes most
             // developers would expect null to be returned in such case, and that's what this 'true' will cause.
             return true;
         }
@@ -504,39 +469,22 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
         @Override
         public Object get(final Object key) {
-            return resolveLazy(this.servletContext.getAttribute(key != null? key.toString() : null));
+            return resolveLazy(getApplication().getAttributeValue(key != null? key.toString() : null));
         }
 
         @Override
         public Set<String> keySet() {
-            final Set<String> keySet = new LinkedHashSet<String>(5);
-            final Enumeration<String> attributeNames = this.servletContext.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                keySet.add(attributeNames.nextElement());
-            }
-            return keySet;
+            return getApplication().getAllAttributeNames();
         }
 
         @Override
         public Collection<Object> values() {
-            final List<Object> values = new ArrayList<Object>(5);
-            final Enumeration<String> attributeNames = this.servletContext.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                values.add(this.servletContext.getAttribute(attributeNames.nextElement()));
-            }
-            return values;
+            return getApplication().getAttributeMap().values();
         }
 
         @Override
         public Set<Map.Entry<String,Object>> entrySet() {
-            final Set<Map.Entry<String,Object>> entrySet = new LinkedHashSet<Map.Entry<String, Object>>(5);
-            final Enumeration<String> attributeNames = this.servletContext.getAttributeNames();
-            while (attributeNames.hasMoreElements()) {
-                final String key = attributeNames.nextElement();
-                final Object value = this.servletContext.getAttribute(key);
-                entrySet.add(new MapEntry(key, value));
-            }
-            return entrySet;
+            return getApplication().getAttributeMap().entrySet();
         }
 
     }
@@ -544,31 +492,41 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
 
-    private static final class RequestParametersMap extends NoOpMapImpl {
+    private static final class RequestParameterMap extends NoOpMapImpl {
 
-        private final HttpServletRequest request;
+        // At build time, we store the exchange and not the request so that we give the web structures
+        // the opportunity to be computed lazily at runtime (e.g. for lazy/reactive resolution).
+        private final IWebExchange webExchange;
+        private IWebRequest webRequest;
 
-        RequestParametersMap(final HttpServletRequest request) {
+        RequestParameterMap(final IWebExchange webExchange) {
             super();
-            this.request = request;
+            this.webExchange = webExchange;
+        }
+
+        private IWebRequest getRequest() {
+            if (this.webRequest == null) {
+                this.webRequest = this.webExchange.getRequest();
+            }
+            return this.webRequest;
         }
 
 
         @Override
         public int size() {
-            return this.request.getParameterMap().size();
+            return getRequest().getParameterCount();
         }
 
         @Override
         public boolean isEmpty() {
-            return this.request.getParameterMap().isEmpty();
+            return getRequest().getParameterCount() == 0;
         }
 
         @Override
         public boolean containsKey(final Object key) {
             // Even if not completely correct to return 'true' for entries that might not exist, this is needed
             // in order to avoid Spring's MapAccessor throwing an exception when trying to access an element
-            // that doesn't exist -- in the case of request parameters, session and servletContext attributes most
+            // that doesn't exist -- in the case of request parameters, session and application attributes most
             // developers would expect null to be returned in such case, and that's what this 'true' will cause.
             return true;
         }
@@ -582,7 +540,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
         @Override
         public Object get(final Object key) {
-            final String[] parameterValues = this.request.getParameterValues(key != null? key.toString() : null);
+            final String[] parameterValues = getRequest().getParameterValues(key != null? key.toString() : null);
             if (parameterValues == null) {
                 return null;
             }
@@ -591,17 +549,17 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
         @Override
         public Set<String> keySet() {
-            return this.request.getParameterMap().keySet();
+            return getRequest().getAllParameterNames();
         }
 
         @Override
         public Collection<Object> values() {
-            return this.request.getParameterMap().values();
+            return (Collection<Object>)(Collection<?>) getRequest().getParameterMap().values();
         }
 
         @Override
         public Set<Map.Entry<String,Object>> entrySet() {
-            return this.request.getParameterMap().entrySet();
+            return (Set<Map.Entry<String,Object>>)(Set<?>) getRequest().getParameterMap().entrySet();
         }
 
     }
@@ -609,13 +567,13 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
 
-    private static final class RequestAttributesVariablesMap extends AbstractEngineContext implements IEngineContext {
+    private static final class ExchangeAttributeMap extends AbstractEngineContext implements IEngineContext {
 
         private static final int DEFAULT_ELEMENT_HIERARCHY_SIZE = 20;
         private static final int DEFAULT_LEVELS_SIZE = 10;
         private static final int DEFAULT_LEVELARRAYS_SIZE = 5;
 
-        private final HttpServletRequest request;
+        private final IWebExchange webExchange;
 
         private int level = 0;
         private int index = 0;
@@ -638,17 +596,17 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
 
-        RequestAttributesVariablesMap(
+        ExchangeAttributeMap(
                 final IEngineConfiguration configuration,
                 final TemplateData templateData,
                 final Map<String,Object> templateResolutionAttributes,
-                final HttpServletRequest request,
+                final IWebExchange webExchange,
                 final Locale locale,
                 final Map<String, Object> variables) {
 
             super(configuration, templateResolutionAttributes, locale);
 
-            this.request = request;
+            this.webExchange = webExchange;
 
             this.levels = new int[DEFAULT_LEVELS_SIZE];
             this.names = new String[DEFAULT_LEVELS_SIZE][];
@@ -687,33 +645,17 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
 
         public boolean containsVariable(final String name) {
-            return this.request.getAttribute(name) != null;
+            return this.webExchange.containsAttribute(name);
         }
 
 
-        public Object getVariable(final String key) {
-            return resolveLazy(this.request.getAttribute(key));
+        public Object getVariable(final String name) {
+            return resolveLazy(this.webExchange.getAttributeValue(name));
         }
 
 
         public Set<String> getVariableNames() {
-            // --------------------------
-            // Note this method relies on HttpServletRequest#getAttributeNames(), which is an extremely slow and
-            // inefficient method in implementations like Apache Tomcat's. So the uses of this method should be
-            // very controlled and reduced to the minimum. Specifically, any call that executes e.g. for every
-            // expression evaluation should be disallowed. Only sporadic uses should be done.
-            // Note also it would not be a good idea to cache the attribute names coming from the request if we
-            // want to keep complete independence of the HttpServletRequest object, so that it can be modified
-            // from the outside (e.g. from other libraries like Tiles) with Thymeleaf perfectly integrating with
-            // those modifications.
-            // --------------------------
-            final Set<String> variableNames = new HashSet<String>(10);
-            final Enumeration<String> attributeNamesEnum = this.request.getAttributeNames();
-            while (attributeNamesEnum.hasMoreElements()) {
-                variableNames.add(attributeNamesEnum.nextElement());
-            }
-            return variableNames;
-
+            return this.webExchange.getAllAttributeNames();
         }
 
 
@@ -769,7 +711,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                      * attribute are exactly the same. So we don't really have a reason to worry about the attribute
                      * already existing or not when it was set to null.
                      */
-                    this.oldValues[this.index][levelIndex] = this.request.getAttribute(name);
+                    this.oldValues[this.index][levelIndex] = this.webExchange.getAttributeValue(name);
 
                     this.newValues[this.index][levelIndex] = value;
 
@@ -780,7 +722,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
             }
 
             // No matter if value is null or not. Value null will be equivalent to .removeAttribute()
-            this.request.setAttribute(name, value);
+            this.webExchange.setAttributeValue(name, value);
 
         }
 
@@ -1050,11 +992,11 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                         final String name = this.names[this.index][n];
                         final Object newValue = this.newValues[this.index][n];
                         final Object oldValue = this.oldValues[this.index][n];
-                        final Object currentValue = this.request.getAttribute(name);
+                        final Object currentValue = this.webExchange.getAttributeValue(name);
                         if (newValue == currentValue) {
                             // Only if the value matches, in order to avoid modifying values that have been set directly
                             // into the request.
-                            this.request.setAttribute(name,oldValue);
+                            this.webExchange.setAttributeValue(name,oldValue);
                         }
                     }
                     this.levelSizes[this.index] = 0;
@@ -1105,7 +1047,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                         if (!oldValuesSum.containsKey(name)) {
                             // This means that, either the value in the request is the same as the newValue, or it was modified
                             // directly at the request and we need to discard this entry.
-                            if (newValue != this.request.getAttribute(name)) {
+                            if (newValue != this.webExchange.getAttributeValue(name)) {
                                 continue;
                             }
                         } else {
@@ -1139,9 +1081,8 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                 }
             }
             final Map<String,Object> requestAttributes = new LinkedHashMap<String, Object>();
-            final Enumeration<String> attrNames = this.request.getAttributeNames();
-            while (attrNames.hasMoreElements()) {
-                final String name = attrNames.nextElement();
+            final Set<String> attrNames = this.webExchange.getAllAttributeNames();
+            for (final String name : attrNames) {
                 if (oldValuesSum.containsKey(name)) {
                     final Object oldValue = oldValuesSum.get(name);
                     if (oldValue != null) {
@@ -1149,7 +1090,7 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
                     }
                     oldValuesSum.remove(name);
                 } else {
-                    requestAttributes.put(name, this.request.getAttribute(name));
+                    requestAttributes.put(name, this.webExchange.getAttributeValue(name));
                 }
             }
             for (Map.Entry<String,Object> oldValuesSumEntry : oldValuesSum.entrySet()) {
@@ -1187,17 +1128,10 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
 
         @Override
         public String toString() {
-
-            final Map<String,Object> equivalentMap = new LinkedHashMap<String, Object>();
-            final Enumeration<String> attributeNamesEnum = this.request.getAttributeNames();
-            while (attributeNamesEnum.hasMoreElements()) {
-                final String name = attributeNamesEnum.nextElement();
-                equivalentMap.put(name, this.request.getAttribute(name));
-            }
+            final Map<String,Object> attributeMap = this.webExchange.getAttributeMap();
             final String textInliningStr = (getInliner() != null? "[" + getInliner().getName() + "]" : "" );
             final String templateDataStr = "(" + getTemplateData().getTemplate() + ")";
-            return equivalentMap.toString() + (hasSelectionTarget()? "<" + getSelectionTarget() + ">" : "") + textInliningStr + templateDataStr;
-
+            return attributeMap.toString() + (hasSelectionTarget()? "<" + getSelectionTarget() + ">" : "") + textInliningStr + templateDataStr;
         }
 
 
@@ -1279,38 +1213,11 @@ public class WebEngineContext extends AbstractEngineContext implements IEngineCo
             return Collections.emptySet();
         }
 
-
-        static final class MapEntry implements Map.Entry<String,Object> {
-
-            private final String key;
-            private final Object value;
-
-            MapEntry(final String key, final Object value) {
-                super();
-                this.key = key;
-                this.value = value;
-            }
-
-            public String getKey() {
-                return this.key;
-            }
-
-            public Object getValue() {
-                return this.value;
-            }
-
-            public Object setValue(final Object value) {
-                throw new UnsupportedOperationException("Cannot set value: map is immutable");
-            }
-
-        }
-
-
     }
 
 
 
-    private static final class RequestParameterValues extends AbstractList<String> {
+    public static final class RequestParameterValues extends AbstractList<String> {
 
         private final String[] parameterValues;
         public final int length;

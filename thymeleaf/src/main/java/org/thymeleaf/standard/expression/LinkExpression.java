@@ -71,6 +71,7 @@ public final class LinkExpression extends SimpleExpression {
     private final IStandardExpression base;
     private final AssignationSequence parameters;
 
+
     // stdlib addition: cache constant expressions
     private final boolean constant;
     private final boolean baseconst;
@@ -87,7 +88,9 @@ public final class LinkExpression extends SimpleExpression {
         baseconst = !constant && isConstantExpression(base);
     }
 
-    private static boolean isConstantParameters(AssignationSequence seq) {
+
+    private static boolean isConstantParameters(AssignationSequence seq)
+    {
         for (Assignation assignation : seq.getAssignations())
         {
             if (!isConstantExpression(assignation.getLeft()) || !isConstantExpression(assignation.getRight()))
@@ -96,8 +99,15 @@ public final class LinkExpression extends SimpleExpression {
 
         return true;
     }
-    private static boolean isConstantExpression(IStandardExpression expr) {
-        return expr == null || expr instanceof GenericTokenExpression || expr instanceof TextLiteralExpression || expr instanceof NumberTokenExpression || expr instanceof BooleanTokenExpression;
+
+
+    private static boolean isConstantExpression(IStandardExpression expr)
+    {
+        return expr == null ||
+               expr instanceof GenericTokenExpression ||
+               expr instanceof TextLiteralExpression ||
+               expr instanceof NumberTokenExpression ||
+               expr instanceof BooleanTokenExpression;
     }
     
     
@@ -244,7 +254,6 @@ public final class LinkExpression extends SimpleExpression {
 
 
     static Object executeLinkExpression(final IExpressionContext context, final LinkExpression expression) {
-
         if (expression.constant && expression.cache != null)
             return expression.cache;
 
@@ -284,21 +293,26 @@ public final class LinkExpression extends SimpleExpression {
         Object base;
         if (expression.baseconst && expression.cache != null)
             base = expression.cache;
-        else {
+        else
+        {
             base = baseExpression.execute(templateContext, StandardExpressionExecutionContext.RESTRICTED);
 
             base = LiteralValue.unwrap(base);
-            if (base != null && !(base instanceof String)) {
+            if (base != null && !(base instanceof String))
+            {
                 base = base.toString();
             }
-            if (base == null || StringUtils.isEmptyOrWhitespace((String) base)) {
+            if (base == null || StringUtils.isEmptyOrWhitespace((String) base))
+            {
                 base = "";
-            } else {
+            }
+            else
+            {
                 base = ((String) base).trim();
             }
 
             if (expression.baseconst)
-                expression.cache = (String)base;
+                expression.cache = (String) base;
         }
 
         /*
@@ -509,4 +523,6 @@ public final class LinkExpression extends SimpleExpression {
         return parameterValue;
 
     }
+
+
 }

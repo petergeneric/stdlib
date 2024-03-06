@@ -25,9 +25,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-
+import org.thymeleaf.context.Contexts;
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.exceptions.TemplateProcessingException;
@@ -42,7 +40,7 @@ import org.unbescape.uri.UriEscape;
  * <p>
  *   This class will build link URLs using (by default) the Java Servlet API when the specified URLs are
  *   context-relative, given the need to obtain the context path and add it to the URL. Also, when an
- *   {@link org.thymeleaf.context.IWebContext} implementation is used as context, URLs will be passed to
+ *   {@link IWebContext} implementation is used as context, URLs will be passed to
  *   the standard {@code HttpSerlvetResponse.encodeURL(...)} method before returning.
  * </p>
  * <p>
@@ -510,15 +508,14 @@ public class StandardLinkBuilder extends AbstractLinkBuilder {
     protected String computeContextPath(
             final IExpressionContext context, final String base, final Map<String, Object> parameters) {
 
-        if (!(context instanceof IWebContext)) {
+        if (!Contexts.isWebContext(context)) {
             throw new TemplateProcessingException(
                     "Link base \"" + base + "\" cannot be context relative (/...) unless the context " +
                     "used for executing the engine implements the " + IWebContext.class.getName() + " interface");
         }
 
         // If it is context-relative, it has to be a web context
-        final HttpServletRequest request = ((IWebContext)context).getRequest();
-        return request.getContextPath();
+        return Contexts.getWebExchange(context).getRequest().getApplicationPath();
 
     }
 
@@ -543,12 +540,11 @@ public class StandardLinkBuilder extends AbstractLinkBuilder {
      */
     protected String processLink(final IExpressionContext context, final String link) {
 
-        if (!(context instanceof IWebContext)) {
+        if (!Contexts.isWebContext(context)) {
             return link;
         }
 
-        final HttpServletResponse response = ((IWebContext)context).getResponse();
-        return (response != null? response.encodeURL(link) : link);
+        return Contexts.getWebExchange(context).transformURL(link);
 
     }
 

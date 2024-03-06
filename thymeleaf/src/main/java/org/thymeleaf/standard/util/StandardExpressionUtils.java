@@ -19,6 +19,8 @@
  */
 package org.thymeleaf.standard.util;
 
+import org.thymeleaf.util.ExpressionUtils;
+
 /**
  * 
  * @author Daniel Fern&aacute;ndez
@@ -29,9 +31,6 @@ package org.thymeleaf.standard.util;
 public final class StandardExpressionUtils {
 
 
-    private static final char[] EXEC_INFO_ARRAY = "ofnIcexe".toCharArray(); // Inverted "execInfo"
-    private static final int EXEC_INFO_LEN = EXEC_INFO_ARRAY.length;
-
     private static final char[] NEW_ARRAY = "wen".toCharArray(); // Inverted "new"
     private static final int NEW_LEN = NEW_ARRAY.length;
     private static final char[] PARAM_ARRAY = "marap".toCharArray(); // Inverted "param"
@@ -39,44 +38,11 @@ public final class StandardExpressionUtils {
 
 
     public static boolean mightNeedExpressionObjects(final String expression) {
-        /*
-         * Checks for 'execInfo' here are performed since 3.0.0 because in that version the previous execInfo context
-         * variable (${execInfo}) was converted into an expression object (${#execInfo}). Since 3.0.0, given execInfo is
-         * only added as an expression object, we use this to detect not only when any expression objects might be
-         * called (by means of looking for '#' symbols), but also to detect when the 'execInfo' context variable might
-         * be called either, so that we make sure the corresponding expression object (to which we will later redirect
-         * the call at the property accessor level) is included in the context.
-         *
-         * IMPORTANT: This 'execInfo' automatic forwarding is considered deprecated since 3.0.0, and it will be removed
-         *            in Thymeleaf 3.1, so this 'execInfo' check should be removed too by then (only the '#' check
-         *            should remain).
-         */
-        int n = expression.length();
-        int ei = 0; // index for computing position in the EXEC_INFO_ARRAY
-        char c;
-        while (n-- != 0) {
-            c = expression.charAt(n);
-            if (c == '#') {
-                return true;
-            } else if (c == EXEC_INFO_ARRAY[ei]) {
-                ei++;
-                if (ei == EXEC_INFO_LEN) {
-                    return true; // we found the "execInfo" keyword, so we might need expression objects
-                }
-            } else {
-                if (ei > 0) {
-                    // We 'restart' the counter (just after the first matched char) in case we had a partial match
-                    n += ei;
-                }
-                ei = 0;
-            }
-        }
-        return false;
+        return expression.indexOf('#') >= 0;
     }
 
 
-    /**
-     *
+    /*
      * @since 3.0.12
      */
     public static boolean containsOGNLInstantiationOrStaticOrParam(final String expression) {
@@ -86,7 +52,9 @@ public final class StandardExpressionUtils {
          * static methods ("@SomeClass@") as both are forbidden in certain contexts in restricted mode.
          */
 
-        final int explen = expression.length();
+        final String exp = ExpressionUtils.normalize(expression);
+
+        final int explen = exp.length();
         int n = explen;
         int ni = 0; // index for computing position in the NEW_ARRAY
         int pi = 0; // index for computing position in the PARAM_ARRAY
@@ -94,16 +62,16 @@ public final class StandardExpressionUtils {
         char c;
         while (n-- != 0) {
 
-            c = expression.charAt(n);
+            c = exp.charAt(n);
 
             // When checking for the "new" keyword, we need to identify that it is not a part of a larger
             // identifier, i.e. there is whitespace after it and no character that might be a part of an
             // identifier before it.
             if (ni < NEW_LEN
                     && c == NEW_ARRAY[ni]
-                    && (ni > 0 || ((n + 1 < explen) && Character.isWhitespace(expression.charAt(n + 1))))) {
+                    && (ni > 0 || ((n + 1 < explen) && Character.isWhitespace(exp.charAt(n + 1))))) {
                 ni++;
-                if (ni == NEW_LEN && (n == 0 || !isSafeIdentifierChar(expression.charAt(n - 1)))) {
+                if (ni == NEW_LEN && (n == 0 || !isSafeIdentifierChar(exp.charAt(n - 1)))) {
                     return true; // we found an object instantiation
                 }
                 continue;
@@ -126,9 +94,9 @@ public final class StandardExpressionUtils {
             // identifier.
             if (pi < PARAM_LEN
                     && c == PARAM_ARRAY[pi]
-                    && (pi > 0 || ((n + 1 < explen) && !isSafeIdentifierChar(expression.charAt(n + 1))))) {
+                    && (pi > 0 || ((n + 1 < explen) && !isSafeIdentifierChar(exp.charAt(n + 1))))) {
                 pi++;
-                if (pi == PARAM_LEN && (n == 0 || !isSafeIdentifierChar(expression.charAt(n - 1)))) {
+                if (pi == PARAM_LEN && (n == 0 || !isSafeIdentifierChar(exp.charAt(n - 1)))) {
                     return true; // we found a param access
                 }
                 continue;

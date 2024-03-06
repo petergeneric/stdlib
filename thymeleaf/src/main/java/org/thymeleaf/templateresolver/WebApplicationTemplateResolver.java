@@ -21,45 +21,41 @@ package org.thymeleaf.templateresolver;
 
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-
 import org.thymeleaf.IEngineConfiguration;
 import org.thymeleaf.templateresource.ITemplateResource;
-import org.thymeleaf.templateresource.ServletContextTemplateResource;
+import org.thymeleaf.templateresource.WebApplicationTemplateResource;
 import org.thymeleaf.util.Validate;
+import org.thymeleaf.web.IWebApplication;
 
 /**
  * <p>
  *   Implementation of {@link ITemplateResolver} that extends {@link AbstractConfigurableTemplateResolver}
- *   and creates {@link ServletContextTemplateResource} instances for template resources.
- * </p>
- * <p>
- *   Note a class with this name existed since 1.0, but it was completely rewritten in Thymeleaf 3.0.
+ *   and creates {@link WebApplicationTemplateResource} instances for template resources.
  * </p>
  *
  * @author Daniel Fern&aacute;ndez
  *
- * @since 3.0.0
+ * @since 3.1.0
  *
  */
-public class ServletContextTemplateResolver extends AbstractConfigurableTemplateResolver {
+public class WebApplicationTemplateResolver extends AbstractConfigurableTemplateResolver {
 
 
-    private final ServletContext servletContext;
+    private final IWebApplication webApplication;
 
 
 
-    public ServletContextTemplateResolver(final ServletContext servletContext) {
+    public WebApplicationTemplateResolver(final IWebApplication webApplication) {
         super();
-        Validate.notNull(servletContext, "ServletContext cannot be null");
-        this.servletContext = servletContext;
+        Validate.notNull(webApplication, "Web Application object cannot be null");
+        this.webApplication = webApplication;
     }
 
 
     @Override
     protected ITemplateResource computeTemplateResource(
             final IEngineConfiguration configuration, final String ownerTemplate, final String template, final String resourceName, final String characterEncoding, final Map<String, Object> templateResolutionAttributes) {
-        return new ServletContextTemplateResource(this.servletContext, resourceName, characterEncoding);
+        return new WebApplicationTemplateResource(this.webApplication, resourceName, characterEncoding);
     }
 
 }

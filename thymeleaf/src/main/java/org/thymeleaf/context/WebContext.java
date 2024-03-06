@@ -22,76 +22,55 @@ package org.thymeleaf.context;
 import java.util.Locale;
 import java.util.Map;
 
-import javax.servlet.ServletContext;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
+import org.thymeleaf.util.Validate;
+import org.thymeleaf.web.IWebExchange;
 
 /**
  * <p>
  *   Basic web-oriented implementation of the {@link IContext} and {@link IWebContext} interfaces.
  * </p>
  * <p>
- *   This context implementation contains all the required Servlet-API artifacts needed for template
+ *   This context implementation contains all the required web artifacts needed for template
  *   execution in web environments, and should be enough for most web-based scenarios of template
  *   processing.
  * </p>
  * <p>
- *   Note a class with this name existed since 2.0.9, but it was completely reimplemented
- *   in Thymeleaf 3.0
+ *   Note this class was modified in a backwards-incompatible way in Thymeleaf 3.1.0.
  * </p>
  *
  * @author Daniel Fern&aacute;ndez
  *
- * @since 3.0.0
+ * @since 3.1.0
  *
  */
 public final class WebContext extends AbstractContext implements IWebContext {
 
-    private final HttpServletRequest request;
-    private final HttpServletResponse response;
-    private final ServletContext servletContext;
+    private final IWebExchange webExchange;
 
 
-    public WebContext(final HttpServletRequest request, final HttpServletResponse response,
-                      final ServletContext servletContext) {
+    public WebContext(final IWebExchange webExchange) {
         super();
-        this.request = request;
-        this.response = response;
-        this.servletContext = servletContext;
+        Validate.notNull(webExchange, "Web exchange cannot be null in web context");
+        this.webExchange = webExchange;
     }
 
-    public WebContext(final HttpServletRequest request, final HttpServletResponse response,
-                      final ServletContext servletContext, final Locale locale) {
+    public WebContext(final IWebExchange webExchange, final Locale locale) {
         super(locale);
-        this.request = request;
-        this.response = response;
-        this.servletContext = servletContext;
+        Validate.notNull(webExchange, "Web exchange cannot be null in web context");
+        this.webExchange = webExchange;
     }
 
-    public WebContext(final HttpServletRequest request, final HttpServletResponse response,
-                      final ServletContext servletContext, final Locale locale, final Map<String, Object> variables) {
+    public WebContext(final IWebExchange webExchange,
+                      final Locale locale, final Map<String, Object> variables) {
         super(locale, variables);
-        this.request = request;
-        this.response = response;
-        this.servletContext = servletContext;
+        Validate.notNull(webExchange, "Web exchange cannot be null in web context");
+        this.webExchange = webExchange;
     }
 
 
-    public HttpServletRequest getRequest() {
-        return this.request;
-    }
-
-    public HttpSession getSession() {
-        return this.request.getSession(false);
-    }
-
-    public HttpServletResponse getResponse() {
-        return this.response;
-    }
-
-    public ServletContext getServletContext() {
-        return this.servletContext;
+    @Override
+    public IWebExchange getExchange() {
+        return this.webExchange;
     }
 
 }

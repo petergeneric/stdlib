@@ -76,6 +76,7 @@ public interface IEngineConfiguration {
 
     public Set<DialectConfiguration> getDialectConfigurations();
     public Set<IDialect> getDialects();
+    public <T extends IDialect> Set<T> getDialectsOfType(final Class<T> type);
     public boolean isStandardDialectPresent();
     public String getStandardDialectPrefix();
 

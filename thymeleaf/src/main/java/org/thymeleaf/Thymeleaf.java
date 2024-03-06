@@ -37,34 +37,6 @@ import org.thymeleaf.util.VersionUtils;
  */
 public final class Thymeleaf {
 
-    private static final String STABLE_RELEASE_QUALIFIER = "RELEASE";
-
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getVersion()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final String VERSION;
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getBuildTimestamp()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final String BUILD_TIMESTAMP;
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getVersionMajor()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final int VERSION_MAJOR;
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getVersionMinor()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final int VERSION_MINOR;
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getVersionPatch()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final int VERSION_BUILD;
-    /**
-     * @deprecated Deprecated in 3.0.12. Use {@link #getVersionQualifier()} instead. Will be removed in Thymeleaf 3.1.
-     */
-    public static final String VERSION_TYPE;
-
-
     private static final VersionUtils.VersionSpec VERSION_SPEC;
 
 
@@ -81,15 +53,7 @@ public final class Thymeleaf {
             // Ignored: we don't have such information, might be due to IDE configuration
         }
 
-
         VERSION_SPEC = VersionUtils.parseVersion(version, buildTimestamp);
-
-        VERSION = VERSION_SPEC.getVersion();
-        BUILD_TIMESTAMP = VERSION_SPEC.getBuildTimestamp();
-        VERSION_MAJOR = VERSION_SPEC.getMajor();
-        VERSION_MINOR = VERSION_SPEC.getMinor();
-        VERSION_BUILD = VERSION_SPEC.getPatch();
-        VERSION_TYPE = VERSION_SPEC.getQualifier();
 
     }
 
@@ -123,9 +87,8 @@ public final class Thymeleaf {
         return VERSION_SPEC.getQualifier();
     }
 
-
     public static boolean isVersionStableRelease() {
-        return STABLE_RELEASE_QUALIFIER.equals(VERSION_SPEC.getQualifier());
+        return VERSION_SPEC.isStableRelease();
     }
 
 

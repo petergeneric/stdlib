@@ -44,6 +44,9 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
         super(trim(text), templateName, line, col);
     }
 
+
+
+
     public String getText() {
         return getContentText();
     }
@@ -111,7 +114,7 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
      */
     private static CharSequence trim(CharSequence in)
     {
-        if (in.length() == 0 )
+        if (in.isEmpty())
             return in;
 
         final boolean startWhitespace = Character.isWhitespace(in.charAt(0));
@@ -119,7 +122,7 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
         {
             final String trimmed = in.toString().trim();
 
-            if (trimmed.length() == 0)
+            if (trimmed.isEmpty())
                 return "\n"; // Whitespace-only node, so use a newline char
 
             if (Character.isWhitespace(in.charAt(in.length() - 1)))

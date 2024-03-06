@@ -25,7 +25,6 @@ import java.util.Set;
 
 import org.thymeleaf.context.IExpressionContext;
 import org.thymeleaf.context.ITemplateContext;
-import org.thymeleaf.context.IWebContext;
 import org.thymeleaf.expression.Aggregates;
 import org.thymeleaf.expression.Arrays;
 import org.thymeleaf.expression.Bools;
@@ -42,6 +41,7 @@ import org.thymeleaf.expression.Numbers;
 import org.thymeleaf.expression.Objects;
 import org.thymeleaf.expression.Sets;
 import org.thymeleaf.expression.Strings;
+import org.thymeleaf.expression.Temporals;
 import org.thymeleaf.expression.Uris;
 
 /**
@@ -67,13 +67,23 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
     public static final String SELECTION_TARGET_EXPRESSION_OBJECT_NAME = "object";
     public static final String LOCALE_EXPRESSION_OBJECT_NAME = "locale";
 
+
+    /*
+     * These are no longer available, but their names are still used for raising an explanatory exception
+     */
     public static final String REQUEST_EXPRESSION_OBJECT_NAME = "request";
     public static final String RESPONSE_EXPRESSION_OBJECT_NAME = "response";
     public static final String SESSION_EXPRESSION_OBJECT_NAME = "session";
     public static final String SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME = "servletContext";
 
+
     public static final String CONVERSIONS_EXPRESSION_OBJECT_NAME = "conversions";
     public static final String URIS_EXPRESSION_OBJECT_NAME = "uris";
+
+    /**
+     * @since 3.1.0
+     */
+    public static final String TEMPORALS_EXPRESSION_OBJECT_NAME = "temporals";
 
     public static final String CALENDARS_EXPRESSION_OBJECT_NAME = "calendars";
     public static final String DATES_EXPRESSION_OBJECT_NAME = "dates";
@@ -91,14 +101,6 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
 
     public static final String EXECUTION_INFO_OBJECT_NAME = "execInfo";
 
-    /*
-     * These two objects, "#httpServletRequest" and "#httpSession" are still supported but deprecated
-     * since Thymeleaf 3.0. They will start issuing warnings in 3.1, and disappear in 3.2.
-     * They have been replaced by the simpler names "#request" and "#session".
-     */
-    public static final String HTTP_SERVLET_REQUEST_EXPRESSION_OBJECT_NAME = "httpServletRequest";
-    public static final String HTTP_SESSION_EXPRESSION_OBJECT_NAME = "httpSession";
-
 
 
 
@@ -111,12 +113,9 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
                             VARIABLES_EXPRESSION_OBJECT_NAME,
                             SELECTION_TARGET_EXPRESSION_OBJECT_NAME,
                             LOCALE_EXPRESSION_OBJECT_NAME,
-                            REQUEST_EXPRESSION_OBJECT_NAME,
-                            RESPONSE_EXPRESSION_OBJECT_NAME,
-                            SESSION_EXPRESSION_OBJECT_NAME,
-                            SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME,
                             CONVERSIONS_EXPRESSION_OBJECT_NAME,
                             URIS_EXPRESSION_OBJECT_NAME,
+                            TEMPORALS_EXPRESSION_OBJECT_NAME,
                             CALENDARS_EXPRESSION_OBJECT_NAME,
                             DATES_EXPRESSION_OBJECT_NAME,
                             BOOLS_EXPRESSION_OBJECT_NAME,
@@ -131,8 +130,10 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
                             MESSAGES_EXPRESSION_OBJECT_NAME,
                             IDS_EXPRESSION_OBJECT_NAME,
                             EXECUTION_INFO_OBJECT_NAME,
-                            HTTP_SERVLET_REQUEST_EXPRESSION_OBJECT_NAME,
-                            HTTP_SESSION_EXPRESSION_OBJECT_NAME
+                            REQUEST_EXPRESSION_OBJECT_NAME,
+                            RESPONSE_EXPRESSION_OBJECT_NAME,
+                            SESSION_EXPRESSION_OBJECT_NAME,
+                            SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME
                     }
             )));
 
@@ -198,49 +199,17 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
         if (LOCALE_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
             return context.getLocale();
         }
-        if (REQUEST_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getRequest();
-            }
-            return null;
-        }
-        if (RESPONSE_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getResponse();
-            }
-            return null;
-        }
-        if (SESSION_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getSession();
-            }
-            return null;
-        }
-        if (SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getServletContext();
-            }
-            return null;
-        }
-        if (HTTP_SERVLET_REQUEST_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            /*
-             * NOTE "#httpServletRequest" is still usable, but deprecated since Thymeleaf 3.0.
-             * Its usage will issue warnings in 3.1, and the object will be removed in 3.2
-             */
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getRequest();
-            }
-            return null;
-        }
-        if (HTTP_SESSION_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
-            /*
-             * NOTE "#httpSession" is still usable, but deprecated since Thymeleaf 3.0.
-             * Its usage will issue warnings in 3.1, and the object will be removed in 3.2
-             */
-            if (context instanceof IWebContext) {
-                return ((IWebContext) context).getSession();
-            }
-            return null;
+        if (REQUEST_EXPRESSION_OBJECT_NAME.equals(expressionObjectName) ||
+                SESSION_EXPRESSION_OBJECT_NAME.equals(expressionObjectName) ||
+                SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME.equals(expressionObjectName) ||
+                RESPONSE_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
+            throw new IllegalArgumentException(
+                    String.format(
+                            "The '%s','%s','%s' and '%s' expression utility objects are no longer available " +
+                            "by default for template expressions and their use is not recommended. In cases where " +
+                            "they are really needed, they should be manually added as context variables.",
+                            REQUEST_EXPRESSION_OBJECT_NAME, SESSION_EXPRESSION_OBJECT_NAME,
+                            SERVLET_CONTEXT_EXPRESSION_OBJECT_NAME, RESPONSE_EXPRESSION_OBJECT_NAME));
         }
         if (CONVERSIONS_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
             return new Conversions(context);
@@ -250,6 +219,9 @@ public class StandardExpressionObjectFactory implements IExpressionObjectFactory
         }
         if (CALENDARS_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
             return new Calendars(context.getLocale());
+        }
+        if (TEMPORALS_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
+            return new Temporals(context.getLocale());
         }
         if (DATES_EXPRESSION_OBJECT_NAME.equals(expressionObjectName)) {
             return new Dates(context.getLocale());
