@@ -9,12 +9,14 @@ import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.types.SimpleId;
+import com.peterphi.std.util.tracing.Tracing;
 import com.peterphi.usermanager.db.BCrypt;
 import com.peterphi.usermanager.db.entity.UserEntity;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
+import org.apache.commons.lang.StringUtils;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.joda.time.DateTime;
 
 import java.util.UUID;
 
@@ -28,6 +30,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	@Doc("If true, logins created using LDAP credentials will be allowed to use the Session Reconnect Key system to stay logged in longer without re-authenticating")
 	public boolean allowRemoteAccountsToUseSessionReconnect;
 
+
 	@Transactional
 	public UserEntity login(String email, String password)
 	{
@@ -35,7 +38,23 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null && account.isLocal())
 		{
-			final boolean correct = BCrypt.verify(account.getPassword(), password.toCharArray());
+			if (StringUtils.isEmpty(account.getPassword()))
+				throw new IllegalArgumentException(
+						"This account is not able to log in. You may have initiated but not completed a password reset, or your account may have been disabled.");
+
+			final boolean correct;
+			try
+			{
+				correct = BCrypt.verify(account.getPassword(), password.toCharArray());
+			}
+			catch (Throwable t)
+			{
+				final String id = Tracing.getTraceId();
+				log.warn("BCrypt.verify failed while verifying user's login attempt, trace={}", id, t);
+				throw new RuntimeException(
+						"An error occurred while checking your password. Please check server logs for more detail. Log Correlation Trace ID: " +
+						id);
+			}
 
 			if (correct)
 			{
@@ -114,7 +133,6 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 	 * Creates a BCrypted hash for a password
 	 *
 	 * @param password
-	 *
 	 * @return
 	 */
 	private String hashPassword(String password)
@@ -155,7 +173,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		account.setLocal(false);
 		account.setEmail(username);
 		account.setName(fullName);
-		account.setPassword("NONE"); // Won't allow password logins anyway, but we also set a value that won't match any BCrypt hash
+		account.setPassword(""); // Won't allow password logins anyway, but set just in case
 
 		if (allowRemoteAccountsToUseSessionReconnect)
 			account.setSessionReconnectKey(UUID.randomUUID().toString());
@@ -184,7 +202,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		final WebQuery search = new WebQuery().eq("sessionReconnectKey", key);
 
 		if (!allowRemoteAccountsToUseSessionReconnect)
-			search.eq("local",true);
+			search.eq("local", true);
 
 		final UserEntity account = uniqueResult(search);
 
@@ -199,6 +217,7 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 		return account;
 	}
 
+
 	@Transactional
 	public UserEntity loginByAccessKey(final String key)
 	{
@@ -209,7 +228,6 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 			log.debug("Allowed login by Access Key for user: {}", account.getEmail());
 
 		return account;
-
 	}
 
 
