@@ -19,11 +19,11 @@
  */
 package org.thymeleaf.engine;
 
-import java.io.IOException;
-import java.io.Writer;
-
 import org.thymeleaf.model.IModelVisitor;
 import org.thymeleaf.model.IText;
+
+import java.io.IOException;
+import java.io.Writer;
 
 /*
  * Engine implementation of IText.
@@ -41,7 +41,7 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
 
 
     Text(final CharSequence text, final String templateName, final int line, final int col) {
-        super(text, templateName, line, col);
+        super(trim(text), templateName, line, col);
     }
 
 
@@ -106,4 +106,42 @@ final class Text extends AbstractTextualTemplateEvent implements IText {
     }
 
 
+    /**
+     * Trim text node start+end whitespace using the same rules as HTML (any amount of whitespace = one whitespace char). Leaves any intenral whitespace.
+     *
+     * @param in
+     * @return
+     */
+    private static CharSequence trim(CharSequence in)
+    {
+        if (in.isEmpty())
+            return in;
+
+        final boolean startWhitespace = Character.isWhitespace(in.charAt(0));
+        if (startWhitespace)
+        {
+            final String trimmed = in.toString().trim();
+
+            if (trimmed.isEmpty())
+                return "\n"; // Whitespace-only node, so use a newline char
+
+            if (Character.isWhitespace(in.charAt(in.length() - 1)))
+            {
+                return " " + trimmed + " ";
+            }
+            else
+            {
+                return " " + trimmed;
+            }
+        }
+        else if (Character.isWhitespace(in.charAt(in.length() - 1)))
+        {
+            // Trailing whitespace
+            return in.toString().trim() + " ";
+        }
+        else
+        {
+            return in;
+        }
+    }
 }
