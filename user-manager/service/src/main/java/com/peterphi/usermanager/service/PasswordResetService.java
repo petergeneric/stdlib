@@ -35,15 +35,22 @@ public class PasswordResetService
 
 
 	@Transactional
-	@AuthConstraint(id = "start-password-reset", role = UserLogin.ROLE_ADMIN, comment = "Only admins may initiate password reset flow")
+	@AuthConstraint(id = "start-password-reset",
+	                role = UserLogin.ROLE_ADMIN,
+	                comment = "Only admins may initiate password reset flow")
 	public String start(final int targetUserId)
 	{
 		final UserEntity entity = userDao.find(new WebQuery().eq("id", targetUserId).eq("local", true)).one();
+
+		if (!entity.isLocal())
+			throw new IllegalArgumentException("May only reset credentials for local users!"); // should be unnecessary, but double-check
+
 		final PasswordResetEntity existing = dao.find(new WebQuery().eq("user:id", targetUserId)).uniqueResult();
 
 		if (existing != null)
 			dao.delete(existing); // Delete any existing reset code for this user
 
+		// Prevent logins until reset. N.B. we don't disable user's access keys (admin can do this by rotating API key twice)
 		entity.setPassword("");
 		entity.setSessionReconnectKey(null);
 

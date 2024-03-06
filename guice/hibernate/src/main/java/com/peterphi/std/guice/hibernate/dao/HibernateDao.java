@@ -508,7 +508,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	public ConstrainedResultSet<Object[]> project(final WebQuery query, final boolean distinct)
 	{
 		return find(query,
-		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT : JPASearchStrategy.CUSTOM_PROJECTION,
+		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION : JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT,
 		            r -> (Object[]) r);
 	}
 
@@ -528,7 +528,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	                                             final Function<Object[], RT> serialiser)
 	{
 		return find(query,
-		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT : JPASearchStrategy.CUSTOM_PROJECTION,
+		            distinct ? JPASearchStrategy.CUSTOM_PROJECTION : JPASearchStrategy.CUSTOM_PROJECTION_NODISTINCT,
 		            serialiser);
 	}
 
