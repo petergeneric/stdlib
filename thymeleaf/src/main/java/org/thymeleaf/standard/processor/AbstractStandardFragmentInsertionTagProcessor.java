@@ -54,6 +54,9 @@ import org.thymeleaf.util.FastStringWriter;
 import org.thymeleaf.util.LoggingUtils;
 import org.thymeleaf.util.StringUtils;
 
+import java.io.Writer;
+import java.util.Map;
+
 /**
  *
  * @author Daniel Fern&aacute;ndez
@@ -62,6 +65,9 @@ import org.thymeleaf.util.StringUtils;
  *
  */
 public abstract class AbstractStandardFragmentInsertionTagProcessor extends AbstractAttributeTagProcessor {
+
+    public static boolean WARN_ON_DEPRECATIONS = false;
+
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AbstractStandardFragmentInsertionTagProcessor.class);
 
@@ -381,7 +387,7 @@ public abstract class AbstractStandardFragmentInsertionTagProcessor extends Abst
                 }
             }
 
-            if (LOGGER.isWarnEnabled()) {
+            if (WARN_ON_DEPRECATIONS && LOGGER.isWarnEnabled()) {
                 LOGGER.warn(
                         "[THYMELEAF][{}][{}] Deprecated unwrapped fragment expression \"{}\" found in template {}, " +
                         "line {}, col {}. Please use the complete syntax of fragment expressions instead (\"{}\"). The " +
