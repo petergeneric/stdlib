@@ -14,7 +14,7 @@ import org.hibernate.SessionFactory;
 import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 
-import javax.inject.Named;
+import jakarta.inject.Named;
 
 /**
  * A SessionFactory Provider for Guice
