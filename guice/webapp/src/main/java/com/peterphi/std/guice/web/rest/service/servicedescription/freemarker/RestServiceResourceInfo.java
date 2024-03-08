@@ -392,6 +392,10 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			return "";
 		else if (header.contains("json") || header.contains("javascript"))
 			return "j";
+		else if (header.contains("html"))
+			return "h";
+		else if (header.contains("form"))
+			return "f";
 		else if (header.contains("text/"))
 			return "t";
 		else
