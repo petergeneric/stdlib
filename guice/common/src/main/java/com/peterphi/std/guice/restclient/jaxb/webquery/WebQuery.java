@@ -33,6 +33,9 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	 */
 	public static final int LIMIT_RETURN_ZERO = -1;
 
+	private transient boolean wasLimitSetExplicitly = false;
+	private transient int capLimit = Integer.MAX_VALUE;
+
 	/**
 	 * An optional name for the query, to allow server-side optimisation/hinting
 	 */
@@ -185,9 +188,29 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 	public WebQuery limit(final int limit)
 	{
+		this.wasLimitSetExplicitly = true;
+
 		constraints.limit = limit;
 
 		return this;
+	}
+
+
+	/**
+	 * Cap the current limit value such that it does not exceed the specified limit. If the limit is 0, or greater than this cap, <code>limit</code> will be set to <code>cap</code><br />
+	 * A capped limit will also be stored, and apply to any <code>_limit</code> decoded from query string by the {@link #decode(UriInfo)} methods.
+	 *
+	 * @param cap the maximum number of rows the user may request
+	 * @return self for chaining
+	 */
+	public WebQuery capLimit(final int cap)
+	{
+		this.capLimit = cap;
+
+		if (cap != Integer.MAX_VALUE && (constraints.limit == 0 || constraints.limit > cap))
+			return limit(cap);
+		else
+			return this;
 	}
 
 
@@ -293,15 +316,14 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	}
 
 
-	public WebQuery decode(UriInfo qs, WebQueryDecodePlugin parserPlugin)
-	{
-		return decode(qs.getQueryParameters(), parserPlugin);
-	}
-
-
 	public WebQuery decode(Map<String, List<String>> map)
 	{
 		return decode(map, null);
+	}
+
+	public WebQuery decode(UriInfo qs, WebQueryDecodePlugin parserPlugin)
+	{
+		return decode(qs.getQueryParameters(), parserPlugin);
 	}
 
 
@@ -313,8 +335,11 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	 */
 	public WebQuery decode(Map<String, List<String>> map, WebQueryDecodePlugin parserPlugin)
 	{
-		// incoming queries from a map get a default limit set
-		limit(QUERY_STRING_DEFAULT_LIMIT);
+		// incoming queries from a map get a default limit set if one has not already been set pre-decode
+		// Make sure this limit does not exceed any cap that has been set
+		// N.B. we set constraints.limit directly to avoid setting "wasLimitSetExplicitly"
+		if (!wasLimitSetExplicitly)
+			constraints.limit = Math.min(capLimit, QUERY_STRING_DEFAULT_LIMIT);
 
 		boolean hasConstraints = false;
 
@@ -375,13 +400,13 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 						// Explicitly ignore (should never be executed anyway)
 						break;
 					case OFFSET:
-						offset(Integer.valueOf(value.get(0)));
+						offset(Integer.parseInt(value.get(0)));
 						break;
 					case LIMIT:
-						limit(Integer.valueOf(value.get(0)));
+						limit(Math.min(capLimit, Integer.parseInt(value.get(0))));
 						break;
 					case CLASS:
-						subclass(value.toArray(new String[value.size()]));
+						subclass(value.toArray(new String[0]));
 						break;
 					case COMPUTE_SIZE:
 						computeSize(parseBoolean(value.get(0)));
@@ -393,17 +418,17 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 						logPerformance(parseBoolean(value.get(0)));
 						break;
 					case EXPAND:
-						expand(value.toArray(new String[value.size()]));
+						expand(value.toArray(new String[0]));
 						break;
 					case ORDER:
 						orderings = value.stream().map(WQOrder :: parseLegacy).collect(Collectors.toList());
 						break;
 					case FETCH:
 						// Ordinarily we'd expect a single value here, but allow for multiple values to be provided as a comma-separated list
-						fetch = value.stream().collect(Collectors.joining(","));
+						fetch = String.join(",", value);
 						break;
 					case DBFETCH:
-						dbfetch = value.stream().collect(Collectors.joining(","));
+						dbfetch = String.join(",", value);
 						break;
 					case NAME:
 						name(value.get(0));
