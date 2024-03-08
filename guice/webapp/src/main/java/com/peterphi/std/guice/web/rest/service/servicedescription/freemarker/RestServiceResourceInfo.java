@@ -8,9 +8,11 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
 
 import javax.ws.rs.Consumes;
+import javax.ws.rs.FormParam;
 import javax.ws.rs.HttpMethod;
 import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
 import java.lang.reflect.Type;
@@ -192,7 +194,20 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
 
 		if (consumes == null || consumes.value() == null || consumes.value().length == 0)
+		{
+			for (Annotation[] param : method.getParameterAnnotations())
+			{
+				for (Annotation annotation : param)
+				{
+					if (annotation.annotationType().equals(FormParam.class))
+					{
+						return MediaType.APPLICATION_FORM_URLENCODED;
+					}
+				}
+			}
+
 			return "*/* (default)";
+		}
 		else
 			return StringUtils.join(consumes.value(), ", ");
 	}
