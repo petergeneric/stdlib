@@ -36,7 +36,7 @@ public class JAXBResourceFactory
 	 *
 	 * @return
 	 */
-	public <T> T get(Class<T> clazz, final String name)
+	public synchronized <T> T get(Class<T> clazz, final String name)
 	{
 		JAXBNamedResourceFactory<T> cached = cachedReferences.get(name);
 
@@ -63,7 +63,7 @@ public class JAXBResourceFactory
 	 *
 	 * @return
 	 */
-	public <T> T get(Class<T> clazz, final String name, T defaultValue)
+	public synchronized <T> T get(Class<T> clazz, final String name, T defaultValue)
 	{
 		JAXBNamedResourceFactory<T> cached = cachedReferences.get(name);
 
