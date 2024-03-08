@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -33,7 +34,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	private final RestServiceInfo service;
 	private final Method method;
-
+	private String anchorName;
 
 	public RestServiceResourceInfo(final RestServiceInfo service, final Method method)
 	{
@@ -52,6 +53,18 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 				return true;
 
 		return false;
+	}
+
+
+	public String getAnchorName()
+	{
+		return anchorName;
+	}
+
+
+	public void setAnchorName(final String anchorName)
+	{
+		this.anchorName = anchorName;
 	}
 
 
@@ -360,5 +373,65 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			return Stream.of(clazz.getEnumConstants()).map(Object :: toString).collect(Collectors.joining("|"));
 		else
 			return "...";
+	}
+
+
+	public static String buildAnchorName(final RestServiceResourceInfo resource)
+	{
+		final String prefix;
+		final String suffix;
+		{
+			final String method = resource.getHttpMethod();
+			final boolean isGET = StringUtils.equals(method, HttpMethod.GET);
+			final String types = getAbbreviatedMimeType(resource.getConsumes()) + getAbbreviatedMimeType(resource.getProduces());
+
+			if (types.equals("xx") || (isGET && types.equals("x")))
+				suffix = ""; // Make XML In/Out the default
+			else if (types.equals("jj"))
+				suffix = "_json"; // JSON In+Out
+			else if (types.isEmpty() && method.equals(HttpMethod.DELETE))
+				suffix = ""; // DELETE expected to be any/any by default
+			else if (types.isEmpty())
+				suffix = "_any";
+			else
+				suffix = "_" + types;
+
+			if (isGET)
+				prefix = "";
+			else
+				prefix = method.toLowerCase();
+		}
+
+		// Removing vowels from hash to avoid inadvertant profanity generation
+		return prefix + sanitise(resource.getPath()) + suffix;
+	}
+
+
+	private static String getAbbreviatedMimeType(final String header)
+	{
+		if (header.contains("xml"))
+			return "x";
+		else if (header.indexOf('*') != -1)
+			return "";
+		else if (header.contains("json") || header.contains("javascript"))
+			return "j";
+		else if (header.contains("text/"))
+			return "t";
+		else
+			return "u"; // unknown
+	}
+
+
+	private static final Pattern NON_ANCHOR_SAFE = Pattern.compile("[^A-Za-z0-9_\\-/:.]+");
+
+
+	/**
+	 * Strips out chars we don't want in anchors
+	 * @param str
+	 * @return
+	 */
+	private static String sanitise(String str)
+	{
+		return NON_ANCHOR_SAFE.matcher(StringUtils.replaceChars(str, '{', ':')).replaceAll("");
 	}
 }

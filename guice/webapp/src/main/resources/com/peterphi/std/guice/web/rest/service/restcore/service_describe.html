@@ -32,15 +32,15 @@
 
 	<h2>Resources</h2>
 	<ol>
-		<li th:each="resource,itStat: ${service.resources}"><a th:href="'#resource_' + ${itStat.index+1}"><span
+		<li th:each="resource,itStat: ${service.resources}"><a th:href="${'#' + resource.anchorName}"><span
 				th:text="${resource.localPath}">localPath</span>
 			(<span th:text="${resource.httpMethod}">method</span>)</a></li>
 	</ol>
 
 
 	<th:block th:each="resource,resourceItStat: ${service.resources}" th:with="url = @{|${coreRestEndpoint}${resource.path}|}">
-		<h3>
-			<a th:href="'#resource_' + ${resourceItStat.index+1}" th:id="'resource_' + ${resourceItStat.index+1}">
+		<h3 th:id="'resource_' + ${resourceItStat.index+1}">
+			<a th:href="${'#' + resource.anchorName}" th:id="${resource.anchorName}">
 				<span th:text="${resourceItStat.index+1}"/>. <span th:text="${resource.httpMethod}"/> <span
 					th:text="${resource.localPath}"/></a>
 		</h3>
