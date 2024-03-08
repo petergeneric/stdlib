@@ -11,6 +11,7 @@ import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.Res
 import com.peterphi.std.guice.web.rest.service.servicedescription.freemarker.SchemaGenerateUtil;
 import com.peterphi.std.guice.web.rest.templating.TemplateCall;
 import com.peterphi.std.guice.web.rest.templating.thymeleaf.GuiceCoreTemplater;
+import org.apache.commons.lang.StringUtils;
 
 import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.UriInfo;
@@ -70,7 +71,7 @@ public class RestServiceListImpl implements RestServiceList
 
 
 	@Override
-	public String getServiceDescription(final int serviceId, final HttpHeaders headers, final UriInfo uriInfo) throws Exception
+	public String getServiceDescription(final String serviceId, final HttpHeaders headers, final UriInfo uriInfo) throws Exception
 	{
 		final TemplateCall template = templater.template(PREFIX + "service_describe.html");
 
@@ -78,8 +79,18 @@ public class RestServiceListImpl implements RestServiceList
 		template.set("containerUrl", containerEndpoint.toString());
 		template.set("restUrl", restEndpoint.toString());
 		template.set("exampleGenerator", exampleGenerator);
-		template.set("service", services.get(serviceId));
-		template.set("serviceId", serviceId);
+
+		final RestServiceInfo svc;
+		if (StringUtils.isNumeric(serviceId))
+			svc = services.get(Integer.parseUnsignedInt(serviceId));
+		else
+			svc = services.stream().filter(s -> serviceId.equals(s.getInterfaceName())).findFirst().orElse(null);
+
+		if (svc == null)
+			throw new IllegalArgumentException("Unknown service: " + serviceId);
+
+		template.set("service", svc);
+		template.set("serviceId", svc.getInterfaceName());
 
 		return template.process();
 	}
