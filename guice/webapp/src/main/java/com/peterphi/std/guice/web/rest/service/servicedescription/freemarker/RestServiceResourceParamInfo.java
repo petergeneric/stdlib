@@ -10,6 +10,7 @@ import javax.ws.rs.HeaderParam;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.QueryParam;
 import javax.ws.rs.core.Context;
+import javax.ws.rs.core.UriInfo;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
@@ -47,6 +48,8 @@ public class RestServiceResourceParamInfo
 
 		if (clazz == type && (pkg == null || pkg.startsWith("java.lang") || pkg.startsWith("java.util")))
 			return clazz.getSimpleName();
+		else if (clazz == UriInfo.class)
+			return "";
 		else
 			return type.toString();
 	}
@@ -89,6 +92,10 @@ public class RestServiceResourceParamInfo
 			final CookieParam p = getAnnotation(CookieParam.class);
 
 			return "CookieParam " + p.value();
+		}
+		else if (UriInfo.class == clazz)
+		{
+			return "Query String";
 		}
 		else if (hasAnnotation(Context.class))
 		{
@@ -145,8 +152,24 @@ public class RestServiceResourceParamInfo
 
 		if (doc != null)
 			return StringUtils.join(doc.value(), "\n");
-		else
-			return "";
+
+		final String name = getName();
+
+		if (String.class.equals(clazz) && "FormParam csrf_token".equals(name))
+		{
+			return "Token to protect against Cross-Site Request Forgery";
+		}
+		else if (UriInfo.class == clazz)
+		{
+			return "Probably: WebQuery Query String";
+		}
+		else if (clazz.isEnum())
+		{
+			return "One of: " + new SchemaGenerateUtil().getSchema(clazz);
+		}
+
+		// no doc available
+		return "";
 	}
 
 	@SuppressWarnings("unchecked")
@@ -181,10 +204,12 @@ public class RestServiceResourceParamInfo
 		{
 			return Arrays.asList(doc.href());
 		}
-		else
+		else if (UriInfo.class == clazz)
 		{
-			return Collections.emptyList();
+			return List.of("https://stdlib.readthedocs.io/en/latest/framework/webquery.html#query-string-format");
 		}
+
+		return Collections.emptyList();
 	}
 
 

@@ -9,7 +9,10 @@ import javax.xml.bind.annotation.XmlEnum;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.util.Arrays;
+import java.util.stream.Collectors;
 
 public class SchemaGenerateUtil
 {
@@ -59,13 +62,14 @@ public class SchemaGenerateUtil
 		{
 			return "void";
 		}
-		else if (clazz == Byte[].class || clazz == byte[].class)
+		else if (clazz == Byte[].class || clazz == byte[].class || clazz == InputStream.class || clazz == OutputStream.class)
 		{
 			return "binary stream";
 		}
 		else if (clazz.isEnum())
 		{
-			return "enum " + Arrays.asList(clazz.getEnumConstants());
+			return "enum " +
+			       Arrays.stream(clazz.getEnumConstants()).map(o -> ((Enum<?>) o).name()).collect(Collectors.joining(", "));
 		}
 		else if (clazz.isAnnotationPresent(XmlRootElement.class))
 		{

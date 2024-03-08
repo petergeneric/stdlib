@@ -25,7 +25,7 @@ import java.util.stream.Collectors;
 @BadgerFish
 @XmlRootElement(name = "WebQueryDefinition")
 @XmlType(name = "QueryDefinitionType")
-@Doc(value = "Generic Web Query", href = "https://github.com/petergeneric/stdlib/wiki/WebQuery-API")
+@Doc(value = "Generic Web Query", href = "https://stdlib.readthedocs.io/en/latest/framework/webquery.html")
 public class WebQuery implements ConstraintContainer<WebQuery>
 {
 	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
