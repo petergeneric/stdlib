@@ -15,6 +15,7 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -195,16 +196,10 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 		if (consumes == null || consumes.value() == null || consumes.value().length == 0)
 		{
-			for (Annotation[] param : method.getParameterAnnotations())
-			{
-				for (Annotation annotation : param)
-				{
-					if (annotation.annotationType().equals(FormParam.class))
-					{
-						return MediaType.APPLICATION_FORM_URLENCODED;
-					}
-				}
-			}
+			// Special-case form param
+			if (!getHttpMethod().equals("GET") &&
+			    Arrays.stream(method.getParameters()).anyMatch(param -> param.isAnnotationPresent(FormParam.class)))
+				return MediaType.APPLICATION_FORM_URLENCODED;
 
 			return "*/* (default)";
 		}
@@ -312,6 +307,21 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 				}
 
 				sb.append("\nEOF");
+			}
+		}
+		else if (getRequestEntity() == null &&
+		         getConsumes().equals(MediaType.APPLICATION_FORM_URLENCODED) &&
+		         (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT") || getHttpMethod().equals("PATCH")) &&
+		         Arrays.stream(method.getParameters()).anyMatch(param -> param.isAnnotationPresent(FormParam.class)))
+		{
+			for (Parameter param : method.getParameters())
+			{
+				final FormParam form = param.getAnnotation(FormParam.class);
+
+				if (form != null)
+				{
+					sb.append(" -d '" + form.value() + "=...'");
+				}
 			}
 		}
 
