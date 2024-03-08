@@ -1,10 +1,7 @@
 package com.peterphi.std.guice.common;
 
 import com.google.inject.AbstractModule;
-import com.google.inject.Key;
 import com.google.inject.Module;
-import com.google.inject.name.Names;
-import com.peterphi.std.guice.common.serviceprops.ConfigRef;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
 import com.peterphi.std.guice.common.serviceprops.jaxbref.JAXBResourceFactory;
 import com.peterphi.std.guice.common.serviceprops.jaxbref.JAXBResourceProvider;
@@ -22,7 +19,6 @@ public abstract class GuiceModule extends AbstractModule
 	 * A reference to the Guice Config environment that is automatically set before {@link #configure()} is called<br />
 	 */
 	protected GuiceConfig config;
-
 
 	public void setConfig(GuiceConfig config)
 	{
@@ -55,9 +51,11 @@ public abstract class GuiceModule extends AbstractModule
 	 */
 	protected <T> JAXBResourceProvider<T> bindConfigFile(final Class<T> type, final String propertyName, Consumer<T> onLoad)
 	{
+		final JAXBResourceFactory factory = super.getProvider(JAXBResourceFactory.class).get();
+
+
 		final JAXBResourceProvider<T> provider = new JAXBResourceProvider<T>(super.getProvider(JAXBResourceFactory.class),
-		                                                                     getProvider(Key.get(ConfigRef.class,
-		                                                                                         Names.named(propertyName))),
+		                                                                     propertyName,
 		                                                                     type,
 		                                                                     onLoad);
 
@@ -67,9 +65,7 @@ public abstract class GuiceModule extends AbstractModule
 			final Timeout validity = TimeoutConverter.doConvert(config.get(propertyName + ".refresh", null));
 
 			if (validity != null)
-			{
-				provider.withCacheValidity(validity);
-			}
+				provider.setCacheValidity(validity);
 		}
 
 		bind(type).toProvider(provider);
