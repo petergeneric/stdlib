@@ -115,17 +115,14 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	public List<RestServiceResourceParamInfo> getParameters()
 	{
-		List<RestServiceResourceParamInfo> list = new ArrayList<>();
+		final List<RestServiceResourceParamInfo> list = new ArrayList<>();
 
-		Annotation[][] allAnnotations = method.getParameterAnnotations();
-		Type[] types = method.getGenericParameterTypes();
+		final Parameter[] parameters = method.getParameters();
+		final Type[] types = method.getGenericParameterTypes();
 
-		for (int i = 0; i < types.length; i++)
+		for (int i = 0; i < parameters.length; i++)
 		{
-			final Type type = types[i];
-			Annotation[] annotations = allAnnotations[i];
-
-			list.add(new RestServiceResourceParamInfo(this, type, annotations));
+			list.add(new RestServiceResourceParamInfo(parameters[i], types[i]));
 		}
 
 		return list;
@@ -192,7 +189,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	public Class<?> getReturnType()
 	{
-		final Class returnType = method.getReturnType();
+		final Class<?> returnType = method.getReturnType();
 
 		if (returnType.equals(Void.TYPE))
 			return null;
