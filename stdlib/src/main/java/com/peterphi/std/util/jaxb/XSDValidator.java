@@ -69,10 +69,7 @@ public class XSDValidator
 
 	private static Source[] getSources(final MultiXSDSchemaFiles schemas)
 	{
-		return reorderDependencies(schemas.files).stream()
-		                                         .map(XSDValidator:: createSource)
-		                                         .collect(Collectors.toList())
-		                                         .toArray(new Source[schemas.files.size()]);
+		return reorderDependencies(schemas.files).stream().map(XSDValidator :: createSource).toArray(Source[] :: new);
 	}
 
 

@@ -75,7 +75,7 @@ class GuiceAwareInvokeStatement extends Statement
 		}
 
 		// Call the method
-		method.invokeExplosively(test, params.toArray(new Object[params.size()]));
+		method.invokeExplosively(test, params.toArray(new Object[0]));
 	}
 
 

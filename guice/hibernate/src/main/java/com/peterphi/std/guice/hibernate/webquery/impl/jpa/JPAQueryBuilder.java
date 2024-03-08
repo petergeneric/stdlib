@@ -159,7 +159,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 			this.conditions.add(predicate);
 
 		// Add the constraints to the query
-		generated.where(criteriaBuilder.and(conditions.toArray(new Predicate[conditions.size()])));
+		generated.where(criteriaBuilder.and(conditions.toArray(new Predicate[0])));
 	}
 
 
@@ -172,7 +172,7 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 		}
 
 		// Add the constraints to the query
-		generated.where(criteriaBuilder.and(conditions.toArray(new Predicate[conditions.size()])));
+		generated.where(criteriaBuilder.and(conditions.toArray(new Predicate[0])));
 	}
 
 
@@ -367,11 +367,11 @@ public class JPAQueryBuilder<T, ID> implements JPAQueryBuilderInternal
 				{
 					case NONE:
 						contents.replaceAll(Predicate :: not);
-						return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
+						return criteriaBuilder.and(contents.toArray(new Predicate[0]));
 					case AND:
-						return criteriaBuilder.and(contents.toArray(new Predicate[conditions.size()]));
+						return criteriaBuilder.and(contents.toArray(new Predicate[0]));
 					case OR:
-						return criteriaBuilder.or(contents.toArray(new Predicate[conditions.size()]));
+						return criteriaBuilder.or(contents.toArray(new Predicate[0]));
 					default:
 						throw new IllegalArgumentException("Unknown group operator: " + group.operator);
 				}

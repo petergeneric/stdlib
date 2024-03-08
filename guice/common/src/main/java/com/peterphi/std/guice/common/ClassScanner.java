@@ -230,7 +230,7 @@ public class ClassScanner
 		for (Class<?> clazz : classes)
 			set.add(clazz.getPackage().getName());
 
-		return set.toArray(new String[set.size()]);
+		return set.toArray(new String[0]);
 	}
 
 

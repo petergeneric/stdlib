@@ -53,7 +53,7 @@ class GuiceRegistryBuilder
 				for (Class c : config.classPackages())
 					packages.add(c.getPackage().getName());
 
-				scanner = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
+				scanner = new ClassScannerFactory(packages.toArray(new String[0]));
 			}
 
 			if (config.role().length > 0)
@@ -72,7 +72,7 @@ class GuiceRegistryBuilder
 					}
 				}
 
-				roles = instances.toArray(new GuiceRole[instances.size()]);
+				roles = instances.toArray(new GuiceRole[0]);
 			}
 		}
 
