@@ -151,7 +151,7 @@ public final class TemplateHandlerAdapterTextHandler extends AbstractTextHandler
         } else {
             final Attribute[] attributesArr =
                     (this.currentElementAttributes.isEmpty()?
-                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[this.currentElementAttributes.size()]));
+                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[0]));
             final String[] innerWhiteSpaces;
             if (attributesArr.length < SYNTHETIC_INNER_WHITESPACES.length) {
                 innerWhiteSpaces = SYNTHETIC_INNER_WHITESPACES[attributesArr.length];
@@ -200,7 +200,7 @@ public final class TemplateHandlerAdapterTextHandler extends AbstractTextHandler
         } else {
             final Attribute[] attributesArr =
                     (this.currentElementAttributes.isEmpty()?
-                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[this.currentElementAttributes.size()]));
+                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[0]));
             final String[] innerWhiteSpaces;
             if (attributesArr.length < SYNTHETIC_INNER_WHITESPACES.length) {
                 innerWhiteSpaces = SYNTHETIC_INNER_WHITESPACES[attributesArr.length];

@@ -200,7 +200,7 @@ public abstract class AbstractMarkupTemplateParser implements ITemplateParser {
             // handler chain AFTER thymeleaf's parser-level and prototype-only comment block readers, so that we
             // will be able to include in selectors code inside prototype-only comments.
             if (selectBlock) {
-                handler = new BlockSelectorMarkupHandler(handler, templateSelectors.toArray(new String[templateSelectors.size()]), referenceResolver);
+                handler = new BlockSelectorMarkupHandler(handler, templateSelectors.toArray(new String[0]), referenceResolver);
             }
 
 
@@ -215,7 +215,7 @@ public abstract class AbstractMarkupTemplateParser implements ITemplateParser {
                 // structures in the DecoupledTemplateLogicMarkupHandler will consider 0 (zero) as their injection
                 // level of interest
                 final Set<String> nodeSelectors = decoupledTemplateLogic.getAllInjectedAttributeSelectors();
-                handler = new NodeSelectorMarkupHandler(handler, handler, nodeSelectors.toArray(new String[nodeSelectors.size()]), referenceResolver);
+                handler = new NodeSelectorMarkupHandler(handler, handler, nodeSelectors.toArray(new String[0]), referenceResolver);
             }
 
 

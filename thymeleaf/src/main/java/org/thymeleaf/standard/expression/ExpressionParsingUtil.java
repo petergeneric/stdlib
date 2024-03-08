@@ -82,7 +82,7 @@ final class ExpressionParsingUtil {
         protectedTokenList.addAll(Arrays.asList(MultiplicationDivisionRemainderExpression.OPERATORS));
         protectedTokenList.addAll(Arrays.asList(NegationExpression.OPERATORS));
         protectedTokenList.addAll(Arrays.asList(OrExpression.OPERATORS));
-        PROTECTED_TOKENS = protectedTokenList.toArray(new String[protectedTokenList.size()]);
+        PROTECTED_TOKENS = protectedTokenList.toArray(new String[0]);
     }
 
 

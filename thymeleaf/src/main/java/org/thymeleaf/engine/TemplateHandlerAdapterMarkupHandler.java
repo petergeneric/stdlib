@@ -255,8 +255,8 @@ public final class TemplateHandlerAdapterMarkupHandler extends AbstractMarkupHan
         } else {
             final Attribute[] attributesArr =
                     (this.currentElementAttributes.isEmpty()?
-                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[this.currentElementAttributes.size()]));
-            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[this.currentElementInnerWhiteSpaces.size()]);
+                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[0]));
+            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[0]);
             attributes = new Attributes(attributesArr, innerWhiteSpaces);
         }
 
@@ -299,8 +299,8 @@ public final class TemplateHandlerAdapterMarkupHandler extends AbstractMarkupHan
         } else {
             final Attribute[] attributesArr =
                     (this.currentElementAttributes.isEmpty()?
-                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[this.currentElementAttributes.size()]));
-            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[this.currentElementInnerWhiteSpaces.size()]);
+                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[0]));
+            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[0]);
             attributes = new Attributes(attributesArr, innerWhiteSpaces);
         }
 
@@ -343,8 +343,8 @@ public final class TemplateHandlerAdapterMarkupHandler extends AbstractMarkupHan
         } else {
             final Attribute[] attributesArr =
                     (this.currentElementAttributes.isEmpty()?
-                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[this.currentElementAttributes.size()]));
-            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[this.currentElementInnerWhiteSpaces.size()]);
+                            Attributes.EMPTY_ATTRIBUTE_ARRAY : this.currentElementAttributes.toArray(new Attribute[0]));
+            final String[] innerWhiteSpaces = this.currentElementInnerWhiteSpaces.toArray(new String[0]);
             attributes = new Attributes(attributesArr, innerWhiteSpaces);
         }
 
