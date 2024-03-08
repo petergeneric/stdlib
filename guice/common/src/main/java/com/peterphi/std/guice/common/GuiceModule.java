@@ -51,9 +51,6 @@ public abstract class GuiceModule extends AbstractModule
 	 */
 	protected <T> JAXBResourceProvider<T> bindConfigFile(final Class<T> type, final String propertyName, Consumer<T> onLoad)
 	{
-		final JAXBResourceFactory factory = super.getProvider(JAXBResourceFactory.class).get();
-
-
 		final JAXBResourceProvider<T> provider = new JAXBResourceProvider<T>(super.getProvider(JAXBResourceFactory.class),
 		                                                                     propertyName,
 		                                                                     type,
