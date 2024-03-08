@@ -71,7 +71,7 @@ public class BreakerService
 	 */
 	public synchronized Breaker register(Consumer<Boolean> onChange, List<String> names)
 	{
-		BreakerGroupImpl group = new BreakerGroupImpl(onChange, names.toArray(new String[names.size()]));
+		BreakerGroupImpl group = new BreakerGroupImpl(onChange, names.toArray(new String[0]));
 
 		// If some breakers are tripped...
 		if (!tripped.isEmpty())

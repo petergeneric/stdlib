@@ -2,6 +2,8 @@ package com.peterphi.std.guice.restclient.jaxb.webquery;
 
 import jakarta.xml.bind.annotation.XmlAttribute;
 import jakarta.xml.bind.annotation.XmlType;
+import org.apache.commons.lang.StringUtils;
+
 import java.beans.Transient;
 
 /**
@@ -80,8 +82,13 @@ public class WQOrder
 
 	public static WQOrder parseLegacy(final String expr)
 	{
-		final String[] parts = expr.split(" ", 2);
+		final String[] parts = StringUtils.split(expr, ' ');
 
-		return new WQOrder(parts[0], parts[1]);
+		if (parts.length == 2)
+			return new WQOrder(parts[0], parts[1]);
+		else if (parts.length == 1)
+			return WQOrder.asc(parts[0]); // Assume ascending if no order set
+		else
+			throw new IllegalArgumentException("Invalid Order Expression \"" + expr + "\". Expected: property [asc|desc]");
 	}
 }

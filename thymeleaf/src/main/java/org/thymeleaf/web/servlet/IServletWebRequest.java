@@ -113,7 +113,7 @@ public interface IServletWebRequest extends IWebRequest {
             return null;
         }
         final List<String> headerValueList = Collections.list(headerValues);
-        return headerValueList.toArray(new String[headerValueList.size()]);
+        return headerValueList.toArray(new String[0]);
     }
 
     @Override

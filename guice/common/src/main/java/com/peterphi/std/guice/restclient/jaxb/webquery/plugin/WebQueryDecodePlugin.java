@@ -150,7 +150,7 @@ public interface WebQueryDecodePlugin
 			else if (plugins.size() == 1)
 				return plugins.get(0);
 			else
-				return new UnionPlugin(plugins.toArray(new WebQueryDecodePlugin[plugins.size()]));
+				return new UnionPlugin(plugins.toArray(new WebQueryDecodePlugin[0]));
 		}
 	}
 }

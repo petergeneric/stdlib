@@ -172,7 +172,7 @@ public final class NumberUtils {
             }
         }
 
-        return values.toArray(new Integer[values.size()]);
+        return values.toArray(new Integer[0]);
         
     }
 

@@ -251,7 +251,7 @@ public class PropertyFile
 				}
 			}
 
-			return files.toArray(new PropertyFile[files.size()]);
+			return files.toArray(new PropertyFile[0]);
 		}
 		catch (IOException e)
 		{

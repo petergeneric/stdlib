@@ -9,7 +9,9 @@ import jakarta.ws.rs.Path;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 public class RestServiceInfo implements Comparable<RestServiceInfo>
@@ -106,11 +108,30 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 
 	public List<RestServiceResourceInfo> getResources()
 	{
-		return Arrays.stream(clazz.getMethods())
-		             .filter(RestServiceResourceInfo:: isResource)
-		             .map(m -> new RestServiceResourceInfo(this, m))
-		             .sorted()
-		             .collect(Collectors.toList());
+		final List<RestServiceResourceInfo> list = Arrays
+				                                           .stream(clazz.getMethods())
+				                                           .filter(RestServiceResourceInfo :: isResource)
+				                                           .map(m -> new RestServiceResourceInfo(this, m))
+				                                           .sorted()
+				                                           .toList();
+
+		Set<String> seenAnchors = new HashSet<>(0);
+
+		int i = 0;
+		for (RestServiceResourceInfo resource : list)
+		{
+			i++;
+
+			final String baseAnchorName = RestServiceResourceInfo.buildAnchorName(resource);
+
+			// If we encounter a duplicate name, append index - otherwise try to keep anchors stable
+			if (seenAnchors.add(baseAnchorName))
+				resource.setAnchorName(baseAnchorName);
+			else
+				resource.setAnchorName(baseAnchorName + "_d" + i);
+		}
+
+		return list;
 	}
 
 

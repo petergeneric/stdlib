@@ -63,7 +63,7 @@ public final class ModelBuilderTemplateHandler extends AbstractTemplateHandler {
 
 
     public TemplateModel getModel() {
-        return new TemplateModel(this.configuration, this.templateData, this.events.toArray(new IEngineTemplateEvent[this.events.size()]));
+        return new TemplateModel(this.configuration, this.templateData, this.events.toArray(new IEngineTemplateEvent[0]));
     }
 
 

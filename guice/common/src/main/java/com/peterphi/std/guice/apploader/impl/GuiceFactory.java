@@ -164,7 +164,7 @@ class GuiceFactory
 			List<String> packages = properties.getList(GuiceProperties.SCAN_PACKAGES, Collections.emptyList());
 
 			if (packages != null && !packages.isEmpty())
-				scannerFactory = new ClassScannerFactory(packages.toArray(new String[packages.size()]));
+				scannerFactory = new ClassScannerFactory(packages.toArray(new String[0]));
 			else
 				throw new IllegalArgumentException("Property " + GuiceProperties.SCAN_PACKAGES + " has not been set!");
 		}

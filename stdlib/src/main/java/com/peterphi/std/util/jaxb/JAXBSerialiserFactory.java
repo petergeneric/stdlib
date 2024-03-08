@@ -1,72 +1,30 @@
 package com.peterphi.std.util.jaxb;
 
-import java.lang.ref.SoftReference;
-import java.util.Iterator;
-import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.function.Supplier;
 
 /**
  * A factory for JAXBSerialiser instances that can optionally be forced to use EclipseLink MOXy (or use the default JAXBContext
  * implementation acquisition rules).<br />
- * Caches JAXBSerialiser instances created using either {@link java.lang.ref.SoftReference}s or direct hard references (based on config - defaults to soft references)
+ * Caches JAXBSerialiser instances created
  */
 public class JAXBSerialiserFactory
 {
-	private final ConcurrentHashMap<String, Object> cache = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<Class<?>, JAXBSerialiser> cacheByClass = new ConcurrentHashMap<>();
+	private final ConcurrentHashMap<String, JAXBSerialiser> cacheByContext = new ConcurrentHashMap<>();
+
 	private final boolean useMoxy;
-	private boolean useSoftReferences;
+
 
 	public JAXBSerialiserFactory(boolean useMoxy)
 	{
-		this(useMoxy, true);
+		this.useMoxy = useMoxy;
 	}
 
 
+	@Deprecated
 	public JAXBSerialiserFactory(boolean useMoxy, boolean useSoftReferences)
 	{
-		this.useMoxy = useMoxy;
-		this.useSoftReferences = useSoftReferences;
-	}
-
-
-	private Object reference(final JAXBSerialiser instance)
-	{
-		if (instance == null) throw new IllegalArgumentException("Cannot construct null reference for cache!");
-
-		if (useSoftReferences)
-			return new SoftReference<>(instance);
-		else
-			return instance;
-	}
-
-
-	private JAXBSerialiser dereference(final Object obj)
-	{
-		if (obj == null)
-			return null;
-
-		if (useSoftReferences)
-			return ((SoftReference<JAXBSerialiser>) obj).get();
-		else
-			return (JAXBSerialiser) obj;
-	}
-
-
-	protected JAXBSerialiser getInstance(final String key, final Supplier<JAXBSerialiser> provider)
-	{
-		JAXBSerialiser instance = dereference(cache.get(key));
-
-		if (instance == null)
-		{
-			instance = provider.get();
-			cache.put(key, reference(instance));
-
-			// We just took the penalty to create a JAXBContext, do some maintenance on the map while we're at it
-			prune();
-		}
-
-		return instance;
+		this(useMoxy);
 	}
 
 
@@ -75,56 +33,25 @@ public class JAXBSerialiserFactory
 	 */
 	public void clear()
 	{
-		cache.clear();
-	}
-
-
-	/**
-	 * Finds stale entries in the map
-	 */
-	private void prune()
-	{
-		if (useSoftReferences)
-		{
-			Iterator<Map.Entry<String, Object>> it = cache.entrySet().iterator();
-
-			while (it.hasNext())
-			{
-				final Map.Entry<String, Object> entry = it.next();
-
-				if (dereference(entry.getValue()) == null)
-					it.remove();
-			}
-		}
+		cacheByContext.clear();
+		cacheByClass.clear();
 	}
 
 
 	public JAXBSerialiser getInstance(final Class<?> clazz)
 	{
-		return getInstance(clazz.toString(), () -> construct(clazz));
+		if (useMoxy)
+			return cacheByClass.computeIfAbsent(clazz, JAXBSerialiser :: getMoxy);
+		else
+			return cacheByClass.computeIfAbsent(clazz, JAXBSerialiser :: getInstance);
 	}
 
 
 	public JAXBSerialiser getInstance(final String contextPath)
 	{
-		return getInstance(contextPath, () -> construct(contextPath));
-	}
-
-
-	JAXBSerialiser construct(String contextPath)
-	{
 		if (useMoxy)
-			return JAXBSerialiser.getMoxy(contextPath);
+			return cacheByContext.computeIfAbsent(contextPath, JAXBSerialiser :: getMoxy);
 		else
-			return JAXBSerialiser.getInstance(contextPath);
-	}
-
-
-	JAXBSerialiser construct(Class<?> clazz)
-	{
-		if (useMoxy)
-			return JAXBSerialiser.getMoxy(clazz);
-		else
-			return JAXBSerialiser.getInstance(clazz);
+			return cacheByContext.computeIfAbsent(contextPath, JAXBSerialiser :: getInstance);
 	}
 }

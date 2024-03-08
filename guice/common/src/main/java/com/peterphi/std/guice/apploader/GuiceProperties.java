@@ -30,9 +30,6 @@ public class GuiceProperties
 	@Doc("If true, force the use of Eclipse MOXy for JAXB serialisation (default true)")
 	public static final String MOXY_ENABLED = "guice.jaxb.moxy";
 
-	@Doc("If true, use soft references to cache constructed JAXBSerialiser instances, allowing GC to reclaim that memory (default true)")
-	public static final String JAXB_CACHE_SOFT_REFERENCES_ENABLED = "guice.jaxb.cache-soft-references";
-
 	@Doc("Set to true when a guice environment is constructed as part of a GuiceUnit test; this allows roles and modules to respond appropriately to a test environment")
 	public static final String UNIT_TEST = "unit-test";
 

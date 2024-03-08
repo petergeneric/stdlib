@@ -205,7 +205,7 @@ public final class EvaluationUtils {
         } else{
             result.add(value);
         }
-        return result.toArray(new Object[result.size()]);
+        return result.toArray(new Object[0]);
 
     }
 

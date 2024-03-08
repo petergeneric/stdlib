@@ -1,35 +1,30 @@
 package com.peterphi.std.guice.common.serviceprops.jaxbref;
 
 import com.google.inject.Provider;
-import com.peterphi.std.guice.common.serviceprops.ConfigRef;
 import com.peterphi.std.threading.Timeout;
 
-import javax.annotation.Nonnull;
-import java.util.concurrent.TimeUnit;
 import java.util.function.Consumer;
 
 public class JAXBResourceProvider<T> implements Provider<T>
 {
 	private final Provider<JAXBResourceFactory> resourceFactoryProvider;
-	private final Provider<ConfigRef> resource;
+	private final String propertyName;
 	private final Class<T> clazz;
 	private final Consumer<T> onLoadMethod;
 
-	private Timeout cacheValidity = new Timeout(30, TimeUnit.SECONDS);
+	private Timeout cacheValidity = Timeout.THIRTY_SECONDS;
 
 	private volatile T value;
 	private volatile long cacheExpires = Integer.MIN_VALUE;
 
-	private final Object lock = new Object();
-
 
 	public JAXBResourceProvider(final Provider<JAXBResourceFactory> resourceFactoryProvider,
-	                            final Provider<ConfigRef> resource,
+	                            final String propertyName,
 	                            final Class<T> clazz,
 	                            final Consumer<T> onLoadMethod)
 	{
 		this.resourceFactoryProvider = resourceFactoryProvider;
-		this.resource = resource;
+		this.propertyName = propertyName;
 		this.clazz = clazz;
 		this.onLoadMethod = onLoadMethod;
 	}
@@ -40,65 +35,42 @@ public class JAXBResourceProvider<T> implements Provider<T>
 	 *
 	 * @param cacheValidity
 	 */
-	public JAXBResourceProvider<T> withCacheValidity(final Timeout cacheValidity)
+	public void setCacheValidity(final Timeout cacheValidity)
 	{
 		this.cacheValidity = cacheValidity;
 		this.cacheExpires = Integer.MIN_VALUE;
-
-		return this;
 	}
 
 
 	@Override
-	public T get()
+	public synchronized T get()
 	{
-		if (cacheExpires > System.currentTimeMillis())
+		final long now = System.currentTimeMillis();
+
+		if (cacheExpires > now)
 		{
 			final T obj = this.value;
 
 			if (obj != null)
 				return obj;
-			else
-				return compute();
 		}
-		else
+
+		// Cannot use cache, must recompute
+		final T obj = deserialise();
+
+		// If caching is enabled, cache the value
+		if (cacheValidity != null)
 		{
-			return compute();
+			this.value = obj;
+			this.cacheExpires = now + cacheValidity.getMilliseconds();
 		}
+
+		return obj;
 	}
-
-
-	/**
-	 * Synchronized to avoid multiple concurrent deserialisations (not a correctness issue, but could be a perf issue)
-	 *
-	 * @return
-	 */
-	@Nonnull
-	private synchronized T compute()
-	{
-		if (cacheExpires <= System.currentTimeMillis() || this.value == null)
-		{
-			final T obj = deserialise();
-
-			// If caching is enabled, cache the value
-			if (cacheValidity != null)
-			{
-				this.value = obj;
-				this.cacheExpires = System.currentTimeMillis() + cacheValidity.getMilliseconds();
-			}
-
-			return obj;
-		}
-		else
-		{
-			return this.value;
-		}
-	}
-
 
 	private T deserialise()
 	{
-		final T obj = resourceFactoryProvider.get().getOnce(clazz, resource.get().getName());
+		final T obj = resourceFactoryProvider.get().getOnce(clazz, propertyName);
 
 		if (onLoadMethod != null)
 			onLoadMethod.accept(obj);

@@ -30,7 +30,7 @@ public interface RestServiceList
 	@GET
 	@Produces("text/html")
 	@Path("/service/{service_id}")
-	public String getServiceDescription(@Doc(value = "the internal index of the service") @PathParam("service_id") int serviceId,
+	public String getServiceDescription(@Doc(value = "the internal id of the service") @PathParam("service_id") String serviceId,
 	                                    @Context HttpHeaders headers,
 	                                    @Context UriInfo uriInfo) throws Exception;
 

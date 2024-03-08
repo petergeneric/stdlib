@@ -4,21 +4,25 @@ import com.google.common.collect.ComparisonChain;
 import com.peterphi.std.annotation.Doc;
 import com.peterphi.std.guice.web.rest.service.servicedescription.ExampleGenerator;
 import com.peterphi.std.util.DOMUtils;
+import jakarta.ws.rs.Consumes;
+import jakarta.ws.rs.FormParam;
+import jakarta.ws.rs.HttpMethod;
+import jakarta.ws.rs.Path;
+import jakarta.ws.rs.Produces;
+import jakarta.ws.rs.core.MediaType;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.HttpMethod;
-import jakarta.ws.rs.Path;
-import jakarta.ws.rs.Produces;
 import java.lang.annotation.Annotation;
 import java.lang.reflect.Method;
+import java.lang.reflect.Parameter;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -31,7 +35,7 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 
 	private final RestServiceInfo service;
 	private final Method method;
-
+	private String anchorName;
 
 	public RestServiceResourceInfo(final RestServiceInfo service, final Method method)
 	{
@@ -50,6 +54,18 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 				return true;
 
 		return false;
+	}
+
+
+	public String getAnchorName()
+	{
+		return anchorName;
+	}
+
+
+	public void setAnchorName(final String anchorName)
+	{
+		this.anchorName = anchorName;
 	}
 
 
@@ -193,7 +209,14 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			consumes = method.getDeclaringClass().getAnnotation(Consumes.class);
 
 		if (consumes == null || consumes.value() == null || consumes.value().length == 0)
+		{
+			// Special-case form param
+			if (!getHttpMethod().equals("GET") &&
+			    Arrays.stream(method.getParameters()).anyMatch(param -> param.isAnnotationPresent(FormParam.class)))
+				return MediaType.APPLICATION_FORM_URLENCODED;
+
 			return "*/* (default)";
+		}
 		else
 			return StringUtils.join(consumes.value(), ", ");
 	}
@@ -301,6 +324,21 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 				sb.append("\nEOF");
 			}
 		}
+		else if (getRequestEntity() == null &&
+		         getConsumes().equals(MediaType.APPLICATION_FORM_URLENCODED) &&
+		         (getHttpMethod().equals("POST") || getHttpMethod().equals("PUT") || getHttpMethod().equals("PATCH")) &&
+		         Arrays.stream(method.getParameters()).anyMatch(param -> param.isAnnotationPresent(FormParam.class)))
+		{
+			for (Parameter param : method.getParameters())
+			{
+				final FormParam form = param.getAnnotation(FormParam.class);
+
+				if (form != null)
+				{
+					sb.append(" -d '" + form.value() + "=...'");
+				}
+			}
+		}
 
 
 		return sb.toString();
@@ -337,5 +375,69 @@ public class RestServiceResourceInfo implements Comparable<RestServiceResourceIn
 			return Stream.of(clazz.getEnumConstants()).map(Object :: toString).collect(Collectors.joining("|"));
 		else
 			return "...";
+	}
+
+
+	public static String buildAnchorName(final RestServiceResourceInfo resource)
+	{
+		final String prefix;
+		final String suffix;
+		{
+			final String method = resource.getHttpMethod();
+			final boolean isGET = StringUtils.equals(method, HttpMethod.GET);
+			final String types = getAbbreviatedMimeType(resource.getConsumes()) + getAbbreviatedMimeType(resource.getProduces());
+
+			if (types.equals("xx") || (isGET && types.equals("x")))
+				suffix = ""; // Make XML In/Out the default
+			else if (types.equals("jj"))
+				suffix = "_json"; // JSON In+Out
+			else if (types.isEmpty() && method.equals(HttpMethod.DELETE))
+				suffix = ""; // DELETE expected to be any/any by default
+			else if (types.isEmpty())
+				suffix = "_any";
+			else
+				suffix = "_" + types;
+
+			if (isGET)
+				prefix = "";
+			else
+				prefix = method.toLowerCase();
+		}
+
+		// Removing vowels from hash to avoid inadvertant profanity generation
+		return prefix + sanitise(resource.getPath()) + suffix;
+	}
+
+
+	private static String getAbbreviatedMimeType(final String header)
+	{
+		if (header.contains("xml"))
+			return "x";
+		else if (header.indexOf('*') != -1)
+			return "";
+		else if (header.contains("json") || header.contains("javascript"))
+			return "j";
+		else if (header.contains("html"))
+			return "h";
+		else if (header.contains("form"))
+			return "f";
+		else if (header.contains("text/"))
+			return "t";
+		else
+			return "u"; // unknown
+	}
+
+
+	private static final Pattern NON_ANCHOR_SAFE = Pattern.compile("[^A-Za-z0-9_\\-/:.]+");
+
+
+	/**
+	 * Strips out chars we don't want in anchors
+	 * @param str
+	 * @return
+	 */
+	private static String sanitise(String str)
+	{
+		return NON_ANCHOR_SAFE.matcher(StringUtils.replaceChars(str, '{', ':')).replaceAll("");
 	}
 }

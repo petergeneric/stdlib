@@ -137,9 +137,7 @@ public class WebQueryTest
 		{
 			if (!kvp.getKey().startsWith("_"))
 			{
-				String[] array = new String[kvp.getValue().size()];
-				kvp.getValue().toArray(array);
-				ub.queryParam(kvp.getKey(), array);
+				ub.queryParam(kvp.getKey(), kvp.getValue().toArray(new String[0]));
 			}
 		}
 
