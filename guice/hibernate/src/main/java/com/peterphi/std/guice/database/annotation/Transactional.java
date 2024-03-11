@@ -27,6 +27,9 @@ import java.lang.annotation.Target;
 @Retention(RetentionPolicy.RUNTIME)
 public @interface Transactional
 {
+	int DEFAULT_ISOLATION_LEVEL = -1;
+	int IGNORE_ISOLATION_LEVEL = -2;
+
 	boolean readOnly() default false;
 
 	/**
@@ -39,9 +42,7 @@ public @interface Transactional
 
 	int autoRetryCount() default 5;
 
-	int isolationLevel() default IGNORE_ISOLATION_LEVEL;
-
-	static int IGNORE_ISOLATION_LEVEL = -1;
+	int isolationLevel() default DEFAULT_ISOLATION_LEVEL;
 
 	/**
 	 * A list of exceptions to rollback on, if thrown by the transactional method. These exceptions are propagated correctly after

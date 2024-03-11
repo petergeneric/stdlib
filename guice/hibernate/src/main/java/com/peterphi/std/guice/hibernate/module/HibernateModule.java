@@ -18,7 +18,8 @@ import com.peterphi.std.guice.hibernate.usertype.SampleCountUserType;
 import com.peterphi.std.guice.hibernate.usertype.TimecodeUserType;
 import com.peterphi.std.io.PropertyFile;
 import org.apache.commons.lang.StringUtils;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.hibernate.Session;
 import org.hibernate.SessionFactory;
 import org.hibernate.Transaction;
@@ -26,29 +27,38 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
+import java.sql.Connection;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 import java.util.Properties;
 import java.util.ServiceLoader;
 
 public abstract class HibernateModule extends AbstractModule
 {
-	private static final Logger log = Logger.getLogger(HibernateModule.class);
+	private static final Logger log = LoggerFactory.getLogger(HibernateModule.class);
 
 	/**
 	 * If hibernate.properties is set to this value, hibernate properties are assumed to be embedded in app config
 	 */
 	private static final String PROPFILE_VAL_EMBEDDED = "embedded";
 
+	private final MetricRegistry registry;
+	private final boolean forceReadOnly;
+	private final int defaultIsolationLevel;
+	private final boolean logStacktraceOnRetryableException;
+
 
 	public HibernateModule(final MetricRegistry registry, GuiceConfig config)
 	{
 		this.registry = registry;
-		this.forceReadOnly=config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
+		this.forceReadOnly = config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
+		this.defaultIsolationLevel = Integer.parseInt(config.get(GuiceProperties.HIBERNATE_DEFAULT_ISOLATION,
+		                                                         "" + Connection.TRANSACTION_READ_COMMITTED));
+		this.logStacktraceOnRetryableException = config.getBoolean(GuiceProperties.HIBERNATE_LOG_RETRYABLE_TX_ERROR_STACK_TRACES,
+		                                                           false);
 	}
 
-
-	private final MetricRegistry registry;
-	private final boolean forceReadOnly;
 
 	@Override
 	protected void configure()
@@ -59,7 +69,11 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry, forceReadOnly);
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class),
+		                                                                            registry,
+		                                                                            forceReadOnly,
+		                                                                            defaultIsolationLevel,
+		                                                                            logStacktraceOnRetryableException);
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);
@@ -94,14 +108,14 @@ public abstract class HibernateModule extends AbstractModule
 			final Iterator<HibernateConfigurationValidator> it = services.iterator();
 
 			if (log.isTraceEnabled())
-				log.trace("Evaluate HibernateConfigurationValidators. has at least one=" + it.hasNext());
+				log.trace("Evaluate HibernateConfigurationValidators. has at least one={}", it.hasNext());
 
 			while (it.hasNext())
 			{
 				final HibernateConfigurationValidator validator = it.next();
 
 				if (log.isTraceEnabled())
-					log.trace("Validating hibernate configuration with " + validator);
+					log.trace("Validating hibernate configuration with {}", validator);
 
 				// Have the validator check the hibernate/database configuration
 				validator.validate(config, properties, guiceConfig);
@@ -120,7 +134,7 @@ public abstract class HibernateModule extends AbstractModule
 		if (PROPFILE_VAL_EMBEDDED.equals(propertyFileName))
 		{
 			// Extract all properties starting with "hibernate." and "liquibase."
-			properties = guiceConfig.toProperties(k -> k.startsWith("hibernate.") || k.startsWith("liquibase."));
+			properties = guiceConfig.toProperties(k -> k.startsWith("hibernate.") || k.startsWith("liquibase.") || k.startsWith("java.naming."));
 		}
 		else
 		{
@@ -140,17 +154,19 @@ public abstract class HibernateModule extends AbstractModule
 				}
 				else
 				{
-					// Merge all hibernate property files into a single file
-					PropertyFile file = PropertyFile.readOnlyUnion(files);
+					// Merge all hibernate property files into a single Properties object
+					Map<String, String> props = new HashMap<>(32);
+					for (PropertyFile file : files)
+						props.putAll(file.toMap());
 
 					// Now Merge all the values and interpret them via the guice config to allow for interpolation of variables
 					GuiceConfig temp = new GuiceConfig();
 
 					temp.setAll(guiceConfig);
-					temp.setAll(file);
+					temp.setAll(props);
 
 					// Now extract the hibernate properties again with any variables
-					properties = temp.toProperties(key -> file.containsKey(key));
+					properties = temp.toProperties(key -> props.containsKey(key));
 				}
 			}
 		}
