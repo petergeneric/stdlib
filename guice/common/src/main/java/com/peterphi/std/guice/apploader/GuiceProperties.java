@@ -207,6 +207,8 @@ public class GuiceProperties
 	     HIBERNATE_ALLOW_HBM2DDL_CREATE +
 	     " is at default false and liquibase.action is set to IGNORE (default false)")
 	public static final String HIBERNATE_READ_ONLY = "hibernate.read-only";
+	@Doc("The default transaction isolation to use. Expected values: READ_UNCOMMITTED=1, READ_COMMITTED=2, REPEATABLE_READ=4, SERIALIZABLE=8, IGNORE=-2, 4096=SQL_SERVER_SNAPSHOT_ISOLATION (defaults to 2)")
+	public static final String HIBERNATE_DEFAULT_ISOLATION = "hibernate.default-transaction-isolation";
 
 	@Doc("If true then all Retryable Transactional errors will include stack traces (default false)")
 	public static final String HIBERNATE_LOG_RETRYABLE_TX_ERROR_STACK_TRACES = "hibernate.log-retryable-error-stack-traces";

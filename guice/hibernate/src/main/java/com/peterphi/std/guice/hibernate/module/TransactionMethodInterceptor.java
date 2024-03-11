@@ -28,8 +28,6 @@ import com.peterphi.std.util.tracing.Tracing;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.hibernate.FlushMode;
 import org.hibernate.Session;
 import org.hibernate.StaleStateException;
@@ -38,17 +36,16 @@ import org.hibernate.TransactionException;
 import org.hibernate.exception.GenericJDBCException;
 import org.hibernate.exception.LockAcquisitionException;
 import org.hibernate.exception.SQLGrammarException;
-import org.hibernate.jdbc.Work;
 import org.hibernate.resource.transaction.spi.TransactionStatus;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.persistence.OptimisticLockException;
 import javax.persistence.PersistenceException;
 import java.lang.reflect.Method;
-import java.sql.Connection;
-import java.sql.SQLException;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Supplier;
 
+import static com.peterphi.std.guice.database.annotation.Transactional.DEFAULT_ISOLATION_LEVEL;
 import static com.peterphi.std.guice.database.annotation.Transactional.IGNORE_ISOLATION_LEVEL;
 
 /**
@@ -62,6 +59,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final Provider<Session> sessionProvider;
 
 	private final boolean forceReadOnly;
+	private final int defaultIsolationLevel;
 	private final Timer calls;
 	private final Timer transactionStartedCalls;
 	private final Meter errorRollbacks;
@@ -70,7 +68,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	private final boolean logStacktraceOnRetryableException;
 
 
-	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly, final boolean logStacktraceOnRetryableException)
+	public TransactionMethodInterceptor(Provider<Session> sessionProvider, MetricRegistry metrics, boolean forceReadOnly, int defaultIsolationLevel, final boolean logStacktraceOnRetryableException)
 	{
 		this.sessionProvider = sessionProvider;
 
@@ -79,6 +77,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		this.errorRollbacks = metrics.meter(GuiceMetricNames.TRANSACTION_ERROR_ROLLBACK_METER);
 		this.commitFailures = metrics.meter(GuiceMetricNames.TRANSACTION_COMMIT_FAILURE_METER);
 		this.forceReadOnly = forceReadOnly;
+		this.defaultIsolationLevel = defaultIsolationLevel;
 		this.logStacktraceOnRetryableException = logStacktraceOnRetryableException;
 	}
 
@@ -210,53 +209,58 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		final boolean readOnly = forceReadOnly || annotation.readOnly();
 
 		// We are responsible for creating+closing the connection
-		Timer.Context ownerTimer = transactionStartedCalls.time();
+		final Timer.Context ownerTimer = transactionStartedCalls.time();
 
 		final Session session = sessionProvider.get();
 
-		Tracing.logOngoing(tracingId,
-		                   "TX:create",
-		                   "Creating new transaction, current status: ",
-		                   (Supplier) () -> session.getTransaction().getStatus());
+		final boolean logVerbose = Tracing.isVerbose();
 
-		final AtomicInteger initialIsololationLevel = new AtomicInteger(IGNORE_ISOLATION_LEVEL);
+		if (logVerbose)
+			Tracing.logOngoing(tracingId,
+			                   "TX:create",
+			                   "Creating new transaction, current status: ",
+			                   session.getTransaction().getStatus());
+
+		// Isolation level to be restored in finally block
+		// N.B. only changed from this default if we actually change the Connection's transaction isolation
+		int originalIsolationLevel = IGNORE_ISOLATION_LEVEL;
 
 		try
 		{
 			// no transaction already started, so start one and enforce its semantics
 			final Transaction tx = session.beginTransaction();
 
+			// Try to signal read-only nature of TX to database and Hibernate
 			if (readOnly)
-				makeReadOnly(session,tracingId);
+				makeReadOnly(session, tracingId);
 			else
 				makeReadWrite(session);
 
+
 			// if an isolation level has been specified, ensure it is set
-			if (annotation.isolationLevel() != IGNORE_ISOLATION_LEVEL)
 			{
-				Tracing.logOngoing(tracingId, "TX:create", "Isolation ", (Supplier) () -> annotation.isolationLevel());
+				final int desiredIsolation = getDesiredIsolation(annotation.isolationLevel());
 
-				session.doWork(new Work()
+				if (desiredIsolation > 0)
 				{
-					@Override
-					public void execute(final Connection connection) throws SQLException
-					{
-						final int currentIsolation = connection.getTransactionIsolation();
-						initialIsololationLevel.set(currentIsolation);
+					if (logVerbose)
+						Tracing.logOngoing(tracingId, "TX:create Isolation ", desiredIsolation);
 
-						Tracing.logOngoing(tracingId, "TX:create", "Isolation level: ", currentIsolation, " current");
+					originalIsolationLevel = session.doReturningWork(conn -> {
+						final int originalIsolation = conn.getTransactionIsolation();
 
-						if (currentIsolation == annotation.isolationLevel())
-						{
-							return;
-						}
-						else
-						{
-							connection.setTransactionIsolation(annotation.isolationLevel());
-						}
-					}
-				});
+						if (logVerbose)
+							Tracing.logOngoing(tracingId, "TX:create Isolation level was: ", originalIsolation);
+
+						if (originalIsolation == desiredIsolation)
+							return IGNORE_ISOLATION_LEVEL; // isolation level was not changed, no need to set it, or to change it back
+
+						conn.setTransactionIsolation(desiredIsolation);
+						return originalIsolation;
+					});
+				}
 			}
+
 
 			// Execute the method
 			final Object result;
@@ -355,11 +359,24 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 			if (session.isOpen())
 			{
-				setIsoloationLevel(session,initialIsololationLevel.get(),tracingId);
+				// If we changed the isolation level, try to restore it
+				restoreIsolationLevel(session, originalIsolationLevel, tracingId);
+
 				// Close the session
 				session.close();
 			}
 		}
+	}
+
+
+	private int getDesiredIsolation(final int isolationLevelAnnotation)
+	{
+		if (isolationLevelAnnotation == IGNORE_ISOLATION_LEVEL)
+			return IGNORE_ISOLATION_LEVEL; // Don't touch Connection's isolation level
+		else if (isolationLevelAnnotation == DEFAULT_ISOLATION_LEVEL)
+			return defaultIsolationLevel; // Use the default isolation level
+		else
+			return isolationLevelAnnotation; // Use a specific isolation level
 	}
 
 
@@ -615,7 +632,7 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	}
 
 
-	private final void rollback(Transaction tx, Exception e)
+	private void rollback(Transaction tx, Exception e)
 	{
 		if (log.isDebugEnabled())
 			log.debug("{} causes rollback", e.getClass().getSimpleName());
@@ -623,33 +640,14 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		rollback(tx);
 	}
 
-	private final void setIsoloationLevel(final Session session, final int isolationLevel, final String tracingId){
-
-		if(isolationLevel != IGNORE_ISOLATION_LEVEL)
+	private void restoreIsolationLevel(final Session session, final int isolationLevel, final String tracingId)
+	{
+		if (isolationLevel != IGNORE_ISOLATION_LEVEL)
 		{
-			session.doWork(new Work()
-			{
-				@Override
-				public void execute(final Connection connection) throws SQLException
-				{
-					final int currentIsolation = connection.getTransactionIsolation();
+			session.doWork(conn -> {
+				Tracing.logOngoing(tracingId, "TX:create", "Restore isolation level: ", isolationLevel);
 
-					Tracing.logOngoing(tracingId,
-					                   "TX:create",
-					                   "Set isolation level: current: ",
-					                   currentIsolation,
-					                   " desired: ",
-					                   isolationLevel);
-
-					if (currentIsolation == isolationLevel)
-					{
-						return;
-					}
-					else
-					{
-						connection.setTransactionIsolation(isolationLevel);
-					}
-				}
+				conn.setTransactionIsolation(isolationLevel);
 			});
 		}
 	}
