@@ -40,7 +40,6 @@
 		<hibernate.version>5.4.33.Final</hibernate.version>
 		<dbunit.version>2.7.0</dbunit.version>
 		<hsqldb.version>2.7.1</hsqldb.version>
-		<bouncycastle.version>1.60</bouncycastle.version>
 		<moxy.version>2.7.14</moxy.version>
 		<mockito.version>2.28.2</mockito.version>
 		<jackson.version>2.12.7</jackson.version>
