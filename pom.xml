@@ -38,7 +38,7 @@
 		<resteasy.version>5.0.9.Final</resteasy.version>
 		<javassist.version>3.29.0-GA</javassist.version>
 		<hibernate.version>5.4.33.Final</hibernate.version>
-		<dbunit.version>2.7.0</dbunit.version>
+		<dbunit.version>2.7.3</dbunit.version>
 		<hsqldb.version>2.7.1</hsqldb.version>
 		<moxy.version>2.7.14</moxy.version>
 		<mockito.version>2.28.2</mockito.version>

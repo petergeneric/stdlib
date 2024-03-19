@@ -47,7 +47,6 @@
 			<version>4.10.0</version>
 		</dependency>
 
-
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -59,14 +58,7 @@
 			<version>${hsqldb.version}</version>
 			<scope>test</scope>
 		</dependency>
-		
-		<dependency>
-			<groupId>org.dbunit</groupId>
-			<artifactId>dbunit</artifactId>
-			<version>${dbunit.version}</version>
-			<scope>test</scope>
-		</dependency>
-		
+
 		<dependency>
 			<groupId>com.peterphi.std.guice</groupId>
 			<artifactId>stdlib-guice-hibernate-testing</artifactId>
