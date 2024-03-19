@@ -387,8 +387,17 @@ class TransactionMethodInterceptor implements MethodInterceptor
 	 */
 	private void makeReadWrite(final Session session)
 	{
-		session.doWork(SetJDBCConnectionReadOnlyWork.READ_WRITE);
 		session.setHibernateFlushMode(FlushMode.AUTO);
+		session.setDefaultReadOnly(false);
+
+		try {
+			session.doWork(SetJDBCConnectionReadOnlyWork.READ_WRITE);
+		}
+		catch (Throwable t)
+		{
+			log.debug("Error signalling to DB that session is read/write", t);
+		}
+
 	}
 
 
@@ -408,10 +417,17 @@ class TransactionMethodInterceptor implements MethodInterceptor
 
 		session.setHibernateFlushMode(FlushMode.MANUAL);
 
-		Tracing.logOngoing(tracingId, "TX:makeReadonly Make Connection Read Only");
+		try
+		{
+			Tracing.logOngoing(tracingId, "TX:makeReadonly Make Connection Read Only");
 
-		// Make the Connection read only
-		session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);
+			// Make the Connection read only
+			session.doWork(SetJDBCConnectionReadOnlyWork.READ_ONLY);
+		}
+		catch (Throwable t)
+		{
+			log.debug("Error signalling to DB that session is read-only", t);
+		}
 
 		Tracing.logOngoing(tracingId, "TX:makeReadonly Complete");
 	}

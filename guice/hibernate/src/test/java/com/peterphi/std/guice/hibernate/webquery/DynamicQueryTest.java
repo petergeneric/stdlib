@@ -4,6 +4,7 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.hibernate.dao.HibernateDao;
 import com.peterphi.std.guice.hibernate.dao.QueryPrivilegeData;
+import com.peterphi.std.guice.hibernate.module.TransactionHelper;
 import com.peterphi.std.guice.hibernate.webquery.impl.QEntityFactory;
 import com.peterphi.std.guice.hibernate.webquery.impl.exception.PrivatePropertyUseRejected;
 import com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPASearchExecutor;
@@ -44,6 +45,10 @@ public class DynamicQueryTest
 
 	@Inject
 	QEntityFactory entityFactory;
+
+	@Inject
+	TransactionHelper txutils;
+
 
 
 	@Transactional
@@ -555,6 +560,22 @@ public class DynamicQueryTest
 	@Test
 	public void testGetIdList() throws Exception
 	{
+		ParentEntity obj1 = new ParentEntity();
+		obj1.setName("Name1");
+		dao.save(obj1);
+
+		ParentEntity obj2 = new ParentEntity();
+		obj2.setName("Name2");
+		dao.save(obj2);
+
+		assertEquals(getIds(Arrays.asList(obj1, obj2)), dao.getIdList(new WebQuery().orderAsc("id").fetch("id")));
+	}
+
+	@Test
+	@Transactional
+	public void testReadOnlyTxAnnotationNestedInReadWriteTx()
+	{
+		assertNotNull(txutils.get());
 		ParentEntity obj1 = new ParentEntity();
 		obj1.setName("Name1");
 		dao.save(obj1);
