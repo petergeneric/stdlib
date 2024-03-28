@@ -28,6 +28,7 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.usertype.UserType;
 
+import java.sql.Connection;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
@@ -45,6 +46,7 @@ public abstract class HibernateModule extends AbstractModule
 
 	private final MetricRegistry registry;
 	private final boolean forceReadOnly;
+	private final int defaultIsolationLevel;
 	private final boolean logStacktraceOnRetryableException;
 
 
@@ -52,6 +54,8 @@ public abstract class HibernateModule extends AbstractModule
 	{
 		this.registry = registry;
 		this.forceReadOnly = config.getBoolean(GuiceProperties.HIBERNATE_READ_ONLY, false);
+		this.defaultIsolationLevel = Integer.parseInt(config.get(GuiceProperties.HIBERNATE_DEFAULT_ISOLATION,
+		                                                         "" + Connection.TRANSACTION_READ_COMMITTED));
 		this.logStacktraceOnRetryableException = config.getBoolean(GuiceProperties.HIBERNATE_LOG_RETRYABLE_TX_ERROR_STACK_TRACES,
 		                                                           false);
 	}
@@ -66,7 +70,11 @@ public abstract class HibernateModule extends AbstractModule
 		bind(Session.class).toProvider(SessionProvider.class);
 		bind(Transaction.class).toProvider(TransactionProvider.class);
 
-		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class), registry, forceReadOnly, logStacktraceOnRetryableException);
+		TransactionMethodInterceptor interceptor = new TransactionMethodInterceptor(getProvider(Session.class),
+		                                                                            registry,
+		                                                                            forceReadOnly,
+		                                                                            defaultIsolationLevel,
+		                                                                            logStacktraceOnRetryableException);
 
 		// handles @Transactional methods
 		binder().bindInterceptor(Matchers.any(), Matchers.annotatedWith(Transactional.class), interceptor);

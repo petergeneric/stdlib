@@ -12,7 +12,7 @@ public class PostgresDialect extends PostgreSQLDialect
 {
 	public PostgresDialect()
 	{
-		super(DatabaseVersion.make(9, 5));
+		super(DatabaseVersion.make(15, 4));
 	}
 
 
