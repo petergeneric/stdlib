@@ -60,7 +60,7 @@ compile:
 
 dependencies:
 	$(MVN) install -DskipTests
-	$(MVN) dependency:tree
+	mvn dependency:tree
 
 package:
 	$(MVN) clean package
