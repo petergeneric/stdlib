@@ -131,9 +131,15 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 	/**
 	 * Enable Verbose Tracing for the next run of this daemon
 	 */
-	public void makeNextRunVerbose()
+	public final void makeNextRunVerbose()
 	{
 		this.nextRunVerbose = true;
+	}
+
+
+	protected boolean shouldVerboseTrace()
+	{
+		return this.nextRunVerbose;
 	}
 
 	@Override
@@ -160,10 +166,10 @@ public abstract class GuiceRecurringDaemon extends GuiceDaemon
 				try
 				{
 					// Assign a trace id for operations performed by this run of this thread
-					Tracing.start(traceId, nextRunVerbose);
+					Tracing.start(traceId, shouldVerboseTrace());
 
 					if (nextRunVerbose)
-						nextRunVerbose = false;
+						nextRunVerbose = false; // Reset the temporary-verbose flag
 
 					userCodeRunning = true;
 
