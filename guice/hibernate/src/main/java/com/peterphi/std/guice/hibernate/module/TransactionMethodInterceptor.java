@@ -1,22 +1,22 @@
 package com.peterphi.std.guice.hibernate.module;
 
-		/*
-		 * Based on warp-persist HibernateLocalTxnInterceptor which is originally
-		 *
-		 * Copyright (C) 2008 Wideplay Interactive.
-		 *
-		 * Licensed under the Apache License, Version 2.0 (the "License");
-		 * you may not use this file except in compliance with the License.
-		 * You may obtain a copy of the License at
-		 *
-		 * http://www.apache.org/licenses/LICENSE-2.0
-		 *
-		 * Unless required by applicable law or agreed to in writing, software
-		 * distributed under the License is distributed on an "AS IS" BASIS,
-		 * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-		 * See the License for the specific language governing permissions and
-		 * limitations under the License.
-		 */
+/*
+ * Based on warp-persist HibernateLocalTxnInterceptor which is originally
+ *
+ * Copyright (C) 2008 Wideplay Interactive.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ * http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 import com.codahale.metrics.Meter;
 import com.codahale.metrics.MetricRegistry;
@@ -100,9 +100,13 @@ class TransactionMethodInterceptor implements MethodInterceptor
 		{
 			Timer.Context callTimer = calls.time();
 
-
 			final String tracingId = Tracing.newOperationId();
-			Tracing.logOngoing(tracingId, "TX:initialStatus", initialStatus);
+
+			if (Tracing.isVerbose())
+			{
+				Tracing.logOngoing(tracingId, "TX:begin", invocation.getMethod());
+				Tracing.logOngoing(tracingId, "TX:initialStatus", initialStatus);
+			}
 
 			try
 			{
@@ -256,7 +260,20 @@ class TransactionMethodInterceptor implements MethodInterceptor
 						if (originalIsolation == desiredIsolation)
 							return IGNORE_ISOLATION_LEVEL; // isolation level was not changed, no need to set it, or to change it back
 
-						conn.setTransactionIsolation(desiredIsolation);
+						try
+						{
+							conn.setTransactionIsolation(desiredIsolation);
+						}
+						catch (Throwable t)
+						{
+							throw new RuntimeException("Failure setting TX Isolation from " +
+							                           originalIsolation +
+							                           " to " +
+							                           desiredIsolation +
+							                           ": " +
+							                           t.getMessage(), t);
+						}
+
 						return originalIsolation;
 					});
 				}
