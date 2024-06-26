@@ -583,7 +583,7 @@ public class QEntity
 		obj.discriminator = getDiscriminatorValue();
 
 		if (!this.descendants.isEmpty())
-			obj.childEntityNames = descendants.stream().map(QEntity:: getName).toList();
+			obj.childEntityNames = descendants.stream().map(QEntity:: getName).collect(Collectors.toList());
 
 		obj.properties = properties
 				                 .values()
@@ -592,7 +592,7 @@ public class QEntity
 				                 .map(QProperty :: encode)
 				                 .collect(Collectors.toList());
 
-		obj.properties.addAll(relations.values().stream().map(QRelation :: encode).toList());
+		obj.properties.addAll(relations.values().stream().map(QRelation :: encode).collect(Collectors.toList()));
 
 		return obj;
 	}

@@ -76,34 +76,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<profiles>
-		<profile>
-			<id>azure</id>
-			<build>
-				<plugins>
-					<!-- copies cloud-context.xmls to war files META-INF -->
-					<plugin>
-						<groupId>com.coderplus.maven.plugins</groupId>
-						<artifactId>copy-rename-maven-plugin</artifactId>
-						<version>1.0.1</version>
-						<executions>
-							<execution>
-								<id>rename-file</id>
-								<phase>compile</phase>
-								<goals>
-									<goal>rename</goal>
-								</goals>
-								<configuration>
-									<sourceFile>${project.build.outputDirectory}/cloud-context.xml</sourceFile>
-									<destinationFile>${project.build.directory}/${project.build.finalName}/META-INF/context.xml
-									</destinationFile>
-								</configuration>
-							</execution>
-						</executions>
-					</plugin>
-				</plugins>
-			</build>
-		</profile>
-	</profiles>
 </project>
