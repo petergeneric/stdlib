@@ -206,7 +206,7 @@ public class RestServiceResourceParamInfo
 		}
 		else if (UriInfo.class == clazz)
 		{
-			return List.of("https://stdlib.readthedocs.io/en/latest/framework/webquery.html#query-string-format");
+			return Collections.singletonList("https://stdlib.readthedocs.io/en/latest/framework/webquery.html#query-string-format");
 		}
 
 		return Collections.emptyList();

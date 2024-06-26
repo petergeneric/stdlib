@@ -113,7 +113,7 @@ public class RestServiceInfo implements Comparable<RestServiceInfo>
 				                                           .filter(RestServiceResourceInfo :: isResource)
 				                                           .map(m -> new RestServiceResourceInfo(this, m))
 				                                           .sorted()
-				                                           .toList();
+				                                           .collect(Collectors.toList());
 
 		Set<String> seenAnchors = new HashSet<>(0);
 
