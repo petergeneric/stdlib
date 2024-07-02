@@ -41,6 +41,17 @@ public class WQGroup extends WQConstraintLine implements ConstraintContainer<WQG
 		this.constraints.addAll(constraints);
 	}
 
+	@Override
+	public WQGroup clone() {
+		WQGroup that = new WQGroup();
+
+		that.operator = operator;
+
+		for (WQConstraintLine constraint : constraints)
+			that.constraints.add(constraint.clone());
+
+		return that;
+	}
 
 	@Override
 	public String toString()
