@@ -5,11 +5,12 @@ import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.slf4j.helpers.MessageFormatter;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
-import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
@@ -20,15 +21,17 @@ public final class Tracing
 
 	private static final ThreadLocal<Tracing> THREAD_LOCAL = new ThreadLocal<>();
 
+	public final Tracing parent;
 	public final String id;
 	public int ops = 0;
 	public final boolean verbose;
 	public final boolean localVerboseOnly;
-	private CopyOnWriteArrayList<MonitorTraceEventListener> monitors;
+	private List<MonitorTraceEventListener> monitors;
 
 
-	private Tracing(final String id, final boolean verbose, final boolean localVerboseOnly)
+	private Tracing(final Tracing parent, final String id, final boolean verbose, final boolean localVerboseOnly)
 	{
+		this.parent = parent;
 		this.id = id;
 		this.verbose = verbose;
 		this.localVerboseOnly = verbose && localVerboseOnly;
@@ -42,13 +45,20 @@ public final class Tracing
 	 */
 	public void monitor(final MonitorTraceEventListener consumer)
 	{
-		if (!verbose)
+		if (!verbose || consumer == null)
 			return;
 
 		if (this.monitors == null)
-			this.monitors = new CopyOnWriteArrayList<>(List.of(consumer));
+		{
+			this.monitors = List.of(consumer);
+		}
 		else
-			this.monitors.add(consumer);
+		{
+			final List<MonitorTraceEventListener> newList = new ArrayList<>(monitors.size() + 1);
+			newList.addAll(this.monitors);
+			newList.add(consumer);
+			this.monitors = List.copyOf(newList);
+		}
 	}
 
 	public static Tracing peek()
@@ -69,9 +79,22 @@ public final class Tracing
 
 		if (obj == null)
 		{
-			obj = new Tracing(newTraceId, verbose || log.isTraceEnabled(), localVerboseOnly);
-			THREAD_LOCAL.set(obj);
+			obj = new Tracing(null, newTraceId, verbose || log.isTraceEnabled(), localVerboseOnly);
 		}
+		else
+		{
+			final Tracing subtrace = new Tracing(obj,
+			                                     obj.createNewOperationId() + "/" + newTraceId,
+			                                     verbose || obj.verbose || log.isTraceEnabled(),
+			                                     localVerboseOnly);
+
+			// Copy monitors (if any). Note: this is COW
+			subtrace.monitors = obj.monitors;
+
+			obj = subtrace;
+		}
+
+		setTrace(obj);
 
 		return obj;
 	}
@@ -88,13 +111,53 @@ public final class Tracing
 				if (tracing.verbose)
 					log("End trace");
 
-				clear();
+				setTrace(tracing.parent);
+
+				return;
 			}
-			else
+			else if (tracing.parent != null)
 			{
-				if (tracing.verbose)
-					log("End sub-trace", id);
+				// Look at previous traces to find match, and if found reset to there
+				Tracing cur = tracing.parent;
+
+				while (cur != null)
+				{
+					if (StringUtils.equals(cur.id, id))
+					{
+						if (cur.parent == null)
+						{
+							if (tracing.verbose || cur.verbose)
+								log("Stopping traces back to parent: ", id);
+							clear();
+						}
+						else
+						{
+							setTrace(cur.parent);
+						}
+
+						return;
+					}
+
+					cur = cur.parent;
+				}
 			}
+
+			if (tracing.verbose)
+				log("End sub-trace", id);
+		}
+	}
+
+
+	private static void setTrace(final Tracing trace)
+	{
+		if (trace != null)
+		{
+			THREAD_LOCAL.set(trace);
+			MDC.put(TracingConstants.MDC_TRACE_ID, trace.id);
+		}
+		else
+		{
+			clear();
 		}
 	}
 
@@ -119,9 +182,6 @@ public final class Tracing
 		// N.B. do not overwrite existing tracing, but do log it
 		if (tracing.id.equals(id))
 		{
-			if (id != null)
-				MDC.put(TracingConstants.MDC_TRACE_ID, id);
-
 			if (tracing.verbose)
 				log("Start trace");
 		}
@@ -319,12 +379,24 @@ public final class Tracing
 			tracing.logMessage(tracing.id, ++tracing.ops, detail);
 	}
 
+	public static void trace(Logger logger, final String format, final Object... args)
+	{
+		if (logger != null && logger.isTraceEnabled())
+			logger.trace(format, args);
+
+		if (Tracing.isVerbose())
+		{
+			if (args.length == 0)
+				Tracing.log(format);
+			else
+				Tracing.log(MessageFormatter.arrayFormat(format, args).getMessage());
+		}
+	}
 
 	/**
 	 * Log an additional message about an ongoing operation
 	 *
 	 * @param operationId An operation id returned by {@link #newOperationId()}
-	 * @param param1
 	 * @param detail
 	 */
 	public static void logOngoing(final String operationId, final Object... detail)
@@ -359,8 +431,10 @@ public final class Tracing
 			detailStr = Arrays.stream(detail).map(o -> {
 				try
 				{
-					if (o instanceof String || o instanceof Number)
-						return o.toString();
+					if (o instanceof String s)
+						return s;
+					else if (o instanceof Number n)
+						return n.toString();
 					else if (o instanceof Supplier<?> s)
 						return Objects.toString(s.get());
 					else if (o instanceof Object[] arr)
@@ -372,7 +446,7 @@ public final class Tracing
 				{
 					return "<err>";
 				}
-			}).collect(Collectors.joining(" "));
+			}).map(StringUtils :: trimToEmpty).collect(Collectors.joining(" "));
 		}
 
 		logFormattedMessage(traceParentId, opId, detailStr);

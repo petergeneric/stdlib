@@ -8,6 +8,7 @@ import jakarta.xml.bind.annotation.XmlElement;
 import jakarta.xml.bind.annotation.XmlRootElement;
 import jakarta.xml.bind.annotation.XmlType;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Date;
@@ -91,28 +92,32 @@ public class WQConstraint extends WQConstraintLine
 		}
 	}
 
+	@Override
+	public WQConstraint clone()
+	{
+		final WQConstraint that = new WQConstraint();
+
+		that.field = this.field;
+		that.function = this.function;
+		that.value = this.value;
+		that.value2 = this.value2;
+
+		if (this.valuelist != null)
+			that.valuelist = new ArrayList<>(this.valuelist);
+
+		return that;
+	}
+
 
 	@Override
 	public String toString()
 	{
-		if (function.hasBinaryParam())
-			return "QConstraint{" +
-			       "'" +
-			       field +
-			       '\'' +
-			       " " +
-			       function +
-			       " value='" +
-			       value +
-			       '\'' +
-			       " value2='" +
-			       value2 +
-			       '\'' +
-			       "}";
-		else if (function.hasParam())
-			return "QConstraint{" + "'" + field + '\'' + " " + function + " '" + value + "'}";
-		else
-			return "QConstraint{" + "'" + field + '\'' + " " + function + '}';
+		StringBuilder sb = new StringBuilder(64);
+
+		sb.append("QConstraint{");
+		toQueryFragment(sb);
+		sb.append('}');
+		return sb.toString();
 	}
 
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////

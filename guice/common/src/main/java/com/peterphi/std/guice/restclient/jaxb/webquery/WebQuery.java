@@ -24,7 +24,7 @@ import java.util.stream.Collectors;
 @XmlRootElement(name = "WebQueryDefinition")
 @XmlType(name = "QueryDefinitionType")
 @Doc(value = "Generic Web Query", href = "https://stdlib.readthedocs.io/en/latest/framework/webquery.html")
-public class WebQuery implements ConstraintContainer<WebQuery>
+public class WebQuery implements ConstraintContainer<WebQuery>, Cloneable
 {
 	private static final int QUERY_STRING_DEFAULT_LIMIT = 200;
 
@@ -72,7 +72,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 
 	@XmlElementWrapper(name = "ordering")
 	@XmlElement(name = "order")
-	public List<WQOrder> orderings = new ArrayList<>();
+	public List<WQOrder> orderings = new ArrayList<>(1);
 
 
 	public WebQuery expand(String... relationships)
@@ -321,6 +321,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		return decode(map, null);
 	}
 
+
 	public WebQuery decode(UriInfo qs, WebQueryDecodePlugin parserPlugin)
 	{
 		return decode(qs.getQueryParameters(), parserPlugin);
@@ -515,6 +516,37 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	}
 
 
+	/**
+	 * Returns a deep clone
+	 *
+	 * @return
+	 */
+	@Override
+	public WebQuery clone()
+	{
+		final WebQuery that = new WebQuery();
+
+		that.name = this.name;
+		that.fetch = this.fetch;
+		that.dbfetch = this.dbfetch;
+		that.expand = this.expand;
+
+		that.logSQL = this.logSQL;
+		that.logPerformance = this.logPerformance;
+
+		that.wasLimitSetExplicitly = this.wasLimitSetExplicitly;
+		that.capLimit = this.capLimit;
+
+		that.orderings = new ArrayList<>(that.orderings.size());
+		for (WQOrder ordering : this.orderings)
+			that.orderings.add(ordering.clone());
+
+		that.constraints = this.constraints.clone();
+
+		return that;
+	}
+
+
 	@Override
 	public String toString()
 	{
@@ -529,8 +561,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		       constraintsToQueryFragment() +
 		       ", limit=" +
 		       constraints.limit +
-		       ", logSQL=" +
-		       logSQL +
+		       (logSQL ? ", logSQL" : "") +
 		       ", orderings=" +
 		       orderings +
 		       '}';
@@ -541,6 +572,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 	{
 		return toQueryFragment(true);
 	}
+
 
 	public String toQueryFragment(final boolean includeSelectAndExpand)
 	{
@@ -556,7 +588,7 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 			if (StringUtils.isNotEmpty(expand))
 			{
 				// If we already had a SELECT then we need to insert a line break
-				if (sb.length() != 0)
+				if (!sb.isEmpty())
 					sb.append('\n');
 
 				sb.append("EXPAND\n\t");
@@ -568,14 +600,14 @@ public class WebQuery implements ConstraintContainer<WebQuery>
 		}
 
 
-		if (sb.length() != 0 && !constraints.constraints.isEmpty())
+		if (!sb.isEmpty() && !constraints.constraints.isEmpty())
 			sb.append("\nWHERE\n");
 
 		constraints.toQueryFragment(sb);
 
-		if (orderings.size() != 0)
+		if (!orderings.isEmpty())
 		{
-			if (sb.length() != 0)
+			if (!sb.isEmpty())
 				sb.append('\n');
 
 			sb.append("ORDER BY ");

@@ -17,4 +17,6 @@ public abstract class WQConstraintLine
 		g.add(this);
 		return g;
 	}
+
+	public abstract WQConstraintLine clone();
 }

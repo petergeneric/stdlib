@@ -59,6 +59,23 @@ public class WQConstraints implements ConstraintContainer<WQConstraints>
 	}
 
 
+	@Override
+	public WQConstraints clone()
+	{
+		final WQConstraints that = new WQConstraints();
+
+		that.offset = offset;
+		that.limit = limit;
+		that.computeSize = computeSize;
+		that.subclass = subclass;
+		that.constraints = new ArrayList<>(constraints.size());
+
+		for (WQConstraintLine constraint : this.constraints)
+			that.constraints.add(constraint.clone());
+
+		return that;
+	}
+
 	public String toQueryFragment()
 	{
 		StringBuilder sb = new StringBuilder();

@@ -1,5 +1,6 @@
 package com.peterphi.std.guice.common;
 
+import com.codahale.metrics.health.HealthCheckRegistry;
 import com.google.inject.AbstractModule;
 import com.google.inject.Module;
 import com.peterphi.std.guice.common.serviceprops.composite.GuiceConfig;
@@ -51,7 +52,8 @@ public abstract class GuiceModule extends AbstractModule
 	 */
 	protected <T> JAXBResourceProvider<T> bindConfigFile(final Class<T> type, final String propertyName, Consumer<T> onLoad)
 	{
-		final JAXBResourceProvider<T> provider = new JAXBResourceProvider<T>(super.getProvider(JAXBResourceFactory.class),
+		final JAXBResourceProvider<T> provider = new JAXBResourceProvider<T>(getProvider(JAXBResourceFactory.class),
+		                                                                     getProvider(HealthCheckRegistry.class),
 		                                                                     propertyName,
 		                                                                     type,
 		                                                                     onLoad);

@@ -33,6 +33,7 @@ public class JAXBResourceFactory
 	 * @param name
 	 * 		the name of the property
 	 * @param <T>
+	 * @throws RuntimeException if a value cannot be retrieved
 	 *
 	 * @return
 	 */
@@ -42,7 +43,7 @@ public class JAXBResourceFactory
 
 		if (cached == null)
 		{
-			cached = new JAXBNamedResourceFactory<T>(this.config, this.factory, name, clazz);
+			cached = makeFactory(clazz, name);
 			cachedReferences.put(name, cached);
 		}
 
@@ -69,7 +70,7 @@ public class JAXBResourceFactory
 
 		if (cached == null)
 		{
-			cached = new JAXBNamedResourceFactory<T>(this.config, this.factory, name, clazz);
+			cached = makeFactory(clazz, name);
 			cachedReferences.put(name, cached);
 		}
 
@@ -83,11 +84,16 @@ public class JAXBResourceFactory
 	 * @param clazz
 	 * @param name
 	 * @param <T>
-	 *
 	 * @return
 	 */
 	public <T> T getOnce(final Class<T> clazz, final String name)
 	{
-		return new JAXBNamedResourceFactory<T>(this.config, this.factory, name, clazz).get();
+		return makeFactory(clazz, name).get();
+	}
+
+
+	private <T> JAXBNamedResourceFactory<T> makeFactory(final Class<T> clazz, final String name)
+	{
+		return new JAXBNamedResourceFactory<T>(this.config, this.factory, name, clazz);
 	}
 }

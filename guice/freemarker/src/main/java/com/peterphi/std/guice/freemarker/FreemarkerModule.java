@@ -18,7 +18,7 @@ public class FreemarkerModule extends AbstractModule
 	/**
 	 * The default
 	 */
-	private static final Version FREEMARKER_COMPATIBILITY_VERSION = Configuration.VERSION_2_3_0;
+	private static final Version FREEMARKER_COMPATIBILITY_VERSION = Configuration.VERSION_2_3_33;
 
 
 	protected void configure()

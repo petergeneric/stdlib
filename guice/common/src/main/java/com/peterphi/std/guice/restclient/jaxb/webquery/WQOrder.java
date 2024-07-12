@@ -62,6 +62,12 @@ public class WQOrder
 
 
 	@Override
+	public WQOrder clone()
+	{
+		return new WQOrder(field, direction);
+	}
+
+	@Override
 	public String toString()
 	{
 		return "WQOrder{" + toLegacyForm() + '}';

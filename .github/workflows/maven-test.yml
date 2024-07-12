@@ -1,4 +1,4 @@
-name: JDK17 Build and Test
+name: JDK21 Build and Test
 
 on: [ push, pull_request ]
 
