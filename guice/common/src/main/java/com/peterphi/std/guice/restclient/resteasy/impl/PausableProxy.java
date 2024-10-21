@@ -148,14 +148,7 @@ class PausableProxy implements InvocationHandler
 			{
 				while (isPaused() && deadline.isValid())
 				{
-					try
-					{
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e)
-					{
-						return;
-					}
+					Timeout.ONE_SECOND.sleep(deadline);
 				}
 			}
 			finally
