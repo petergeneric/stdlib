@@ -87,9 +87,14 @@ class PausableProxy implements InvocationHandler
 
 			// Make sure we never throw a BadRequestException, because this bubbles all the way up and throws a 400 Bad Request error against our own service if uncaught
 			if (cause instanceof BadRequestException)
-				throw new RuntimeException("Remote service returned 400 Bad Request!", e);
+			{
+				final String methodName = method.getDeclaringClass().getSimpleName() + "::" + method.getName();
+				throw new RuntimeException("Remote service call " + methodName + " returned 400 Bad Request!", e);
+			}
 			else
+			{
 				throw cause;
+			}
 		}
 	}
 
