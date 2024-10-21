@@ -4,6 +4,8 @@ import com.google.inject.Inject;
 import com.peterphi.std.guice.restclient.resteasy.impl.jaxb.JAXBXmlRootElementProvider;
 import com.peterphi.std.util.jaxb.JAXBSerialiser;
 import com.peterphi.std.util.jaxb.JAXBSerialiserFactory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.Produces;
@@ -21,6 +23,8 @@ import java.io.OutputStream;
 @Produces({"application/fastinfoset", "application/*+fastinfoset"})
 public class FastInfosetXmlRootElementProvider<T> extends JAXBXmlRootElementProvider<T>
 {
+	private static final Logger log = LoggerFactory.getLogger(FastInfosetXmlRootElementProvider.class);
+
 	@Inject
 	public FastInfosetXmlRootElementProvider(final JAXBSerialiserFactory factory)
 	{
@@ -69,7 +73,7 @@ public class FastInfosetXmlRootElementProvider<T> extends JAXBXmlRootElementProv
 	                                            final InputStream is) throws IOException
 	{
 		final Object obj;
-		try
+		try (is)
 		{
 			final XMLStreamReader reader = FastInfosetHelper.getInputFactory().createXMLStreamReader(is);
 			try
@@ -83,11 +87,19 @@ public class FastInfosetXmlRootElementProvider<T> extends JAXBXmlRootElementProv
 		}
 		catch (XMLStreamException e)
 		{
+			log.warn("Error reading fast infoset class {}", clazz, e);
+
 			throw new RuntimeException("Error reading fast infoset input while reading " + clazz + ": " + e.getMessage(), e);
 		}
-		finally
+		catch (IOException e)
 		{
-			is.close();
+			throw e;
+		}
+		catch (Exception e)
+		{
+			log.warn("Error reading fast infoset class {}", clazz, e);
+
+			throw e;
 		}
 
 		// Optionally unwrap & return
