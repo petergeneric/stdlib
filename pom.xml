@@ -30,7 +30,7 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<javalang.version>1.8</javalang.version>
-		<slf4j.version>1.7.30</slf4j.version>
+		<slf4j.version>2.0.13</slf4j.version>
 		<junit.version>4.13.1</junit.version>
 		<httpclient.version>4.5.13</httpclient.version>
 		<maven-deploy-plugin.version>2.8.2</maven-deploy-plugin.version>
