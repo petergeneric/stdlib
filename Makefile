@@ -14,18 +14,7 @@ else
 	MVN=mvn3 -T$(MAVEN_PARALLELISM)
 endif
 
-ifeq ($(env), azure)
-	MVN=mvn3 -T$(MAVEN_PARALLELISM) -P azure
-endif
-
 RSYNC=rsync --progress -vzr
-
-ifeq ($(env), azure)
-	HOST=$(host)
-	DESTINATION=/opt/tomcat/
-	WEBAPPS=$(HOST):$(DESTINATION)core-services/webapps
-	RSYNC=rsync --progress -vzr --chmod=a+wrx --perms
-endif
 
 all: install
 
