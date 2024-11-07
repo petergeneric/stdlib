@@ -50,8 +50,15 @@ public class LDAPSearchService
 	 */
 	@Inject
 	@Named("ldap.filter")
+	@Doc("Java Format String that takes one string arg, the supplied username")
 	@Reconfigurable
 	public String ldapFilter;
+
+	@Inject(optional = true)
+	@Named("ldap.error.disclose-error-message")
+	@Doc("If true, the underlying error message detail will be disclosed for NamingExceptions (default false)")
+	@Reconfigurable
+	public boolean reportLdapErrorMessage = false;
 
 	/**
 	 * Formatted with 1 argument, the user's DN. Searches for the groups a user is a member of (directly or indirectly)
@@ -256,9 +263,22 @@ public class LDAPSearchService
 		}
 		catch (NamingException e)
 		{
-			throw new RuntimeException(
-					"Error accessing LDAP server (incorrect username/password or server connection issue, please try again)",
-					e);
+			if (this.reportLdapErrorMessage)
+			{
+				throw new RuntimeException(
+						"Error accessing LDAP server (incorrect username/password or server connection issue, please try again). " +
+						e.getClass().getSimpleName() +
+						": " +
+						e.getMessage(),
+						e);
+			}
+			else
+			{
+				throw new RuntimeException(
+						"Error accessing LDAP server (incorrect username/password or server connection issue, please try again). Error Type: " +
+						e.getClass().getSimpleName(),
+						e);
+			}
 		}
 	}
 
