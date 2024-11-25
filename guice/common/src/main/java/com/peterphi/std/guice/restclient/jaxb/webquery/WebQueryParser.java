@@ -249,7 +249,7 @@ public class WebQueryParser
 				}
 				while (StringUtils.equals(peek(t), COMMA));
 
-				query.fetch(selects.stream().collect(Collectors.joining(",")));
+				query.fetch(String.join(",", selects));
 
 				// Allow EOF, EXPAND, WHERE or ORDER
 				final String token = peek(t);
@@ -287,6 +287,9 @@ public class WebQueryParser
 
 				if (operator.equalsIgnoreCase(IS))
 				{ // Unary expression
+					if (notted)
+						throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 					final boolean isNotNullExpr = takeIf(t, NOT);
 
 					expect(t, NULL);
@@ -357,54 +360,66 @@ public class WebQueryParser
 						else
 							group.notContains(start, val);
 					}
-					else if (operator.equalsIgnoreCase("eqref"))
+					else if (operator.length() >= 5 && StringUtils.endsWithIgnoreCase(operator, "ref"))
 					{
-						if (!notted)
-							group.eqRef(start, val);
+						if (operator.equalsIgnoreCase("eqref"))
+						{
+							if (!notted)
+								group.eqRef(start, val);
+							else
+								group.neqRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("neqref"))
+						{
+							if (!notted)
+								group.neqRef(start, val);
+							else
+								group.eqRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("leref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.leRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("geref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.geRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("ltref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.ltRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("gtref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.gtRef(start, val);
+						}
 						else
-							group.neqRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("neqref"))
-					{
-						if (!notted)
-							group.neqRef(start, val);
-						else
-							group.eqRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("leref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.leRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("geref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.geRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("ltref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.ltRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("gtref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.gtRef(start, val);
+						{
+							throw new IllegalArgumentException("Unknown operator: " + operator);
+						}
 					}
 					else
 					{
 						if (notted)
 							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
 
-						switch (operator.toLowerCase(Locale.ROOT))
+						// Allow case-insensitive matching for "eq", but leave "=" alone
+						final String lcop = operator.length() == 1 || !Character.isAlphabetic(operator.charAt(0)) ?
+						                    operator :
+						                    operator.toLowerCase(Locale.ROOT);
+
+						switch (lcop)
 						{
 							case "=":
 							case "eq":
