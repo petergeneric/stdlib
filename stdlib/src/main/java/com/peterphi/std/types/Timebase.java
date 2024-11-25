@@ -394,7 +394,7 @@ public class Timebase
 	 */
 	public static Timebase valueOf(String rate)
 	{
-		if (rate.equalsIgnoreCase("PAL"))
+		if (rate.equalsIgnoreCase("PAL") || rate.equals("25"))
 		{
 			return HZ_25;
 		}
