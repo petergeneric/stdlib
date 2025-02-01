@@ -215,7 +215,7 @@ public class LoginUIServiceImpl implements LoginUIService
 			else if (!StringUtils.equals(newPassword, newPasswordConfirm))
 				throw new IllegalArgumentException("Password boxes do not match. Please try again");
 
-			passwordResetService.reset(code, newPassword);
+			passwordResetService.reset(code.toCharArray(), newPassword);
 
 			invalidateSession();
 

@@ -7,6 +7,8 @@ import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.database.annotation.Transactional;
 import com.peterphi.std.guice.restclient.jaxb.webquery.WebQuery;
 import com.peterphi.std.threading.Timeout;
+import com.peterphi.std.types.SimpleId;
+import com.peterphi.usermanager.db.BCrypt;
 import com.peterphi.usermanager.db.dao.hibernate.PasswordResetCodeDaoImpl;
 import com.peterphi.usermanager.db.dao.hibernate.UserDaoImpl;
 import com.peterphi.usermanager.db.entity.PasswordResetEntity;
@@ -55,17 +57,22 @@ public class PasswordResetService
 		entity.setSessionReconnectKey(null);
 
 		final PasswordResetEntity newResetCode = new PasswordResetEntity();
+
+		final String code = SimpleId.alphanumeric("umpr-", 250);
+		newResetCode.setId(hash(code.toCharArray()));
 		newResetCode.setUser(entity);
 
 		dao.save(newResetCode);
 
+		dao.deleteExpired();
+
 		// Return the reset code
-		return newResetCode.getId();
+		return code;
 	}
 
 
 	@Transactional
-	public synchronized void reset(final String code, final String newPassword) throws IllegalArgumentException
+	public synchronized void reset(final char[] code, final String newPassword) throws IllegalArgumentException
 	{
 		if (StringUtils.isBlank(newPassword))
 			throw new IllegalArgumentException("Must supply a non-blank new password!");
@@ -73,27 +80,43 @@ public class PasswordResetService
 		// Throttle the rate at which password resets can be attempted (works in unison with this method being synchronized)
 		PASSWORD_RESET_DELAY.sleep();
 
+		dao.deleteExpired();
+
 		final PasswordResetEntity entity = dao
 				                                   .find(new WebQuery()
-						                                         .eq("id", code)
 						                                         .eq("user.local", true)
 						                                         .eq("user.password", "")
-						                                         .limit(1))
-				                                   .uniqueResult();
+						                                         .ge("expires", "now")
+						                                         .limit(0))
+				                                   .getList()
+				                                   .stream()
+				                                   .filter(e -> verify(e.getId(), code))
+				                                   .findFirst()
+				                                   .orElse(null);
 
 		if (entity == null)
-			throw new IllegalArgumentException("Password Reset Code provided is not known. Please check with your administrator.");
-		else if (entity.getExpires().isBeforeNow())
-			throw new IllegalArgumentException("Password Reset Code provided has expired. Please check with your administrator.");
+			throw new IllegalArgumentException("Password Reset Code provided is not known or has expired. Please check with your administrator.");
 
 		final int userId = entity.getUser().getId();
-
-		log.info("Password Reset via Password Reset Code for user: {}", userId);
 
 		// Invalidate this Password Reset Code
 		dao.delete(entity);
 
 		userDao.changePassword(userId, newPassword);
 		userDao.changeSessionReconnectKey(userId);
+
+		log.info("Password Reset via Password Reset Code for user: {}", userId);
+	}
+
+
+	private static String hash(final char[] code)
+	{
+		return BCrypt.hash(code, BCrypt.DEFAULT_COST);
+	}
+
+
+	private static boolean verify(final String hashed, final char[] plaintext)
+	{
+		return BCrypt.verify(hashed, plaintext);
 	}
 }
