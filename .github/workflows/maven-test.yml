@@ -32,4 +32,4 @@ jobs:
       run: mvn -T3 -B test --file pom.xml
     - name: Publish Test Report
       if: ${{ always() }}
-      uses: scacap/action-surefire-report@v1
+      uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727
