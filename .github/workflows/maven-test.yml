@@ -22,7 +22,7 @@ jobs:
         java-version: 21
         distribution: zulu
  # Step that does that actual cache save and restore
-    - uses: actions/cache@v1
+    - uses: actions/cache@v4.2.2
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
