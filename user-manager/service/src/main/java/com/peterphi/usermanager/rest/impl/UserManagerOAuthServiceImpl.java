@@ -8,6 +8,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 import com.google.inject.name.Named;
 import com.peterphi.std.annotation.Doc;
+import com.peterphi.std.guice.apploader.GuiceProperties;
 import com.peterphi.std.guice.common.auth.annotations.AuthConstraint;
 import com.peterphi.std.guice.common.auth.iface.CurrentUser;
 import com.peterphi.std.guice.common.retry.annotation.Retry;
@@ -34,11 +35,11 @@ import com.peterphi.usermanager.rest.marshaller.UserMarshaller;
 import com.peterphi.usermanager.rest.type.UserManagerUser;
 import com.peterphi.usermanager.util.UserManagerBearerToken;
 import org.apache.commons.lang.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.jboss.resteasy.util.BasicAuthHelper;
 import org.joda.time.DateTime;
 import org.joda.time.Period;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.ws.rs.core.CacheControl;
@@ -78,6 +79,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	@Doc("If true then when using an Access Key, access will be permitted automatically to services they have never used before (default false)")
 	public boolean autoGrantAccessKeysToAccessAllServices = false;
 
+	@Inject
+	@Named(GuiceProperties.LOCAL_REST_SERVICES_ENDPOINT)
+	public URI ownEndpoint;
 
 	@Inject
 	Templater templater;
@@ -218,6 +222,24 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	}
 
 
+	private URI buildRedirectUri(final String redirectUri)
+	{
+		final URI desired = URI.create(redirectUri);
+
+		// If URI matches our endpoint's protocol/host/port, return a server-relative URI
+		if (desired.getScheme().equals(ownEndpoint.getScheme()) &&
+		    desired.getHost().equals(ownEndpoint.getHost()) &&
+		    desired.getPort() == ownEndpoint.getPort())
+		{
+			String path = desired.getRawPath();
+			String query = desired.getRawQuery();
+			return URI.create(path + (query != null ? "?" + query : ""));
+		}
+
+
+		return desired;
+	}
+
 	private Response redirectSuccess(final String responseType,
 	                                 final String redirectUri,
 	                                 final String state,
@@ -225,7 +247,9 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	{
 		final URI redirectTo;
 		{
-			final UriBuilder builder = UriBuilder.fromUri(URI.create(redirectUri));
+			final URI redirect = buildRedirectUri(redirectUri);
+
+			final UriBuilder builder = UriBuilder.fromUri(redirect);
 
 			builder.replaceQueryParam(responseType, session.getAuthorisationCode());
 
@@ -236,7 +260,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		}
 
 		// Redirect the user
-		return Response.seeOther(redirectTo).build();
+		if (!redirectTo.isAbsolute())
+			return Response.status(Response.Status.SEE_OTHER).header("Location", redirectTo.toString()).build();
+		else
+			return Response.seeOther(redirectTo).build();
 	}
 
 
@@ -244,7 +271,7 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 	{
 		final URI redirectTo;
 		{
-			final UriBuilder builder = UriBuilder.fromUri(URI.create(redirectUri));
+			final UriBuilder builder = UriBuilder.fromUri(buildRedirectUri(redirectUri));
 
 			builder.replaceQueryParam("error", error);
 			builder.replaceQueryParam("error_description", errorText);
@@ -256,7 +283,10 @@ public class UserManagerOAuthServiceImpl implements UserManagerOAuthService
 		}
 
 		// Redirect the user
-		return Response.seeOther(redirectTo).build();
+		if (!redirectTo.isAbsolute())
+			return Response.status(Response.Status.SEE_OTHER).header("Location", redirectTo.toString()).build();
+		else
+			return Response.seeOther(redirectTo).build();
 	}
 
 	OAuthSessionEntity createSession(final int userId,
