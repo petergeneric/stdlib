@@ -38,9 +38,10 @@ public class UserDaoImpl extends HibernateDao<UserEntity, Integer>
 
 		if (account != null && account.isLocal())
 		{
-			if (StringUtils.isEmpty(account.getPassword()))
+			// Check if no password bcrypt hash
+			if (StringUtils.isEmpty(account.getPassword()) || "NONE".equals(account.getPassword()))
 				throw new IllegalArgumentException(
-						"This account is not able to log in. You may have initiated but not completed a password reset, or your account may have been disabled.");
+						"This account does not have a password set. You may have initiated but not completed a password reset, this may be a service account, or your account may have been disabled.");
 
 			final boolean correct;
 			try
