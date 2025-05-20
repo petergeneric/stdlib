@@ -89,7 +89,7 @@ public class UserUIServiceImpl implements UserUIService
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public String getUsers(UriInfo query)
 	{
-		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));
+		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").capLimit(1000).limit(1000).decode(query));
 
 		TemplateCall call = templater.template("users");
 
