@@ -90,7 +90,7 @@ public class UserUIServiceImpl implements UserUIService
 	@AuthConstraint(role = UserLogin.ROLE_ADMIN)
 	public String getUsers(UriInfo query)
 	{
-		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").decode(query));
+		ConstrainedResultSet<UserEntity> resultset = accountDao.findByUriQuery(new WebQuery().orderAsc("id").capLimit(1000).limit(1000).decode(query));
 
 		TemplateCall call = templater.template("users");
 
@@ -174,28 +174,23 @@ public class UserUIServiceImpl implements UserUIService
 			delRoles.removeAll(roles);
 
 			// Add roles as necessary
-			if (addRoles.size() > 0)
+			for (String role : addRoles)
 			{
-				for (String role : addRoles)
-				{
-					RoleEntity entity = roleDao.getById(role);
-					entity.getMembers().add(user);
+				RoleEntity entity = roleDao.getById(role);
+				entity.getMembers().add(user);
 
-					roleDao.update(entity);
-				}
+				roleDao.update(entity);
 			}
 
+
 			// Remove roles as necessary
-			if (delRoles.size() > 0)
+			for (String role : delRoles)
 			{
-				for (String role : delRoles)
-				{
-					RoleEntity entity = roleDao.getById(role);
+				RoleEntity entity = roleDao.getById(role);
 
-					entity.getMembers().removeIf(u -> u.getId() == user.getId());
+				entity.getMembers().removeIf(u -> u.getId() == user.getId());
 
-					roleDao.update(entity);
-				}
+				roleDao.update(entity);
 			}
 		}
 

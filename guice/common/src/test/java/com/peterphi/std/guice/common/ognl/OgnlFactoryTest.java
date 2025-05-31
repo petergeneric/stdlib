@@ -21,6 +21,12 @@ public class OgnlFactoryTest
 
 
 	@Test
+	public void testStaticMethodCallParseIntAndToStringBase36()
+	{
+		assertEquals("z", OgnlFactory.template("${ @Integer@toString(@Integer@valueOf(get(0)), 36) }", List.of("35")));
+	}
+
+	@Test
 	public void testCompiledExpression()
 	{
 		final OgnlEvaluator evaluator = OgnlFactory.getInstance(new Object(), "'xyz'");

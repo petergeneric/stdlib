@@ -18,8 +18,13 @@ public class WebQueryParser
 	private static final String WHERE = "WHERE";
 
 	private static final String OPEN_BRACKET = "(";
+	private static final char OPEN_BRACKET_C = '(';
 	private static final String CLOSE_BRACKET = ")";
+	private static final char CLOSE_BRACKET_C = ')';
 	private static final String COMMA = ",";
+	private static final char COMMA_C = ',';
+
+	private static final char COLON_C = ':';
 
 	private static final String AND = "AND";
 	private static final String OR = "OR";
@@ -36,6 +41,9 @@ public class WebQueryParser
 	private static final String STARTS = "STARTS";
 	private static final String CONTAINS = "CONTAINS";
 	private static final String CONTAINS2 = "~=";
+
+	// operator token is a run of any of the following:
+	private static final char[] OPERATORS = new char[]{'=', '<', '>', '~', '!'};
 	
 	public static WebQuery parse(String search, WebQuery query)
 	{
@@ -241,7 +249,7 @@ public class WebQueryParser
 				}
 				while (StringUtils.equals(peek(t), COMMA));
 
-				query.fetch(selects.stream().collect(Collectors.joining(",")));
+				query.fetch(String.join(",", selects));
 
 				// Allow EOF, EXPAND, WHERE or ORDER
 				final String token = peek(t);
@@ -279,6 +287,9 @@ public class WebQueryParser
 
 				if (operator.equalsIgnoreCase(IS))
 				{ // Unary expression
+					if (notted)
+						throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
 					final boolean isNotNullExpr = takeIf(t, NOT);
 
 					expect(t, NULL);
@@ -349,54 +360,66 @@ public class WebQueryParser
 						else
 							group.notContains(start, val);
 					}
-					else if (operator.equalsIgnoreCase("eqref"))
+					else if (operator.length() >= 5 && StringUtils.endsWithIgnoreCase(operator, "ref"))
 					{
-						if (!notted)
-							group.eqRef(start, val);
+						if (operator.equalsIgnoreCase("eqref"))
+						{
+							if (!notted)
+								group.eqRef(start, val);
+							else
+								group.neqRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("neqref"))
+						{
+							if (!notted)
+								group.neqRef(start, val);
+							else
+								group.eqRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("leref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.leRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("geref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.geRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("ltref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.ltRef(start, val);
+						}
+						else if (operator.equalsIgnoreCase("gtref"))
+						{
+							if (notted)
+								throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
+
+							group.gtRef(start, val);
+						}
 						else
-							group.neqRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("neqref"))
-					{
-						if (!notted)
-							group.neqRef(start, val);
-						else
-							group.eqRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("leref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.leRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("geref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.geRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("ltref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.ltRef(start, val);
-					}
-					else if (operator.equalsIgnoreCase("gtref"))
-					{
-						if (notted)
-							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
-
-						group.gtRef(start, val);
+						{
+							throw new IllegalArgumentException("Unknown operator: " + operator);
+						}
 					}
 					else
 					{
 						if (notted)
 							throw new IllegalArgumentException("Unexpected symbol NOT before " + operator);
 
-						switch (operator.toLowerCase(Locale.ROOT))
+						// Allow case-insensitive matching for "eq", but leave "=" alone
+						final String lcop = operator.length() == 1 || !Character.isAlphabetic(operator.charAt(0)) ?
+						                    operator :
+						                    operator.toLowerCase(Locale.ROOT);
+
+						switch (lcop)
 						{
 							case "=":
 							case "eq":
@@ -515,8 +538,6 @@ public class WebQueryParser
 	{
 		List<String> tokens = new ArrayList<>();
 
-		char[] operators = new char[]{'=', '<', '>', '~', '!'};
-
 		for (int i = 0; i < search.length(); i++)
 		{
 			try
@@ -538,11 +559,11 @@ public class WebQueryParser
 
 						tokens.add(str);
 					}
-					else if (c == OPEN_BRACKET.charAt(0) || c == CLOSE_BRACKET.charAt(0) || c == COMMA.charAt(0))
+					else if (c == OPEN_BRACKET_C || c == CLOSE_BRACKET_C || c == COMMA_C)
 					{
 						tokens.add(Character.toString(c));
 					}
-					else if (Character.isJavaIdentifierPart(c))
+					else if (Character.isJavaIdentifierPart(c) || c == COLON_C)
 					{
 						final int start = i;
 						// Search for: EOF, next char that is not isJavaIdentifierPart, a dot colon or square brackets
@@ -563,7 +584,7 @@ public class WebQueryParser
 							tokens.add(search.substring(start, i + 1));
 						}
 					}
-					else if ((c == '-' && tokenPeekIs(search, i, '-')) || (c == '/' && tokenPeekIs(search, i, '/')))
+					else if (tokenTupleMatch(search,i, c, '-','-') || tokenTupleMatch(search,i, c, '/','/'))
 					{
 						i++;
 
@@ -576,7 +597,7 @@ public class WebQueryParser
 						// Skip over all data
 						i = endPos;
 					}
-					else if (c == '/' && tokenPeekIs(search, i, '*'))
+					else if (tokenTupleMatch(search,i, c, '/','*'))
 					{
 						i++;
 
@@ -591,11 +612,11 @@ public class WebQueryParser
 
 						i = endPos +1;
 					}
-					else if (ArrayUtils.indexOf(operators, c) != -1)
+					else if (ArrayUtils.indexOf(OPERATORS, c) != -1)
 					{
 						final int start = i;
-						// Search for: EOF, next char that is not isJavaIdentifierPart / ":"
-						while (i < search.length() && ArrayUtils.indexOf(operators, search.charAt(i)) != -1)
+						// Consume a run of operators, stopping if we hit EOF
+						while (i < search.length() && ArrayUtils.indexOf(OPERATORS, search.charAt(i)) != -1)
 						{
 							i++;
 						}
@@ -628,12 +649,25 @@ public class WebQueryParser
 	}
 
 
-	public static boolean tokenPeekIs(final String s, final int i, final char c)
+	/**
+	 * Tests if the current+next token matches (a,b)
+	 *
+	 * @param s    source string
+	 * @param i    current token position
+	 * @param curr the current token
+	 * @param a    desired first token
+	 * @param b    desired second token
+	 * @return
+	 */
+	private static boolean tokenTupleMatch(final String s, final int i, final char curr, final char a, final char b)
 	{
-		if (s.length() > i)
-			return c == s.charAt(i + 1);
-		else
-			return false;
+		return
+				// current token matches
+				curr == a &&
+				// we are not at EOF
+				s.length() > i &&
+				// the next token matches
+				b == s.charAt(i + 1);
 	}
 
 	public static boolean isBareWordPart(final char c)

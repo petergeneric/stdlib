@@ -1,7 +1,6 @@
 package com.peterphi.usermanager.db.entity;
 
 import com.peterphi.std.guice.database.annotation.EagerFetch;
-import com.peterphi.std.types.SimpleId;
 import org.joda.time.DateTime;
 
 import jakarta.persistence.Column;
@@ -14,7 +13,7 @@ import jakarta.persistence.ManyToOne;
 @Entity(name = "password_reset_code")
 public class PasswordResetEntity
 {
-	private String id = SimpleId.alphanumeric("umpr-", 250);
+	private String id;
 
 	private UserEntity user;
 

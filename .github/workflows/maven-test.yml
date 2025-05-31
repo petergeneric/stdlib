@@ -7,6 +7,8 @@ jobs:
   build:
 
     runs-on: ubuntu-latest
+    env:
+      TZ: "Europe/London"
 
     steps:
     - uses: actions/checkout@v2
@@ -20,7 +22,7 @@ jobs:
         java-version: 21
         distribution: zulu
  # Step that does that actual cache save and restore
-    - uses: actions/cache@v1
+    - uses: actions/cache@v4.2.2
       with:
         path: ~/.m2/repository
         key: ${{ runner.os }}-maven-${{ hashFiles('**/pom.xml') }}
@@ -30,4 +32,4 @@ jobs:
       run: mvn -T3 -B test --file pom.xml
     - name: Publish Test Report
       if: ${{ always() }}
-      uses: scacap/action-surefire-report@v1
+      uses: scacap/action-surefire-report@1a128e49c0585bc0b8e38e541ac3b6e35a5bc727

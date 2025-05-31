@@ -387,4 +387,10 @@
 		                         initiallyDeferred="false" onDelete="CASCADE" onUpdate="CASCADE"
 		                         referencedTableName="user_account" referencedColumnNames="id"/>
 	</changeSet>
+
+	<!-- Delete all existing Password Reset Codes, we have moved to storing hashed reset codes in PK -->
+	<changeSet author="peter@peterphi.com" id="clear_password_reset_codes">
+		<delete tableName="password_reset_code">
+		</delete>
+	</changeSet>
 </databaseChangeLog>

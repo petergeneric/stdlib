@@ -3,15 +3,19 @@ package com.peterphi.std.guice.restclient.resteasy.impl;
 import com.peterphi.std.guice.apploader.impl.GuiceBuilder;
 import com.peterphi.std.guice.common.breaker.Breaker;
 import com.peterphi.std.guice.restclient.exception.ServiceBreakerTripPreventsCallException;
+import com.peterphi.std.io.FileHelper;
 import com.peterphi.std.threading.Deadline;
 import com.peterphi.std.threading.Timeout;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import jakarta.ws.rs.BadRequestException;
+import java.io.InputStream;
+import java.io.Reader;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.util.Base64;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -86,10 +90,45 @@ class PausableProxy implements InvocationHandler
 			final Throwable cause = e.getCause();
 
 			// Make sure we never throw a BadRequestException, because this bubbles all the way up and throws a 400 Bad Request error against our own service if uncaught
-			if (cause instanceof BadRequestException)
-				throw new RuntimeException("Remote service returned 400 Bad Request!", e);
+			if (cause instanceof BadRequestException br)
+			{
+				final String methodName = method.getDeclaringClass().getSimpleName() + "::" + method.getName();
+
+				if (log.isWarnEnabled())
+				{
+					try
+					{
+						if (br.getResponse() != null && br.getResponse().hasEntity())
+						{
+							final Object entity = br.getResponse().getEntity();
+
+							final String body = switch (entity)
+							{
+								case InputStream is ->
+									// TODO should read binary data and use heuristic to determine if text, otherwise base64 encode
+										FileHelper.cat(is);
+								case Reader r -> FileHelper.cat(r);
+								case CharSequence cs -> cs.toString();
+								case byte[] arr -> "byte[]: " + Base64.getEncoder().encodeToString(arr);
+								case null -> "(null body)";
+								default -> "Entity class=" + entity.getClass().getSimpleName() + ": " + entity;
+							};
+
+							log.warn("HTTP Call {} Encountered 400 Bad Request error, response body: {}", methodName, body, br);
+						}
+					}
+					catch (Throwable tt)
+					{
+						// ignore
+					}
+				}
+
+				throw new RuntimeException("Remote service call " + methodName + " returned 400 Bad Request!", br);
+			}
 			else
+			{
 				throw cause;
+			}
 		}
 	}
 
@@ -109,14 +148,7 @@ class PausableProxy implements InvocationHandler
 			{
 				while (isPaused() && deadline.isValid())
 				{
-					try
-					{
-						Thread.sleep(500);
-					}
-					catch (InterruptedException e)
-					{
-						return;
-					}
+					Timeout.ONE_SECOND.sleep(deadline);
 				}
 			}
 			finally
