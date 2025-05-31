@@ -20,6 +20,9 @@ class ObjWithDateTimeVersionField
 	@Column(name = "updated_ts", nullable = false)
 	private DateTime lastUpdated = DateTime.now();
 
+	@Column(name="some_string",nullable=true)
+	private String someString;
+
 
 	public Long getId()
 	{
@@ -42,5 +45,17 @@ class ObjWithDateTimeVersionField
 	public void setLastUpdated(final DateTime lastUpdated)
 	{
 		this.lastUpdated = lastUpdated;
+	}
+
+
+	public String getSomeString()
+	{
+		return someString;
+	}
+
+
+	public void setSomeString(final String someString)
+	{
+		this.someString = someString;
 	}
 }

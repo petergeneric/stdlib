@@ -143,28 +143,6 @@ public interface Dao<T, ID extends Serializable>
 	public void delete(T obj);
 
 	/**
-	 * Create or Update an item in the database
-	 *
-	 * @param obj
-	 * 		the entity
-	 *
-	 * @see org.hibernate.Session#saveOrUpdate(Object)
-	 */
-	public void saveOrUpdate(T obj);
-
-	/**
-	 * Save a new item in the database, returning its primary key
-	 *
-	 * @param obj
-	 * 		the entity
-	 *
-	 * @return the primary key of the newly saved object
-	 *
-	 * @see org.hibernate.Session#save(Object)
-	 */
-	public ID save(T obj);
-
-	/**
 	 * Update an existing item in the database
 	 *
 	 * @param obj
@@ -185,6 +163,17 @@ public interface Dao<T, ID extends Serializable>
 	 * @see org.hibernate.Session#merge(Object)
 	 */
 	public T merge(T obj);
+
+
+	/**
+	 * Schedule asynchronous persistence of an unmanaged entity into a new managed entity
+	 *
+	 * @param obj
+	 * 		the entity
+	 *
+	 * @see org.hibernate.Session#persist(Object)
+	 */
+	void persist(T obj);
 
 
 	/**

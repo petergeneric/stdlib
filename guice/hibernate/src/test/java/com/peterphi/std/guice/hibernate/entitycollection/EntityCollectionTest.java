@@ -349,22 +349,22 @@ public class EntityCollectionTest
 		{
 			ParentEntity p1 = new ParentEntity();
 			p1.setCapacity(2);
-			p1.setId(dao.save(p1));
+			p1 = dao.merge(p1);
 
 			ChildEntity c1 = new ChildEntity();
 			c1.setParent(p1);
 			c1.setFlag(true);
-			c1.setId(rDao.save(c1));
+			c1 = rDao.merge(c1);
 
 			ChildEntity c2 = new ChildEntity();
 			c2.setParent(p1);
 			c2.setFlag(true);
-			c2.setId(rDao.save(c2));
+			c2 = rDao.merge(c2);
 
 			ChildEntity c3 = new ChildEntity();
 			c3.setParent(p1);
 			c3.setFlag(false);
-			c3.setId(rDao.save(c3));
+			c3 = rDao.merge(c3);
 
 			parentIds.add(p1.getId());
 		}
@@ -373,22 +373,22 @@ public class EntityCollectionTest
 		{
 			ParentEntity p2 = new ParentEntity();
 			p2.setCapacity(2);
-			p2.setId(dao.save(p2));
+			p2 = dao.merge(p2);
 
 			ChildEntity c1 = new ChildEntity();
 			c1.setParent(p2);
 			c1.setFlag(true);
-			c1.setId(rDao.save(c1));
+			c1 = rDao.merge(c1);
 
 			ChildEntity c2 = new ChildEntity();
 			c2.setParent(p2);
 			c2.setFlag(true);
-			c2.setId(rDao.save(c2));
+			c2 = rDao.merge(c2);
 
 			ChildEntity c3 = new ChildEntity();
 			c3.setParent(p2);
 			c3.setFlag(false);
-			c3.setId(rDao.save(c3));
+			c3 = rDao.merge(c3);
 
 			parentIds.add(p2.getId());
 		}
@@ -442,7 +442,7 @@ public class EntityCollectionTest
 		{
 			p1 = new ParentEntity();
 			p1.setCapacity(2);
-			p1 = dao.getById(dao.save(p1));
+			p1 = dao.merge(p1);
 		}
 
 		List<Long> ids;
@@ -455,7 +455,7 @@ public class EntityCollectionTest
 			r.setParent(p1);
 			r.setFlag(true);
 
-			rDao.save(r);
+			rDao.persist(r);
 		}
 
 		ids = dao.getIdsByQuery(query);
@@ -466,7 +466,7 @@ public class EntityCollectionTest
 			r.setParent(p1);
 			r.setFlag(false);
 
-			rDao.save(r);
+			rDao.persist(r);
 		}
 
 		// One Q should match now
@@ -479,7 +479,7 @@ public class EntityCollectionTest
 			r.setParent(p1);
 			r.setFlag(true);
 
-			rDao.save(r);
+			rDao.persist(r);
 		}
 
 		// Now none should match again

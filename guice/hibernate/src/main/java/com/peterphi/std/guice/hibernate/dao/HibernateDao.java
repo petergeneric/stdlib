@@ -205,24 +205,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional
 	public void delete(T obj)
 	{
-		getWriteSession().delete(obj);
-	}
-
-
-	@Override
-	@Transactional
-	public void saveOrUpdate(T obj)
-	{
-		getWriteSession().saveOrUpdate(obj);
-	}
-
-
-	@SuppressWarnings("unchecked")
-	@Override
-	@Transactional
-	public ID save(T obj)
-	{
-		return (ID) getWriteSession().save(obj);
+		getWriteSession().remove(obj);
 	}
 
 
@@ -230,7 +213,7 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional
 	public void update(T obj)
 	{
-		getWriteSession().update(obj);
+		merge(obj);
 	}
 
 
@@ -238,7 +221,14 @@ public class HibernateDao<T, ID extends Serializable> implements Dao<T, ID>
 	@Transactional
 	public T merge(T obj)
 	{
-		return (T) getWriteSession().merge(obj);
+		return getWriteSession().merge(obj);
+	}
+
+	@Override
+	@Transactional
+	public void persist(T obj)
+	{
+		getWriteSession().persist(obj);
 	}
 
 

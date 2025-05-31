@@ -121,7 +121,7 @@ public class ServiceUIServiceImpl implements ServiceUIService
 		entity.setEnabled(true);
 		entity.setRoles(new HashSet<>(roleDao.getListById(roles)));
 
-		dao.save(entity);
+		entity = dao.merge(entity);
 
 		return Response.seeOther(URI.create("/service/" + entity.getId())).build();
 	}

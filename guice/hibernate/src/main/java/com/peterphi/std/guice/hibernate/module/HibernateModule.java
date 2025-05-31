@@ -92,7 +92,15 @@ public abstract class HibernateModule extends AbstractModule
 		validateHibernateProperties(guiceConfig, properties);
 
 		// Set up the hibernate Configuration
-		Configuration config = new Configuration();
+		Configuration config;
+		try
+		{
+			config = new Configuration();
+		}
+		catch (Throwable t)
+		{
+			throw new RuntimeException("Unable to construct empty hibernate Configuration type! " + t.getMessage(), t);
+		}
 
 		// Set up the interceptor
 		properties.setProperty("hibernate.session_factory.statement_inspector",

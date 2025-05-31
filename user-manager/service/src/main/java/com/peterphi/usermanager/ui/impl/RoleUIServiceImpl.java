@@ -92,7 +92,7 @@ public class RoleUIServiceImpl implements RoleUIService
 		entity.setId(id);
 		entity.setCaption(caption);
 
-		dao.save(entity);
+		dao.persist(entity);
 
 		return Response.seeOther(URI.create("/role/" + id)).build();
 	}
