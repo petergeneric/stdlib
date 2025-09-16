@@ -327,7 +327,7 @@ public class QEntity
 		{
 			isCollection = false;
 			//type = attribute.getDeclaringType();
-			nullable = attribute instanceof SingularAttribute sa && sa.isOptional();
+			nullable = attribute instanceof SingularAttribute<?,?> sa && sa.isOptional();
 
 			final Class<?> baseJavaType = attribute.getJavaType();
 
@@ -345,6 +345,12 @@ public class QEntity
 				else {
 					throw new IllegalArgumentException("Unsupported member type: " + attribute.getJavaMember().getClass());
 				}
+
+				// In Hibernate 7.0.5 and later, where an abstract entity class has a generic placeholder, we're pointed at that placeholder
+				// It's uncertain whether we should actually be attempting to support this, since it does seem an unusual case to have such a class...
+				// This logic is here to catch and throw as early in the process as possible when one of these classes is encountered
+				if (clazz == Enum.class)
+					throw new IllegalArgumentException("Encountered Enum type without further type information, cannot proceed. " + attribute.getJavaMember());
 			}
 			else {
 				clazz = baseJavaType;
