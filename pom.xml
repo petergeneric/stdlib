@@ -4,7 +4,7 @@
 
 	<groupId>com.peterphi.std</groupId>
 	<artifactId>stdlib-parent</artifactId>
-	<version>14.7.15-SNAPSHOT</version>
+	<version>15.0.0-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 	<name>application framework parent</name>
@@ -211,6 +211,7 @@
 				<artifactId>maven-compiler-plugin</artifactId>
 				<version>3.13.0</version>
 				<configuration>
+					<release>${javalang.version}</release>
 					<source>${javalang.version}</source>
 					<target>${javalang.version}</target>
 					<encoding>UTF-8</encoding>
