@@ -333,24 +333,11 @@ public class QEntity
 
 			if (baseJavaType == Enum.class) {
 				// Hibernate has unhelpfully told us this is an enum without giving us the underlying type
-				// We need to inspect the Member to figure out the actual Java type
-				if (attribute.getJavaMember() instanceof Method m)
-				{
-					clazz = m.getReturnType();
-				}
-				else if (attribute.getJavaMember() instanceof Field f)
-				{
-					clazz = f.getType();
-				}
-				else {
-					throw new IllegalArgumentException("Unsupported member type: " + attribute.getJavaMember().getClass());
-				}
 
 				// In Hibernate 7.0.5 and later, where an abstract entity class has a generic placeholder, we're pointed at that placeholder
-				// It's uncertain whether we should actually be attempting to support this, since it does seem an unusual case to have such a class...
-				// This logic is here to catch and throw as early in the process as possible when one of these classes is encountered
-				if (clazz == Enum.class)
-					throw new IllegalArgumentException("Encountered Enum type without further type information, cannot proceed. " + attribute.getJavaMember());
+				// We can try to resolve this here, but we end up needing to figure out this data in com.peterphi.std.guice.hibernate.webquery.impl.jpa.JPAQueryBuilder.parseValue where we simply don't have enough information anymore
+				// So instead, bail early.
+				throw new IllegalArgumentException("Encountered Enum type without further type information, cannot proceed. " + this.clazz + ", " + attribute + ". Superclasses may not have generic Enum fields!");
 			}
 			else {
 				clazz = baseJavaType;

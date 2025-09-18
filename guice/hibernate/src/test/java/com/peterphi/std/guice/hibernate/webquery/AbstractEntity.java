@@ -7,16 +7,10 @@ import jakarta.persistence.Version;
 import org.joda.time.DateTime;
 
 @MappedSuperclass
-abstract class AbstractEntity<E extends Enum>
+abstract class AbstractEntity
 {
 	private DateTime created = DateTime.now();
 	private DateTime updated = DateTime.now();
-
-	@Column(name="state_val")
-	abstract E getState();
-
-
-	abstract void setState(final E state);
 
 
 	@Column(name = "created_ts", nullable = false)

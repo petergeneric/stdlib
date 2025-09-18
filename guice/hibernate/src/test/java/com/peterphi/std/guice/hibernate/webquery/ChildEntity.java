@@ -12,7 +12,7 @@ import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 
 @Entity
-class ChildEntity extends AbstractEntity<SomeStateEnum>
+class ChildEntity extends AbstractEntity
 {
 	private Long id;
 
@@ -37,14 +37,13 @@ class ChildEntity extends AbstractEntity<SomeStateEnum>
 	}
 
 
-	@Override
+	@Column(name="state_val")
 	public SomeStateEnum getState()
 	{
 		return this.state;
 	}
 
 
-	@Override
 	public void setState(SomeStateEnum v)
 	{
 		this.state = v;

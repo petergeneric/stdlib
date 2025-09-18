@@ -13,7 +13,7 @@ import jakarta.persistence.ManyToOne;
 
 @Entity(name = "mapped_superclass_test_entity")
 @BatchSize(size = 250)
-public class MappedSuperclassEntity extends AbstractEntity<SomeStateEnum>
+public class MappedSuperclassEntity extends AbstractEntity
 {
 	private Long id;
 
@@ -64,15 +64,13 @@ public class MappedSuperclassEntity extends AbstractEntity<SomeStateEnum>
 	}
 
 
-	@Override
-	SomeStateEnum getState()
+	@Column(name="state_val")
+	public SomeStateEnum getState()
 	{
 		return this.state;
 	}
 
-
-	@Override
-	void setState(final SomeStateEnum state)
+	public void setState(final SomeStateEnum state)
 	{
 		this.state = state;
 	}
